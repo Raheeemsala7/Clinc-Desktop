@@ -12,6 +12,7 @@ export interface PatientPayload {
   age: number;
   dateOfBirth?: string;
   address?: string;
+  occupation?: string;
   chronicConditions: string[];
 }
 
@@ -25,6 +26,7 @@ export interface Patient {
   age: number;
   dateOfBirth?: string;
   address?: string;
+  occupation?: string;
   chronicConditions?: string[];
   visitCount?: number;
   lastVisitDate?: string | null;
@@ -36,6 +38,9 @@ export type PatientFilterType = 'all' | 'chronic' | 'male' | 'female' | 'month';
 
 export interface PatientVisitItem {
   id: string;
+  visitId?: string | null;
+  hasExamination?: boolean;
+  diagnosis?: string | null;
   clinicDate: string;
   type: string;
   status: string;
@@ -84,6 +89,7 @@ export interface PatientDetails {
     age: number;
     dateOfBirth?: string | null;
     address?: string | null;
+    occupation?: string | null;
     chronicConditions?: string[];
     createdAt?: string | null;
   };
@@ -97,6 +103,23 @@ export interface PatientDetails {
   } | null;
   financialSummary: PatientFinancialSummary;
   previousAppointments: PatientVisitItem[];
+  prescriptions?: Array<{
+    id: string;
+    visitId?: string;
+    patientId: string;
+    doctorId: string;
+    doctorName?: string | null;
+    notes?: string;
+    items: Array<{
+      id?: string;
+      drugName: string;
+      dose: string;
+      frequency: string;
+      duration: string;
+      instructions?: string;
+    }>;
+    createdAt?: string | null;
+  }>;
   attachments?: PatientAttachmentItem[];
   notes?: PatientNoteItem[];
   visitCount: number;

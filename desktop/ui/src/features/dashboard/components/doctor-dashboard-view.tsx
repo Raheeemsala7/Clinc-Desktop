@@ -137,9 +137,15 @@ export const DoctorDashboardView = ({
     fetchCalendarForDate(today);
   };
 
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
   const handleRefresh = async () => {
-    refetch();
-    await fetchCalendarForDate(currentDate);
+    setIsManualRefreshing(true);
+    try {
+      await Promise.all([refetch(), fetchCalendarForDate(currentDate)]);
+    } finally {
+      setIsManualRefreshing(false);
+    }
   };
 
   const calendarBookedSlots = calendarData?.daySlots?.filter((s) => s.isBooked) || [];
@@ -256,16 +262,16 @@ export const DoctorDashboardView = ({
           <button
             type="button"
             onClick={handleRefresh}
-            disabled={isFetching || isCalendarLoading}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 active:scale-95 transition-all shadow-2xs cursor-pointer disabled:opacity-60"
+            disabled={isManualRefreshing}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-w-[85px] rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 active:scale-95 transition-all shadow-2xs cursor-pointer disabled:opacity-60"
           >
             <RefreshCw
               className={cn(
                 'w-3.5 h-3.5 text-slate-500',
-                (isFetching || isCalendarLoading) && 'animate-spin'
+                isManualRefreshing && 'animate-spin'
               )}
             />
-            <span>{isFetching || isCalendarLoading ? 'جاري التحديث...' : 'تحديث'}</span>
+            <span>تحديث</span>
           </button>
         </div>
       </div>

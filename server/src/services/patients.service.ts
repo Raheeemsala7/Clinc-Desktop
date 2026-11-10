@@ -24,6 +24,7 @@ export class PatientsService {
       dateOfBirth,
       age,
       address,
+      occupation,
       allergies,
       chronicConditions,
       generalNotes,
@@ -88,6 +89,7 @@ export class PatientsService {
       age: parsedAge,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : (parsedAge !== undefined ? new Date(new Date().getFullYear() - parsedAge, 0, 1) : null),
       address: address || null,
+      occupation: occupation || null,
       allergies: allergies || [],
       chronicConditions: parsedChronic,
       generalNotes: generalNotes || null,
@@ -232,6 +234,7 @@ export class PatientsService {
       patient.dateOfBirth = dto.dateOfBirth ? new Date(dto.dateOfBirth) : null;
     }
     if (dto.address !== undefined) patient.address = dto.address;
+    if (dto.occupation !== undefined) (patient as any).occupation = dto.occupation;
     if (dto.chronicConditions !== undefined) {
       if (Array.isArray(dto.chronicConditions)) {
         patient.chronicConditions = dto.chronicConditions.map((c: any) => String(c).trim()).filter(Boolean);
@@ -365,9 +368,15 @@ export class PatientsService {
 
     const populatedAppointments = await Promise.all(
       appointments.map(async (appt) => {
-        const doc = await User.findById(appt.doctorId).select('name');
+        const [doc, visit] = await Promise.all([
+          User.findById(appt.doctorId).select('name'),
+          Visit.findOne({ appointmentId: appt.id }),
+        ]);
         return {
           id: appt.id,
+          visitId: visit ? visit.id : null,
+          hasExamination: Boolean(visit?.entExamination && Object.keys(visit.entExamination).length > 0),
+          diagnosis: visit?.diagnosis || null,
           clinicDate: appt.clinicDate,
           type: appt.type === 'CONSULTATION' ? 'EXAMINATION' : appt.type,
           status: appt.status,
@@ -472,15 +481,36 @@ export class PatientsService {
 
     notes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+    // 4. Fetch all patient prescriptions for doctor history
+    const rawPrescriptions = await Prescription.find({ patientId }).sort({ createdAt: -1 });
+    const prescriptions = await Promise.all(
+      rawPrescriptions.map(async (rx) => {
+        const doc = await User.findById(rx.doctorId).select('name');
+        return {
+          id: rx.id,
+          visitId: rx.visitId,
+          patientId: rx.patientId,
+          doctorId: rx.doctorId,
+          doctorName: doc ? doc.name : null,
+          notes: rx.notes || '',
+          items: rx.items || [],
+          createdAt: rx.createdAt ? rx.createdAt.toISOString() : null,
+        };
+      })
+    );
+
     return {
       patient: {
         id: patient.id,
+        fileNumber: patient.fileNumber || null,
         fullName: patient.fullName,
         phone: patient.phone,
         gender: patient.gender,
+        maritalStatus: (patient as any).maritalStatus || 'MARRIED',
         age,
         dateOfBirth: patient.dateOfBirth ? patient.dateOfBirth.toISOString() : null,
         address: patient.address || null,
+        occupation: (patient as any).occupation || null,
         chronicConditions: patient.chronicConditions || [],
         createdAt: patient.createdAt ? patient.createdAt.toISOString() : null,
       },
@@ -493,6 +523,7 @@ export class PatientsService {
         recentPayments: recentPayments.map((p) => p.toJSON()),
       },
       previousAppointments: populatedAppointments,
+      prescriptions,
       attachments,
       notes,
       visitCount: allAppts.length,

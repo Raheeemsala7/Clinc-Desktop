@@ -24,6 +24,8 @@ export const quickPatientSchema = (t?: any) =>
           maritalStatus: z.enum(['SINGLE', 'MARRIED', 'WIDOWED', 'DIVORCED'], {
             message: 'يرجى تحديد الحالة الاجتماعية',
           }),
+          occupation: z.string().optional(),
+          address: z.string().optional(),
           hasChronicDisease: z.boolean(),
           chronicDiseases: z.array(z.string()),
     })

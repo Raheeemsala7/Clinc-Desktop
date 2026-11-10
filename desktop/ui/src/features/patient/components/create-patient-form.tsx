@@ -32,6 +32,8 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
             age: 30,
             gender: 'MALE',
             maritalStatus: 'MARRIED',
+            occupation: '',
+            address: '',
             hasChronicDisease: false,
             chronicDiseases: [],
         },
@@ -65,6 +67,8 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                 age: values.age,
                 gender: values.gender,
                 maritalStatus: values.maritalStatus || 'MARRIED',
+                occupation: values.occupation?.trim() || undefined,
+                address: values.address?.trim() || undefined,
                 chronicConditions: values.hasChronicDisease ? values.chronicDiseases : [],
             });
             setValueBoking("patientId", data.id)
@@ -279,6 +283,46 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                     )}
                 />
 
+                {/* 6. الوظيفة والعنوان (اختياري) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <Controller
+                        name="occupation"
+                        control={quickControl}
+                        render={({ field }) => (
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                    الوظيفة <span className="text-slate-400 font-normal">(اختياري)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="مثال: مهندس، معلم..."
+                                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10 transition-all"
+                                    {...field}
+                                    value={field.value || ''}
+                                />
+                            </div>
+                        )}
+                    />
+
+                    <Controller
+                        name="address"
+                        control={quickControl}
+                        render={({ field }) => (
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                    العنوان / المدينة <span className="text-slate-400 font-normal">(اختياري)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="مثال: الزقازيق، القومية"
+                                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10 transition-all"
+                                    {...field}
+                                    value={field.value || ''}
+                                />
+                            </div>
+                        )}
+                    />
+                </div>
 
             </div>
 

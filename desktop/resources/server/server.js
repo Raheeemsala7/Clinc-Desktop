@@ -100435,6 +100435,7 @@ var init_patient_model = __esm({
         age: { type: Number },
         dateOfBirth: { type: Date },
         address: { type: String },
+        occupation: { type: String },
         allergies: { type: [String], default: [] },
         chronicConditions: { type: [String], default: [] },
         generalNotes: { type: String },
@@ -171366,6 +171367,7 @@ var PatientsService = class {
       dateOfBirth,
       age,
       address,
+      occupation,
       allergies,
       chronicConditions,
       generalNotes,
@@ -171423,6 +171425,7 @@ var PatientsService = class {
       age: parsedAge,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : parsedAge !== void 0 ? new Date((/* @__PURE__ */ new Date()).getFullYear() - parsedAge, 0, 1) : null,
       address: address || null,
+      occupation: occupation || null,
       allergies: allergies || [],
       chronicConditions: parsedChronic,
       generalNotes: generalNotes || null,
@@ -171539,6 +171542,7 @@ var PatientsService = class {
       patient.dateOfBirth = dto.dateOfBirth ? new Date(dto.dateOfBirth) : null;
     }
     if (dto.address !== void 0) patient.address = dto.address;
+    if (dto.occupation !== void 0) patient.occupation = dto.occupation;
     if (dto.chronicConditions !== void 0) {
       if (Array.isArray(dto.chronicConditions)) {
         patient.chronicConditions = dto.chronicConditions.map((c5) => String(c5).trim()).filter(Boolean);
@@ -171647,9 +171651,15 @@ var PatientsService = class {
     const appointments = await Appointment.find({ patientId, status: { $ne: "CANCELLED" } }).sort({ clinicDate: -1, createdAt: -1 }).limit(10);
     const populatedAppointments = await Promise.all(
       appointments.map(async (appt) => {
-        const doc = await User.findById(appt.doctorId).select("name");
+        const [doc, visit] = await Promise.all([
+          User.findById(appt.doctorId).select("name"),
+          Visit.findOne({ appointmentId: appt.id })
+        ]);
         return {
           id: appt.id,
+          visitId: visit ? visit.id : null,
+          hasExamination: Boolean(visit?.entExamination && Object.keys(visit.entExamination).length > 0),
+          diagnosis: visit?.diagnosis || null,
           clinicDate: appt.clinicDate,
           type: appt.type === "CONSULTATION" ? "EXAMINATION" : appt.type,
           status: appt.status,
@@ -171732,15 +171742,34 @@ var PatientsService = class {
       }
     }
     notes.sort((a5, b5) => new Date(b5.date).getTime() - new Date(a5.date).getTime());
+    const rawPrescriptions = await Prescription.find({ patientId }).sort({ createdAt: -1 });
+    const prescriptions = await Promise.all(
+      rawPrescriptions.map(async (rx) => {
+        const doc = await User.findById(rx.doctorId).select("name");
+        return {
+          id: rx.id,
+          visitId: rx.visitId,
+          patientId: rx.patientId,
+          doctorId: rx.doctorId,
+          doctorName: doc ? doc.name : null,
+          notes: rx.notes || "",
+          items: rx.items || [],
+          createdAt: rx.createdAt ? rx.createdAt.toISOString() : null
+        };
+      })
+    );
     return {
       patient: {
         id: patient.id,
+        fileNumber: patient.fileNumber || null,
         fullName: patient.fullName,
         phone: patient.phone,
         gender: patient.gender,
+        maritalStatus: patient.maritalStatus || "MARRIED",
         age,
         dateOfBirth: patient.dateOfBirth ? patient.dateOfBirth.toISOString() : null,
         address: patient.address || null,
+        occupation: patient.occupation || null,
         chronicConditions: patient.chronicConditions || [],
         createdAt: patient.createdAt ? patient.createdAt.toISOString() : null
       },
@@ -171753,6 +171782,7 @@ var PatientsService = class {
         recentPayments: recentPayments.map((p3) => p3.toJSON())
       },
       previousAppointments: populatedAppointments,
+      prescriptions,
       attachments,
       notes,
       visitCount: allAppts.length

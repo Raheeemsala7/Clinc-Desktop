@@ -13,6 +13,7 @@ export interface IPatient extends Document {
   age?: number;
   dateOfBirth?: Date;
   address?: string;
+  occupation?: string;
   allergies: string[];
   chronicConditions: string[];
   generalNotes?: string;
@@ -40,6 +41,7 @@ const PatientSchema = new Schema(
     age: { type: Number },
     dateOfBirth: { type: Date },
     address: { type: String },
+    occupation: { type: String },
     allergies: { type: [String], default: [] },
     chronicConditions: { type: [String], default: [] },
     generalNotes: { type: String },

@@ -319,9 +319,9 @@ export function useTodayQueueQuery(initialData?: TodayQueueItem[], doctorId?: st
             return (data.payload || data.data || []) as TodayQueueItem[];
         },
         initialData,
-        refetchInterval: 3_000,
-        refetchIntervalInBackground: true,
-        staleTime: 0,
+        refetchInterval: 10_000,
+        refetchIntervalInBackground: false,
+        staleTime: 5_000,
     });
 }
 

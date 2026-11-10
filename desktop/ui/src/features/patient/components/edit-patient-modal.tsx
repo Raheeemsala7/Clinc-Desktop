@@ -26,6 +26,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
   const [maritalStatus, setMaritalStatus] = useState<'SINGLE' | 'MARRIED' | 'WIDOWED' | 'DIVORCED'>('MARRIED');
   const [fileNumber, setFileNumber] = useState('');
   const [address, setAddress] = useState('');
+  const [occupation, setOccupation] = useState('');
   const [hasChronic, setHasChronic] = useState(false);
   const [selectedDiseases, setSelectedDiseases] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
@@ -39,6 +40,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
       setMaritalStatus(patient.maritalStatus || 'MARRIED');
       setFileNumber(patient.fileNumber || '');
       setAddress(patient.address || '');
+      setOccupation(patient.occupation || '');
       const chronic = patient.chronicConditions || [];
       setSelectedDiseases(chronic);
       setHasChronic(chronic.length > 0);
@@ -84,6 +86,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
         fileNumber: fileNumber.trim() || undefined,
         age: Number(age),
         address: address.trim() || undefined,
+        occupation: occupation.trim() || undefined,
         chronicConditions: hasChronic ? selectedDiseases : [],
       });
 
@@ -200,7 +203,9 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
             </div>
 
             <div>
-              <label className="block mb-1.5 text-slate-700">العنوان / المدينة</label>
+              <label className="block mb-1.5 text-slate-700">
+                العنوان / المدينة <span className="text-slate-400 font-normal text-[11px]">(اختياري)</span>
+              </label>
               <input
                 type="text"
                 value={address}
@@ -209,6 +214,20 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
                 className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
               />
             </div>
+          </div>
+
+          {/* الوظيفة (اختياري) */}
+          <div>
+            <label className="block mb-1.5 text-slate-700">
+              الوظيفة <span className="text-slate-400 font-normal text-[11px]">(اختياري)</span>
+            </label>
+            <input
+              type="text"
+              value={occupation}
+              onChange={(e) => setOccupation(e.target.value)}
+              placeholder="مثال: مهندس، معلم، تاجر..."
+              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
+            />
           </div>
 
           {/* رقم الملف الطبي والحالة الاجتماعية */}
