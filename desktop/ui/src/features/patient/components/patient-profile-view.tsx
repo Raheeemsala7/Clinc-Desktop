@@ -169,29 +169,40 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0040D8] flex items-center justify-center">
-                              <Pill className="w-4 h-4" />
+                            <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#0040D8] flex items-center justify-center font-black text-sm">
+                              ℞
                             </div>
                             <div>
-                              <h4 className="font-black text-sm text-[#0A164E]">
-                                روشتة علاجية #{details.prescriptions!.length - idx}
-                              </h4>
-                              <p className="text-[11px] text-slate-400 font-mono">
-                                {rx.createdAt ? new Date(rx.createdAt).toLocaleDateString('ar-EG') : '—'} · الطبيب: {rx.doctorName || 'د. إسلام'}
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-black text-sm text-[#0A164E]">
+                                  روشتة علاجية #{details.prescriptions!.length - idx}
+                                </h4>
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0040D8] font-bold text-[11px] border border-blue-200">
+                                  <span>تاريخ الزيارة:</span>
+                                  <strong className="font-mono">
+                                    {(rx as any).visitDate || (rx.createdAt ? new Date(rx.createdAt).toISOString().slice(0, 10) : '—')}
+                                  </strong>
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 font-bold mt-0.5">
+                                الطبيب المعالج: <strong className="text-slate-700">{rx.doctorName || 'د. إسلام'}</strong>
+                                {(rx as any).diagnosis && (
+                                  <span className="mr-2 text-slate-600">
+                                    · التشخيص: <strong className="text-[#0A164E]">{(rx as any).diagnosis}</strong>
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {rx.visitId && (
-                              <Link
-                                href={`/dashboard/examination/${rx.visitId}?tab=prescription`}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-                              >
-                                <Printer className="w-3.5 h-3.5" />
-                                <span>طباعة ومعاينة الروشتة</span>
-                              </Link>
-                            )}
+                            <Link
+                              href={`/dashboard/examination/${(rx as any).appointmentId || rx.visitId}?tab=prescription`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                              <span>طباعة ومعاينة الروشتة</span>
+                            </Link>
                           </div>
                         </div>
 
@@ -199,22 +210,26 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                         <div className="overflow-x-auto">
                           <table className="w-full text-start text-xs border-collapse">
                             <thead>
-                              <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
-                                <th className="py-2 px-3 text-start">الدواء</th>
+                              <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-100">
+                                <th className="py-2 px-3 text-start">اسم الدواء</th>
+                                <th className="py-2 px-3 text-center">النوع (Form)</th>
+                                <th className="py-2 px-3 text-center">التركيز</th>
                                 <th className="py-2 px-3 text-center">الجرعة</th>
                                 <th className="py-2 px-3 text-center">التكرار</th>
                                 <th className="py-2 px-3 text-center">المدة</th>
-                                <th className="py-2 px-3 text-start">تعليمات</th>
+                                <th className="py-2 px-3 text-start">التعليمات</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 font-medium">
                               {rx.items?.map((item: any, i: number) => (
                                 <tr key={item.id || i} className="hover:bg-slate-50/50">
                                   <td className="py-2 px-3 font-bold text-[#0A164E] font-mono">{item.drugName}</td>
+                                  <td className="py-2 px-3 text-center text-slate-700 font-bold">{item.form || '—'}</td>
+                                  <td className="py-2 px-3 text-center font-mono font-bold text-slate-800">{item.concentration || '—'}</td>
                                   <td className="py-2 px-3 text-center font-bold text-slate-700">{item.dose || '—'}</td>
                                   <td className="py-2 px-3 text-center text-slate-600">{item.frequency || '—'}</td>
                                   <td className="py-2 px-3 text-center text-slate-600">{item.duration || '—'}</td>
-                                  <td className="py-2 px-3 text-slate-500">{item.instructions || '—'}</td>
+                                  <td className="py-2 px-3 text-slate-600 font-bold">{item.instructions || '—'}</td>
                                 </tr>
                               ))}
                             </tbody>

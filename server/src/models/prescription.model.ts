@@ -5,6 +5,8 @@ import { transformOptions } from './base';
 export interface IPrescriptionItem {
   id: string;
   drugName: string;
+  form?: string;
+  concentration?: string;
   dose: string;
   frequency: string;
   duration: string;
@@ -39,6 +41,8 @@ const PrescriptionItemSchema = new Schema(
   {
     _id: { type: String, default: uuidv4 },
     drugName: { type: String, required: true },
+    form: { type: String },
+    concentration: { type: String },
     dose: { type: String, required: true },
     frequency: { type: String, required: true },
     duration: { type: String, required: true },

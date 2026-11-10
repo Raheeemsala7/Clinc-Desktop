@@ -92,6 +92,8 @@ export async function saveAppointmentExaminationAction(
           notes: examData.treatmentNotes || '',
           items: validItems.map((item, idx) => ({
             drugName: item.drugName.trim(),
+            form: item.form?.trim() || '',
+            concentration: item.concentration?.trim() || '',
             dose: item.dose?.trim() || 'حسب الإرشاد',
             frequency: item.frequency?.trim() || 'يومياً',
             duration: item.duration?.trim() || 'أسبوع',

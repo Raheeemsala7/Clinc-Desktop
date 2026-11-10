@@ -162,6 +162,8 @@ export class VisitsService {
 
     const formattedItems = validItems.map((item: any, idx: number) => ({
       drugName: item.drugName.trim(),
+      form: item.form?.trim() || null,
+      concentration: item.concentration?.trim() || null,
       dose: item.dose?.trim() || 'حسب الإرشاد',
       frequency: item.frequency?.trim() || 'يومياً',
       duration: item.duration?.trim() || 'أسبوع',

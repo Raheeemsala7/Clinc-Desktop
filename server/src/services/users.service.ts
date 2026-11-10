@@ -94,8 +94,12 @@ export class UsersService {
 
     const before = { name: user.name, username: user.username, role: user.role, isActive: user.isActive };
 
-    if (dto.name !== undefined) user.name = dto.name;
-    if (dto.role !== undefined) user.role = dto.role as any;
+    if (dto.name !== undefined) user.name = dto.name.trim();
+    if (dto.role !== undefined) {
+      const normalizedRole =
+        dto.role.toUpperCase() === 'RECEPTIONIST' ? 'RECEPTION' : dto.role.toUpperCase();
+      user.role = normalizedRole as any;
+    }
     if (dto.isActive !== undefined) user.isActive = dto.isActive;
     if (dto.username !== undefined) {
       const clean = dto.username.toLowerCase().trim();

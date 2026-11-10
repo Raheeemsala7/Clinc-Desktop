@@ -16,12 +16,14 @@ import auditRoutes from './audit.routes';
 import doctorScheduleRoutes from './doctor-schedule.routes';
 import attachmentsRoutes from './attachments.routes';
 import backupRoutes from './backup.routes';
+import chatRoutes from './chat.routes';
 
 const apiRouter = Router();
 
 // Resource routes
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/users', usersRoutes);
+apiRouter.use('/chat', chatRoutes);
 apiRouter.use('/patients', patientsRoutes);
 apiRouter.use('/appointments', appointmentsRoutes);
 apiRouter.use('/doctor-schedule', doctorScheduleRoutes);

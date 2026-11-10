@@ -485,10 +485,28 @@ export class PatientsService {
     const rawPrescriptions = await Prescription.find({ patientId }).sort({ createdAt: -1 });
     const prescriptions = await Promise.all(
       rawPrescriptions.map(async (rx) => {
-        const doc = await User.findById(rx.doctorId).select('name');
+        const [doc, visit] = await Promise.all([
+          User.findById(rx.doctorId).select('name'),
+          Visit.findById(rx.visitId).select('appointmentId diagnosis createdAt'),
+        ]);
+
+        let visitDate = rx.createdAt ? rx.createdAt.toISOString().slice(0, 10) : '';
+        let diagnosis = visit?.diagnosis || '';
+        let appointmentId = visit?.appointmentId || rx.visitId;
+
+        if (visit?.appointmentId) {
+          const appt = await Appointment.findById(visit.appointmentId).select('clinicDate');
+          if (appt?.clinicDate) {
+            visitDate = appt.clinicDate;
+          }
+        }
+
         return {
           id: rx.id,
           visitId: rx.visitId,
+          appointmentId,
+          visitDate,
+          diagnosis,
           patientId: rx.patientId,
           doctorId: rx.doctorId,
           doctorName: doc ? doc.name : null,

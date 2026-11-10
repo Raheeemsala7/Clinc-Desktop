@@ -174,6 +174,14 @@ export class RealtimeService {
     });
   }
 
+  static emitChatMessage(payload: any) {
+    if (!this.io) return;
+    this.io.to('clinic:global').emit('chat:message', {
+      ...payload,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   static emitExaminationCompleted(payload: {
     visitId: string;
     appointmentId: string;

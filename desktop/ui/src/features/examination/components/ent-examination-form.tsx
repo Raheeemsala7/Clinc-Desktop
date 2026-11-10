@@ -52,6 +52,7 @@ export function EntExaminationForm({
   const [printTarget, setPrintTarget] = useState<'exam' | 'prescription'>(
     requestedTab === 'prescription' ? 'prescription' : 'exam'
   );
+  const [rxPrintMode, setRxPrintMode] = useState<'full' | 'plain'>('full');
 
   // الحالة الابتدائية لبيانات الفحص
   const existingExam = visit?.entExamination || {};
@@ -212,7 +213,8 @@ export function EntExaminationForm({
   };
 
   // طباعة الروشتة الطبية
-  const handlePrintRx = () => {
+  const handlePrintRx = (mode: 'full' | 'plain' = 'full') => {
+    setRxPrintMode(mode);
     setPrintTarget('prescription');
     setTimeout(() => {
       window.print();
@@ -423,6 +425,7 @@ export function EntExaminationForm({
           examData={examData}
           patient={patient}
           doctor={doctor}
+          printMode={rxPrintMode}
         />
       </div>
     </div>

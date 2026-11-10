@@ -108,6 +108,8 @@ export interface AdditionalVisit {
 export interface PrescriptionMedicine {
   id: string;
   drugName: string;
+  form?: string;
+  concentration?: string;
   dose: string;
   frequency: string;
   duration: string;
