@@ -8,21 +8,31 @@ build/
 # Environment files (never commit real secrets; .env.example is kept)
 .env
 .env.*
+.env.local
 !.env.example
+!.env.*.example
 
-# Uploads (local storage)
+# Uploads & Backups (local storage)
 uploads/
+backups/
 
-# Coverage
+# Coverage & Test outputs
 coverage/
+.nyc_output/
+jest-*.json
+*-results.json
 
-# Logs
+# Logs & Output dumps
 *.log
 npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*-out.txt
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # IDE
 .vscode/
@@ -30,5 +40,7 @@ Thumbs.db
 *.swp
 *.swo
 
-# Prisma
+# Prisma / SQLite
 prisma/migrations/dev.db
+*.sqlite
+*.db
