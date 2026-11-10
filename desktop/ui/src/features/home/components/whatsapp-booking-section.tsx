@@ -27,12 +27,12 @@ export const WhatsAppBookingSection = () => {
   ];
 
   return (
-    <section id="booking" className="py-16 sm:py-20 bg-gradient-to-br from-[#08143D] via-[#0A164E] to-[#060F2E] text-white relative overflow-hidden">
+    <section id="booking" className="py-16 sm:py-20 bg-gradient-to-br from-[#074C3A] via-[#074C3A] to-[#060F2E] text-white relative overflow-hidden">
       {/* إضاءات جمالية خفيفة تنبض بالخلفية */}
       <motion.div
         animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-10 left-10 w-96 h-96 bg-blue-600 rounded-full blur-3xl pointer-events-none"
+        className="absolute top-10 left-10 w-96 h-96 bg-[#0B7B5E] rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
       <motion.div
@@ -88,7 +88,7 @@ export const WhatsAppBookingSection = () => {
                   whileHover={{ y: -2 }}
                   className="flex items-center gap-2.5 cursor-default group"
                 >
-                  <span className="w-8 h-8 rounded-lg bg-[#F5B800] text-[#0A164E] font-black text-xs flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                  <span className="w-8 h-8 rounded-lg bg-[#F5B800] text-[#074C3A] font-black text-xs flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
                     {step.num}
                   </span>
                   <span className="text-sm sm:text-base font-bold text-white whitespace-nowrap">
@@ -115,7 +115,7 @@ export const WhatsAppBookingSection = () => {
                 className="absolute -inset-1 rounded-2xl bg-amber-400 opacity-35 blur-sm animate-pulse -z-10"
                 aria-hidden="true"
               />
-              <WhatsAppIcon className="w-6 h-6 text-[#0A164E] group-hover:rotate-12 transition-transform duration-200" />
+              <WhatsAppIcon className="w-6 h-6 text-[#074C3A] group-hover:rotate-12 transition-transform duration-200" />
               <span>{t('bookBtn')}</span>
             </motion.a>
           </div>
@@ -134,7 +134,7 @@ export const WhatsAppBookingSection = () => {
               <motion.div
                 animate={{ rotate: [0, 3, -3, 0] }}
                 transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-12 h-12 rounded-2xl bg-[#1D4ED8] text-white flex items-center justify-center mb-6 shadow-md"
+                className="w-12 h-12 rounded-2xl bg-[#0B7B5E] text-white flex items-center justify-center mb-6 shadow-md"
               >
                 <WhatsAppIcon className="w-6 h-6" />
               </motion.div>

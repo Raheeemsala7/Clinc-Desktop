@@ -109,7 +109,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     'w-full h-10 px-3.5 rounded-xl border bg-white text-xs placeholder:text-slate-400 focus:outline-none transition-all',
                                     quickErrors.fullName
                                         ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
-                                        : 'border-slate-200 focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10'
+                                        : 'border-slate-200 focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15'
                                 )}
                                 {...field}
                             />
@@ -143,7 +143,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                         'w-full h-10 px-3.5 rounded-xl border bg-white text-xs placeholder:text-slate-400 focus:outline-none transition-all text-start',
                                         quickErrors.phone
                                             ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
-                                            : 'border-slate-200 focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10'
+                                            : 'border-slate-200 focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15'
                                     )}
                                     {...field}
                                 />
@@ -175,7 +175,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                         'w-full h-10 px-3.5 rounded-xl border bg-white text-xs placeholder:text-slate-400 focus:outline-none transition-all',
                                         quickErrors.age
                                             ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
-                                            : 'border-slate-200 focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10'
+                                            : 'border-slate-200 focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15'
                                     )}
                                     value={field.value ?? ''}
                                     onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
@@ -210,7 +210,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     className={cn(
                                         'h-10 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all cursor-pointer',
                                         field.value === 'MALE'
-                                            ? 'bg-[#0A164E] text-white border-[#0A164E] shadow-xs'
+                                            ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
                                             : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                                     )}
                                 >
@@ -225,7 +225,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     className={cn(
                                         'h-10 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all cursor-pointer',
                                         field.value === 'FEMALE'
-                                            ? 'bg-[#0A164E] text-white border-[#0A164E] shadow-xs'
+                                            ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
                                             : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                                     )}
                                 >
@@ -269,7 +269,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                             className={cn(
                                                 'h-9 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer select-none',
                                                 isSelected
-                                                    ? 'bg-[#0A164E] text-white border-[#0A164E] shadow-xs'
+                                                    ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
                                                     : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                                             )}
                                         >
@@ -296,7 +296,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                 <input
                                     type="text"
                                     placeholder="مثال: مهندس، معلم..."
-                                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10 transition-all"
+                                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15 transition-all"
                                     {...field}
                                     value={field.value || ''}
                                 />
@@ -315,7 +315,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                 <input
                                     type="text"
                                     placeholder="مثال: الزقازيق، القومية"
-                                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10 transition-all"
+                                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15 transition-all"
                                     {...field}
                                     value={field.value || ''}
                                 />
@@ -339,7 +339,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                             className={cn(
                                 'px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
                                 hasChronicDisease
-                                    ? 'bg-[#0A164E] text-white shadow-xs'
+                                    ? 'bg-[#074C3A] text-white shadow-xs'
                                     : 'text-slate-500 hover:text-slate-800'
                             )}
                         >
@@ -354,7 +354,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                             className={cn(
                                 'px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
                                 !hasChronicDisease
-                                    ? 'bg-[#0A164E] text-white shadow-xs'
+                                    ? 'bg-[#074C3A] text-white shadow-xs'
                                     : 'text-slate-500 hover:text-slate-800'
                             )}
                         >
@@ -399,7 +399,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                     type="button"
                     onClick={() => void submitQuickPatient()}
                     disabled={isCreatingPatient || isCreateMutation}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-98 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs"
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-98 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs"
                 >
                     {isCreatingPatient || isCreateMutation ? (
                         <>

@@ -403,7 +403,7 @@ export function ClinicChatWidget() {
                           <span>{msg.senderName} (طبيب)</span>
                         </span>
                       ) : isAdmin ? (
-                        <span className="flex items-center gap-0.5 text-[#0E3B5C]">
+                        <span className="flex items-center gap-0.5 text-[#074C3A]">
                           <Shield className="w-3 h-3" />
                           <span>{msg.senderName} (إدارة)</span>
                         </span>

@@ -181,7 +181,7 @@ export function BookingForm() {
 
         {/* رأس الصفحة الرئيسي */}
         <div className="text-start">
-          <h2 className="text-2xl sm:text-3xl font-black text-[#0A164E] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight">
             حجز موعد جديد
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">

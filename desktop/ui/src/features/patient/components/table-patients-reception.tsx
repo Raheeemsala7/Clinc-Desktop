@@ -68,10 +68,10 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
     return (
       <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-12 text-center">
         <div className="max-w-md mx-auto flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0040D8] mb-4 shadow-2xs">
+          <div className="w-16 h-16 rounded-2xl bg-[#E3F5EE] border border-[#D0E5DC] flex items-center justify-center text-[#0B7B5E] mb-4 shadow-2xs">
             <Users className="w-8 h-8 stroke-[1.8]" />
           </div>
-          <h3 className="text-lg font-black text-[#0A164E] mb-2">
+          <h3 className="text-lg font-black text-[#074C3A] mb-2">
             {resolvedParams.q || resolvedParams.filter
               ? 'لا توجد نتائج مطابقة لبحثك'
               : 'لا يوجد مرضى مسجلون حتى الآن'}
@@ -125,11 +125,11 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
                   {/* 1. عمود المريض: الأيقونة الدائرية الكحلية + الاسم + العمر والهاتف */}
                   <td className="py-4 px-6 text-start">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#0A164E] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
+                      <div className="w-10 h-10 rounded-full bg-[#074C3A] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
                         {getFirstLetter(patient.fullName)}
                       </div>
                       <div className="space-y-0.5">
-                        <h4 className="font-black text-[#0A164E] text-sm group-hover:text-[#0040D8] transition-colors">
+                        <h4 className="font-black text-[#074C3A] text-sm group-hover:text-[#0B7B5E] transition-colors">
                           {patient.fullName}
                         </h4>
                         <div className="text-xs text-slate-400 font-sans flex items-center gap-1.5 dir-ltr justify-end">
@@ -148,7 +148,7 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
                       <span
                         className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${
                           isMale
-                            ? 'bg-blue-50 text-blue-700'
+                            ? 'bg-[#E3F5EE] text-[#0B7B5E]'
                             : 'bg-pink-50 text-pink-700'
                         }`}
                       >
@@ -172,7 +172,7 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
 
                   {/* 4. عمود عدد الزيارات */}
                   <td className="py-4 px-6 text-center">
-                    <span className="text-sm font-black text-[#0A164E] font-sans">
+                    <span className="text-sm font-black text-[#074C3A] font-sans">
                       {patient.visitCount ?? 0}
                     </span>
                   </td>
@@ -206,7 +206,7 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
                   href={buildPageUrl(pNum)}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs transition-all ${
                     isCurrent
-                      ? 'bg-[#0040D8] text-white shadow-2xs font-black'
+                      ? 'bg-[#0B7B5E] text-white shadow-2xs font-black'
                       : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >

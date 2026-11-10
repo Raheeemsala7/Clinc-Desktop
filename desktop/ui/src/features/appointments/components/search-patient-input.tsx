@@ -56,12 +56,12 @@ export function SearchPatientInput({}) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ابحث بالاسم أو رقم الهاتف أو المعرف..."
-                className="w-full h-11 pl-4 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all"
+                className="w-full h-11 pl-4 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all"
             />
 
             <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                 {isSearching || isDebouncing ? (
-                    <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-[#0B7B5E] animate-spin" />
                 ) : (
                     <Search className="w-4 h-4 text-slate-400" />
                 )}
@@ -79,7 +79,7 @@ export function SearchPatientInput({}) {
                     ) : isDebouncing || isSearching ? (
                         /* Loading */
                         <div className="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0B7B5E]" />
                             <span>جاري البحث في قاعدة البيانات...</span>
                         </div>
                     ) : isSearchError ? (
@@ -103,15 +103,15 @@ export function SearchPatientInput({}) {
                                     handleSelectPatient(patient);
                                     setSearchQuery("");
                                 }}
-                                className="w-full p-3.5 hover:bg-blue-50/60 transition-colors cursor-pointer flex items-center justify-between text-start"
+                                className="w-full p-3.5 hover:bg-[#E3F5EE]/60 transition-colors cursor-pointer flex items-center justify-between text-start"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-[#0A164E] text-white flex items-center justify-center font-bold text-xs">
+                                    <div className="w-8 h-8 rounded-full bg-[#074C3A] text-white flex items-center justify-center font-bold text-xs">
                                         {(patient.name || patient.fullName || "م").charAt(0)}
                                     </div>
 
                                     <div>
-                                        <p className="font-bold text-xs text-[#0A164E]">
+                                        <p className="font-bold text-xs text-[#074C3A]">
                                             {patient.name || patient.fullName}
                                         </p>
 
@@ -128,7 +128,7 @@ export function SearchPatientInput({}) {
                                     </div>
                                 </div>
 
-                                <span className="text-xs font-bold text-[#1D4ED8]">
+                                <span className="text-xs font-bold text-[#0B7B5E]">
                                     اختيار
                                 </span>
                             </button>

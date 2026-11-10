@@ -76,10 +76,10 @@ export default function DoctorSchedulePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-2xl bg-blue-50 text-[#0040D8]">
+            <span className="p-2 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E]">
               <Clock className="w-5 h-5" />
             </span>
-            <h1 className="text-xl sm:text-2xl font-black text-[#0A164E] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight">
               أوقات العمل الأسبوعية والورديات
             </h1>
           </div>
@@ -113,7 +113,7 @@ export default function DoctorSchedulePage() {
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#0040D8] hover:bg-blue-700 text-white font-black text-xs transition-all shadow-md active:scale-95 disabled:opacity-60 cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-black text-xs transition-all shadow-md active:scale-95 disabled:opacity-60 cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>{isSaving ? 'جاري الحفظ...' : 'حفظ الجدول'}</span>
@@ -125,7 +125,7 @@ export default function DoctorSchedulePage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-xs space-y-1">
           <span className="text-xs font-bold text-slate-400 block">أيام العمل النشطة</span>
-          <span className="text-2xl font-black text-[#0A164E]">{activeDaysCount} أيام / أسبوع</span>
+          <span className="text-2xl font-black text-[#074C3A]">{activeDaysCount} أيام / أسبوع</span>
           <span className="text-[11px] text-emerald-600 font-bold block">
             {7 - activeDaysCount} أيام عطلة أسبوعية
           </span>
@@ -133,7 +133,7 @@ export default function DoctorSchedulePage() {
 
         <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-xs space-y-1">
           <span className="text-xs font-bold text-slate-400 block">متوسط مدة الكشف</span>
-          <span className="text-2xl font-black text-[#0040D8]">20 دقيقة</span>
+          <span className="text-2xl font-black text-[#0B7B5E]">20 دقيقة</span>
           <span className="text-[11px] text-slate-500 font-bold block">
             قابلة للتعديل لكل يوم بشكل منفصل
           </span>
@@ -152,8 +152,8 @@ export default function DoctorSchedulePage() {
       <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-[#0040D8]" />
-            <h2 className="text-base font-black text-[#0A164E]">
+            <Calendar className="w-5 h-5 text-[#0B7B5E]" />
+            <h2 className="text-base font-black text-[#074C3A]">
               جدول الحضور اليومي وتوزيع الفترات
             </h2>
           </div>
@@ -190,7 +190,7 @@ export default function DoctorSchedulePage() {
                 </button>
 
                 <div>
-                  <span className="font-black text-sm text-[#0A164E] block">
+                  <span className="font-black text-sm text-[#074C3A] block">
                     {day.nameAr}
                   </span>
                   <span className="text-[11px] font-bold text-slate-400 block" dir="ltr">
@@ -208,7 +208,7 @@ export default function DoctorSchedulePage() {
                       type="time"
                       value={day.startTime}
                       onChange={(e) => updateDayTime(day.id, 'startTime', e.target.value)}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:outline-none focus:border-[#0040D8]"
+                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
 
@@ -218,7 +218,7 @@ export default function DoctorSchedulePage() {
                       type="time"
                       value={day.endTime}
                       onChange={(e) => updateDayTime(day.id, 'endTime', e.target.value)}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:outline-none focus:border-[#0040D8]"
+                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
 
@@ -228,7 +228,7 @@ export default function DoctorSchedulePage() {
                     <select
                       value={day.slotDurationMinutes}
                       onChange={(e) => updateDuration(day.id, Number(e.target.value))}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:outline-none focus:border-[#0040D8] cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                     >
                       <option value={15}>15 دقيقة</option>
                       <option value={20}>20 دقيقة</option>

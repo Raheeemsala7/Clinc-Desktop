@@ -153,7 +153,7 @@ export function PrescriptionView({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-black text-[#0A164E]">
+              <h3 className="text-lg font-black text-[#074C3A]">
                 الروشتة الطبية (Medical Prescription)
               </h3>
               <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
@@ -188,7 +188,7 @@ export function PrescriptionView({
               onChange((prev) => ({ ...prev, diagnosis: e.target.value }))
             }
             placeholder="اكتب تشخيص الحالة ليظهر في الروشتة..."
-            className="w-full bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-[#0A164E] focus:outline-none focus:border-[#0040D8]"
+            className="w-full bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
           />
         </div>
       </div>
@@ -211,11 +211,11 @@ export function PrescriptionView({
               key={i}
               type="button"
               onClick={() => addQuickDrug(d)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-blue-50 hover:border-blue-300 text-slate-700 hover:text-[#0040D8] text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-[#E3F5EE] hover:border-[#D0E5DC] text-slate-700 hover:text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
             >
-              <Plus className="w-3 h-3 text-[#0040D8]" />
+              <Plus className="w-3 h-3 text-[#0B7B5E]" />
               <span>{d.drugName}</span>
-              {d.concentration && <span className="text-[10px] text-blue-600 font-mono font-normal">({d.concentration})</span>}
+              {d.concentration && <span className="text-[10px] text-[#0B7B5E] font-mono font-normal">({d.concentration})</span>}
             </button>
           ))}
         </div>
@@ -225,15 +225,15 @@ export function PrescriptionView({
       <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center text-[#0040D8] font-black text-sm">
+            <div className="w-8 h-8 rounded-xl bg-[#E3F5EE] flex items-center justify-center text-[#0B7B5E] font-black text-sm">
               ℞
             </div>
             <div>
-              <h4 className="font-black text-sm text-[#0A164E]">
+              <h4 className="font-black text-sm text-[#074C3A]">
                 قائمة الأدوية الموصوفة
               </h4>
               <p className="text-[11px] text-slate-500">
-                إجمالي الأصناف: <strong className="text-[#0040D8]">{items.length}</strong> دواء
+                إجمالي الأصناف: <strong className="text-[#0B7B5E]">{items.length}</strong> دواء
               </p>
             </div>
           </div>
@@ -265,7 +265,7 @@ export function PrescriptionView({
             <button
               type="button"
               onClick={addItem}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>إضافة صنف دواء</span>
@@ -288,11 +288,11 @@ export function PrescriptionView({
             {items.map((item, index) => (
               <div
                 key={item.id}
-                className="p-4 bg-slate-50/80 hover:bg-blue-50/40 rounded-2xl border border-slate-200 transition-all space-y-3"
+                className="p-4 bg-slate-50/80 hover:bg-[#E3F5EE]/40 rounded-2xl border border-slate-200 transition-all space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center">
+                    <span className="w-6 h-6 rounded-full bg-[#0B7B5E] text-white font-black text-xs flex items-center justify-center">
                       {index + 1}
                     </span>
                     <span className="text-xs font-bold text-slate-700">
@@ -319,7 +319,7 @@ export function PrescriptionView({
                       value={item.drugName}
                       onChange={(e) => updateItem(item.id, 'drugName', e.target.value)}
                       placeholder="Augmentin, Otrivin, Cataflam..."
-                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
 
@@ -329,7 +329,7 @@ export function PrescriptionView({
                     <select
                       value={item.form || 'Tablet'}
                       onChange={(e) => updateItem(item.id, 'form', e.target.value)}
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0040D8] cursor-pointer"
+                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                     >
                       {DRUG_FORMS.map((f) => (
                         <option key={f.id} value={f.id}>
@@ -347,7 +347,7 @@ export function PrescriptionView({
                       value={item.concentration || ''}
                       onChange={(e) => updateItem(item.id, 'concentration', e.target.value)}
                       placeholder="مثال: 500mg, 1gm, 0.1%..."
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
 
@@ -359,7 +359,7 @@ export function PrescriptionView({
                       value={item.dose}
                       onChange={(e) => updateItem(item.id, 'dose', e.target.value)}
                       placeholder="1 قرص، بخة، ملعقة..."
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
 
@@ -371,7 +371,7 @@ export function PrescriptionView({
                       value={item.frequency}
                       onChange={(e) => updateItem(item.id, 'frequency', e.target.value)}
                       placeholder="كل 12 ساعة، 3 مرات يومياً..."
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
 
@@ -383,7 +383,7 @@ export function PrescriptionView({
                       value={item.duration}
                       onChange={(e) => updateItem(item.id, 'duration', e.target.value)}
                       placeholder="5 أيام، أسبوع، شهر..."
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
 
@@ -395,7 +395,7 @@ export function PrescriptionView({
                       value={item.instructions || ''}
                       onChange={(e) => updateItem(item.id, 'instructions', e.target.value)}
                       placeholder="بعد الأكل مباشرة، قبل النوم، رج الزجاجة قبل الاستخدام..."
-                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
                 </div>
@@ -416,7 +416,7 @@ export function PrescriptionView({
               onChange((prev) => ({ ...prev, treatmentNotes: e.target.value }))
             }
             placeholder="تعليمات إضافية مثل: الراحة التامة، شرب سوائل دافئة، تجنب المأكولات الحارة..."
-            className="w-full p-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-bold leading-relaxed focus:outline-none focus:border-[#0040D8] focus:bg-white"
+            className="w-full p-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-bold leading-relaxed focus:outline-none focus:border-[#0B7B5E] focus:bg-white"
           />
         </div>
       </div>
@@ -458,7 +458,7 @@ export function PrescriptionView({
           <button
             type="button"
             onClick={() => onPrintRx('full')}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100 text-[#0040D8] text-xs font-bold transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE]/60 hover:bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>طباعة كاملة</span>

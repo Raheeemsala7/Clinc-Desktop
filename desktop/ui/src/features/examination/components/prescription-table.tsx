@@ -55,11 +55,11 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
       {/* رأس قسم الروشتة والأدوية السريعة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Pill className="w-5 h-5 text-[#0040D8]" />
-          <h4 className="font-black text-sm text-[#0A164E]">
+          <Pill className="w-5 h-5 text-[#0B7B5E]" />
+          <h4 className="font-black text-sm text-[#074C3A]">
             العلاج والروشتة الطبية (Rx)
           </h4>
-          <span className="px-2 py-0.5 rounded-full bg-blue-100 text-[#0040D8] text-xs font-bold">
+          <span className="px-2 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold">
             {items.length} أصناف
           </span>
         </div>
@@ -79,7 +79,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
           <button
             type="button"
             onClick={addItem}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>إضافة دواء جديد</span>
@@ -99,7 +99,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
               key={i}
               type="button"
               onClick={() => addQuickDrug(d)}
-              className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 text-[11px] font-bold text-slate-700 transition-all cursor-pointer shadow-2xs"
+              className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-[#D0E5DC] hover:bg-[#E3F5EE]/50 text-[11px] font-bold text-slate-700 transition-all cursor-pointer shadow-2xs"
             >
               + {d.drugName}
             </button>
@@ -138,7 +138,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                       placeholder="e.g. Augmentin 1gm"
                       value={item.drugName}
                       onChange={(e) => updateItem(item.id, 'drugName', e.target.value)}
-                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-bold text-[#0A164E] focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </td>
                   <td className="py-2 px-2">
@@ -147,7 +147,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                       placeholder="e.g. 1 قرص"
                       value={item.dose}
                       onChange={(e) => updateItem(item.id, 'dose', e.target.value)}
-                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </td>
                   <td className="py-2 px-2">
@@ -156,7 +156,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                       placeholder="e.g. كل 12 ساعة"
                       value={item.frequency}
                       onChange={(e) => updateItem(item.id, 'frequency', e.target.value)}
-                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </td>
                   <td className="py-2 px-2">
@@ -165,7 +165,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                       placeholder="e.g. 7 أيام"
                       value={item.duration}
                       onChange={(e) => updateItem(item.id, 'duration', e.target.value)}
-                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </td>
                   <td className="py-2 px-2">
@@ -174,7 +174,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                       placeholder="e.g. بعد الأكل"
                       value={item.instructions || ''}
                       onChange={(e) => updateItem(item.id, 'instructions', e.target.value)}
-                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0040D8]"
+                      className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </td>
                   <td className="py-2 px-3 text-center">

@@ -89,7 +89,7 @@ export function CalendarWeekGridView({
             <span>في الانتظار</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#0040D8]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E]" />
             <span>محجوز</span>
           </div>
           <div className="flex items-center gap-1.5 text-rose-500">
@@ -111,7 +111,7 @@ export function CalendarWeekGridView({
                   key={day.date}
                   className={`py-3.5 px-2 border-l border-slate-200 transition-colors ${
                     day.isToday
-                      ? 'bg-[#0A164E] text-white shadow-sm'
+                      ? 'bg-[#074C3A] text-white shadow-sm'
                       : day.isOffDay
                       ? 'bg-slate-100/70 text-slate-400'
                       : 'text-slate-700'
@@ -157,7 +157,7 @@ export function CalendarWeekGridView({
                             ? 'bg-slate-50/50 cursor-not-allowed'
                             : isDoctorView
                             ? 'hover:bg-slate-50/60'
-                            : 'hover:bg-blue-50/30 cursor-pointer'
+                            : 'hover:bg-[#E3F5EE]/30 cursor-pointer'
                         }`}
                         onClick={() => {
                           if (!isDoctorView && !isOff && cellAppts.length === 0) {
@@ -184,7 +184,7 @@ export function CalendarWeekGridView({
                               ? 'bg-[#DCFCE7] border-[#86EFAC] text-emerald-900'
                               : isWaiting
                               ? 'bg-[#FEF08A] border-[#FDE047] text-amber-950'
-                              : 'bg-[#DBEAFE] border-[#BFDBFE] text-blue-950';
+                              : 'bg-[#DBEAFE] border-[#BFDBFE] text-[#0B241D]';
 
                             return (
                               <Link

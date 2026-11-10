@@ -39,7 +39,7 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
               ? 'bg-amber-500'
               : usagePercentage > 80
               ? 'bg-amber-400'
-              : 'bg-[#0040D8]'
+              : 'bg-[#0B7B5E]'
           }`}
         />
 
@@ -47,11 +47,11 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
           {/* الجانب الأيمن: العنوان والملخص التوضيحي */}
           <div className="space-y-2 flex-1">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0040D8] shadow-2xs">
+              <div className="w-10 h-10 rounded-2xl bg-[#E3F5EE] border border-[#D0E5DC] flex items-center justify-center text-[#0B7B5E] shadow-2xs">
                 <Sparkles className="w-5 h-5 stroke-[2.2]" />
               </div>
               <div>
-                <h3 className="text-lg sm:text-xl font-black text-[#0A164E] tracking-tight">
+                <h3 className="text-lg sm:text-xl font-black text-[#074C3A] tracking-tight">
                   {t('budgetTitle')}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -79,7 +79,7 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
             <div className="pt-2">
               <div className="flex items-center justify-between text-xs font-bold mb-1.5">
                 <span className="text-slate-500">
-                  {t('usagePercentage')}: <span className="font-mono text-[#0A164E]">{usagePercentage}%</span>
+                  {t('usagePercentage')}: <span className="font-mono text-[#074C3A]">{usagePercentage}%</span>
                 </span>
                 <span className="text-slate-400">
                   {t('budgetMonth')}: <span className="font-mono text-slate-700">{budget?.month || 'Current'}</span>
@@ -92,7 +92,7 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
                       ? 'bg-amber-500'
                       : usagePercentage > 80
                       ? 'bg-amber-500'
-                      : 'bg-[#0040D8]'
+                      : 'bg-[#0B7B5E]'
                   }`}
                   style={{ width: `${Math.min(100, Math.max(0, usagePercentage))}%` }}
                 />
@@ -107,7 +107,7 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
               <span className="text-[11px] font-bold text-slate-400 block mb-1">
                 {t('monthlyBudget')}
               </span>
-              <div className="text-base sm:text-lg font-black text-[#0A164E] font-sans">
+              <div className="text-base sm:text-lg font-black text-[#074C3A] font-sans">
                 {formatMoney(monthlyLimit)}{' '}
                 <span className="text-xs text-slate-400 font-bold">{t('currency')}</span>
               </div>
@@ -125,13 +125,13 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
             </div>
 
             {/* 3. المتبقي للصرف بدون موافقة */}
-            <div className="flex-1 sm:flex-initial p-4 rounded-2xl bg-blue-50/50 border border-blue-100 min-w-[140px] text-center">
-              <span className="text-[11px] font-bold text-[#0040D8] block mb-1">
+            <div className="flex-1 sm:flex-initial p-4 rounded-2xl bg-[#E3F5EE]/50 border border-[#D0E5DC] min-w-[140px] text-center">
+              <span className="text-[11px] font-bold text-[#0B7B5E] block mb-1">
                 {t('remainingBudget')}
               </span>
-              <div className="text-base sm:text-lg font-black text-[#0040D8] font-sans">
+              <div className="text-base sm:text-lg font-black text-[#0B7B5E] font-sans">
                 {formatMoney(remaining)}{' '}
-                <span className="text-xs text-blue-600 font-bold">{t('currency')}</span>
+                <span className="text-xs text-[#0B7B5E] font-bold">{t('currency')}</span>
               </div>
             </div>
 
@@ -154,7 +154,7 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(true)}
-                className="w-full sm:w-auto p-3.5 rounded-2xl border border-slate-200 hover:border-[#0040D8] hover:bg-blue-50/50 text-slate-700 hover:text-[#0040D8] transition-all flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer active:scale-95 shadow-2xs"
+                className="w-full sm:w-auto p-3.5 rounded-2xl border border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE]/50 text-slate-700 hover:text-[#0B7B5E] transition-all flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer active:scale-95 shadow-2xs"
                 title={t('editLimit')}
               >
                 <Settings2 className="w-4 h-4" />

@@ -39,11 +39,11 @@ export function UpdateBudgetModal({ isOpen, onClose, currentLimit }: UpdateBudge
         {/* رأس النافذة */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#0040D8] flex items-center justify-center border border-blue-100 shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center border border-[#D0E5DC] shadow-2xs">
               <Settings2 className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <h3 className="text-base font-black text-[#0A164E]">
+              <h3 className="text-base font-black text-[#074C3A]">
                 تعديل سقف المصروفات الشهري
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -74,7 +74,7 @@ export function UpdateBudgetModal({ isOpen, onClose, currentLimit }: UpdateBudge
                 required
                 value={limit}
                 onChange={(e) => setLimit(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:border-[#0040D8] focus:ring-2 focus:ring-[#0040D8]/10 text-sm font-bold font-sans transition-all"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/10 text-sm font-bold font-sans transition-all"
                 placeholder="1000"
               />
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
@@ -99,7 +99,7 @@ export function UpdateBudgetModal({ isOpen, onClose, currentLimit }: UpdateBudge
                   onClick={() => setLimit(val)}
                   className={`flex-1 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                     limit === val
-                      ? 'border-[#0040D8] bg-blue-50 text-[#0040D8]'
+                      ? 'border-[#0B7B5E] bg-[#E3F5EE] text-[#0B7B5E]'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -114,7 +114,7 @@ export function UpdateBudgetModal({ isOpen, onClose, currentLimit }: UpdateBudge
             <button
               type="submit"
               disabled={updateMutation.isPending}
-              className="flex-1 py-3 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 disabled:opacity-60 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-3 px-4 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-60 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {updateMutation.isPending ? (
                 <>

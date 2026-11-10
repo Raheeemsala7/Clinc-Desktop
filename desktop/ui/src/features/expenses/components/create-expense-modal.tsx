@@ -55,11 +55,11 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
         {/* رأس النافذة */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#0040D8] flex items-center justify-center border border-blue-100 shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center border border-[#D0E5DC] shadow-2xs">
               <Receipt className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <h3 className="text-base font-black text-[#0A164E]">
+              <h3 className="text-base font-black text-[#074C3A]">
                 تسجيل مصروف جديد
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -87,7 +87,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
               required
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0040D8] text-sm font-medium bg-white transition-all cursor-pointer"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-sm font-medium bg-white transition-all cursor-pointer"
             >
               <option value="">اختر التصنيف المناسب...</option>
               {categories.map((cat) => (
@@ -113,7 +113,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0040D8] text-sm font-bold font-sans transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-sm font-bold font-sans transition-all"
                 />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
                   ج.م
@@ -130,7 +130,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
                 required
                 value={spentAt}
                 onChange={(e) => setSpentAt(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0040D8] text-sm font-medium transition-all"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-sm font-medium transition-all"
               />
             </div>
           </div>
@@ -175,7 +175,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="اكتب تفاصيل ما تم شراؤه أو سبب الصرف..."
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0040D8] text-sm font-medium transition-all resize-none"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-sm font-medium transition-all resize-none"
             />
           </div>
 
@@ -184,7 +184,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="flex-1 py-3 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 disabled:opacity-60 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-3 px-4 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-60 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {createMutation.isPending ? (
                 <>

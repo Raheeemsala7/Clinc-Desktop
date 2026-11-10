@@ -91,11 +91,11 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
         {/* رأس النافذة */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#0040D8] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center">
               <UserPlus className="w-5 h-5 stroke-[2]" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-[#0A164E]">إضافة مريض جديد</h3>
+              <h3 className="text-lg font-black text-[#074C3A]">إضافة مريض جديد</h3>
               <p className="text-xs text-slate-400">سجل ملف المريض في قاعدة بيانات العيادة</p>
             </div>
           </div>
@@ -125,7 +125,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="مثال: محمد علاء الدين محمود أحمد"
-              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
+              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal"
             />
           </div>
 
@@ -140,7 +140,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="01XXXXXXXXX"
                 dir="ltr"
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-mono font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-mono font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal"
               />
             </div>
 
@@ -154,7 +154,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
                 max={120}
                 value={age}
                 onChange={(e) => setAge(e.target.value ? Number(e.target.value) : '')}
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all"
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all"
               />
             </div>
           </div>
@@ -169,7 +169,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
                   onClick={() => setGender('MALE')}
                   className={`h-10 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                     gender === 'MALE'
-                      ? 'bg-blue-50 border-[#0040D8] text-[#0040D8]'
+                      ? 'bg-[#E3F5EE] border-[#0B7B5E] text-[#0B7B5E]'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -199,7 +199,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="مثال: الزقازيق، الشرقية"
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal"
               />
             </div>
           </div>
@@ -214,7 +214,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
               value={occupation}
               onChange={(e) => setOccupation(e.target.value)}
               placeholder="مثال: مهندس، معلم، تاجر..."
-              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
+              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal"
             />
           </div>
 
@@ -234,7 +234,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
                   onClick={() => setMaritalStatus(item.id as any)}
                   className={`h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center select-none ${
                     maritalStatus === item.id
-                      ? 'bg-[#0A164E] text-white border-[#0A164E] shadow-xs'
+                      ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -252,7 +252,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
                 type="button"
                 onClick={() => setHasChronic(!hasChronic)}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  hasChronic ? 'bg-[#0040D8]' : 'bg-slate-200'
+                  hasChronic ? 'bg-[#0B7B5E]' : 'bg-slate-200'
                 }`}
               >
                 <span
@@ -291,7 +291,7 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 h-11 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white font-bold text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              className="flex-1 h-11 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               {isPending ? (
                 <>

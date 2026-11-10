@@ -61,7 +61,7 @@ export function PayRemainingModal({
               <Coins className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-[#0A164E]">
+              <h3 className="text-base font-black text-[#074C3A]">
                 سداد المبلغ المتبقي
               </h3>
               <p className="text-xs text-slate-400 font-medium">
@@ -84,7 +84,7 @@ export function PayRemainingModal({
           <div className="grid grid-cols-3 gap-2.5 p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 text-center text-xs">
             <div>
               <span className="text-slate-400 block text-[11px] mb-0.5">إجمالي الكشف</span>
-              <span className="font-black text-[#0A164E]">{totalAmount} ج.م</span>
+              <span className="font-black text-[#074C3A]">{totalAmount} ج.م</span>
             </div>
             <div>
               <span className="text-slate-400 block text-[11px] mb-0.5">المسدد سابقاً</span>
@@ -98,7 +98,7 @@ export function PayRemainingModal({
 
           {/* المبلغ المراد تحصيله الآن */}
           <div>
-            <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+            <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
               المبلغ المدفوع الآن (ج.م) <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -108,7 +108,7 @@ export function PayRemainingModal({
                 max={remainingAmount}
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full h-11 px-3.5 rounded-2xl border border-slate-200 bg-white text-sm font-black text-[#0A164E] focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all font-sans"
+                className="w-full h-11 px-3.5 rounded-2xl border border-slate-200 bg-white text-sm font-black text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all font-sans"
                 required
               />
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
@@ -125,7 +125,7 @@ export function PayRemainingModal({
 
           {/* طريقة الدفع */}
           <div>
-            <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+            <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
               طريقة الدفع
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -135,7 +135,7 @@ export function PayRemainingModal({
                 className={cn(
                   'h-11 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer',
                   method === 'CASH'
-                    ? 'border-[#0040D8] bg-blue-50/70 text-[#0040D8] font-black shadow-xs ring-2 ring-blue-600/10'
+                    ? 'border-[#0B7B5E] bg-[#E3F5EE]/70 text-[#0B7B5E] font-black shadow-xs ring-2 ring-blue-600/10'
                     : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 )}
               >
@@ -149,7 +149,7 @@ export function PayRemainingModal({
                 className={cn(
                   'h-11 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer',
                   method === 'CARD'
-                    ? 'border-[#0040D8] bg-blue-50/70 text-[#0040D8] font-black shadow-xs ring-2 ring-blue-600/10'
+                    ? 'border-[#0B7B5E] bg-[#E3F5EE]/70 text-[#0B7B5E] font-black shadow-xs ring-2 ring-blue-600/10'
                     : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 )}
               >
@@ -163,7 +163,7 @@ export function PayRemainingModal({
                 className={cn(
                   'h-11 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer',
                   method === 'WALLET'
-                    ? 'border-[#0040D8] bg-blue-50/70 text-[#0040D8] font-black shadow-xs ring-2 ring-blue-600/10'
+                    ? 'border-[#0B7B5E] bg-[#E3F5EE]/70 text-[#0B7B5E] font-black shadow-xs ring-2 ring-blue-600/10'
                     : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 )}
               >
@@ -175,7 +175,7 @@ export function PayRemainingModal({
 
           {/* ملاحظات الإيصال */}
           <div>
-            <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+            <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
               ملاحظات التحصيل (اختياري)
             </label>
             <input
@@ -183,7 +183,7 @@ export function PayRemainingModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="مثال: سداد باقي قيمة الكشف عند الخروج"
-              className="w-full h-11 px-3.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
+              className="w-full h-11 px-3.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal"
             />
           </div>
 
@@ -200,7 +200,7 @@ export function PayRemainingModal({
             <button
               type="submit"
               disabled={payMutation.isPending || amount <= 0}
-              className="h-11 px-5 rounded-2xl bg-[#0040D8] hover:bg-blue-700 text-white text-xs font-black shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="h-11 px-5 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {payMutation.isPending ? (
                 <>

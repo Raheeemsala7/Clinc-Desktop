@@ -31,7 +31,7 @@ export function TablePatientsSkeleton() {
                 {/* 2. التصنيف */}
                 <td className="py-4 px-6 text-start">
                   <div className="flex items-center gap-1.5">
-                    <div className="h-6 w-14 bg-blue-50/60 rounded-lg" />
+                    <div className="h-6 w-14 bg-[#E3F5EE]/60 rounded-lg" />
                     <div className="h-6 w-20 bg-amber-50/60 rounded-lg" />
                   </div>
                 </td>
@@ -49,7 +49,7 @@ export function TablePatientsSkeleton() {
                 {/* 5. الإجراءات */}
                 <td className="py-4 px-6 text-end">
                   <div className="flex items-center justify-end gap-1.5">
-                    <div className="h-8 w-20 bg-blue-100/70 rounded-lg" />
+                    <div className="h-8 w-20 bg-[#E3F5EE]/70 rounded-lg" />
                     <div className="h-8 w-14 bg-slate-100 rounded-lg" />
                     <div className="h-8 w-14 bg-rose-50 rounded-lg" />
                   </div>
@@ -64,7 +64,7 @@ export function TablePatientsSkeleton() {
       <div className="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-white">
         <div className="h-4 w-32 bg-slate-100 rounded-md" />
         <div className="flex items-center gap-1.5 justify-center sm:justify-end">
-          <div className="w-8 h-8 rounded-lg bg-blue-100/70" />
+          <div className="w-8 h-8 rounded-lg bg-[#E3F5EE]/70" />
           <div className="w-8 h-8 rounded-lg bg-slate-100" />
           <div className="w-8 h-8 rounded-lg bg-slate-100" />
         </div>

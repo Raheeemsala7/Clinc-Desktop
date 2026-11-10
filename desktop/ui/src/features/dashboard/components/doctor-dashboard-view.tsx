@@ -209,9 +209,9 @@ export const DoctorDashboardView = ({
       {/* رأس الصفحة + أزرار التبديل ومؤشر التحديث */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-xs">
         <div className="text-start">
-          <h2 className="text-2xl sm:text-3xl font-black text-[#0A164E] tracking-tight flex items-center gap-3">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight flex items-center gap-3">
             <span>{t('title')}</span>
-            <span className="text-xs px-3 py-1 rounded-full bg-blue-50 text-[#0040D8] font-mono font-bold border border-blue-100">
+            <span className="text-xs px-3 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold border border-[#D0E5DC]">
               {currentDate}
             </span>
           </h2>
@@ -229,13 +229,13 @@ export const DoctorDashboardView = ({
               className={cn(
                 'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer',
                 dashboardView === 'queue'
-                  ? 'bg-white text-[#0A164E] shadow-xs'
+                  ? 'bg-white text-[#074C3A] shadow-xs'
                   : 'text-slate-500 hover:text-slate-900'
               )}
             >
-              <ListOrdered className="w-4 h-4 text-[#0040D8]" />
+              <ListOrdered className="w-4 h-4 text-[#0B7B5E]" />
               <span>قائمة المرضى اليوم</span>
-              <span className="bg-[#0040D8] text-white px-2 py-0.5 rounded-full text-xs font-mono font-bold">
+              <span className="bg-[#0B7B5E] text-white px-2 py-0.5 rounded-full text-xs font-mono font-bold">
                 {totalCount}
               </span>
             </button>
@@ -246,11 +246,11 @@ export const DoctorDashboardView = ({
               className={cn(
                 'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer',
                 dashboardView === 'calendar'
-                  ? 'bg-white text-[#0A164E] shadow-xs'
+                  ? 'bg-white text-[#074C3A] shadow-xs'
                   : 'text-slate-500 hover:text-slate-900'
               )}
             >
-              <CalendarDays className="w-4 h-4 text-[#0040D8]" />
+              <CalendarDays className="w-4 h-4 text-[#0B7B5E]" />
               <span>جدول المواعيد بالساعات 📅</span>
               {calendarBookedCount > 0 && (
                 <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-xs font-mono font-bold">
@@ -321,7 +321,7 @@ export const DoctorDashboardView = ({
               {tDoctorStatus('title')}
             </span>
             {isStatusFetching && (
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E3F5EE]0" />
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -362,18 +362,18 @@ export const DoctorDashboardView = ({
             {t('waitingStatus')}
           </span>
           <div className="flex items-baseline justify-center gap-2 my-1">
-            <span className="text-3xl font-black text-[#0A164E]">{waitingCount}</span>
+            <span className="text-3xl font-black text-[#074C3A]">{waitingCount}</span>
             <span className="text-xs font-bold text-slate-500">{t('remainingCases')}</span>
           </div>
         </div>
 
         {/* بطاقة تم الكشف */}
-        <div className="bg-[#F0F5FF] rounded-2xl p-5 shadow-xs border border-blue-200 flex flex-col justify-between text-center">
+        <div className="bg-[#F0F5FF] rounded-2xl p-5 shadow-xs border border-[#D0E5DC] flex flex-col justify-between text-center">
           <span className="text-xs font-semibold text-slate-500">
             {t('completedCheckup')}
           </span>
           <div className="flex items-baseline justify-center gap-2 my-1">
-            <span className="text-3xl font-black text-[#0A164E]">{completedCount}</span>
+            <span className="text-3xl font-black text-[#074C3A]">{completedCount}</span>
             <span className="text-xs font-bold text-slate-500">{t('doneCheckup')}</span>
           </div>
         </div>
@@ -384,7 +384,7 @@ export const DoctorDashboardView = ({
             {t('totalCases')}
           </span>
           <div className="flex items-baseline justify-center gap-2 my-1">
-            <span className="text-3xl font-black text-[#0A164E]">{totalCount}</span>
+            <span className="text-3xl font-black text-[#074C3A]">{totalCount}</span>
             <span className="text-xs font-bold text-slate-500">{t('registeredAppointments')}</span>
           </div>
         </div>
@@ -396,13 +396,13 @@ export const DoctorDashboardView = ({
           {/* شريط التحكم بالتقويم اليومي للطبيب */}
           <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0040D8] flex items-center justify-center font-bold">
+              <div className="w-12 h-12 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center font-bold">
                 <Calendar className="w-6 h-6 stroke-[2.2]" />
               </div>
               <div className="text-start">
-                <h3 className="font-black text-base text-[#0A164E] flex items-center gap-2">
+                <h3 className="font-black text-base text-[#074C3A] flex items-center gap-2">
                   <span>جدول المواعيد والساعات للطبيب</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0040D8] font-mono font-bold">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold">
                     {currentDate}
                   </span>
                 </h3>
@@ -422,7 +422,7 @@ export const DoctorDashboardView = ({
                   className={cn(
                     'px-3 py-1.5 rounded-lg transition-all cursor-pointer',
                     calendarDisplayMode === 'grid'
-                      ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                      ? 'bg-[#074C3A] text-white shadow-xs font-black'
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
@@ -434,7 +434,7 @@ export const DoctorDashboardView = ({
                   className={cn(
                     'px-3 py-1.5 rounded-lg transition-all cursor-pointer',
                     calendarDisplayMode === 'timeline'
-                      ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                      ? 'bg-[#074C3A] text-white shadow-xs font-black'
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
@@ -452,7 +452,7 @@ export const DoctorDashboardView = ({
               <button
                 type="button"
                 onClick={handleResetToToday}
-                className="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0040D8] text-xs font-black transition-all shadow-2xs cursor-pointer border border-blue-200/60"
+                className="px-4 py-2 rounded-xl bg-[#E3F5EE] hover:bg-[#E3F5EE] text-[#0B7B5E] text-xs font-black transition-all shadow-2xs cursor-pointer border border-[#D0E5DC]/60"
               >
                 اليوم
               </button>
@@ -469,7 +469,7 @@ export const DoctorDashboardView = ({
           {/* محتوى جدول الساعات الزمني مع ربط الإجراءات */}
           {isCalendarLoading ? (
             <div className="bg-white rounded-3xl p-16 border border-slate-100 text-center shadow-xs">
-              <RefreshCw className="w-8 h-8 text-[#0040D8] animate-spin mx-auto mb-3" />
+              <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
               <p className="text-xs font-bold text-slate-400">جاري تحميل جدول المواعيد بالساعات...</p>
             </div>
           ) : calendarDisplayMode === 'grid' ? (
@@ -512,7 +512,7 @@ export const DoctorDashboardView = ({
                         <span>كشف جاري الآن في الغرفة 🩺</span>
                       </span>
 
-                      <h3 className="text-lg sm:text-xl font-black text-[#0A164E]">
+                      <h3 className="text-lg sm:text-xl font-black text-[#074C3A]">
                         {inProgressPatient.patientName}
                       </h3>
 
@@ -532,7 +532,7 @@ export const DoctorDashboardView = ({
                         <span>• {inProgressPatient.patientAge} سنة</span>
                       )}
                       <span>• {getAppointmentTypeLabel(inProgressPatient.type)}</span>
-                      <span className="inline-flex items-center gap-1 text-[#0040D8] font-bold">
+                      <span className="inline-flex items-center gap-1 text-[#0B7B5E] font-bold">
                         <Clock className="w-3.5 h-3.5" />
                         {formatWaitingTime(inProgressPatient.waitingMinutes)}
                       </span>
@@ -547,7 +547,7 @@ export const DoctorDashboardView = ({
                 <div className="flex items-center gap-2.5 flex-wrap shrink-0">
                   <Link
                     href={`/dashboard/examination/${inProgressPatient.id}`}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer whitespace-nowrap"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer whitespace-nowrap"
                   >
                     <Stethoscope className="w-4 h-4 stroke-[2.2]" />
                     <span>فحص المريض والروشتة (Rx)</span>
@@ -572,7 +572,7 @@ export const DoctorDashboardView = ({
                     title="فتح الملف الطبي للمريض"
                     className="w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors shadow-2xs"
                   >
-                    <FileText className="w-4 h-4 text-[#0040D8]" />
+                    <FileText className="w-4 h-4 text-[#0B7B5E]" />
                   </Link>
                 </div>
               </div>
@@ -591,7 +591,7 @@ export const DoctorDashboardView = ({
                   className={cn(
                     'px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap',
                     activeTab === 'all'
-                      ? 'bg-[#0A164E] text-white shadow-xs'
+                      ? 'bg-[#074C3A] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
@@ -636,7 +636,7 @@ export const DoctorDashboardView = ({
                   className={cn(
                     'px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap',
                     activeTab === 'done'
-                      ? 'bg-[#0A164E] text-white shadow-xs'
+                      ? 'bg-[#074C3A] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
@@ -670,7 +670,7 @@ export const DoctorDashboardView = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="ابحث بالاسم أو رقم الهاتف..."
-                  className="w-full pr-10 pl-4 py-2 rounded-xl border border-slate-200 bg-slate-50/70 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#0040D8] transition-all"
+                  className="w-full pr-10 pl-4 py-2 rounded-xl border border-slate-200 bg-slate-50/70 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B7B5E]/20/20 focus:border-[#0B7B5E] transition-all"
                 />
               </div>
             </div>
@@ -696,7 +696,7 @@ export const DoctorDashboardView = ({
 
                   // تحديد نمط الإطار والخلفية للبطاقة
                   let cardStyle = 'bg-white border-slate-200/90 hover:border-slate-300';
-                  let queueBadgeStyle = 'bg-blue-50 text-[#0040D8]';
+                  let queueBadgeStyle = 'bg-[#E3F5EE] text-[#0B7B5E]';
 
                   if (isInProgress) {
                     cardStyle = 'bg-emerald-50/70 border-2 border-emerald-500 shadow-sm ring-1 ring-emerald-300';
@@ -733,7 +733,7 @@ export const DoctorDashboardView = ({
 
                         <div className="space-y-1">
                           <div className="flex items-center gap-2.5 flex-wrap">
-                            <h4 className="font-black text-[#0A164E] text-base sm:text-lg">
+                            <h4 className="font-black text-[#074C3A] text-base sm:text-lg">
                               {patient.patientName}
                             </h4>
 
@@ -752,7 +752,7 @@ export const DoctorDashboardView = ({
                             )}
 
                             {isBooked && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E3F5EE] text-[#074C3A] border border-[#D0E5DC]">
                                 <span>حجز مسبق</span>
                               </span>
                             )}
@@ -788,7 +788,7 @@ export const DoctorDashboardView = ({
                             {patient.patientGender && (
                               <span>• {patient.patientGender === 'MALE' ? 'ذكر' : 'أنثى'}</span>
                             )}
-                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-[#0040D8] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-[#E3F5EE] text-[#0B7B5E] font-bold">
                               {getAppointmentTypeLabel(patient.type)}
                             </span>
                             <span className="inline-flex items-center gap-1 text-slate-600">
@@ -814,7 +814,7 @@ export const DoctorDashboardView = ({
                         {/* زر فتح الكشف والروشتة */}
                         <Link
                           href={`/dashboard/examination/${patient.id}`}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
                         >
                           <Stethoscope className="w-4 h-4 stroke-[2.2]" />
                           <span>كشف وروشتة 📋</span>
@@ -860,7 +860,7 @@ export const DoctorDashboardView = ({
                           title="فتح الملف الطبي للمريض"
                           className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors shadow-2xs"
                         >
-                          <FileText className="w-4 h-4 text-[#0040D8]" />
+                          <FileText className="w-4 h-4 text-[#0B7B5E]" />
                         </Link>
                       </div>
                     </div>

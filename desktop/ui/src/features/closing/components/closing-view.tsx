@@ -17,7 +17,7 @@ export function ClosingView() {
       {/* 1. رأس الصفحة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
-          <h2 className="text-2xl sm:text-3xl font-black text-[#0A164E] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight">
             {t('title')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -38,7 +38,7 @@ export function ClosingView() {
 
       {isLoading ? (
         <div className="bg-white rounded-3xl border border-slate-100 p-16 text-center shadow-xs">
-          <Loader2 className="w-8 h-8 text-[#0040D8] animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
           <p className="text-xs text-slate-400 font-bold">جاري تحميل بيانات ومعاينة الإغلاق...</p>
         </div>
       ) : (

@@ -59,13 +59,13 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
       <aside className="hidden lg:block w-72 xl:w-80 shrink-0">
         <div className="sticky top-20 bg-white rounded-3xl border border-slate-200/80 shadow-md overflow-hidden select-none">
           {/* رأس الملخص مع شعار العيادة المربّع */}
-          <div className="bg-[#0A164E] text-white px-5 py-4 flex items-center justify-between">
+          <div className="bg-[#074C3A] text-white px-5 py-4 flex items-center justify-between">
             <h3 className="font-black text-base tracking-tight">ملخص الحجز</h3>
             {/* الشعار المربّع الملوّن */}
             <div className="grid grid-cols-2 gap-0.5 w-5 h-5 shrink-0" aria-hidden="true">
-              <span className="w-2 h-2 rounded-2xs bg-[#1D4ED8]" />
+              <span className="w-2 h-2 rounded-2xs bg-[#0B7B5E]" />
               <span className="w-2 h-2 rounded-2xs bg-white" />
-              <span className="w-2 h-2 rounded-2xs bg-[#081544]" />
+              <span className="w-2 h-2 rounded-2xs bg-[#05382A]" />
               <span className="w-2 h-2 rounded-2xs bg-brand-yellow" />
             </div>
           </div>
@@ -75,7 +75,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             {/* المريض */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">المريض</span>
-              <span className="font-bold text-[#0A164E] truncate max-w-[150px]">
+              <span className="font-bold text-[#074C3A] truncate max-w-[150px]">
                 {patientName ? patientName : '[اسم المريض]'}
               </span>
             </div>
@@ -83,13 +83,13 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             {/* نوع الموعد */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">النوع</span>
-              <span className="font-bold text-[#0A164E]">{currentType.label}</span>
+              <span className="font-bold text-[#074C3A]">{currentType.label}</span>
             </div>
 
             {/* الطبيب */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">الطبيب</span>
-              <span className="font-bold text-[#0A164E]">
+              <span className="font-bold text-[#074C3A]">
                 {currentDoctor?.name || 'د. إسلام'}
               </span>
             </div>
@@ -97,19 +97,19 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             {/* التاريخ */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">التاريخ</span>
-              <span className="font-bold text-[#0A164E] dir-ltr">{appointmentDate || '02/11/2026'}</span>
+              <span className="font-bold text-[#074C3A] dir-ltr">{appointmentDate || '02/11/2026'}</span>
             </div>
 
             {/* الساعة */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">الساعة</span>
-              <span className="font-bold text-[#0A164E]">{appointmentTime || '04:30 م'}</span>
+              <span className="font-bold text-[#074C3A]">{appointmentTime || '04:30 م'}</span>
             </div>
 
             {/* نوع الحضور */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">الحضور</span>
-              <span className="font-bold text-[#0A164E]">
+              <span className="font-bold text-[#074C3A]">
                 {source === 'WALK_IN' ? 'بدون موعد (مباشر)' : 'موعد مسبق'}
               </span>
             </div>
@@ -127,7 +127,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             {/* سعر الكشف */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">سعر الكشف</span>
-              <span className={cn('font-black text-[#0A164E]', isExempt && 'line-through text-slate-300')}>
+              <span className={cn('font-black text-[#074C3A]', isExempt && 'line-through text-slate-300')}>
                 {examinationFee} ج.م
               </span>
             </div>
@@ -144,14 +144,14 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             {!isExempt && discount > 0 && (
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 font-semibold">المطلوب</span>
-                <span className="font-black text-[#0040D8]">{netFee} ج.م</span>
+                <span className="font-black text-[#0B7B5E]">{netFee} ج.م</span>
               </div>
             )}
 
             {/* المدفوع */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">المدفوع</span>
-              <span className="font-black text-[#0A164E]">{paidAmount} ج.م</span>
+              <span className="font-black text-[#074C3A]">{paidAmount} ج.م</span>
             </div>
 
             {/* شارة الإعفاء من الرسوم إن وجدت */}
@@ -164,7 +164,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             {/* المتبقي */}
             <div className="flex items-center justify-between pt-1">
               <span className="text-slate-500 font-bold">المتبقي</span>
-              <span className="font-black text-sm text-[#0A164E]">{remainingAmount} ج.م</span>
+              <span className="font-black text-sm text-[#074C3A]">{remainingAmount} ج.م</span>
             </div>
 
             {/* أزرار الإجراءات */}
@@ -172,7 +172,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-98 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
+                className="w-full py-3 px-4 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-98 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
               >
                 {isSubmitting ? (
                   <>
@@ -202,7 +202,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
       {/* 2. الشريط العائم السفلي على شاشات الموبايل (Mobile Sticky Bottom Bar) */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 z-40 shadow-xl flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-black text-[#0A164E] truncate">
+          <p className="text-xs font-black text-[#074C3A] truncate">
             {patientName ? `${patientName} · ` : ''}{currentType.label} · {appointmentTime || '04:30 م'}
           </p>
           <p className="text-[11px] text-slate-400 font-medium truncate">
@@ -213,7 +213,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
         <button
           type="submit"
           disabled={isSubmitting}
-          className="py-2.5 px-5 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white font-black text-xs shadow-md transition-all shrink-0 cursor-pointer disabled:opacity-60"
+          className="py-2.5 px-5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-black text-xs shadow-md transition-all shrink-0 cursor-pointer disabled:opacity-60"
         >
           {isSubmitting ? 'جاري الحفظ...' : 'تأكيد الحجز'}
         </button>

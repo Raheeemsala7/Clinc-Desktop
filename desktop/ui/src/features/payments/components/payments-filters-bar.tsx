@@ -50,7 +50,7 @@ export function PaymentsFiltersBar({
               className={cn(
                 'h-10 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 select-none',
                 isActive
-                  ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
                   : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
               )}
             >
@@ -77,7 +77,7 @@ export function PaymentsFiltersBar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="w-full h-10 pr-9 pl-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#0A164E] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all"
+            className="w-full h-10 pr-9 pl-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all"
           />
           <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
@@ -88,9 +88,9 @@ export function PaymentsFiltersBar({
             type="date"
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="h-10 pr-9 pl-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#0A164E] focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all cursor-pointer font-sans"
+            className="h-10 pr-9 pl-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer font-sans"
           />
-          <Calendar className="w-4 h-4 text-blue-600 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Calendar className="w-4 h-4 text-[#0B7B5E] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* زر التصدير (Export) */}

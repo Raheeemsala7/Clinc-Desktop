@@ -26,17 +26,17 @@ export function ClosingKpiCards({ preview }: ClosingKpiCardsProps) {
         <span className="text-xs font-bold text-slate-500">
           {t('paymentCount')}
         </span>
-        <div className="mt-3 text-2xl sm:text-3xl font-black text-[#0A164E] font-sans">
+        <div className="mt-3 text-2xl sm:text-3xl font-black text-[#074C3A] font-sans">
           {formatNumber(paymentsCount)}
         </div>
       </div>
 
       {/* 2. المدفوع نقداً */}
-      <div className="bg-blue-50/60 rounded-2xl border border-blue-100/80 p-5 shadow-xs flex flex-col justify-between">
+      <div className="bg-[#E3F5EE]/60 rounded-2xl border border-[#D0E5DC]/80 p-5 shadow-xs flex flex-col justify-between">
         <span className="text-xs font-bold text-slate-600">
           {t('paidInCash')}
         </span>
-        <div className="mt-3 flex items-baseline gap-1.5 text-2xl sm:text-3xl font-black text-[#0040D8] font-sans">
+        <div className="mt-3 flex items-baseline gap-1.5 text-2xl sm:text-3xl font-black text-[#0B7B5E] font-sans">
           <span>{formatNumber(totalCashPayments)}</span>
           <span className="text-xs font-bold text-slate-500 font-sans">{t('currency')}</span>
         </div>
@@ -47,7 +47,7 @@ export function ClosingKpiCards({ preview }: ClosingKpiCardsProps) {
         <span className="text-xs font-bold text-slate-500">
           {t('approvedExpenses')}
         </span>
-        <div className="mt-3 flex items-baseline gap-1.5 text-2xl sm:text-3xl font-black text-[#0A164E] font-sans">
+        <div className="mt-3 flex items-baseline gap-1.5 text-2xl sm:text-3xl font-black text-[#074C3A] font-sans">
           <span>{formatNumber(totalApprovedExpenses)}</span>
           <span className="text-xs font-bold text-slate-500 font-sans">{t('currency')}</span>
         </div>

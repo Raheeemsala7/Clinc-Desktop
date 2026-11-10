@@ -123,11 +123,11 @@ export function DoctorTimingStepCard() {
     <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-100 space-y-6 animate-in fade-in-50">
       {/* رأس القسم: الرقم 3 والعنوان */}
       <div className="flex items-start gap-3.5">
-        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-black text-sm shrink-0">
+        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0B7B5E] text-white flex items-center justify-center font-black text-sm shrink-0">
           3
         </span>
         <div>
-          <h3 className="text-base sm:text-lg font-black text-[#0A164E] tracking-tight">
+          <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
             الطبيب والتوقيت
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -140,7 +140,7 @@ export function DoctorTimingStepCard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-start">
         {/* 1. الطبيب المعالج */}
         <div>
-          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+          <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
             الطبيب المعالج <span className="text-rose-500">*</span>
           </label>
           <Controller
@@ -153,7 +153,7 @@ export function DoctorTimingStepCard() {
                   onChange={field.onChange}
                   disabled={isLoadingDoctors}
                   className={cn(
-                    'w-full h-11 pr-3.5 pl-9 rounded-2xl border bg-white text-xs font-bold text-[#0A164E] focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all appearance-none cursor-pointer disabled:opacity-60',
+                    'w-full h-11 pr-3.5 pl-9 rounded-2xl border bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all appearance-none cursor-pointer disabled:opacity-60',
                     errors.doctorId ? 'border-rose-400' : 'border-slate-200'
                   )}
                 >
@@ -177,7 +177,7 @@ export function DoctorTimingStepCard() {
 
         {/* 2. تاريخ الموعد */}
         <div>
-          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+          <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
             تاريخ الموعد <span className="text-rose-500">*</span>
           </label>
           <Controller
@@ -190,11 +190,11 @@ export function DoctorTimingStepCard() {
                   value={field.value}
                   onChange={field.onChange}
                   className={cn(
-                    'w-full h-11 pr-10 pl-3.5 rounded-2xl border bg-white text-xs font-bold text-[#0A164E] focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all cursor-pointer',
+                    'w-full h-11 pr-10 pl-3.5 rounded-2xl border bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer',
                     errors.appointmentDate ? 'border-rose-400' : 'border-slate-200'
                   )}
                 />
-                <Calendar className="w-4 h-4 text-[#1D4ED8] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Calendar className="w-4 h-4 text-[#0B7B5E] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             )}
           />
@@ -208,7 +208,7 @@ export function DoctorTimingStepCard() {
 
         {/* 3. ساعة الموعد (عرض ذكي بالقراءة فقط لاختيار الوقت من المواعيد المتاحة) */}
         <div>
-          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+          <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
             ساعة الموعد <span className="text-rose-500">*</span>
           </label>
           <div
@@ -217,7 +217,7 @@ export function DoctorTimingStepCard() {
               errors.appointmentTime ? 'border-rose-400 ring-1 ring-rose-400' : 'border-slate-200'
             )}
           >
-            <span className={cn(selectedTime ? 'text-[#0A164E]' : 'text-slate-400 font-normal')}>
+            <span className={cn(selectedTime ? 'text-[#074C3A]' : 'text-slate-400 font-normal')}>
               {selectedTime || 'اختر من المواعيد'}
             </span>
             <Clock className="w-4 h-4 text-slate-400 shrink-0" />
@@ -232,7 +232,7 @@ export function DoctorTimingStepCard() {
 
         {/* 4. نوع الحضور */}
         <div>
-          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+          <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
             نوع الحضور <span className="text-rose-500">*</span>
           </label>
           <Controller
@@ -249,7 +249,7 @@ export function DoctorTimingStepCard() {
                   className={cn(
                     'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5 select-none',
                     field.value === 'WALK_IN'
-                      ? 'bg-[#0040D8] text-white shadow-xs'
+                      ? 'bg-[#0B7B5E] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
@@ -270,7 +270,7 @@ export function DoctorTimingStepCard() {
                   className={cn(
                     'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5 select-none',
                     field.value === 'SCHEDULED'
-                      ? 'bg-[#0040D8] text-white shadow-xs'
+                      ? 'bg-[#0B7B5E] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
@@ -287,16 +287,16 @@ export function DoctorTimingStepCard() {
       <div className="pt-4 border-t border-slate-100 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-xs font-black text-[#0A164E]">
+            <h4 className="text-xs font-black text-[#074C3A]">
               المواعيد المتاحة اليوم
             </h4>
             {selectedTime && (
-              <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-[#0040D8] text-[11px] font-black">
+              <span className="px-2.5 py-0.5 rounded-lg bg-[#E3F5EE] border border-[#D0E5DC] text-[#0B7B5E] text-[11px] font-black">
                 الوقت المختار: {selectedTime}
               </span>
             )}
             {isFetchingSlots && (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1D4ED8]" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0B7B5E]" />
             )}
           </div>
           <span className="text-[11px] text-slate-400">
@@ -307,7 +307,7 @@ export function DoctorTimingStepCard() {
         {/* حالة التحميل الأولي للمواعيد */}
         {isLoadingSlots ? (
           <div className="flex items-center gap-2 py-4 text-xs font-bold text-slate-400">
-            <Loader2 className="w-4 h-4 animate-spin text-[#1D4ED8]" />
+            <Loader2 className="w-4 h-4 animate-spin text-[#0B7B5E]" />
             <span>جاري فحص المواعيد المتاحة للطبيب...</span>
           </div>
         ) : slotsData && !slotsData.isWorkingDay ? (
@@ -376,8 +376,8 @@ export function DoctorTimingStepCard() {
                   className={cn(
                     'px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer select-none',
                     isSelected
-                      ? 'bg-[#0040D8] text-white border-[#0040D8] shadow-xs font-black ring-2 ring-blue-600/10'
-                      : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50/40'
+                      ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] shadow-xs font-black ring-2 ring-blue-600/10'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE]/40'
                   )}
                 >
                   {label}

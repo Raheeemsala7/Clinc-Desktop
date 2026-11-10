@@ -926,7 +926,7 @@ export function EntPaperSheet({
                 <button
                   type="button"
                   onClick={addPresentItem}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 hover:text-blue-900 cursor-pointer print:hidden"
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-[#0B7B5E] hover:text-[#074C3A] cursor-pointer print:hidden"
                 >
                   <Plus className="w-3 h-3" />
                   <span>+ Add Present</span>
@@ -978,7 +978,7 @@ export function EntPaperSheet({
                 <button
                   type="button"
                   onClick={addNeedItem}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 hover:text-blue-900 cursor-pointer print:hidden"
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-[#0B7B5E] hover:text-[#074C3A] cursor-pointer print:hidden"
                 >
                   <Plus className="w-3 h-3" />
                   <span>+ Add Need</span>

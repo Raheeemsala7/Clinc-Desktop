@@ -55,7 +55,7 @@ export function PatientNotesCard({ notes = [], patientId }: PatientNotesCardProp
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-xs text-start select-none">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <h3 className="text-base font-black text-[#0A164E]">
+        <h3 className="text-base font-black text-[#074C3A]">
           ملاحظات الطبيب والاستقبال
         </h3>
         <button
@@ -80,7 +80,7 @@ export function PatientNotesCard({ notes = [], patientId }: PatientNotesCardProp
               key={note.id}
               className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
             >
-              <p className="font-bold text-[#0A164E] leading-relaxed">
+              <p className="font-bold text-[#074C3A] leading-relaxed">
                 {note.content}
               </p>
               <div className="text-[11px] text-slate-400 shrink-0 flex items-center gap-1.5">
@@ -101,7 +101,7 @@ export function PatientNotesCard({ notes = [], patientId }: PatientNotesCardProp
             dir="rtl"
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h4 className="text-base font-black text-[#0A164E]">إضافة ملاحظة جديدة</h4>
+              <h4 className="text-base font-black text-[#074C3A]">إضافة ملاحظة جديدة</h4>
               <button
                 type="button"
                 onClick={() => setIsOpenAdd(false)}
@@ -122,7 +122,7 @@ export function PatientNotesCard({ notes = [], patientId }: PatientNotesCardProp
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="أدخل ملاحظات حول حالة المريض أو تفاصيل الزيارة..."
-                  className="w-full p-3 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal resize-none"
+                  className="w-full p-3 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal resize-none"
                 />
               </div>
 
@@ -130,7 +130,7 @@ export function PatientNotesCard({ notes = [], patientId }: PatientNotesCardProp
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex-1 h-10 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 h-10 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   {isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

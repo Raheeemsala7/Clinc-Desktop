@@ -14,7 +14,7 @@ export function PatientMedicalHistoryCard({ details }: PatientMedicalHistoryCard
 
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-xs text-start select-none">
-      <h3 className="text-base font-black text-[#0A164E] mb-4 pb-3 border-b border-slate-100">
+      <h3 className="text-base font-black text-[#074C3A] mb-4 pb-3 border-b border-slate-100">
         التاريخ المرضي
       </h3>
 
@@ -25,7 +25,7 @@ export function PatientMedicalHistoryCard({ details }: PatientMedicalHistoryCard
           <span
             className={`px-3 py-1 rounded-full text-xs font-black ${
               hasChronic
-                ? 'bg-[#0A164E] text-white shadow-2xs'
+                ? 'bg-[#074C3A] text-white shadow-2xs'
                 : 'bg-slate-100 text-slate-500'
             }`}
           >

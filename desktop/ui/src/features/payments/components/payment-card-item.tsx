@@ -71,7 +71,7 @@ export function PaymentCardItem({
         <div className="space-y-3 flex-1 min-w-0">
           {/* 1. اسم المريض + الهاتف + الشارات */}
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h4 className="text-base sm:text-lg font-black text-[#0A164E] tracking-tight">
+            <h4 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
               {patient?.fullName || 'مريض غير مسجل'}
             </h4>
 
@@ -88,7 +88,7 @@ export function PaymentCardItem({
                 عربون حجز موعد
               </span>
             ) : isRemainingSettlement ? (
-              <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 text-[11px] font-bold">
+              <span className="px-2.5 py-0.5 rounded-lg bg-[#E3F5EE] text-[#074C3A] border border-[#D0E5DC] text-[11px] font-bold">
                 سداد متبقي الحجز
               </span>
             ) : (
@@ -118,7 +118,7 @@ export function PaymentCardItem({
           <div className="flex items-center gap-2.5 text-xs text-slate-500 flex-wrap">
             <div className="flex items-center gap-1.5">
               <span className="text-slate-400">نوع الحجز:</span>
-              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold text-[11px]">
+              <span className="px-2 py-0.5 rounded-md bg-[#E3F5EE] text-[#0B7B5E] font-bold text-[11px]">
                 {appointment?.type === 'FOLLOW_UP'
                   ? 'إعادة'
                   : appointment?.type === 'OPERATION_FOLLOWUP'
@@ -179,7 +179,7 @@ export function PaymentCardItem({
             <button
               type="button"
               onClick={() => onPrintReceipt(payment)}
-              className="text-[#0040D8] hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+              className="text-[#0B7B5E] hover:text-[#074C3A] font-bold flex items-center gap-1 cursor-pointer transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>طباعة الإيصال</span>
@@ -196,7 +196,7 @@ export function PaymentCardItem({
             <div
               className={`flex items-baseline justify-end gap-1.5 ${
                 hasRemaining && !isRemainingSettlement
-                  ? 'text-[#0A164E]'
+                  ? 'text-[#074C3A]'
                   : 'text-emerald-600'
               }`}
             >

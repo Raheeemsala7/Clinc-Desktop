@@ -73,7 +73,7 @@ export function PatientVisitsTable({ visits }: PatientVisitsTableProps) {
         );
       default:
         return (
-          <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold">
+          <span className="px-2.5 py-0.5 rounded-lg bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold">
             كشف
           </span>
         );
@@ -102,7 +102,7 @@ export function PatientVisitsTable({ visits }: PatientVisitsTableProps) {
         );
       case 'BOOKED':
         return (
-          <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold">
+          <span className="px-2.5 py-0.5 rounded-lg bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold">
             مؤكد
           </span>
         );
@@ -156,7 +156,7 @@ export function PatientVisitsTable({ visits }: PatientVisitsTableProps) {
                 {v.paymentStatus === 'EXEMPT' ? (
                   <span className="text-emerald-600 font-black">معفي</span>
                 ) : (
-                  <span className="text-[#0A164E] font-sans font-black">
+                  <span className="text-[#074C3A] font-sans font-black">
                     {v.totalAmount} ج.م
                   </span>
                 )}
@@ -168,7 +168,7 @@ export function PatientVisitsTable({ visits }: PatientVisitsTableProps) {
                   <Link
                     href={`/dashboard/examination/${v.id}`}
                     title="عرض استمارة الفحص والكشف الطبي"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#0040D8] text-[11px] font-bold border border-blue-200/60 transition-all cursor-pointer whitespace-nowrap"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#E3F5EE] hover:bg-[#E3F5EE] text-[#0B7B5E] text-[11px] font-bold border border-[#D0E5DC]/60 transition-all cursor-pointer whitespace-nowrap"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>استمارة الكشف</span>

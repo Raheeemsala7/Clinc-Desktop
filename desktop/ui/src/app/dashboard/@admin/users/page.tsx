@@ -241,7 +241,7 @@ export default function AdminUsersPage() {
         );
       case 'DOCTOR':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-[#0040D8] font-black text-xs border border-blue-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-black text-xs border border-[#D0E5DC]">
             <Stethoscope className="w-3.5 h-3.5" />
             <span>طبيب (Doctor)</span>
           </span>
@@ -264,10 +264,10 @@ export default function AdminUsersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-2xl bg-blue-50 text-[#0040D8]">
+            <span className="p-2 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E]">
               <UserCog className="w-5 h-5" />
             </span>
-            <h1 className="text-xl sm:text-2xl font-black text-[#0A164E] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight">
               إدارة مستخدمي النظام والصلاحيات
             </h1>
           </div>
@@ -284,14 +284,14 @@ export default function AdminUsersPage() {
             className="h-11 px-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             title="تحديث القائمة"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : 'text-slate-400'}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#0B7B5E]' : 'text-slate-400'}`} />
             <span>تحديث</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
-            className="h-11 px-5 rounded-2xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-black text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            className="h-11 px-5 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-black text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
             <span>إضافة مستخدم جديد</span>
@@ -307,7 +307,7 @@ export default function AdminUsersPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="بحث بالاسم أو اسم المستخدم (Username)..."
-            className="w-full h-10 pr-10 pl-4 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0040D8] focus:bg-white transition-all"
+            className="w-full h-10 pr-10 pl-4 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
           />
           <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         </div>
@@ -325,7 +325,7 @@ export default function AdminUsersPage() {
               onClick={() => setFilterRole(tab.id)}
               className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
                 filterRole === tab.id
-                  ? 'bg-[#0040D8] text-white shadow-xs'
+                  ? 'bg-[#0B7B5E] text-white shadow-xs'
                   : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
             >
@@ -339,7 +339,7 @@ export default function AdminUsersPage() {
       <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-slate-400 text-xs space-y-2">
-            <RefreshCw className="w-6 h-6 animate-spin text-[#0040D8] mx-auto" />
+            <RefreshCw className="w-6 h-6 animate-spin text-[#0B7B5E] mx-auto" />
             <p className="font-bold">جاري تحميل بيانات المستخدمين...</p>
           </div>
         ) : filteredUsers.length === 0 ? (
@@ -362,7 +362,7 @@ export default function AdminUsersPage() {
               <tbody className="divide-y divide-slate-100 font-bold">
                 {filteredUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3.5 px-4 text-[#0A164E] font-black">
+                    <td className="py-3.5 px-4 text-[#074C3A] font-black">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs uppercase">
                           {u.name?.charAt(0) || 'U'}
@@ -398,7 +398,7 @@ export default function AdminUsersPage() {
                         <button
                           type="button"
                           onClick={() => openEditModal(u)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-700 hover:text-[#0040D8] text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-[#D0E5DC] bg-white hover:bg-[#E3F5EE] text-slate-700 hover:text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs cursor-pointer"
                           title="تعديل الاسم أو اسم المستخدم أو الصلاحية"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -443,10 +443,10 @@ export default function AdminUsersPage() {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-blue-50 text-[#0040D8]">
+                <span className="p-2 rounded-xl bg-[#E3F5EE] text-[#0B7B5E]">
                   <UserPlus className="w-5 h-5" />
                 </span>
-                <h3 className="text-base font-black text-[#0A164E]">إضافة مستخدم جديد للنظام</h3>
+                <h3 className="text-base font-black text-[#074C3A]">إضافة مستخدم جديد للنظام</h3>
               </div>
               <button
                 type="button"
@@ -466,7 +466,7 @@ export default function AdminUsersPage() {
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                   placeholder="مثال: د. إسلام كريمة، أ. أحمد الاستقبال..."
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0040D8]"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
 
@@ -478,7 +478,7 @@ export default function AdminUsersPage() {
                   value={createForm.username}
                   onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
                   placeholder="مثال: doctor, reception2, ahmed..."
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold font-mono focus:outline-none focus:border-[#0040D8]"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold font-mono focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
 
@@ -487,7 +487,7 @@ export default function AdminUsersPage() {
                 <select
                   value={createForm.role}
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white focus:outline-none focus:border-[#0040D8] cursor-pointer"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                 >
                   <option value="DOCTOR">طبيب (Doctor) - فحص المرضى والروشتة</option>
                   <option value="RECEPTION">موظف استقبال (Reception) - الحجوزات والمدفوعات</option>
@@ -504,7 +504,7 @@ export default function AdminUsersPage() {
                     value={createForm.password}
                     onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                     placeholder="أدخل كلمة مرور قوية..."
-                    className="w-full h-10 pr-3 pl-10 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0040D8]"
+                    className="w-full h-10 pr-3 pl-10 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                   />
                   <button
                     type="button"
@@ -527,7 +527,7 @@ export default function AdminUsersPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white font-bold cursor-pointer disabled:opacity-60"
+                  className="px-5 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold cursor-pointer disabled:opacity-60"
                 >
                   {isSubmitting ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
                 </button>
@@ -543,10 +543,10 @@ export default function AdminUsersPage() {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-blue-50 text-[#0040D8]">
+                <span className="p-2 rounded-xl bg-[#E3F5EE] text-[#0B7B5E]">
                   <Edit2 className="w-5 h-5" />
                 </span>
-                <h3 className="text-base font-black text-[#0A164E]">تعديل بيانات المستخدم</h3>
+                <h3 className="text-base font-black text-[#074C3A]">تعديل بيانات المستخدم</h3>
               </div>
               <button
                 type="button"
@@ -565,7 +565,7 @@ export default function AdminUsersPage() {
                   required
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0040D8]"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
 
@@ -576,7 +576,7 @@ export default function AdminUsersPage() {
                   required
                   value={editForm.username}
                   onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold font-mono focus:outline-none focus:border-[#0040D8]"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold font-mono focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
 
@@ -585,7 +585,7 @@ export default function AdminUsersPage() {
                 <select
                   value={editForm.role}
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white focus:outline-none focus:border-[#0040D8] cursor-pointer"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                 >
                   <option value="DOCTOR">طبيب (Doctor)</option>
                   <option value="RECEPTION">موظف استقبال (Reception)</option>
@@ -599,7 +599,7 @@ export default function AdminUsersPage() {
                   id="userActiveCheck"
                   checked={editForm.isActive}
                   onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 rounded text-[#0B7B5E] focus:ring-0 cursor-pointer"
                 >
                 </input>
                 <label htmlFor="userActiveCheck" className="font-bold text-slate-700 cursor-pointer">
@@ -618,7 +618,7 @@ export default function AdminUsersPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white font-bold cursor-pointer disabled:opacity-60"
+                  className="px-5 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold cursor-pointer disabled:opacity-60"
                 >
                   {isSubmitting ? 'جاري الحفظ...' : 'حفظ التعديلات'}
                 </button>
@@ -638,7 +638,7 @@ export default function AdminUsersPage() {
                   <Lock className="w-5 h-5" />
                 </span>
                 <div>
-                  <h3 className="text-base font-black text-[#0A164E]">تغيير كلمة المرور</h3>
+                  <h3 className="text-base font-black text-[#074C3A]">تغيير كلمة المرور</h3>
                   <p className="text-[11px] font-bold text-slate-500">للمستخدم: {selectedUser.name}</p>
                 </div>
               </div>
@@ -661,7 +661,7 @@ export default function AdminUsersPage() {
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                     placeholder="أدخل كلمة المرور الجديدة..."
-                    className="w-full h-10 pr-3 pl-10 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0040D8]"
+                    className="w-full h-10 pr-3 pl-10 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                   />
                   <button
                     type="button"
@@ -681,7 +681,7 @@ export default function AdminUsersPage() {
                   value={passwordForm.confirmPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                   placeholder="أعد كتابة كلمة المرور للتأكيد..."
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0040D8]"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
 

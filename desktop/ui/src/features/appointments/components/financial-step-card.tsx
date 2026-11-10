@@ -59,11 +59,11 @@ export function FinancialStepCard() {
     <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-100 space-y-5 animate-in fade-in-50">
       {/* رأس القسم: الرقم 4 والعنوان */}
       <div className="flex items-start gap-3.5">
-        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-black text-sm shrink-0">
+        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0B7B5E] text-white flex items-center justify-center font-black text-sm shrink-0">
           4
         </span>
         <div>
-          <h3 className="text-base sm:text-lg font-black text-[#0A164E] tracking-tight">
+          <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
             الرسوم والبيانات المالية
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -76,7 +76,7 @@ export function FinancialStepCard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* 1. سعر الكشف كامل */}
         <div>
-          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+          <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
             سعر الكشف كامل <span className="text-rose-500">*</span>
           </label>
           <Controller
@@ -99,7 +99,7 @@ export function FinancialStepCard() {
                     'w-full h-11 px-3.5 pe-12 rounded-2xl border text-xs sm:text-sm font-bold transition-all focus:outline-none',
                     isExempt
                       ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed line-through'
-                      : 'bg-white border-slate-200 text-[#0A164E] focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10'
+                      : 'bg-white border-slate-200 text-[#074C3A] focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15'
                   )}
                 />
                 <span className="absolute end-3.5 text-xs font-bold text-slate-400 pointer-events-none select-none">
@@ -118,7 +118,7 @@ export function FinancialStepCard() {
 
         {/* 2. قيمة الخصم المالي */}
         <div>
-          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+          <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
             قيمة الخصم
           </label>
           <Controller
@@ -160,7 +160,7 @@ export function FinancialStepCard() {
 
         {/* 3. المدفوع الآن */}
         <div>
-          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+          <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
             المدفوع الآن
           </label>
           <Controller
@@ -183,7 +183,7 @@ export function FinancialStepCard() {
                     'w-full h-11 px-3.5 pe-12 rounded-2xl border text-xs sm:text-sm font-bold transition-all focus:outline-none',
                     isExempt
                       ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
-                      : 'bg-white border-slate-200 text-[#0A164E] focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10'
+                      : 'bg-white border-slate-200 text-[#074C3A] focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15'
                   )}
                 />
                 <span className="absolute end-3.5 text-xs font-bold text-slate-400 pointer-events-none select-none">
@@ -206,7 +206,7 @@ export function FinancialStepCard() {
         <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
           <div className="flex items-center justify-between px-2">
             <span className="text-xs font-bold text-slate-500">الصافي بعد الخصم:</span>
-            <span className="text-sm font-black text-[#0040D8]">{netFee} ج.م</span>
+            <span className="text-sm font-black text-[#0B7B5E]">{netFee} ج.م</span>
           </div>
           <div className="flex items-center justify-between px-2 border-r border-slate-200">
             <span className="text-xs font-bold text-slate-500">المبلغ المتبقي:</span>
@@ -232,7 +232,7 @@ export function FinancialStepCard() {
           dir="ltr"
           className={cn(
             'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2',
-            isExempt ? 'bg-[#0040D8]' : 'bg-slate-200'
+            isExempt ? 'bg-[#0B7B5E]' : 'bg-slate-200'
           )}
         >
           <span
@@ -244,7 +244,7 @@ export function FinancialStepCard() {
         </button>
         <span
           onClick={handleToggleExemption}
-          className="text-xs sm:text-sm font-bold text-[#0A164E] cursor-pointer select-none"
+          className="text-xs sm:text-sm font-bold text-[#074C3A] cursor-pointer select-none"
         >
           إعفاء المريض من الرسوم (حالة خاصة / مجاني)
         </span>
@@ -253,7 +253,7 @@ export function FinancialStepCard() {
       {/* المربع الأصفر لسبب الإعفاء عند تفعيل المفتاح */}
       {isExempt && (
         <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF0] border border-amber-300 space-y-3 animate-in fade-in-50">
-          <label className="block text-xs font-black text-[#0A164E]">
+          <label className="block text-xs font-black text-[#074C3A]">
             سبب الإعفاء من الرسوم <span className="text-rose-500">*</span>
           </label>
           <div className="space-y-2">
@@ -267,7 +267,7 @@ export function FinancialStepCard() {
                   className={cn(
                     'w-full py-2.5 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 select-none',
                     isSelected
-                      ? 'bg-[#0A164E] border-[#0A164E] text-white shadow-xs font-black'
+                      ? 'bg-[#074C3A] border-[#074C3A] text-white shadow-xs font-black'
                       : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50/80'
                   )}
                 >

@@ -61,7 +61,7 @@ export function ExpenseCardItem({ expense, isAdmin, onReject }: ExpenseCardItemP
         <div className="space-y-3 flex-1 min-w-0">
           <div className="flex items-center gap-2.5 flex-wrap">
             {/* اسم التصنيف */}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50 text-[#0040D8] border border-blue-100 text-xs font-black shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#E3F5EE] text-[#0B7B5E] border border-[#D0E5DC] text-xs font-black shadow-2xs">
               <Tag className="w-3.5 h-3.5 stroke-[2.2]" />
               <span>{expense.category?.name || 'مصروف عام'}</span>
             </span>
@@ -94,7 +94,7 @@ export function ExpenseCardItem({ expense, isAdmin, onReject }: ExpenseCardItemP
           </div>
 
           {/* بيان المصروف / الوصف */}
-          <p className="text-sm sm:text-base font-bold text-[#0A164E] leading-relaxed">
+          <p className="text-sm sm:text-base font-bold text-[#074C3A] leading-relaxed">
             {expense.description}
           </p>
 

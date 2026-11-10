@@ -150,11 +150,11 @@ export function AttachmentsNotesStepCard() {
       {/* رأس القسم: الرقم 5 والعنوان وعداد الصور */}
       <div className="flex items-center justify-between">
         <div className="flex items-start gap-3.5">
-          <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-black text-sm shrink-0">
+          <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0B7B5E] text-white flex items-center justify-center font-black text-sm shrink-0">
             5
           </span>
           <div>
-            <h3 className="text-base sm:text-lg font-black text-[#0A164E] tracking-tight">
+            <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
               مرفقات وملاحظات
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -202,14 +202,14 @@ export function AttachmentsNotesStepCard() {
         }}
         className={`border-2 border-dashed rounded-2xl p-4 sm:p-5 text-center cursor-pointer transition-all space-y-1.5 select-none ${
           isDragging
-            ? 'border-[#1D4ED8] bg-blue-50/80 scale-[1.01]'
-            : 'border-blue-200/80 bg-blue-50/20 hover:bg-blue-50/50 hover:border-blue-400'
+            ? 'border-[#0B7B5E] bg-[#E3F5EE]/80 scale-[1.01]'
+            : 'border-[#D0E5DC]/80 bg-[#E3F5EE]/20 hover:bg-[#E3F5EE]/50 hover:border-[#0B7B5E]'
         }`}
       >
-        <div className="size-10 rounded-full bg-blue-50 text-[#0040D8] flex items-center justify-center mx-auto mb-1">
+        <div className="size-10 rounded-full bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center mx-auto mb-1">
           <Upload className="size-5" />
         </div>
-        <p className="text-xs sm:text-sm font-black text-[#0040D8]">
+        <p className="text-xs sm:text-sm font-black text-[#0B7B5E]">
           اضغط لرفع صور الفحوصات أو ملفات PDF أو اسحبها هنا
         </p>
         <p className="text-2xs sm:text-xs text-slate-400 font-medium">
@@ -300,7 +300,7 @@ export function AttachmentsNotesStepCard() {
             {...field}
             rows={3}
             placeholder="ملاحظات للطبيب أو الاستقبال..."
-            className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10 transition-all resize-none"
+            className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15 transition-all resize-none"
           />
         )}
       />

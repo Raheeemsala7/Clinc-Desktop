@@ -106,11 +106,11 @@ export function PatientStepCard() {
 
       {/* رأس القسم: الرقم 1 والعنوان */}
       <div className="flex items-start gap-3.5">
-        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-black text-sm shrink-0">
+        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0B7B5E] text-white flex items-center justify-center font-black text-sm shrink-0">
           1
         </span>
         <div>
-          <h3 className="text-base sm:text-lg font-black text-[#0A164E] tracking-tight">
+          <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
             المريض والتاريخ المرضي
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -134,7 +134,7 @@ export function PatientStepCard() {
               }}
               className="h-11 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
             >
-              <UserPlus className="w-4 h-4 text-[#1D4ED8]" />
+              <UserPlus className="w-4 h-4 text-[#0B7B5E]" />
               <span>{isQuickAddOpen ? 'إلغاء' : '+ مريض جديد'}</span>
             </button>
           </div>
@@ -143,8 +143,8 @@ export function PatientStepCard() {
           {isQuickAddOpen && (
             <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 animate-in fade-in-50">
               <div className="flex items-center justify-between">
-                <h4 className="font-bold text-xs sm:text-sm text-[#0A164E] flex items-center gap-2">
-                  <UserPlus className="w-4 h-4 text-[#1D4ED8]" />
+                <h4 className="font-bold text-xs sm:text-sm text-[#074C3A] flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-[#0B7B5E]" />
                   <span>تسجيل مريض جديد فوري</span>
                 </h4>
                 <button
@@ -182,13 +182,13 @@ export function PatientStepCard() {
         </div>
       ) : (
         <>
-          <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70 flex items-center justify-between animate-in fade-in-50">
+          <div className="p-4 rounded-2xl bg-[#E3F5EE]/60 border border-[#D0E5DC]/70 flex items-center justify-between animate-in fade-in-50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#0A164E] text-white flex items-center justify-center font-black text-sm shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#074C3A] text-white flex items-center justify-center font-black text-sm shrink-0">
                 {selectedPatientName ? selectedPatientName.charAt(0) : 'م'}
               </div>
               <div>
-                <p className="font-black text-sm text-[#0A164E]">{selectedPatientName}</p>
+                <p className="font-black text-sm text-[#074C3A]">{selectedPatientName}</p>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {selectedPatientPhone ? `${selectedPatientPhone} · ` : ''}
                   {selectedPatientAge ? `السن: ${selectedPatientAge} سنة · ` : ''}
@@ -205,7 +205,7 @@ export function PatientStepCard() {
             <button
               type="button"
               onClick={handleClearPatient}
-              className="text-xs font-bold text-[#1D4ED8] hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer"
             >
               تغيير
             </button>
@@ -225,7 +225,7 @@ export function PatientStepCard() {
                   className={cn(
                     'px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
                     hasChronicDisease
-                      ? 'bg-[#0A164E] text-white shadow-xs'
+                      ? 'bg-[#074C3A] text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-800'
                   )}
                 >
@@ -241,7 +241,7 @@ export function PatientStepCard() {
                   className={cn(
                     'px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
                     !hasChronicDisease
-                      ? 'bg-[#0A164E] text-white shadow-xs'
+                      ? 'bg-[#074C3A] text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-800'
                   )}
                 >

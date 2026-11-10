@@ -8,7 +8,7 @@ export function PatientsSearchFilterBarSkeleton() {
         <div className="space-y-2 text-start">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-24 bg-slate-200 rounded-xl" />
-            <div className="h-6 w-16 bg-blue-100/70 rounded-full" />
+            <div className="h-6 w-16 bg-[#E3F5EE]/70 rounded-full" />
           </div>
           <div className="h-4 w-52 bg-slate-100 rounded-md" />
         </div>

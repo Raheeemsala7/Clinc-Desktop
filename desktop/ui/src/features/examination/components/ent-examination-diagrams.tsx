@@ -89,7 +89,7 @@ export function EarAnatomyDiagram({
               </text>
             </svg>
             {selectedWeber && (
-              <span className="text-[11px] font-bold mt-1 text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 print:text-black print:bg-transparent print:border-none">
+              <span className="text-[11px] font-bold mt-1 text-[#0B7B5E] bg-[#E3F5EE] px-2.5 py-0.5 rounded-full border border-[#D0E5DC] print:text-black print:bg-transparent print:border-none">
                 {selectedWeber}
               </span>
             )}
@@ -124,7 +124,7 @@ export function EarAnatomyDiagram({
                 onClick={() => onSelectWeber?.(val)}
                 className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                   isSelected
-                    ? 'bg-[#0040D8] text-white shadow-2xs scale-105'
+                    ? 'bg-[#0B7B5E] text-white shadow-2xs scale-105'
                     : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
                 }`}
               >
@@ -153,7 +153,7 @@ export function NoseAnatomyDiagram({
 }) {
   return (
     <div className="flex flex-col items-center justify-center p-2 bg-slate-50/70 border border-slate-200 rounded-2xl select-none print:border-none print:p-0 print:bg-transparent">
-      <span className="text-[11px] font-black text-[#0A164E] uppercase tracking-wider mb-1 print:hidden">
+      <span className="text-[11px] font-black text-[#074C3A] uppercase tracking-wider mb-1 print:hidden">
         Nose Pyramid & Septum (متاح الرسم بالقلم ✍️)
       </span>
 
@@ -241,7 +241,7 @@ export function MallampatiSelector({
           <span className="text-xs font-black text-slate-900">Mallampati classification:</span>
           <span className="text-[11px] font-bold text-slate-500">اختر درجة الرؤية المناسبة للمريض</span>
         </div>
-        <span className="text-xs font-black text-blue-700 bg-blue-100 border border-blue-200 px-3 py-0.5 rounded-full print:border-black print:text-black print:bg-transparent">
+        <span className="text-xs font-black text-[#0B7B5E] bg-[#E3F5EE] border border-[#D0E5DC] px-3 py-0.5 rounded-full print:border-black print:text-black print:bg-transparent">
           {selectedClass || 'Class I'}
         </span>
       </div>
@@ -256,12 +256,12 @@ export function MallampatiSelector({
               onClick={() => onSelect?.(c.id)}
               className={`flex flex-col items-center p-2 rounded-xl border text-center transition-all cursor-pointer relative group ${
                 isSelected
-                  ? 'bg-blue-50/90 border-blue-600 ring-2 ring-blue-500/30 shadow-xs print:border-black print:bg-transparent'
+                  ? 'bg-[#E3F5EE]/90 border-[#0B7B5E] ring-2 ring-blue-500/30 shadow-xs print:border-black print:bg-transparent'
                   : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50/50 print:border-none'
               }`}
             >
               {isSelected && (
-                <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white print:hidden">
+                <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0B7B5E] rounded-full flex items-center justify-center text-white print:hidden">
                   <Check className="w-2.5 h-2.5" />
                 </div>
               )}
@@ -273,7 +273,7 @@ export function MallampatiSelector({
                   className="w-full h-full object-contain pointer-events-none"
                 />
               </div>
-              <span className={`text-xs font-black ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
+              <span className={`text-xs font-black ${isSelected ? 'text-[#074C3A]' : 'text-slate-900'}`}>
                 {c.label}
               </span>
               <span className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
@@ -302,7 +302,7 @@ export function LarynxVocalCordDiagram({
 }) {
   return (
     <div className="flex flex-col items-center justify-center p-2 bg-slate-50/70 border border-slate-200 rounded-2xl select-none print:border-none print:p-0 print:bg-transparent">
-      <span className="text-[11px] font-black text-[#0A164E] uppercase tracking-wider mb-1 print:hidden">
+      <span className="text-[11px] font-black text-[#074C3A] uppercase tracking-wider mb-1 print:hidden">
         Larynx & Vocal Cords (متاح الرسم بالقلم ✍️)
       </span>
 

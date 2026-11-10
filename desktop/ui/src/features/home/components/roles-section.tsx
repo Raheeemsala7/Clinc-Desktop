@@ -22,7 +22,7 @@ export const RolesSection = () => {
       icon: Shield,
       title: 'المدير',
       description: 'رؤية كل تفاصيل العيادة، وإدارة حسابات المستخدمين والصلاحيات، ومتابعة الإيرادات والمصروفات والأرشفة.',
-      accent: 'border-[#0E3B5C]',
+      accent: 'border-[#074C3A]',
     },
   ];
 
@@ -71,3 +71,4 @@ export const RolesSection = () => {
     </section>
   );
 };
+

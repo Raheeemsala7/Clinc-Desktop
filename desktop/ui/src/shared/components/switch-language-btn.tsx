@@ -46,7 +46,7 @@ export function SwitchLanguageBtn({
         isPending && 'opacity-60 pointer-events-none',
         isLight
           ? 'text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15'
-          : 'text-[#0A164E] bg-slate-100 hover:bg-slate-200 border border-slate-200',
+          : 'text-[#074C3A] bg-slate-100 hover:bg-slate-200 border border-slate-200',
         className
       )}
     >

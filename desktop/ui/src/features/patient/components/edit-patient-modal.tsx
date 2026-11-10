@@ -114,7 +114,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
               <Edit3 className="w-5 h-5 stroke-[2]" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-[#0A164E]">تعديل بيانات المريض</h3>
+              <h3 className="text-lg font-black text-[#074C3A]">تعديل بيانات المريض</h3>
               <p className="text-xs text-slate-400">تحديث المعلومات الأساسية للمريض</p>
             </div>
           </div>
@@ -142,7 +142,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all"
+              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all"
             />
           </div>
 
@@ -155,7 +155,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 dir="ltr"
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-mono font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all"
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-mono font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all"
               />
             </div>
 
@@ -168,7 +168,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
                 max={120}
                 value={age}
                 onChange={(e) => setAge(e.target.value ? Number(e.target.value) : '')}
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all"
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all"
               />
             </div>
           </div>
@@ -182,7 +182,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
                   onClick={() => setGender('MALE')}
                   className={`h-10 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                     gender === 'MALE'
-                      ? 'bg-blue-50 border-[#0040D8] text-[#0040D8]'
+                      ? 'bg-[#E3F5EE] border-[#0B7B5E] text-[#0B7B5E]'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -211,7 +211,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="مثال: الزقازيق، الشرقية"
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal"
               />
             </div>
           </div>
@@ -226,7 +226,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
               value={occupation}
               onChange={(e) => setOccupation(e.target.value)}
               placeholder="مثال: مهندس، معلم، تاجر..."
-              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all placeholder:text-slate-400 placeholder:font-normal"
+              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal"
             />
           </div>
 
@@ -239,7 +239,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
                 value={fileNumber}
                 onChange={(e) => setFileNumber(e.target.value)}
                 placeholder="مثال: 101"
-                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#0A164E] font-mono font-bold focus:outline-none focus:border-[#0040D8] focus:ring-3 focus:ring-blue-600/10 transition-all"
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-[#074C3A] font-mono font-bold focus:outline-none focus:border-[#0B7B5E] focus:ring-3 focus:ring-[#0B7B5E]/15 transition-all"
               />
             </div>
 
@@ -258,7 +258,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
                     onClick={() => setMaritalStatus(item.id as any)}
                     className={`h-9 rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center select-none ${
                       maritalStatus === item.id
-                        ? 'bg-[#0A164E] text-white border-[#0A164E] shadow-xs'
+                        ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
                         : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
@@ -276,7 +276,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
                 type="button"
                 onClick={() => setHasChronic(!hasChronic)}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  hasChronic ? 'bg-[#0040D8]' : 'bg-slate-200'
+                  hasChronic ? 'bg-[#0B7B5E]' : 'bg-slate-200'
                 }`}
               >
                 <span
@@ -314,7 +314,7 @@ export function EditPatientModal({ isOpen, onClose, patient, onSuccess }: EditPa
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 h-11 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white font-bold text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              className="flex-1 h-11 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               {isPending ? (
                 <>

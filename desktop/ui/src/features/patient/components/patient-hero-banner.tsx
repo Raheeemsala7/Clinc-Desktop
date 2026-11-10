@@ -20,11 +20,11 @@ export function PatientHeroBanner({ details }: PatientHeroBannerProps) {
     : '';
 
   return (
-    <div className="bg-[#0A164E] text-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-800/20 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5 select-none">
+    <div className="bg-[#074C3A] text-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-800/20 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5 select-none">
       {/* الجانب الأيمن: الأيقونة الدائرية الصفراء + الاسم والبيانات الأساسية */}
       <div className="flex items-center gap-4">
         {/* الأيقونة الدائرية الصفراء الكبيرة مطابقة للتصميم */}
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#EAB308] text-[#0A164E] flex items-center justify-center font-black text-2xl sm:text-3xl shrink-0 shadow-md">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#EAB308] text-[#074C3A] flex items-center justify-center font-black text-2xl sm:text-3xl shrink-0 shadow-md">
           {firstLetter}
         </div>
 
@@ -49,8 +49,8 @@ export function PatientHeroBanner({ details }: PatientHeroBannerProps) {
 
       {/* الجانب الأيسر: بطاقة المرض المزمن إذا كان المريض يعاني من أمراض مزمنة */}
       {hasChronic && (
-        <div className="bg-[#EAB308] text-[#0A164E] rounded-2xl p-4 sm:p-4.5 min-w-[180px] shadow-sm shrink-0 border border-yellow-300">
-          <div className="flex items-center gap-1.5 font-black text-xs sm:text-sm mb-1 text-[#0A164E]">
+        <div className="bg-[#EAB308] text-[#074C3A] rounded-2xl p-4 sm:p-4.5 min-w-[180px] shadow-sm shrink-0 border border-yellow-300">
+          <div className="flex items-center gap-1.5 font-black text-xs sm:text-sm mb-1 text-[#074C3A]">
             <AlertTriangle className="w-4 h-4 stroke-[2.5]" />
             <span>مرض مزمن</span>
           </div>

@@ -26,7 +26,7 @@ export default function DoctorCalendarPage({
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6" dir="rtl">
       {/* ترويسة صفحة جدول مواعيد الطبيب */}
       <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-black text-[#0A164E] tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight">
           تقويم المواعيد والحجوزات
         </h1>
         <p className="text-xs sm:text-sm font-bold text-slate-400">

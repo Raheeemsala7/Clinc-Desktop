@@ -31,7 +31,7 @@ export function ClosingPreviewCard({ preview }: ClosingPreviewCardProps) {
   return (
     <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden flex flex-col">
       {/* 1. رأس البطاقة الكحلي الداكن */}
-      <div className="bg-[#0A164E] text-white px-6 py-4 flex items-center justify-between">
+      <div className="bg-[#074C3A] text-white px-6 py-4 flex items-center justify-between">
         <h3 className="text-base font-bold tracking-tight">{t('previewTitle')}</h3>
         <span className="text-xs font-mono font-bold text-slate-300">
           {formatDate(preview?.clinicDate)}
@@ -61,11 +61,11 @@ export function ClosingPreviewCard({ preview }: ClosingPreviewCardProps) {
         </div>
 
         {/* 3. الصندوق الأزرق الكبير: النقد المتوقع في الصندوق */}
-        <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <span className="text-sm sm:text-base font-black text-[#0A164E]">
+        <div className="bg-[#E3F5EE]/70 border border-[#D0E5DC] rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="text-sm sm:text-base font-black text-[#074C3A]">
             {t('expectedCash')}
           </span>
-          <div className="text-2xl sm:text-3xl font-black text-[#0040D8] font-sans">
+          <div className="text-2xl sm:text-3xl font-black text-[#0B7B5E] font-sans">
             {formatMoney(expectedCash)}{' '}
             <span className="text-xs font-bold text-slate-500 font-sans">{t('currency')}</span>
           </div>

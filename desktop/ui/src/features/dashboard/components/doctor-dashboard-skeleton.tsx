@@ -34,7 +34,7 @@ export function DoctorDashboardSkeleton() {
         </div>
 
         {/* بطاقة 3: تم الكشف */}
-        <div className="bg-[#F0F5FF] rounded-2xl p-5 border border-blue-200/60 space-y-2">
+        <div className="bg-[#F0F5FF] rounded-2xl p-5 border border-[#D0E5DC]/60 space-y-2">
           <div className="h-3 w-20 bg-blue-200/60 rounded mx-auto" />
           <div className="h-8 w-12 bg-blue-200/70 rounded-lg mx-auto" />
         </div>
@@ -52,7 +52,7 @@ export function DoctorDashboardSkeleton() {
         <div className="lg:col-span-5 bg-white rounded-3xl p-5 border border-slate-100 shadow-2xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="h-5 w-28 bg-slate-200 rounded-lg" />
-            <div className="h-5 w-16 bg-blue-100 rounded-full" />
+            <div className="h-5 w-16 bg-[#E3F5EE] rounded-full" />
           </div>
 
           <div className="h-9 bg-slate-100 rounded-xl" />

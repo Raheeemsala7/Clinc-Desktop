@@ -27,7 +27,7 @@ interface DrawingCanvasOverlayProps {
 }
 
 const PEN_COLORS = [
-  { id: 'blue', value: '#1D4ED8', label: 'أزرق (قلم كشف)' },
+  { id: 'blue', value: '#0B7B5E', label: 'أزرق (قلم كشف)' },
   { id: 'red', value: '#DC2626', label: 'أحمر (التهاب / ثقب)' },
   { id: 'black', value: '#000000', label: 'أسود' },
 ];
@@ -47,7 +47,7 @@ export function DrawingCanvasOverlay({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [activeTool, setActiveTool] = useState<'pen' | 'eraser'>('pen');
-  const [selectedColor, setSelectedColor] = useState<string>('#1D4ED8'); // أزرق افتراضي
+  const [selectedColor, setSelectedColor] = useState<string>('#0B7B5E'); // أزرق افتراضي
   const [lineWidth, setLineWidth] = useState<number>(2.5);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -237,7 +237,7 @@ export function DrawingCanvasOverlay({
             onClick={() => setViewingSnapshotId(null)}
             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
               viewingSnapshotId === null
-                ? 'bg-blue-600 text-white shadow-2xs'
+                ? 'bg-[#0B7B5E] text-white shadow-2xs'
                 : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
             }`}
           >
@@ -286,7 +286,7 @@ export function DrawingCanvasOverlay({
           <button
             type="button"
             onClick={() => setViewingSnapshotId(null)}
-            className="text-blue-600 underline text-[11px] mr-2 cursor-pointer font-bold"
+            className="text-[#0B7B5E] underline text-[11px] mr-2 cursor-pointer font-bold"
           >
             (العودة للرسم الحالي)
           </button>
@@ -301,7 +301,7 @@ export function DrawingCanvasOverlay({
 
       {/* الحاوية: الخلفية التشريحية وتحتها كانفاس الرسم التفاعلي مطابقة للأصل */}
       <div
-        className="relative group border border-transparent hover:border-blue-200/60 rounded-2xl overflow-hidden bg-transparent transition-all print:border-none print:shadow-none"
+        className="relative group border border-transparent hover:border-[#D0E5DC]/60 rounded-2xl overflow-hidden bg-transparent transition-all print:border-none print:shadow-none"
         style={{ width: `${width}px`, height: `${height}px` }}
       >
         {/* الطبقة 1: الرسم التشريحي الأساسي (صورة حقيقية أو SVG) */}
@@ -354,7 +354,7 @@ export function DrawingCanvasOverlay({
               onClick={() => setActiveTool('pen')}
               className={`p-1 rounded-lg transition-all cursor-pointer ${
                 activeTool === 'pen'
-                  ? 'bg-blue-600 text-white shadow-2xs'
+                  ? 'bg-[#0B7B5E] text-white shadow-2xs'
                   : 'text-slate-600 hover:bg-slate-200'
               }`}
               title="قلم للكتابة والتأشير"

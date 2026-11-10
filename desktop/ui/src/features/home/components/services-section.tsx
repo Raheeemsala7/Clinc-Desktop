@@ -29,10 +29,10 @@ export const ServicesSection = () => {
           className="flex items-start justify-between mb-10 sm:mb-14"
         >
           <div className="text-start">
-            <span className="text-[#1D4ED8] text-xs font-bold tracking-widest uppercase block mb-2">
+            <span className="text-[#0B7B5E] text-xs font-bold tracking-widest uppercase block mb-2">
               {t('kicker')}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0A164E] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#074C3A] tracking-tight">
               {t('title')}
             </h2>
             <p className="text-slate-500 text-sm sm:text-base mt-2">
@@ -90,15 +90,15 @@ const ServiceCard = ({
   const isNavy = service.theme === 'navy';
 
   const badgeClasses = {
-    blue: 'bg-[#1D4ED8] text-white',
-    yellow: 'bg-[#F5B800] text-[#0A164E] font-bold',
-    navy: 'bg-[#0A164E] text-white',
+    blue: 'bg-[#0B7B5E] text-white',
+    yellow: 'bg-[#F5B800] text-[#074C3A] font-bold',
+    navy: 'bg-[#074C3A] text-white',
   }[service.badgeColor];
 
   const linkColorClass =
     service.linkColor === 'yellow'
       ? 'text-[#F5B800] group-hover:text-amber-300'
-      : 'text-[#1D4ED8] group-hover:text-blue-700';
+      : 'text-[#0B7B5E] group-hover:text-[#0B7B5E]';
 
   const consultationMsg = isArabic
     ? `مرحباً د. إسلام، أود حجز استشارة بخصوص: ${title}`
@@ -116,8 +116,8 @@ const ServiceCard = ({
       className={cn(
         'group relative rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-shadow duration-200 cursor-pointer',
         isNavy
-          ? 'bg-[#0A164E] text-white shadow-md hover:shadow-2xl hover:shadow-blue-950/30'
-          : 'bg-white text-[#0A164E] border border-slate-100 shadow-xs hover:shadow-xl hover:border-blue-100'
+          ? 'bg-[#074C3A] text-white shadow-md hover:shadow-2xl hover:shadow-blue-950/30'
+          : 'bg-white text-[#074C3A] border border-slate-100 shadow-xs hover:shadow-xl hover:border-[#D0E5DC]'
       )}
     >
       <div>
@@ -135,7 +135,7 @@ const ServiceCard = ({
         <h3
           className={cn(
             'text-lg sm:text-xl font-bold mb-2.5 tracking-tight transition-colors',
-            isNavy ? 'text-white' : 'text-[#0A164E]'
+            isNavy ? 'text-white' : 'text-[#074C3A]'
           )}
         >
           {title}

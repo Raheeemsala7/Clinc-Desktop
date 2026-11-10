@@ -39,7 +39,7 @@ export function RejectExpenseModal({ isOpen, onClose, expense }: RejectExpenseMo
               <AlertTriangle className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <h3 className="text-base font-black text-[#0A164E]">
+              <h3 className="text-base font-black text-[#074C3A]">
                 رفض المصروف
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">

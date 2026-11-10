@@ -58,11 +58,11 @@ export function DashboardSidebar({
       side={side}
       dir={dir}
       collapsible="icon"
-      className={cn('border-none bg-[#0E3B5C] text-white select-none shadow-xl', className)}
+      className={cn('border-none bg-[#074C3A] text-white select-none shadow-xl', className)}
       {...props}
     >
       {/* 1. رأس الشريط الجانبي: الشعار واسم العيادة */}
-      <SidebarHeader className="border-b border-white/10 px-4 py-4 group-data-[collapsible=icon]:p-2 bg-[#0E3B5C]">
+      <SidebarHeader className="border-b border-white/10 px-4 py-4 group-data-[collapsible=icon]:p-2 bg-[#074C3A]">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -88,7 +88,7 @@ export function DashboardSidebar({
       </SidebarHeader>
 
       {/* 2. محتوى الشريط: قائمة الروابط المترجمة مع الأيقونات وتمييز brand-yellow */}
-      <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:px-1 bg-[#091336]">
+      <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:px-1 bg-[#074C3A]">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">

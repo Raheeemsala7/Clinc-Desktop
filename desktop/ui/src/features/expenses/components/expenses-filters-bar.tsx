@@ -92,7 +92,7 @@ export function ExpensesFiltersBar({
                 onClick={() => onTabChange(tab.id)}
                 className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
                   isActive
-                    ? 'bg-[#0040D8] text-white shadow-sm'
+                    ? 'bg-[#0B7B5E] text-white shadow-sm'
                     : 'bg-white text-slate-600 border border-slate-100 hover:bg-slate-50'
                 }`}
               >
@@ -122,12 +122,12 @@ export function ExpensesFiltersBar({
             </button>
 
             <div className="relative flex items-center px-2">
-              <Calendar className="w-3.5 h-3.5 text-[#0040D8] ml-1.5 shrink-0 pointer-events-none" />
+              <Calendar className="w-3.5 h-3.5 text-[#0B7B5E] ml-1.5 shrink-0 pointer-events-none" />
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => onMonthChange(e.target.value)}
-                className="text-xs font-bold text-[#0A164E] bg-transparent focus:outline-none cursor-pointer font-sans"
+                className="text-xs font-bold text-[#074C3A] bg-transparent focus:outline-none cursor-pointer font-sans"
               />
               <span className="text-[11px] font-bold text-slate-500 mr-2 hidden sm:inline whitespace-nowrap">
                 ({formattedMonthLabel})
@@ -149,7 +149,7 @@ export function ExpensesFiltersBar({
             <button
               type="button"
               onClick={() => onMonthChange(currentMonthStr)}
-              className="px-2.5 py-2 rounded-2xl text-[11px] font-bold text-[#0040D8] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all cursor-pointer whitespace-nowrap"
+              className="px-2.5 py-2 rounded-2xl text-[11px] font-bold text-[#0B7B5E] bg-[#E3F5EE] hover:bg-[#E3F5EE] border border-[#D0E5DC] transition-all cursor-pointer whitespace-nowrap"
             >
               {t('currentMonth')}
             </button>
@@ -172,7 +172,7 @@ export function ExpensesFiltersBar({
           <select
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="w-full pl-3 pr-8 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:border-[#0040D8] cursor-pointer appearance-none shadow-2xs"
+            className="w-full pl-3 pr-8 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:border-[#0B7B5E] cursor-pointer appearance-none shadow-2xs"
           >
             <option value="">{t('allCategories')}</option>
             {categories.map((c) => (
@@ -191,7 +191,7 @@ export function ExpensesFiltersBar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="w-full pl-3 pr-9 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0040D8] shadow-2xs"
+            className="w-full pl-3 pr-9 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] shadow-2xs"
           />
           <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>

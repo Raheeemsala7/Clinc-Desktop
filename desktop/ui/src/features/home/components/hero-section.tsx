@@ -71,9 +71,9 @@ export const HeroSection = () => {
 
               <Link
                 href="/auth/login"
-                className="bg-white hover:bg-[#F2F8F4] active:scale-95 text-[#0E3B5C] border-2 border-[#0E3B5C] font-bold text-sm sm:text-base px-6 sm:px-7 py-3.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2 cursor-pointer shadow-2xs"
+                className="bg-white hover:bg-[#F2F8F4] active:scale-95 text-[#074C3A] border-2 border-[#074C3A] font-bold text-sm sm:text-base px-6 sm:px-7 py-3.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2 cursor-pointer shadow-2xs"
               >
-                <LogIn className="w-4 h-4 text-[#0E3B5C]" />
+                <LogIn className="w-4 h-4 text-[#074C3A]" />
                 <span>تسجيل الدخول</span>
               </Link>
             </motion.div>

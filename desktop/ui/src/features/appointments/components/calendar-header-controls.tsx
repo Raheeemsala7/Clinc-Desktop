@@ -101,7 +101,7 @@ export function CalendarHeaderControls({
               onViewModeChange('week');
             }
           }}
-          className="h-10 px-4 rounded-xl bg-[#0A164E] hover:bg-[#111f68] active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
+          className="h-10 px-4 rounded-xl bg-[#074C3A] hover:bg-[#111f68] active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
         >
           اليوم
         </button>
@@ -119,11 +119,11 @@ export function CalendarHeaderControls({
               <ChevronRight className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center gap-2 px-1 text-xs font-black text-[#0A164E]">
+            <div className="flex items-center gap-2 px-1 text-xs font-black text-[#074C3A]">
               <span>
                 {monthName || 'نوفمبر'} {monthYear || 2026}
               </span>
-              <CalendarIcon className="w-4 h-4 text-blue-600" />
+              <CalendarIcon className="w-4 h-4 text-[#0B7B5E]" />
             </div>
 
             <button
@@ -147,9 +147,9 @@ export function CalendarHeaderControls({
               <ChevronRight className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center gap-2 px-1 text-xs font-bold text-[#0A164E] font-sans">
+            <div className="flex items-center gap-2 px-1 text-xs font-bold text-[#074C3A] font-sans">
               <span>{formatWeekRangeLabel(weekStartDate, weekEndDate)}</span>
-              <CalendarIcon className="w-4 h-4 text-blue-600" />
+              <CalendarIcon className="w-4 h-4 text-[#0B7B5E]" />
             </div>
 
             <button
@@ -175,10 +175,10 @@ export function CalendarHeaderControls({
 
             <div
               onClick={() => dateInputRef.current?.showPicker?.()}
-              className="flex items-center gap-2 cursor-pointer px-1 text-xs font-bold text-[#0A164E] font-sans"
+              className="flex items-center gap-2 cursor-pointer px-1 text-xs font-bold text-[#074C3A] font-sans"
             >
               <span>{formattedDisplayDate}</span>
-              <CalendarIcon className="w-4 h-4 text-blue-600" />
+              <CalendarIcon className="w-4 h-4 text-[#0B7B5E]" />
               <input
                 ref={dateInputRef}
                 type="date"
@@ -216,7 +216,7 @@ export function CalendarHeaderControls({
               onClick={() => onViewModeChange('week')}
               className={`h-8 px-3 rounded-lg cursor-pointer transition-all ${
                 viewMode === 'week'
-                  ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -227,7 +227,7 @@ export function CalendarHeaderControls({
               onClick={() => onViewModeChange('month')}
               className={`h-8 px-3 rounded-lg cursor-pointer transition-all ${
                 viewMode === 'month'
-                  ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -238,8 +238,8 @@ export function CalendarHeaderControls({
 
         {/* اختيار الطبيب أو عرض شارة الطبيب الخاصة */}
         {isDoctorView ? (
-          <div className="h-10 px-3.5 rounded-xl border border-blue-200 bg-blue-50/60 text-xs font-bold text-[#0A164E] shadow-2xs flex items-center gap-2">
-            <Stethoscope className="w-4 h-4 text-[#0040D8]" />
+          <div className="h-10 px-3.5 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE]/60 text-xs font-bold text-[#074C3A] shadow-2xs flex items-center gap-2">
+            <Stethoscope className="w-4 h-4 text-[#0B7B5E]" />
             <span>{doctorName || 'جدول مواعيدي الخاصة'}</span>
           </div>
         ) : (
@@ -247,7 +247,7 @@ export function CalendarHeaderControls({
             <select
               value={selectedDoctorId || ''}
               onChange={(e) => onDoctorChange(e.target.value)}
-              className="h-10 pr-4 pl-9 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#0A164E] shadow-2xs appearance-none focus:outline-none focus:border-[#0040D8] cursor-pointer"
+              className="h-10 pr-4 pl-9 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] shadow-2xs appearance-none focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
             >
               <option value="">جميع الأطباء (كل المواعيد)</option>
               {doctors && doctors.length > 0
@@ -272,7 +272,7 @@ export function CalendarHeaderControls({
             onClick={() => onViewModeChange('list')}
             className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               viewMode === 'list'
-                ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                ? 'bg-[#074C3A] text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -285,7 +285,7 @@ export function CalendarHeaderControls({
             onClick={() => onViewModeChange('week')}
             className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               isCalendarMode
-                ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                ? 'bg-[#074C3A] text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -300,7 +300,7 @@ export function CalendarHeaderControls({
             href={`/dashboard/appointments/new?date=${currentDate}${
               selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
             }`}
-            className="h-10 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+            className="h-10 px-4 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>حجز موعد جديد</span>

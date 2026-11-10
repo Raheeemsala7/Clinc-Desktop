@@ -68,13 +68,13 @@ export function DeletePatientModal({
         </div>
 
         {/* عنوان النافذة */}
-        <h3 className="text-xl sm:text-2xl font-black text-[#0A164E] tracking-tight mb-3">
+        <h3 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight mb-3">
           حذف المريض؟
         </h3>
 
         {/* نص الرسالة التوضيحية */}
         <p className="text-sm text-slate-500 leading-relaxed mb-1">
-          سيتم حذف ملف <strong className="text-[#0A164E] font-black">{patient.fullName}</strong> وكل زياراته ومدفوعاته، ولا يمكن التراجع.
+          سيتم حذف ملف <strong className="text-[#074C3A] font-black">{patient.fullName}</strong> وكل زياراته ومدفوعاته، ولا يمكن التراجع.
         </p>
         <p className="text-xs text-slate-400 mb-8">
           يمكنك{' '}
@@ -82,7 +82,7 @@ export function DeletePatientModal({
             type="button"
             onClick={handleArchive}
             disabled={isBusy}
-            className="text-[#0040D8] font-bold underline hover:text-blue-700 cursor-pointer inline-block"
+            className="text-[#0B7B5E] font-bold underline hover:text-[#0B7B5E] cursor-pointer inline-block"
           >
             أرشفته
           </button>{' '}
@@ -106,9 +106,9 @@ export function DeletePatientModal({
             type="button"
             onClick={handleArchive}
             disabled={isBusy}
-            className="h-11 rounded-xl bg-white hover:bg-blue-50 text-[#0040D8] border border-[#BFDBFE] font-bold text-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+            className="h-11 rounded-xl bg-white hover:bg-[#E3F5EE] text-[#0B7B5E] border border-[#BFDBFE] font-bold text-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
           >
-            {isArchiving ? <Loader2 className="w-4 h-4 animate-spin text-[#0040D8]" /> : 'أرشفة'}
+            {isArchiving ? <Loader2 className="w-4 h-4 animate-spin text-[#0B7B5E]" /> : 'أرشفة'}
           </button>
 
           {/* زر الإلغاء */}

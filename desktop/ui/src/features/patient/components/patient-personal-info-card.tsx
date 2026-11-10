@@ -47,7 +47,7 @@ export function PatientPersonalInfoCard({ details }: PatientPersonalInfoCardProp
 
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-xs text-start select-none">
-      <h3 className="text-base font-black text-[#0A164E] mb-4 pb-3 border-b border-slate-100">
+      <h3 className="text-base font-black text-[#074C3A] mb-4 pb-3 border-b border-slate-100">
         البيانات الشخصية
       </h3>
 
@@ -56,7 +56,7 @@ export function PatientPersonalInfoCard({ details }: PatientPersonalInfoCardProp
           <div key={idx} className="flex items-center justify-between gap-3 text-xs">
             <span className="text-slate-400 font-bold">{row.label}</span>
             <span
-              className={`font-black text-[#0A164E] ${
+              className={`font-black text-[#074C3A] ${
                 row.isLtr ? 'dir-ltr font-mono' : ''
               }`}
             >

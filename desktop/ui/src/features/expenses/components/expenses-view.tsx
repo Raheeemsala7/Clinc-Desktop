@@ -102,7 +102,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
       {/* 1. رأس الصفحة وزر تسجيل المصروف */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
-          <h2 className="text-2xl sm:text-3xl font-black text-[#0A164E] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight">
             {t('title')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -124,7 +124,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
           <button
             type="button"
             onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>{t('newExpenseBtn')}</span>
@@ -152,7 +152,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
       {/* 4. قائمة بطاقات المصروفات */}
       {isLoading ? (
         <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center shadow-xs">
-          <Loader2 className="w-8 h-8 text-[#0040D8] animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
           <p className="text-xs text-slate-400 font-bold">جاري تحميل سجل المصروفات...</p>
         </div>
       ) : error ? (
@@ -168,10 +168,10 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
         </div>
       ) : filteredExpenses.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center shadow-xs">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0040D8] mx-auto mb-4 shadow-2xs">
+          <div className="w-16 h-16 rounded-2xl bg-[#E3F5EE] border border-[#D0E5DC] flex items-center justify-center text-[#0B7B5E] mx-auto mb-4 shadow-2xs">
             <Receipt className="w-8 h-8 stroke-[1.8]" />
           </div>
-          <h3 className="text-base font-black text-[#0A164E] mb-1">
+          <h3 className="text-base font-black text-[#074C3A] mb-1">
             لا توجد أي مصروفات مطابقة للفلتر
           </h3>
           <p className="text-xs text-slate-400 max-w-sm mx-auto mb-5">
@@ -180,7 +180,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
           <button
             type="button"
             onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0040D8] text-white text-xs font-bold hover:bg-blue-700 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] text-white text-xs font-bold hover:bg-[#09634C] transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>تسجيل مصروف جديد</span>

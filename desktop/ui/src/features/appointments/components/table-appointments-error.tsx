@@ -37,7 +37,7 @@ export function TableAppointmentsError({ error, reset }: TableAppointmentsErrorP
         </div>
 
         {/* عنوان الخطأ */}
-        <h3 className="text-lg font-black text-[#0A164E] mb-2">
+        <h3 className="text-lg font-black text-[#074C3A] mb-2">
           {t('errorTitle')}
         </h3>
 
@@ -51,7 +51,7 @@ export function TableAppointmentsError({ error, reset }: TableAppointmentsErrorP
           type="button"
           onClick={handleRetry}
           disabled={isPending}
-          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 disabled:opacity-60 text-white font-bold text-sm shadow-sm transition-all cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-60 text-white font-bold text-sm shadow-sm transition-all cursor-pointer"
         >
           <RotateCcw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />
           <span>{isPending ? 'جاري التحديث...' : t('retry')}</span>

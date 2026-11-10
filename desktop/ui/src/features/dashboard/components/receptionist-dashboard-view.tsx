@@ -19,7 +19,7 @@ export async function ReceptionistDashboardView() {
       {/* رأس الصفحة + زر حجز موعد جديد */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
-          <h2 className="text-3xl font-black text-[#0A164E] tracking-tight">
+          <h2 className="text-3xl font-black text-[#074C3A] tracking-tight">
             {t('title')}
           </h2>
           <p className="text-sm text-slate-400 mt-1">
@@ -35,7 +35,7 @@ export async function ReceptionistDashboardView() {
         {/* زر حجز موعد / تسجيل مريض */}
         <Link
           href="/dashboard/appointments/new"
-          className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl shadow-md transition-all text-sm self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold rounded-xl shadow-md transition-all text-sm self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
           <span>{t('bookPatient')}</span>

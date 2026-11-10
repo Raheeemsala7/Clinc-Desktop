@@ -26,10 +26,10 @@ export const AboutSection = () => {
           transition={{ duration: 0.3 }}
           className="text-start mb-12 sm:mb-16"
         >
-          <span className="text-[#1D4ED8] text-xs font-bold tracking-widest uppercase block mb-2">
+          <span className="text-[#0B7B5E] text-xs font-bold tracking-widest uppercase block mb-2">
             {t('kicker')}
           </span>
-          <h2 id="qualifications" className="text-3xl sm:text-4xl font-black text-[#0A164E] tracking-tight">
+          <h2 id="qualifications" className="text-3xl sm:text-4xl font-black text-[#074C3A] tracking-tight">
             {t('title')}
           </h2>
           <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-2xl">
@@ -45,8 +45,8 @@ export const AboutSection = () => {
               className={cn(
                 'relative space-y-8 py-2',
                 isArabic
-                  ? 'pr-6 border-r-2 border-[#1D4ED8]'
-                  : 'pl-6 border-l-2 border-[#1D4ED8]'
+                  ? 'pr-6 border-r-2 border-[#0B7B5E]'
+                  : 'pl-6 border-l-2 border-[#0B7B5E]'
               )}
             >
               {TIMELINE_MILESTONES.map((milestone, idx) => (
@@ -69,11 +69,11 @@ export const AboutSection = () => {
                     <span className="absolute inset-0 rounded-xs bg-[#F5B800] animate-ping opacity-40 pointer-events-none" />
                   </span>
 
-                  <span className="text-xs sm:text-sm font-bold text-[#1D4ED8] block mb-1">
+                  <span className="text-xs sm:text-sm font-bold text-[#0B7B5E] block mb-1">
                     {t(`milestones.${milestone.id}.year`)}
                   </span>
 
-                  <h3 className="text-lg sm:text-xl font-bold text-[#0A164E] tracking-tight mb-0.5">
+                  <h3 className="text-lg sm:text-xl font-bold text-[#074C3A] tracking-tight mb-0.5">
                     {t(`milestones.${milestone.id}.degree`)}
                   </h3>
 
@@ -90,7 +90,7 @@ export const AboutSection = () => {
             <div className="relative w-full max-w-[360px]">
               {/* المربع الأزرق البارز الثابت خلف الإطار */}
               <div
-                className="absolute -top-3.5 -right-3.5 w-24 h-24 bg-[#1D4ED8] rounded-3xl -z-10"
+                className="absolute -top-3.5 -right-3.5 w-24 h-24 bg-[#0B7B5E] rounded-3xl -z-10"
                 aria-hidden="true"
               />
               {/* المربع الأصفر البارز الثابت خلف الإطار */}
@@ -99,8 +99,8 @@ export const AboutSection = () => {
                 aria-hidden="true"
               />
 
-              <div className="w-full aspect-[4/5] min-h-[350px] bg-white/90 backdrop-blur-xs border-2 border-dashed border-[#1D4ED8] rounded-3xl flex flex-col items-center justify-center p-6 text-center shadow-lg">
-                <div className="w-14 h-14 rounded-full bg-blue-50 text-[#1D4ED8] flex items-center justify-center mb-3 shadow-xs">
+              <div className="w-full aspect-[4/5] min-h-[350px] bg-white/90 backdrop-blur-xs border-2 border-dashed border-[#0B7B5E] rounded-3xl flex flex-col items-center justify-center p-6 text-center shadow-lg">
+                <div className="w-14 h-14 rounded-full bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center mb-3 shadow-xs">
                   <Stethoscope className="w-7 h-7" />
                 </div>
                 <p className="text-slate-600 font-bold text-sm sm:text-base leading-relaxed">

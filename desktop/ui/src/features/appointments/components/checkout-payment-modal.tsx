@@ -60,11 +60,11 @@ export function CheckoutPaymentModal({
         {/* Header */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0040D8]">
+            <div className="w-10 h-10 rounded-xl bg-[#E3F5EE] border border-[#D0E5DC] flex items-center justify-center text-[#0B7B5E]">
               <CreditCard className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
-              <h3 className="text-base font-black text-[#0A164E]">
+              <h3 className="text-base font-black text-[#074C3A]">
                 {t('checkoutModalTitle')}
               </h3>
               <p className="text-xs text-slate-400">
@@ -112,7 +112,7 @@ export function CheckoutPaymentModal({
                     onClick={() => setMethod('CASH')}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                       method === 'CASH'
-                        ? 'border-[#0040D8] bg-blue-50/40 text-[#0040D8] shadow-2xs'
+                        ? 'border-[#0B7B5E] bg-[#E3F5EE]/40 text-[#0B7B5E] shadow-2xs'
                         : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
@@ -125,7 +125,7 @@ export function CheckoutPaymentModal({
                     onClick={() => setMethod('CARD')}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                       method === 'CARD'
-                        ? 'border-[#0040D8] bg-blue-50/40 text-[#0040D8] shadow-2xs'
+                        ? 'border-[#0B7B5E] bg-[#E3F5EE]/40 text-[#0B7B5E] shadow-2xs'
                         : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
@@ -138,7 +138,7 @@ export function CheckoutPaymentModal({
                     onClick={() => setMethod('WALLET')}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                       method === 'WALLET'
-                        ? 'border-[#0040D8] bg-blue-50/40 text-[#0040D8] shadow-2xs'
+                        ? 'border-[#0B7B5E] bg-[#E3F5EE]/40 text-[#0B7B5E] shadow-2xs'
                         : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
@@ -159,7 +159,7 @@ export function CheckoutPaymentModal({
                   max={remainingAmount}
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold focus:outline-hidden focus:border-[#0040D8] focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold focus:outline-hidden focus:border-[#0B7B5E] focus:ring-2 focus:ring-blue-100 transition-all"
                 />
               </div>
 
@@ -173,7 +173,7 @@ export function CheckoutPaymentModal({
                   placeholder="مثال: تم السداد كاش بالكامل واستلام الروشتة"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-hidden focus:border-[#0040D8] focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-hidden focus:border-[#0B7B5E] focus:ring-2 focus:ring-blue-100 transition-all"
                 />
               </div>
             </>
@@ -201,7 +201,7 @@ export function CheckoutPaymentModal({
             type="button"
             onClick={handleConfirm}
             disabled={isPending}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 disabled:opacity-60 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-60 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>{isPending ? 'جاري الحفظ...' : t('confirmAndCheckout')}</span>

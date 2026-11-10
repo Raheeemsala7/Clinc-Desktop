@@ -49,7 +49,7 @@ export function PatientMetricCards({ details }: PatientMetricCardsProps) {
       {/* 1. عدد الزيارات */}
       <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between min-h-[100px] text-start">
         <span className="text-xs font-bold text-slate-400">عدد الزيارات</span>
-        <div className="mt-2 text-2xl sm:text-3xl font-black text-[#0A164E] font-sans">
+        <div className="mt-2 text-2xl sm:text-3xl font-black text-[#074C3A] font-sans">
           {visitCount}
         </div>
       </div>
@@ -57,7 +57,7 @@ export function PatientMetricCards({ details }: PatientMetricCardsProps) {
       {/* 2. آخر زيارة */}
       <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between min-h-[100px] text-start">
         <span className="text-xs font-bold text-slate-400">آخر زيارة</span>
-        <div className="mt-2 text-lg sm:text-xl font-black text-[#0A164E] font-mono">
+        <div className="mt-2 text-lg sm:text-xl font-black text-[#074C3A] font-mono">
           {formatDate(lastVisitDate)}
         </div>
       </div>
@@ -65,7 +65,7 @@ export function PatientMetricCards({ details }: PatientMetricCardsProps) {
       {/* 3. إجمالي المدفوع */}
       <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between min-h-[100px] text-start">
         <span className="text-xs font-bold text-slate-400">إجمالي المدفوع</span>
-        <div className="mt-2 flex items-baseline gap-1 text-[#0A164E]">
+        <div className="mt-2 flex items-baseline gap-1 text-[#074C3A]">
           <span className="text-xl sm:text-2xl font-black font-sans">
             {formatMoney(financial.totalPaid)}
           </span>

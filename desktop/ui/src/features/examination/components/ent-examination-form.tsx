@@ -240,7 +240,7 @@ export function EntExaminationForm({
 
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span className="text-xs font-black text-[#0A164E]">
+            <span className="text-xs font-black text-[#074C3A]">
               {patient?.fullName}
             </span>
             <span className="text-[11px] text-slate-600 font-bold">
@@ -287,11 +287,11 @@ export function EntExaminationForm({
           onClick={() => setActiveTab('exam')}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'exam'
-              ? 'bg-white text-[#0A164E] shadow-sm border border-slate-200'
+              ? 'bg-white text-[#074C3A] shadow-sm border border-slate-200'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
           }`}
         >
-          <Stethoscope className={`w-4 h-4 ${activeTab === 'exam' ? 'text-[#0040D8]' : 'text-slate-400'}`} />
+          <Stethoscope className={`w-4 h-4 ${activeTab === 'exam' ? 'text-[#0B7B5E]' : 'text-slate-400'}`} />
           <span>1. استمارة الكشف الطبي (ENT Examination Sheet)</span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold hidden sm:inline-block">
             متاح التعديل ✍️
@@ -304,15 +304,15 @@ export function EntExaminationForm({
           onClick={() => setActiveTab('prescription')}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'prescription'
-              ? 'bg-white text-[#0A164E] shadow-sm border border-slate-200'
+              ? 'bg-white text-[#074C3A] shadow-sm border border-slate-200'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
           }`}
         >
-          <Pill className={`w-4 h-4 ${activeTab === 'prescription' ? 'text-[#0040D8]' : 'text-slate-400'}`} />
+          <Pill className={`w-4 h-4 ${activeTab === 'prescription' ? 'text-[#0B7B5E]' : 'text-slate-400'}`} />
           <span>2. الروشتة الطبية (Prescription Rx)</span>
           <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
             (examData.prescriptionItems?.length || 0) > 0
-              ? 'bg-blue-100 text-[#0040D8]'
+              ? 'bg-[#E3F5EE] text-[#0B7B5E]'
               : 'bg-slate-200 text-slate-600'
           }`}>
             {examData.prescriptionItems?.length || 0} أدوية
@@ -336,7 +336,7 @@ export function EntExaminationForm({
           <button
             type="button"
             onClick={handleProceedToPrescription}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0040D8] text-white text-[11px] font-black hover:bg-blue-700 transition-all cursor-pointer shadow-xs shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B7B5E] text-white text-[11px] font-black hover:bg-[#09634C] transition-all cursor-pointer shadow-xs shrink-0"
           >
             <span>الانتقال للروشتة ➔</span>
           </button>
@@ -377,7 +377,7 @@ export function EntExaminationForm({
           <button
             type="button"
             onClick={handleProceedToPrescription}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white text-xs font-black shadow-md transition-all cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black shadow-md transition-all cursor-pointer"
           >
             <span>حفظ ومتابعة إلى كتابة الروشتة (Rx)</span>
             <ArrowLeft className="w-4 h-4" />

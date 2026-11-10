@@ -188,7 +188,7 @@ export function PaymentsView() {
           <meta charset="utf-8">
           <title>إيصال سداد - ${payment.patient?.fullName || ''}</title>
           <style>
-            body { font-family: system-ui, -apple-system, sans-serif; padding: 24px; color: #0A164E; }
+            body { font-family: system-ui, -apple-system, sans-serif; padding: 24px; color: #074C3A; }
             .header { text-align: center; border-bottom: 2px dashed #CBD5E1; padding-bottom: 16px; margin-bottom: 20px; }
             .clinic-name { font-size: 20px; font-weight: 900; }
             .title { font-size: 15px; color: #64748B; margin-top: 4px; }
@@ -240,7 +240,7 @@ export function PaymentsView() {
       {/* 1. رأس الصفحة: العنوان والوصف والتاريخ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-[#0A164E] tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight">
             {t('title')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -257,7 +257,7 @@ export function PaymentsView() {
           className="h-10 px-3.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-2xs"
         >
           <RefreshCw
-            className={`w-3.5 h-3.5 text-blue-600 ${isFetching ? 'animate-spin' : ''}`}
+            className={`w-3.5 h-3.5 text-[#0B7B5E] ${isFetching ? 'animate-spin' : ''}`}
           />
           <span>{t('refresh')}</span>
         </button>
@@ -283,8 +283,8 @@ export function PaymentsView() {
         {isLoading ? (
           /* حالة التحميل */
           <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-[#1D4ED8] animate-spin" />
-            <p className="text-sm font-bold text-[#0A164E]">جاري تحميل سجل المدفوعات...</p>
+            <Loader2 className="w-8 h-8 text-[#0B7B5E] animate-spin" />
+            <p className="text-sm font-bold text-[#074C3A]">جاري تحميل سجل المدفوعات...</p>
             <p className="text-xs text-slate-400">يرجى الانتظار لحظات</p>
           </div>
         ) : error ? (
@@ -308,7 +308,7 @@ export function PaymentsView() {
             <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
               <Receipt className="w-7 h-7" />
             </div>
-            <h4 className="text-base font-black text-[#0A164E]">
+            <h4 className="text-base font-black text-[#074C3A]">
               {searchQuery ? 'لا توجد نتائج تطابق بحثك' : 'لا توجد مدفوعات مسجلة لهذا اليوم'}
             </h4>
             <p className="text-xs text-slate-400 max-w-sm">

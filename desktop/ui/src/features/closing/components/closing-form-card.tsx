@@ -56,7 +56,7 @@ export function ClosingFormCard({ preview }: ClosingFormCardProps) {
   return (
     <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-7 shadow-xs flex flex-col justify-between">
       <div>
-        <h3 className="text-xl font-black text-[#0A164E] mb-6">{t('formTitle')}</h3>
+        <h3 className="text-xl font-black text-[#074C3A] mb-6">{t('formTitle')}</h3>
 
         {/* حالة الصندوق إذا كان مغلقاً بالفعل */}
         {isClosed && (
@@ -93,7 +93,7 @@ export function ClosingFormCard({ preview }: ClosingFormCardProps) {
                 value={actualCashStr}
                 onChange={(e) => setActualCashStr(e.target.value)}
                 placeholder="0.00"
-                className="w-full h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0040D8] text-base font-bold font-sans transition-all disabled:bg-slate-50 disabled:text-slate-500"
+                className="w-full h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-base font-bold font-sans transition-all disabled:bg-slate-50 disabled:text-slate-500"
               />
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
                 {t('currency')}
@@ -111,7 +111,7 @@ export function ClosingFormCard({ preview }: ClosingFormCardProps) {
                 </span>
               </div>
             ) : diff > 0 ? (
-              <div className="w-full py-3 px-4 rounded-xl bg-blue-50/90 border border-blue-200 text-blue-800 text-xs font-bold flex items-center justify-between shadow-2xs">
+              <div className="w-full py-3 px-4 rounded-xl bg-[#E3F5EE]/90 border border-[#D0E5DC] text-[#074C3A] text-xs font-bold flex items-center justify-between shadow-2xs">
                 <span>{t('diffLabel')}</span>
                 <span className="font-sans font-black flex items-center gap-1.5">
                   {t('diffSurplus', { amount: formatMoney(diff) })}
@@ -138,7 +138,7 @@ export function ClosingFormCard({ preview }: ClosingFormCardProps) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t('notesPlaceholder')}
-              className="w-full p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0040D8] text-xs font-medium resize-none transition-all disabled:bg-slate-50 disabled:text-slate-500"
+              className="w-full p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-xs font-medium resize-none transition-all disabled:bg-slate-50 disabled:text-slate-500"
             />
           </div>
 
@@ -147,7 +147,7 @@ export function ClosingFormCard({ preview }: ClosingFormCardProps) {
             <button
               type="submit"
               disabled={isClosed || closeMutation.isPending}
-              className="w-full py-3.5 px-6 rounded-xl bg-[#0A164E] hover:bg-[#070F2B] active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-xl bg-[#074C3A] hover:bg-[#070F2B] active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {closeMutation.isPending ? (
                 <>

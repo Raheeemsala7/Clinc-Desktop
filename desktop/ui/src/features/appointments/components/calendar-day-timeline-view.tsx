@@ -128,11 +128,11 @@ export function CalendarDayTimelineView({
       );
     } else if (isBookedStatus) {
       // أزرق ملكي مريح — حجز مسبق مؤكد لم يحضر بعد
-      containerStyle = 'bg-blue-50/70 border-2 border-blue-300 shadow-xs';
-      indicatorColor = 'bg-[#0040D8]';
-      timeBadgeStyle = 'bg-blue-100 text-[#0040D8]';
+      containerStyle = 'bg-[#E3F5EE]/70 border-2 border-[#D0E5DC] shadow-xs';
+      indicatorColor = 'bg-[#0B7B5E]';
+      timeBadgeStyle = 'bg-[#E3F5EE] text-[#0B7B5E]';
       statusBadge = (
-        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-bold bg-[#0040D8] text-white shadow-2xs">
+        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-bold bg-[#0B7B5E] text-white shadow-2xs">
           <span>حجز مسبق مؤكد 📅</span>
         </span>
       );
@@ -172,11 +172,11 @@ export function CalendarDayTimelineView({
           {/* تفاصيل المريض */}
           <div className="space-y-1.5 text-start">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-base sm:text-lg font-black text-[#0A164E]">
+              <h4 className="text-base sm:text-lg font-black text-[#074C3A]">
                 {appt.patientName}
               </h4>
               {appt.queueNumber > 0 && (
-                <span className="px-2.5 py-0.5 rounded-lg bg-[#0A164E] text-white font-mono text-xs font-black shadow-2xs">
+                <span className="px-2.5 py-0.5 rounded-lg bg-[#074C3A] text-white font-mono text-xs font-black shadow-2xs">
                   #{String(appt.queueNumber).padStart(2, '0')}
                 </span>
               )}
@@ -184,7 +184,7 @@ export function CalendarDayTimelineView({
               {/* شارة اسم الطبيب */}
               {appt.doctorName && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white/80 text-slate-700 text-xs font-bold border border-slate-200">
-                  <Stethoscope className="w-3.5 h-3.5 text-[#0040D8]" />
+                  <Stethoscope className="w-3.5 h-3.5 text-[#0B7B5E]" />
                   <span>{appt.doctorName}</span>
                 </span>
               )}
@@ -208,7 +208,7 @@ export function CalendarDayTimelineView({
         {/* الجانب الأوسط والأيسر: الشارات والإجراءات المباشرة */}
         <div className="flex items-center gap-2.5 flex-wrap justify-start md:justify-end">
           {/* شارة نوع الكشف */}
-          <span className="px-3 py-1 rounded-xl bg-white text-[#0040D8] text-xs font-bold border border-blue-200 shadow-2xs">
+          <span className="px-3 py-1 rounded-xl bg-white text-[#0B7B5E] text-xs font-bold border border-[#D0E5DC] shadow-2xs">
             {getTypeLabel(appt.type)}
           </span>
 
@@ -235,7 +235,7 @@ export function CalendarDayTimelineView({
             {/* زر فتح الكشف والروشتة */}
             <Link
               href={`/dashboard/examination/${appt.id}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
             >
               <Stethoscope className="w-4 h-4 stroke-[2.2]" />
               <span>كشف وروشتة 📋</span>
@@ -273,7 +273,7 @@ export function CalendarDayTimelineView({
               title="فتح الملف الطبي للمريض"
               className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-600 cursor-pointer transition-colors shadow-2xs"
             >
-              <FileText className="w-4 h-4 text-[#0040D8]" />
+              <FileText className="w-4 h-4 text-[#0B7B5E]" />
             </Link>
           </div>
         </div>
@@ -292,7 +292,7 @@ export function CalendarDayTimelineView({
             onClick={() => setFilter('booked')}
             className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer ${
               filter === 'booked'
-                ? 'bg-[#0040D8] text-white shadow-xs'
+                ? 'bg-[#0B7B5E] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -316,7 +316,7 @@ export function CalendarDayTimelineView({
             onClick={() => setFilter('all')}
             className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer ${
               filter === 'all'
-                ? 'bg-[#0040D8] text-white shadow-xs'
+                ? 'bg-[#0B7B5E] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -328,7 +328,7 @@ export function CalendarDayTimelineView({
             onClick={() => setFilter('available')}
             className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer ${
               filter === 'available'
-                ? 'bg-[#0040D8] text-white shadow-xs'
+                ? 'bg-[#0B7B5E] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -348,8 +348,8 @@ export function CalendarDayTimelineView({
             <span>في صالة الانتظار</span>
           </div>
 
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-100 text-blue-900 border border-blue-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#0040D8]" />
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#E3F5EE] text-[#074C3A] border border-[#D0E5DC]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E]" />
             <span>حجز مسبق مؤكد</span>
           </div>
 
@@ -392,7 +392,7 @@ export function CalendarDayTimelineView({
             return (
               <div
                 key={slot.time}
-                className="bg-white rounded-3xl border-2 border-dashed border-slate-200 hover:border-blue-400 hover:bg-blue-50/20 p-4 sm:p-5 flex items-center justify-between gap-4 transition-all shadow-2xs"
+                className="bg-white rounded-3xl border-2 border-dashed border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE]/20 p-4 sm:p-5 flex items-center justify-between gap-4 transition-all shadow-2xs"
               >
                 {/* وقت الفترة */}
                 <div className="text-base sm:text-lg font-black text-slate-400 font-mono min-w-[75px] text-center px-3 py-1 bg-slate-50 rounded-xl border border-slate-200/60">
@@ -411,7 +411,7 @@ export function CalendarDayTimelineView({
                     href={`/dashboard/appointments/new?date=${selectedDate}&time=${slot.time}${
                       selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
                     }`}
-                    className="h-9 px-4 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[#0040D8] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                    className="h-9 px-4 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE] hover:bg-[#E3F5EE] text-[#0B7B5E] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>حجز هذه الفترة</span>

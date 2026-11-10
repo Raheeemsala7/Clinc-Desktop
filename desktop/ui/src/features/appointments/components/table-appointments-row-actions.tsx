@@ -71,7 +71,7 @@ export function TableAppointmentsRowActions({
             onClick={handleAdmit}
             disabled={isAnyPending}
             title={t('admit')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0040D8] hover:bg-blue-700 active:scale-95 disabled:opacity-60 text-white font-bold text-xs transition-all cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-60 text-white font-bold text-xs transition-all cursor-pointer shadow-2xs"
           >
             <LogIn className={`w-3.5 h-3.5 ${admitMutation.isPending ? 'animate-spin' : ''}`} />
             <span>{t('admit')}</span>

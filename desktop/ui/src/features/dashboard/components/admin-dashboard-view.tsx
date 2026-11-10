@@ -13,32 +13,32 @@ export const AdminDashboardView = () => {
   const tNav = useTranslations('Dashboard.nav');
 
   const stats = [
-    { title: t('stats.revenue'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#1D4ED8]' },
+    { title: t('stats.revenue'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#0B7B5E]' },
     { title: t('stats.expenses'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#F5B800]' },
-    { title: t('stats.netProfit'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#0A164E]' },
-    { title: t('stats.visits'), value: '0', border: 'border-t-4 border-[#0A164E]' },
-    { title: t('stats.averageVisit'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#1D4ED8]' },
+    { title: t('stats.netProfit'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#074C3A]' },
+    { title: t('stats.visits'), value: '0', border: 'border-t-4 border-[#074C3A]' },
+    { title: t('stats.averageVisit'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#0B7B5E]' },
   ];
 
   const quickActions = [
-    { title: tNav('payments'), href: '/dashboard/payments', iconBg: 'bg-[#081544]' },
-    { title: tNav('expenses'), href: '/dashboard/expenses', iconBg: 'bg-[#1D4ED8]' },
+    { title: tNav('payments'), href: '/dashboard/payments', iconBg: 'bg-[#05382A]' },
+    { title: tNav('expenses'), href: '/dashboard/expenses', iconBg: 'bg-[#0B7B5E]' },
     { title: tNav('closing'), href: '/dashboard/closing', iconBg: 'bg-[#F5B800]' },
-    { title: tNav('reports'), href: '/dashboard/reports', iconBg: 'bg-[#081544]' },
-    { title: tNav('users'), href: '/dashboard/users', iconBg: 'bg-[#1D4ED8]' },
+    { title: tNav('reports'), href: '/dashboard/reports', iconBg: 'bg-[#05382A]' },
+    { title: tNav('users'), href: '/dashboard/users', iconBg: 'bg-[#0B7B5E]' },
     { title: tNav('settings'), href: '/dashboard/settings', iconBg: 'bg-[#F5B800]' },
-    { title: tNav('audit'), href: '/dashboard/audit', iconBg: 'bg-[#081544]' },
-    { title: tNav('patients'), href: '/dashboard/patients', iconBg: 'bg-[#1D4ED8]' },
+    { title: tNav('audit'), href: '/dashboard/audit', iconBg: 'bg-[#05382A]' },
+    { title: tNav('patients'), href: '/dashboard/patients', iconBg: 'bg-[#0B7B5E]' },
   ];
 
   const chartBars = [
-    { height: '40%', color: 'bg-[#0040D8]' },
+    { height: '40%', color: 'bg-[#0B7B5E]' },
     { height: '90%', color: 'bg-brand-yellow' },
-    { height: '50%', color: 'bg-[#0040D8]' },
-    { height: '75%', color: 'bg-[#0040D8]' },
-    { height: '30%', color: 'bg-[#0040D8]' },
-    { height: '65%', color: 'bg-[#0040D8]' },
-    { height: '45%', color: 'bg-[#0040D8]' },
+    { height: '50%', color: 'bg-[#0B7B5E]' },
+    { height: '75%', color: 'bg-[#0B7B5E]' },
+    { height: '30%', color: 'bg-[#0B7B5E]' },
+    { height: '65%', color: 'bg-[#0B7B5E]' },
+    { height: '45%', color: 'bg-[#0B7B5E]' },
   ];
 
   return (
@@ -46,7 +46,7 @@ export const AdminDashboardView = () => {
       {/* رأس الصفحة + فلتر التاريخ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
-          <h2 className="text-3xl font-black text-[#0A164E] tracking-tight">
+          <h2 className="text-3xl font-black text-[#074C3A] tracking-tight">
             {t('title')}
           </h2>
           <p className="text-sm text-slate-400 mt-1">
@@ -72,7 +72,7 @@ export const AdminDashboardView = () => {
             <span className="text-xs font-semibold text-slate-400 mb-2">
               {stat.title}
             </span>
-            <span className="text-lg sm:text-2xl font-black text-[#0A164E] tracking-tight">
+            <span className="text-lg sm:text-2xl font-black text-[#074C3A] tracking-tight">
               {stat.value}
             </span>
           </div>
@@ -85,9 +85,9 @@ export const AdminDashboardView = () => {
           <Link
             key={i}
             href={action.href}
-            className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-100 flex items-center justify-between hover:shadow-md hover:border-blue-100 transition-all group"
+            className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-100 flex items-center justify-between hover:shadow-md hover:border-[#D0E5DC] transition-all group"
           >
-            <span className="font-bold text-sm text-[#0A164E] group-hover:text-[#1D4ED8] transition-colors">
+            <span className="font-bold text-sm text-[#074C3A] group-hover:text-[#0B7B5E] transition-colors">
               {action.title}
             </span>
             <span
@@ -102,7 +102,7 @@ export const AdminDashboardView = () => {
 
       {/* كارت الرسم البياني التوضيحي للإيرادات */}
       <div className="bg-white rounded-2xl p-6 sm:p-7 shadow-xs border border-slate-100">
-        <h3 className="text-sm font-bold text-[#0A164E] mb-6 text-start">
+        <h3 className="text-sm font-bold text-[#074C3A] mb-6 text-start">
           {t('weeklyRevenue')}
         </h3>
 

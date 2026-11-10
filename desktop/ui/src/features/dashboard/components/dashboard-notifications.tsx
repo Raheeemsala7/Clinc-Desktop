@@ -89,7 +89,7 @@ export function DashboardNotifications() {
   const getIcon = (type: NotificationItem['type']) => {
     switch (type) {
       case 'booking':
-        return <Calendar className="w-4 h-4 text-blue-600" />;
+        return <Calendar className="w-4 h-4 text-[#0B7B5E]" />;
       case 'payment':
         return <CreditCard className="w-4 h-4 text-emerald-600" />;
       case 'waiting':
@@ -100,7 +100,7 @@ export function DashboardNotifications() {
   const getIconBg = (type: NotificationItem['type']) => {
     switch (type) {
       case 'booking':
-        return 'bg-blue-50';
+        return 'bg-[#E3F5EE]';
       case 'payment':
         return 'bg-emerald-50';
       case 'waiting':
@@ -114,7 +114,7 @@ export function DashboardNotifications() {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0A164E] text-brand-yellow flex items-center justify-center font-black text-sm shadow-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+        className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#074C3A] text-brand-yellow flex items-center justify-center font-black text-sm shadow-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
         aria-label={t('title')}
         title={t('title')}
         aria-expanded={open}
@@ -135,7 +135,7 @@ export function DashboardNotifications() {
           {/* رأس القائمة */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/70">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-[#0A164E]">{t('title')}</span>
+              <span className="font-bold text-sm text-[#074C3A]">{t('title')}</span>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-xs font-bold">
                   {t('newCount', { count: unreadCount })}
@@ -147,7 +147,7 @@ export function DashboardNotifications() {
               <button
                 type="button"
                 onClick={handleMarkAllAsRead}
-                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-[#0B7B5E] hover:text-[#074C3A] font-semibold cursor-pointer transition-colors"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 <span>{t('markAllRead')}</span>
@@ -168,7 +168,7 @@ export function DashboardNotifications() {
                   onClick={() => handleMarkAsRead(item.id)}
                   className={cn(
                     'flex items-start gap-3 p-3.5 hover:bg-slate-50/80 transition-colors cursor-pointer text-start',
-                    item.unread && 'bg-blue-50/30'
+                    item.unread && 'bg-[#E3F5EE]/30'
                   )}
                 >
                   {/* أيقونة نوع الإشعار */}
@@ -184,11 +184,11 @@ export function DashboardNotifications() {
                   {/* نصوص الإشعار */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <p className="text-xs font-bold text-[#0A164E] truncate">
+                      <p className="text-xs font-bold text-[#074C3A] truncate">
                         {t(item.titleKey)}
                       </p>
                       {item.unread && (
-                        <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
+                        <span className="w-2 h-2 rounded-full bg-[#0B7B5E] shrink-0" />
                       )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
@@ -208,7 +208,7 @@ export function DashboardNotifications() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="text-xs text-slate-600 hover:text-[#0A164E] font-bold py-1 w-full rounded-lg hover:bg-white transition-colors cursor-pointer"
+              className="text-xs text-slate-600 hover:text-[#074C3A] font-bold py-1 w-full rounded-lg hover:bg-white transition-colors cursor-pointer"
             >
               {t('viewAll')}
             </button>

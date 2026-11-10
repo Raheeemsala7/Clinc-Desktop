@@ -43,11 +43,11 @@ export function AppointmentTypeStepCard() {
     <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-100 space-y-5 animate-in fade-in-50">
       {/* رأس القسم: الرقم 2 والعنوان */}
       <div className="flex items-start gap-3.5">
-        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-black text-sm shrink-0">
+        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0B7B5E] text-white flex items-center justify-center font-black text-sm shrink-0">
           2
         </span>
         <div>
-          <h3 className="text-base sm:text-lg font-black text-[#0A164E] tracking-tight">
+          <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
             نوع الموعد
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -73,12 +73,12 @@ export function AppointmentTypeStepCard() {
                     className={cn(
                       'h-12 sm:h-14 px-3 py-2 rounded-2xl border transition-all cursor-pointer flex items-center justify-center gap-2 select-none',
                       isSelected
-                        ? 'border-[#1D4ED8] bg-blue-50/70 text-[#0A164E] font-black shadow-xs ring-2 ring-blue-600/10'
+                        ? 'border-[#0B7B5E] bg-[#E3F5EE]/70 text-[#074C3A] font-black shadow-xs ring-2 ring-blue-600/10'
                         : 'border-slate-200 bg-white text-slate-700 font-bold hover:border-slate-300 hover:bg-slate-50/60'
                     )}
                   >
                     {isSelected && (
-                      <Check className="w-3.5 h-3.5 text-[#1D4ED8] stroke-[3] shrink-0" />
+                      <Check className="w-3.5 h-3.5 text-[#0B7B5E] stroke-[3] shrink-0" />
                     )}
                     <span className="text-xs sm:text-sm">{type.label}</span>
                     <span

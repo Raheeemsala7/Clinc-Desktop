@@ -11,7 +11,7 @@ export const CHRONIC_DISEASES = [
 ] as const;
 
 export const APPOINTMENT_TYPES: AppointmentTypeOption[] = [
-  { id: 'EXAMINATION', label: 'كشف', dotColor: 'bg-[#1D4ED8]', defaultFee: 300 },
+  { id: 'EXAMINATION', label: 'كشف', dotColor: 'bg-[#0B7B5E]', defaultFee: 300 },
   { id: 'FOLLOW_UP', label: 'إعادة', dotColor: 'bg-emerald-500', defaultFee: 0 },
   { id: 'OPERATION_FOLLOWUP', label: 'متابعة عملية', dotColor: 'bg-amber-500', defaultFee: 0 },
   { id: 'ENDOSCOPY', label: 'منظار', dotColor: 'bg-teal-500', defaultFee: 200 },

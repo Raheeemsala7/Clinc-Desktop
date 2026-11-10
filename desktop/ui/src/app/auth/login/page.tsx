@@ -38,7 +38,7 @@ export default async function LoginPage() {
 
           <Link
             href="/"
-            className="text-xs font-semibold text-slate-400 hover:text-[#1D4ED8] transition-colors inline-flex items-center gap-1.5 group"
+            className="text-xs font-semibold text-slate-400 hover:text-[#0B7B5E] transition-colors inline-flex items-center gap-1.5 group"
           >
             <span>{t('backToHome')}</span>
             <ArrowLeft className="w-3.5 h-3.5 transition-transform rtl:rotate-0 ltr:rotate-180 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5" />

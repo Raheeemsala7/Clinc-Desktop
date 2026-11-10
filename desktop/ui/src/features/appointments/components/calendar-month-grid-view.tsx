@@ -83,7 +83,7 @@ export function CalendarMonthGridView({
             <span>في الانتظار</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#0040D8]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E]" />
             <span>محجوز</span>
           </div>
         </div>
@@ -130,7 +130,7 @@ export function CalendarMonthGridView({
                         : isOff
                         ? 'bg-slate-50/60'
                         : isToday
-                        ? 'bg-blue-50/20 hover:bg-blue-50/40'
+                        ? 'bg-[#E3F5EE]/20 hover:bg-[#E3F5EE]/40'
                         : 'hover:bg-slate-50/80 bg-white'
                     }`}
                   >
@@ -139,12 +139,12 @@ export function CalendarMonthGridView({
                       <div
                         className={`w-7 h-7 rounded-xl flex items-center justify-center font-black ${
                           isToday
-                            ? 'bg-[#0A164E] text-white shadow-xs'
+                            ? 'bg-[#074C3A] text-white shadow-xs'
                             : !isCurrent
                             ? 'text-slate-300'
                             : isOff
                             ? 'text-slate-400'
-                            : 'text-[#0A164E]'
+                            : 'text-[#074C3A]'
                         }`}
                       >
                         {day.dayNumber}
@@ -156,7 +156,7 @@ export function CalendarMonthGridView({
                           إجازة
                         </span>
                       ) : dayAppts.length > 0 ? (
-                        <span className="text-[10px] text-blue-700 font-bold px-1.5 py-0.2 rounded-md bg-blue-50 border border-blue-100">
+                        <span className="text-[10px] text-[#0B7B5E] font-bold px-1.5 py-0.2 rounded-md bg-[#E3F5EE] border border-[#D0E5DC]">
                           {dayAppts.length} {dayAppts.length === 1 ? 'موعد' : 'مواعيد'}
                         </span>
                       ) : null}
@@ -172,7 +172,7 @@ export function CalendarMonthGridView({
                           ? 'bg-[#DCFCE7] border-[#86EFAC] text-emerald-950'
                           : isWaiting
                           ? 'bg-[#FEF08A] border-[#FDE047] text-amber-950'
-                          : 'bg-[#DBEAFE] border-[#BFDBFE] text-blue-950';
+                          : 'bg-[#DBEAFE] border-[#BFDBFE] text-[#0B241D]';
 
                         return (
                           <div
@@ -199,7 +199,7 @@ export function CalendarMonthGridView({
                       })}
 
                       {dayAppts.length > 2 && (
-                        <div className="text-[10px] font-bold text-blue-600 text-center pt-0.5 hover:underline">
+                        <div className="text-[10px] font-bold text-[#0B7B5E] text-center pt-0.5 hover:underline">
                           +{dayAppts.length - 2} مواعيد أخرى
                         </div>
                       )}

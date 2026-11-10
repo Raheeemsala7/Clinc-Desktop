@@ -35,10 +35,10 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
     return (
       <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-12 text-center">
         <div className="max-w-md mx-auto flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0040D8] mb-4 shadow-2xs">
+          <div className="w-16 h-16 rounded-2xl bg-[#E3F5EE] border border-[#D0E5DC] flex items-center justify-center text-[#0B7B5E] mb-4 shadow-2xs">
             <Users className="w-8 h-8 stroke-[1.8]" />
           </div>
-          <h3 className="text-lg font-black text-[#0A164E] mb-2">
+          <h3 className="text-lg font-black text-[#074C3A] mb-2">
             {t('emptyTitle')}
           </h3>
           <p className="text-sm text-slate-400 mb-6 leading-relaxed">
@@ -46,7 +46,7 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
           </p>
           <Link
             href="/dashboard/appointments/new"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold text-sm shadow-sm transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-sm shadow-sm transition-all"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>حجز موعد أو كشف مباشر</span>
@@ -62,7 +62,7 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
       <div className="p-4 sm:px-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/40">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-slate-500">إجمالي الحالات في الانتظار:</span>
-          <span className="px-2.5 py-0.5 rounded-full bg-[#0040D8] text-white text-xs font-black">
+          <span className="px-2.5 py-0.5 rounded-full bg-[#0B7B5E] text-white text-xs font-black">
             {patients.length}
           </span>
         </div>
@@ -103,7 +103,7 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
                 >
                   {/* رقم الكشف */}
                   <td className="py-4 px-6 text-start">
-                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-blue-50 text-[#0040D8] font-black text-sm">
+                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-[#E3F5EE] text-[#0B7B5E] font-black text-sm">
                       #{queueNo}
                     </span>
                   </td>
@@ -111,7 +111,7 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
                   {/* اسم المريض وبياناته */}
                   <td className="py-4 px-6 text-start">
                     <div className="flex flex-col">
-                      <span className="font-bold text-[#0A164E] text-sm">
+                      <span className="font-bold text-[#074C3A] text-sm">
                         {patient.patientName}
                       </span>
                       <div className="flex items-center gap-2 mt-0.5">
