@@ -266,7 +266,6 @@ export function EntPaperSheet({
     ? examData.additionalVisits
     : [
         { id: 'v2', visitNumber: 2, label: '2nd Visit:', date: '', notes: examData.secondVisitNotes || '' },
-        { id: 'v3', visitNumber: 3, label: '3rd Visit:', date: '', notes: examData.thirdVisitNotes || '' },
       ];
 
   const updateVisit = (index: number, field: 'date' | 'notes', val: string) => {
@@ -559,6 +558,16 @@ export function EntPaperSheet({
                     ear: { ...prev.ear, drawing: val },
                   }))
                 }
+                drawingHistory={examData.ear.drawingHistory}
+                onAddSnapshot={(snap) =>
+                  onChange((prev) => ({
+                    ...prev,
+                    ear: {
+                      ...prev.ear,
+                      drawingHistory: [...(prev.ear.drawingHistory || []), snap],
+                    },
+                  }))
+                }
                 readOnly={isPrintOnly}
               />
             </div>
@@ -700,6 +709,16 @@ export function EntPaperSheet({
                 onChange((prev) => ({
                   ...prev,
                   nose: { ...prev.nose, drawing: val },
+                }))
+              }
+              drawingHistory={examData.nose.drawingHistory}
+              onAddSnapshot={(snap) =>
+                onChange((prev) => ({
+                  ...prev,
+                  nose: {
+                    ...prev.nose,
+                    drawingHistory: [...(prev.nose.drawingHistory || []), snap],
+                  },
                 }))
               }
               readOnly={isPrintOnly}
@@ -874,6 +893,16 @@ export function EntPaperSheet({
                   onChange((prev) => ({
                     ...prev,
                     larynx: { ...prev.larynx, drawing: val },
+                  }))
+                }
+                drawingHistory={examData.larynx.drawingHistory}
+                onAddSnapshot={(snap) =>
+                  onChange((prev) => ({
+                    ...prev,
+                    larynx: {
+                      ...prev.larynx,
+                      drawingHistory: [...(prev.larynx.drawingHistory || []), snap],
+                    },
                   }))
                 }
                 readOnly={isPrintOnly}
@@ -1083,7 +1112,7 @@ export function EntPaperSheet({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+            <div className={`grid grid-cols-1 ${visitsList.length > 1 ? 'sm:grid-cols-2' : ''} gap-x-4 gap-y-3`}>
               {visitsList.map((visit, idx) => (
                 <div key={visit.id || idx} className="space-y-1 border-b border-dotted border-slate-300 pb-2">
                   <div className="flex items-baseline justify-between gap-1">
@@ -1099,7 +1128,7 @@ export function EntPaperSheet({
                         placeholder="DD/MM/YYYY"
                         className="w-24 border-b border-dotted border-black bg-transparent px-1 text-[11px] font-mono focus:outline-none"
                       />
-                      {!isPrintOnly && visitsList.length > 2 && (
+                      {!isPrintOnly && visitsList.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeVisit(idx)}

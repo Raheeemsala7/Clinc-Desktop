@@ -66,6 +66,17 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
             <span>حجز جديد</span>
           </Link>
 
+          {details.previousAppointments && details.previousAppointments[0] && (
+            <Link
+              href={`/dashboard/examination/${details.previousAppointments[0].id}`}
+              className="h-10 px-3.5 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-[#0040D8] font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+              title="فتح استمارة كشف المريض الكاملة"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>استمارة الكشف 📋</span>
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={() => setIsEditOpen(true)}

@@ -17,6 +17,7 @@ export interface IPatient extends Document {
   allergies: string[];
   chronicConditions: string[];
   generalNotes?: string;
+  masterExamination?: Record<string, any>;
   createdById: string;
   isArchived?: boolean;
   archivedAt?: Date;
@@ -45,6 +46,7 @@ const PatientSchema = new Schema(
     allergies: { type: [String], default: [] },
     chronicConditions: { type: [String], default: [] },
     generalNotes: { type: String },
+    masterExamination: { type: Schema.Types.Mixed, default: {} },
     createdById: { type: String, required: true },
     isArchived: { type: Boolean, default: false },
     archivedAt: { type: Date },

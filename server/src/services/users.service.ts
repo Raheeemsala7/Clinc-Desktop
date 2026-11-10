@@ -51,12 +51,15 @@ export class UsersService {
       throw new ConflictError('Username already in use');
     }
 
+    const normalizedRole =
+      role.toUpperCase() === 'RECEPTIONIST' ? 'RECEPTION' : role.toUpperCase();
+
     const passwordHash = await hashPassword(password);
     const user = await User.create({
-      name,
+      name: name.trim(),
       username: cleanUsername,
       passwordHash,
-      role,
+      role: normalizedRole,
       isActive: true,
     });
 

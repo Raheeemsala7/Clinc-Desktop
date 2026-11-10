@@ -1,3 +1,11 @@
+export interface DrawingSnapshot {
+  id: string;
+  date: string;
+  drawing: string;
+  label?: string;
+  notes?: string;
+}
+
 export interface EntEarSide {
   swelling?: string;
   tenderness?: string;
@@ -15,6 +23,7 @@ export interface EntEarExam {
   lt: EntEarSide;
   weber?: 'Centralized' | 'Lateralized Rt' | 'Lateralized Lt' | string;
   drawing?: string; // Base64 transparent drawing layer by the doctor
+  drawingHistory?: DrawingSnapshot[]; // أرشيف تاريخ الرسومات السابقة للمريض
   vestibular: {
     rombergTest?: string;
     dexahallpike?: string;
@@ -43,11 +52,13 @@ export interface EntNoseExam {
   lt: EntNoseSide;
   deformity?: string;
   drawing?: string; // Base64 transparent drawing layer by the doctor
+  drawingHistory?: DrawingSnapshot[];
 }
 
 export interface EntOropharynxExam {
   mallampati?: 'Class I' | 'Class II' | 'Class III' | 'Class IV' | string;
   drawing?: string; // Base64 drawing layer
+  drawingHistory?: DrawingSnapshot[];
   tonsils?: string;
   adenoid?: string;
   softPalate?: string;
@@ -68,6 +79,7 @@ export interface EntLarynxExam {
   indirectLaryngoscope?: string;
   others?: string;
   drawing?: string; // Base64 transparent drawing layer by the doctor
+  drawingHistory?: DrawingSnapshot[];
 }
 
 export interface InvestigationItem {

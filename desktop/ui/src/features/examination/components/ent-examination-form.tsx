@@ -75,7 +75,7 @@ export function EntExaminationForm({
     date: existingExam.date || appointment?.clinicDate || new Date().toISOString().slice(0, 10),
     residence: existingExam.residence || patient?.address || '',
     maritalStatus: defaultMarital,
-    work: existingExam.work || '',
+    work: existingExam.work || (patient as any)?.occupation || '',
     habits: existingExam.habits || '',
     smokingIndex: existingExam.smokingIndex || '',
 

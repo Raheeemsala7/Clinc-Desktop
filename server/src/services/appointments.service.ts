@@ -720,17 +720,65 @@ export class AppointmentsService {
     if (!appt) throw new NotFoundError('Appointment not found');
 
     const [patient, doctor] = await Promise.all([
-      Patient.findById(appt.patientId).select('id fullName phone gender dateOfBirth age address'),
+      Patient.findById(appt.patientId).select(
+        'id fullName phone gender dateOfBirth age address occupation maritalStatus generalNotes masterExamination',
+      ),
       User.findById(appt.doctorId).select('id name'),
     ]);
 
     let visit = await Visit.findOne({ appointmentId: appt.id });
     if (!visit) {
+      // جلب استمارة الكشف الأساسية للمريض (Master Examination) من الزيارات السابقة أو ملف المريض الدائم
+      const previousVisitWithExam = await Visit.findOne({
+        patientId: appt.patientId,
+        $or: [
+          { 'entExamination.ear': { $exists: true } },
+          { 'entExamination.complaint': { $exists: true, $ne: '' } },
+          { 'entExamination.diagnosis': { $exists: true, $ne: '' } },
+        ],
+      }).sort({ createdAt: -1 });
+
+      const initialExam =
+        previousVisitWithExam?.entExamination &&
+        Object.keys(previousVisitWithExam.entExamination).length > 0
+          ? previousVisitWithExam.entExamination
+          : (patient as any)?.masterExamination || {};
+
       visit = await Visit.create({
         appointmentId: appt.id,
         patientId: appt.patientId,
         doctorId: appt.doctorId,
+        entExamination: initialExam,
+        complaint: previousVisitWithExam?.complaint || '',
+        diagnosis: previousVisitWithExam?.diagnosis || '',
       });
+    } else if (!visit.entExamination || Object.keys(visit.entExamination).length === 0) {
+      const previousVisitWithExam = await Visit.findOne({
+        patientId: appt.patientId,
+        _id: { $ne: visit._id },
+        $or: [
+          { 'entExamination.ear': { $exists: true } },
+          { 'entExamination.complaint': { $exists: true, $ne: '' } },
+          { 'entExamination.diagnosis': { $exists: true, $ne: '' } },
+        ],
+      }).sort({ createdAt: -1 });
+
+      const initialExam =
+        previousVisitWithExam?.entExamination &&
+        Object.keys(previousVisitWithExam.entExamination).length > 0
+          ? previousVisitWithExam.entExamination
+          : (patient as any)?.masterExamination || {};
+
+      if (initialExam && Object.keys(initialExam).length > 0) {
+        visit.entExamination = initialExam;
+        if (!visit.complaint && previousVisitWithExam?.complaint) {
+          visit.complaint = previousVisitWithExam.complaint;
+        }
+        if (!visit.diagnosis && previousVisitWithExam?.diagnosis) {
+          visit.diagnosis = previousVisitWithExam.diagnosis;
+        }
+        await visit.save();
+      }
     }
 
     const apptJson = appt.toJSON();

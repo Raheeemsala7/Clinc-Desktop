@@ -2,10 +2,12 @@
 
 import React from 'react';
 import { DrawingCanvasOverlay } from './drawing-canvas-overlay';
+import { DrawingSnapshot } from '../types/ent-examination.types';
+import { Check } from 'lucide-react';
 
 /**
- * رسومات توضيحية تشريحية لأقسام كشف الأنف والأذن والحنجرة
- * مكبّرة ومطابقة تماماً للأصل الورقي مع إمكانية الرسم والتأشير الحر بالقلم والممحاة
+ * رسومات توضيحية وصور حقيقية لأقسام كشف الأنف والأذن والحنجرة
+ * مع إمكانية الرسم والتأشير الحر بالقلم والممحاة وحفظ لقطات للزيارات
  */
 
 export function EarAnatomyDiagram({
@@ -13,17 +15,21 @@ export function EarAnatomyDiagram({
   onSelectWeber,
   drawing,
   onSaveDrawing,
+  drawingHistory = [],
+  onAddSnapshot,
   readOnly = false,
 }: {
   selectedWeber?: string;
   onSelectWeber?: (val: string) => void;
   drawing?: string;
   onSaveDrawing?: (dataUrl: string) => void;
+  drawingHistory?: DrawingSnapshot[];
+  onAddSnapshot?: (snapshot: DrawingSnapshot) => void;
   readOnly?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center justify-center p-1 bg-transparent border-none select-none print:border-none print:p-0 print:bg-transparent">
-      {/* عنوان الفحص كما في الصورة المرفقة بـ Double Underline */}
+      {/* عنوان الفحص كما في الأصل بـ Double Underline */}
       <div className="text-center mb-1.5">
         <span className="font-serif text-2xl sm:text-3xl font-black text-black underline decoration-double underline-offset-4 tracking-wide">
           Ear
@@ -33,59 +39,30 @@ export function EarAnatomyDiagram({
       <DrawingCanvasOverlay
         initialDrawing={drawing}
         onSaveDrawing={onSaveDrawing}
+        drawingHistory={drawingHistory}
+        onAddSnapshot={onAddSnapshot}
         width={560}
-        height={280}
+        height={270}
         readOnly={readOnly}
       >
-        <div className="flex items-start justify-between w-full h-full px-3 text-black font-serif pt-1">
-          {/* Right Ear (الأذن اليمنى) - مكبّرة ومطابقة 100% للصورة المرفقة */}
+        <div className="flex items-center justify-between w-full h-full px-4 text-black font-serif">
+          {/* Right Ear (الأذن اليمنى) - صورة المنظار الحقيقية */}
           <div className="flex flex-col items-center">
-            <span className="text-xl font-black font-serif mb-1 tracking-tight">Rt</span>
-            <svg
-              className="w-38 h-56 text-black drop-shadow-2xs"
-              viewBox="0 0 110 150"
-              fill="none"
-              stroke="currentColor"
-            >
-              {/* إطار طبلة الأذن البيضاوي (Tympanic Ring) */}
-              <ellipse
-                cx="55"
-                cy="78"
-                rx="46"
-                ry="64"
-                strokeWidth="3.4"
-                stroke="currentColor"
-                fill="none"
+            <span className="text-lg font-black font-serif mb-1 tracking-tight text-slate-900">Rt</span>
+            <div className="relative w-44 h-44 rounded-full overflow-hidden border-2 border-slate-800 shadow-md bg-black">
+              <img
+                src="/images/ear-right.jpg"
+                alt="Right Ear Tympanic Membrane"
+                className="w-full h-full object-cover select-none pointer-events-none"
               />
-
-              {/* الثنيات المطرية الأمامية والخلفية (Anterior & Posterior Malleolar Folds) */}
-              <path
-                d="M 11 68 C 22 70, 36 60, 52 50"
-                strokeWidth="2.5"
-                stroke="currentColor"
-                fill="none"
-              />
-              <path
-                d="M 99 74 C 84 68, 72 58, 62 50"
-                strokeWidth="2.5"
-                stroke="currentColor"
-                fill="none"
-              />
-
-              {/* مقبض عظمة المطرقة وسرة الطبلة (Manubrium of Malleus & Umbo) */}
-              <path
-                d="M 52 46 L 50 104 C 50 112, 59 112, 59 104 L 62 46 Z"
-                strokeWidth="2.5"
-                stroke="currentColor"
-                fill="none"
-              />
-            </svg>
+            </div>
+            <span className="text-[10px] font-bold text-slate-500 mt-1">Right Ear (OD)</span>
           </div>
 
           {/* Weber in Center - في المنتصف بين الأذنين */}
-          <div className="flex flex-col items-center pt-4">
+          <div className="flex flex-col items-center justify-center">
             <svg
-              className="w-32 h-18 text-black"
+              className="w-28 h-16 text-black"
               viewBox="0 0 110 65"
               fill="none"
               stroke="currentColor"
@@ -118,48 +95,17 @@ export function EarAnatomyDiagram({
             )}
           </div>
 
-          {/* Left Ear (الأذن اليسرى) - مكبّرة ومطابقة 100% للصورة المرفقة */}
+          {/* Left Ear (الأذن اليسرى) - صورة المنظار الحقيقية */}
           <div className="flex flex-col items-center">
-            <span className="text-xl font-black font-serif mb-1 tracking-tight">Lt</span>
-            <svg
-              className="w-38 h-56 text-black drop-shadow-2xs"
-              viewBox="0 0 110 150"
-              fill="none"
-              stroke="currentColor"
-            >
-              {/* إطار طبلة الأذن البيضاوي (Tympanic Ring) */}
-              <ellipse
-                cx="55"
-                cy="78"
-                rx="46"
-                ry="64"
-                strokeWidth="3.4"
-                stroke="currentColor"
-                fill="none"
+            <span className="text-lg font-black font-serif mb-1 tracking-tight text-slate-900">Lt</span>
+            <div className="relative w-44 h-44 rounded-full overflow-hidden border-2 border-slate-800 shadow-md bg-black">
+              <img
+                src="/images/ear-left.jpg"
+                alt="Left Ear Tympanic Membrane"
+                className="w-full h-full object-cover select-none pointer-events-none"
               />
-
-              {/* الثنية المطرية الأمامية وبها نتوء وكسرة الزاوية مطابقة للصورة */}
-              <path
-                d="M 11 76 C 20 78, 25 84, 30 84 C 36 84, 40 72, 44 72 C 48 72, 51 58, 54 52"
-                strokeWidth="2.5"
-                stroke="currentColor"
-                fill="none"
-              />
-              <path
-                d="M 99 64 C 84 62, 72 56, 65 52"
-                strokeWidth="2.5"
-                stroke="currentColor"
-                fill="none"
-              />
-
-              {/* مقبض عظمة المطرقة مائل لليمين باتجاه الساعة الخامسة مطابق تماماً للصورة */}
-              <path
-                d="M 54 48 L 65 106 C 68 114, 76 112, 74 104 L 65 48 Z"
-                strokeWidth="2.5"
-                stroke="currentColor"
-                fill="none"
-              />
-            </svg>
+            </div>
+            <span className="text-[10px] font-bold text-slate-500 mt-1">Left Ear (OS)</span>
           </div>
         </div>
       </DrawingCanvasOverlay>
@@ -195,10 +141,14 @@ export function EarAnatomyDiagram({
 export function NoseAnatomyDiagram({
   drawing,
   onSaveDrawing,
+  drawingHistory = [],
+  onAddSnapshot,
   readOnly = false,
 }: {
   drawing?: string;
   onSaveDrawing?: (dataUrl: string) => void;
+  drawingHistory?: DrawingSnapshot[];
+  onAddSnapshot?: (snapshot: DrawingSnapshot) => void;
   readOnly?: boolean;
 }) {
   return (
@@ -210,6 +160,8 @@ export function NoseAnatomyDiagram({
       <DrawingCanvasOverlay
         initialDrawing={drawing}
         onSaveDrawing={onSaveDrawing}
+        drawingHistory={drawingHistory}
+        onAddSnapshot={onAddSnapshot}
         width={320}
         height={220}
         readOnly={readOnly}
@@ -249,28 +201,52 @@ export function NoseAnatomyDiagram({
 }
 
 export function MallampatiSelector({
-  selectedClass,
+  selectedClass = 'Class I',
   onSelect,
 }: {
   selectedClass?: string;
   onSelect?: (val: string) => void;
 }) {
   const classes = [
-    { id: 'Class I', label: 'Class I' },
-    { id: 'Class II', label: 'Class II' },
-    { id: 'Class III', label: 'Class III' },
-    { id: 'Class IV', label: 'Class IV' },
+    {
+      id: 'Class I',
+      label: 'Class I',
+      sublabel: 'حلق لين + لهاة + رتوج',
+      img: '/images/mallampati-1.svg',
+    },
+    {
+      id: 'Class II',
+      label: 'Class II',
+      sublabel: 'حلق لين + لهاة',
+      img: '/images/mallampati-2.svg',
+    },
+    {
+      id: 'Class III',
+      label: 'Class III',
+      sublabel: 'حلق لين + قاعدة اللهاة',
+      img: '/images/mallampati-3.svg',
+    },
+    {
+      id: 'Class IV',
+      label: 'Class IV',
+      sublabel: 'حلق صلب فقط',
+      img: '/images/mallampati-4.svg',
+    },
   ];
 
   return (
-    <div className="p-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl select-none print:border-none print:p-0 print:bg-transparent">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-black text-black">Mallampati classification</span>
-        <span className="text-[11px] font-bold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full print:border print:border-black print:text-black print:bg-transparent">
+    <div className="p-3 bg-slate-50/80 border border-slate-200 rounded-2xl select-none print:border-none print:p-0 print:bg-transparent">
+      <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-black text-slate-900">Mallampati classification:</span>
+          <span className="text-[11px] font-bold text-slate-500">اختر درجة الرؤية المناسبة للمريض</span>
+        </div>
+        <span className="text-xs font-black text-blue-700 bg-blue-100 border border-blue-200 px-3 py-0.5 rounded-full print:border-black print:text-black print:bg-transparent">
           {selectedClass || 'Class I'}
         </span>
       </div>
-      <div className="grid grid-cols-4 gap-2">
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {classes.map((c) => {
           const isSelected = selectedClass === c.id;
           return (
@@ -278,28 +254,31 @@ export function MallampatiSelector({
               key={c.id}
               type="button"
               onClick={() => onSelect?.(c.id)}
-              className={`p-1.5 rounded-xl border text-center transition-all cursor-pointer ${
+              className={`flex flex-col items-center p-2 rounded-xl border text-center transition-all cursor-pointer relative group ${
                 isSelected
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-2xs print:border-black print:text-black print:bg-transparent'
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 print:border-none'
+                  ? 'bg-blue-50/90 border-blue-600 ring-2 ring-blue-500/30 shadow-xs print:border-black print:bg-transparent'
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50/50 print:border-none'
               }`}
             >
-              <svg
-                className={`w-9 h-9 mx-auto mb-1 ${
-                  isSelected ? 'text-white print:text-black' : 'text-black'
-                }`}
-                viewBox="0 0 40 40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              >
-                <ellipse cx="20" cy="20" rx="16" ry="12" />
-                <path d="M 10 18 Q 20 26 30 18" />
-                {c.id !== 'Class IV' && (
-                  <path d="M 18 20 Q 20 28 22 20" fill="currentColor" />
-                )}
-              </svg>
-              <span className="text-[11px] font-black block">{c.label}</span>
+              {isSelected && (
+                <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white print:hidden">
+                  <Check className="w-2.5 h-2.5" />
+                </div>
+              )}
+              {/* صورة الصنف من SVG الأصلي */}
+              <div className="w-full h-24 sm:h-28 flex items-center justify-center bg-white rounded-lg p-1 mb-1.5 border border-slate-100">
+                <img
+                  src={c.img}
+                  alt={c.label}
+                  className="w-full h-full object-contain pointer-events-none"
+                />
+              </div>
+              <span className={`text-xs font-black ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
+                {c.label}
+              </span>
+              <span className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                {c.sublabel}
+              </span>
             </button>
           );
         })}
@@ -311,10 +290,14 @@ export function MallampatiSelector({
 export function LarynxVocalCordDiagram({
   drawing,
   onSaveDrawing,
+  drawingHistory = [],
+  onAddSnapshot,
   readOnly = false,
 }: {
   drawing?: string;
   onSaveDrawing?: (dataUrl: string) => void;
+  drawingHistory?: DrawingSnapshot[];
+  onAddSnapshot?: (snapshot: DrawingSnapshot) => void;
   readOnly?: boolean;
 }) {
   return (
@@ -326,27 +309,19 @@ export function LarynxVocalCordDiagram({
       <DrawingCanvasOverlay
         initialDrawing={drawing}
         onSaveDrawing={onSaveDrawing}
-        width={280}
-        height={220}
+        drawingHistory={drawingHistory}
+        onAddSnapshot={onAddSnapshot}
+        width={320}
+        height={210}
         readOnly={readOnly}
       >
-        <svg
-          className="w-36 h-36 text-black"
-          viewBox="0 0 80 80"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          {/* Laryngeal ring outline */}
-          <circle cx="40" cy="40" r="34" strokeWidth="3" />
-          {/* Vocal cords V-shape */}
-          <path d="M 40 18 L 24 58 M 40 18 L 56 58" strokeWidth="3" />
-          {/* Arytenoids */}
-          <circle cx="24" cy="58" r="4.5" fill="currentColor" />
-          <circle cx="56" cy="58" r="4.5" fill="currentColor" />
-          {/* Posterior commissure */}
-          <line x1="24" y1="58" x2="56" y2="58" strokeWidth="2.2" strokeDasharray="3 2" />
-        </svg>
+        <div className="relative w-full h-full flex items-center justify-center bg-black rounded-xl overflow-hidden shadow-inner">
+          <img
+            src="/images/larynx.png"
+            alt="Larynx Endoscopic View"
+            className="w-full h-full object-cover select-none pointer-events-none"
+          />
+        </div>
       </DrawingCanvasOverlay>
     </div>
   );

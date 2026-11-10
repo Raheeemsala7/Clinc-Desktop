@@ -100439,6 +100439,7 @@ var init_patient_model = __esm({
         allergies: { type: [String], default: [] },
         chronicConditions: { type: [String], default: [] },
         generalNotes: { type: String },
+        masterExamination: { type: import_mongoose4.Schema.Types.Mixed, default: {} },
         createdById: { type: String, required: true },
         isArchived: { type: Boolean, default: false },
         archivedAt: { type: Date },
@@ -172778,16 +172779,51 @@ var AppointmentsService = class {
     const appt = await Appointment.findById(id);
     if (!appt) throw new NotFoundError("Appointment not found");
     const [patient, doctor] = await Promise.all([
-      Patient.findById(appt.patientId).select("id fullName phone gender dateOfBirth age address"),
+      Patient.findById(appt.patientId).select(
+        "id fullName phone gender dateOfBirth age address occupation maritalStatus generalNotes masterExamination"
+      ),
       User.findById(appt.doctorId).select("id name")
     ]);
     let visit = await Visit.findOne({ appointmentId: appt.id });
     if (!visit) {
+      const previousVisitWithExam = await Visit.findOne({
+        patientId: appt.patientId,
+        $or: [
+          { "entExamination.ear": { $exists: true } },
+          { "entExamination.complaint": { $exists: true, $ne: "" } },
+          { "entExamination.diagnosis": { $exists: true, $ne: "" } }
+        ]
+      }).sort({ createdAt: -1 });
+      const initialExam = previousVisitWithExam?.entExamination && Object.keys(previousVisitWithExam.entExamination).length > 0 ? previousVisitWithExam.entExamination : patient?.masterExamination || {};
       visit = await Visit.create({
         appointmentId: appt.id,
         patientId: appt.patientId,
-        doctorId: appt.doctorId
+        doctorId: appt.doctorId,
+        entExamination: initialExam,
+        complaint: previousVisitWithExam?.complaint || "",
+        diagnosis: previousVisitWithExam?.diagnosis || ""
       });
+    } else if (!visit.entExamination || Object.keys(visit.entExamination).length === 0) {
+      const previousVisitWithExam = await Visit.findOne({
+        patientId: appt.patientId,
+        _id: { $ne: visit._id },
+        $or: [
+          { "entExamination.ear": { $exists: true } },
+          { "entExamination.complaint": { $exists: true, $ne: "" } },
+          { "entExamination.diagnosis": { $exists: true, $ne: "" } }
+        ]
+      }).sort({ createdAt: -1 });
+      const initialExam = previousVisitWithExam?.entExamination && Object.keys(previousVisitWithExam.entExamination).length > 0 ? previousVisitWithExam.entExamination : patient?.masterExamination || {};
+      if (initialExam && Object.keys(initialExam).length > 0) {
+        visit.entExamination = initialExam;
+        if (!visit.complaint && previousVisitWithExam?.complaint) {
+          visit.complaint = previousVisitWithExam.complaint;
+        }
+        if (!visit.diagnosis && previousVisitWithExam?.diagnosis) {
+          visit.diagnosis = previousVisitWithExam.diagnosis;
+        }
+        await visit.save();
+      }
     }
     const apptJson = appt.toJSON();
     return {
@@ -173480,6 +173516,15 @@ var VisitsService = class {
     }
     visit.version = visit.version + 1;
     await visit.save();
+    if (entExamination !== void 0 && entExamination !== null) {
+      try {
+        await Patient.findByIdAndUpdate(visit.patientId, {
+          masterExamination: entExamination
+        });
+      } catch (pErr) {
+        console.error("[VisitsService] Failed to sync masterExamination to Patient:", pErr);
+      }
+    }
     await logAudit({
       userId: actorId,
       action: "UPDATE",

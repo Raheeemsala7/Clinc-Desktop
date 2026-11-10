@@ -63,6 +63,17 @@ export class VisitsService {
 
     await visit.save();
 
+    // مزامنة استمارة الكشف لتصبح الاستمارة الرئيسية الدائمة للمريض (Master Examination)
+    if (entExamination !== undefined && entExamination !== null) {
+      try {
+        await Patient.findByIdAndUpdate(visit.patientId, {
+          masterExamination: entExamination,
+        });
+      } catch (pErr) {
+        console.error('[VisitsService] Failed to sync masterExamination to Patient:', pErr);
+      }
+    }
+
     await logAudit({
       userId: actorId,
       action: 'UPDATE',
