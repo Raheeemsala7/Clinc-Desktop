@@ -2,25 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, LogIn } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useTranslations, useLocale } from 'next-intl';
-import { BrandLogo } from './brand-logo';
+import { Menu, X, LogIn, PhoneCall } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { NafsLogo } from '@/shared/components/nafs-logo';
 import { getWhatsAppUrl } from '../constants';
-import { SwitchLanguageBtn } from '@/shared/components/switch-language-btn';
-import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
-import { cn } from 'cn';
+import { useLocale } from 'next-intl';
+import { cn } from '@/lib/utils';
 
-/**
- * شريط التنقل العلوي (Navbar) مع زر تبديل اللغة وزر الحجز المباشر عبر واتساب
- */
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const t = useTranslations('Nav');
   const locale = useLocale();
 
-  // استشعار التمرير لإضافة ظل خلفي وتأثير زجاجي بلوري
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 15);
@@ -30,117 +23,99 @@ export const Navbar = () => {
   }, []);
 
   const navItems = [
-    { label: t('home'), href: '#hero' },
-    { label: t('about'), href: '#about' },
-    { label: t('services'), href: '#services' },
-    { label: t('clinic'), href: '#clinic' },
-    { label: t('reviews'), href: '#reviews' },
+    { label: 'المميزات', href: '#features' },
+    { label: 'الأدوار', href: '#roles' },
+    { label: 'كيف نعمل', href: '#how-it-works' },
   ];
 
-  const whatsappHref = getWhatsAppUrl(undefined, locale);
+  const demoUrl = getWhatsAppUrl('مرحباً، أود الاستفسار وطلب عرض تجريبي لمنظومة نَفَس لإدارة العيادات.');
 
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 w-full transition-all duration-200',
+        'sticky top-0 z-40 w-full transition-all duration-200 select-none',
         isScrolled
-          ? 'bg-[#0A164E]/92 backdrop-blur-md shadow-lg border-b border-white/10 py-2.5 sm:py-3'
-          : 'bg-[#0A164E] py-3 sm:py-4'
+          ? 'bg-white/90 backdrop-blur-md shadow-xs border-b border-[#D0E5DC] py-3'
+          : 'bg-white/70 backdrop-blur-xs py-4 border-b border-[#D0E5DC]/60'
       )}
+      dir="rtl"
     >
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-2">
-          {/* الجانب الأيمن (في الـ RTL): الشعار - يخفي اسم الطبيب على شاشات الموبايل للحفاظ على المساحة */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-4">
+          {/* الجانب الأيمن: شعار نَفَس */}
           <div className="flex items-center shrink-0">
-            <BrandLogo variant="light" />
+            <NafsLogo href="#hero" size="md" />
           </div>
 
-          {/* المنتصف: روابط التنقل السلس للشاشات الكبيرة */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8" aria-label="Main Navigation">
+          {/* المنتصف: روابط التنقل الرئيسية */}
+          <nav className="hidden md:flex items-center gap-8" aria-label="Main Navigation">
             {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-white/80 hover:text-white transition-colors py-1 relative hover:after:w-full after:w-0 after:h-0.5 after:bg-[#F5B800] after:absolute after:bottom-0 after:right-0 after:transition-all after:duration-200"
+                className="text-sm font-bold text-[#4A635B] hover:text-[#0B7B5E] transition-colors py-1"
               >
                 {item.label}
               </a>
             ))}
           </nav>
 
-          {/* الجانب الأيسر (في الـ RTL): زر تبديل اللغة + زر تسجيل الدخول + زر احجز الآن المباشر إلى واتساب + زر قائمة الجوال */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* زر تبديل اللغة */}
-            <SwitchLanguageBtn variant="light" />
-
-            {/* زر تسجيل الدخول إلى نظام العيادة */}
+          {/* الجانب الأيسر: زر طلب عرض تجريبي + زر تسجيل الدخول */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <Link
               href="/auth/login"
-              className="bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-white/20 transition-all duration-150 inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+              className="text-[#0B241D] hover:text-[#0B7B5E] border border-[#D0E5DC] hover:border-[#0B7B5E] bg-white font-bold text-xs sm:text-sm px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              <LogIn className="w-4 h-4 text-[#F5B800]" />
+              <LogIn className="w-4 h-4 text-[#0B7B5E]" />
               <span>تسجيل الدخول</span>
             </Link>
 
-            {/* زر احجز الآن المباشر عبر واتساب مع تأثير هوفر وانتقال رشيق */}
             <motion.a
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              href={whatsappHref}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              href={demoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md hover:shadow-xl inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors duration-150 group"
+              className="bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors"
             >
-              <WhatsAppIcon className="w-4 h-4 text-slate-950 group-hover:rotate-12 transition-transform duration-200" />
-              <span>{t('bookNow')}</span>
+              <span>اطلب عرضاً تجريبياً</span>
             </motion.a>
 
-            {/* زر قائمة الجوال للشاشات الصغيرة */}
+            {/* زر القائمة للشاشات الصغيرة */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+              className="md:hidden p-2 text-[#4A635B] hover:text-[#0B7B5E] rounded-xl hover:bg-[#E3F5EE] transition-colors cursor-pointer"
               aria-label="القائمة"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* قائمة الجوال المنبثقة */}
+      {/* قائمة الموبايل المنسدلة */}
+      <AnimatePresence>
         {mobileMenuOpen && (
-          <div className="lg:hidden mt-3 pt-3 border-t border-white/10 pb-3 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white border-b border-[#D0E5DC] px-4 py-4 space-y-3 shadow-lg"
+          >
             {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
+                className="block text-sm font-bold text-[#4A635B] hover:text-[#0B7B5E] py-2 px-3 rounded-lg hover:bg-[#E3F5EE]"
               >
                 {item.label}
               </a>
             ))}
-            <div className="pt-2 space-y-2">
-              <Link
-                href="/auth/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full text-center bg-white/15 hover:bg-white/25 text-white font-bold px-4 py-2.5 rounded-xl transition-all text-sm border border-white/20"
-              >
-                <LogIn className="w-4 h-4 text-[#F5B800]" />
-                <span>تسجيل الدخول للنظام</span>
-              </Link>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full text-center bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition-all text-sm"
-              >
-                <WhatsAppIcon className="w-4 h-4" />
-                <span>{t('bookNow')}</span>
-              </a>
-            </div>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </header>
   );
 };

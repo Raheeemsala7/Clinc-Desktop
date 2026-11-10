@@ -63,10 +63,10 @@ export function LoginForm() {
     <div className="w-full max-w-sm sm:max-w-md mx-auto">
       {/* رأس النموذج */}
       <div className="text-center sm:text-start mb-8">
-        <h2 className="text-3xl sm:text-4xl font-black text-[#0A164E] tracking-tight">
+        <h2 className="text-3xl sm:text-4xl font-heading font-black text-[#0B241D] tracking-tight">
           {t('title')}
         </h2>
-        <p className="text-sm text-slate-400 mt-2">
+        <p className="text-sm text-[#4A635B] mt-2 font-medium">
           {t('subtitle')}
         </p>
       </div>
@@ -79,7 +79,7 @@ export function LoginForm() {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field>
-              <FieldLabel className="block text-xs font-bold text-[#0A164E] mb-2 text-start">
+              <FieldLabel className="block text-xs font-bold text-[#0B241D] mb-2 text-start">
                 {t('usernameLabel')}
               </FieldLabel>
 
@@ -89,8 +89,8 @@ export function LoginForm() {
                 autoComplete="username"
                 placeholder={t('usernamePlaceholder')}
                 className={cn(
-                  'w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 transition-all duration-150',
-                  'focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10',
+                  'w-full h-12 px-4 rounded-xl border border-[#D0E5DC] bg-white text-[#0B241D] text-sm placeholder:text-[#8D9D97] transition-all duration-150',
+                  'focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15',
                   'disabled:opacity-60 disabled:cursor-not-allowed',
                   fieldState.invalid && 'border-destructive focus:border-destructive focus:ring-destructive/10'
                 )}
@@ -110,7 +110,7 @@ export function LoginForm() {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field>
-              <FieldLabel className="block text-xs font-bold text-[#0A164E] mb-2 text-start">
+              <FieldLabel className="block text-xs font-bold text-[#0B241D] mb-2 text-start">
                 {t('passwordLabel')}
               </FieldLabel>
 
@@ -120,8 +120,8 @@ export function LoginForm() {
                 autoComplete="current-password"
                 placeholder={t('passwordPlaceholder')}
                 className={cn(
-                  'w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 transition-all duration-150',
-                  'focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10',
+                  'w-full h-12 px-4 rounded-xl border border-[#D0E5DC] bg-white text-[#0B241D] text-sm placeholder:text-[#8D9D97] transition-all duration-150',
+                  'focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15',
                   'disabled:opacity-60 disabled:cursor-not-allowed',
                   fieldState.invalid && 'border-destructive focus:border-destructive focus:ring-destructive/10'
                 )}
@@ -135,12 +135,12 @@ export function LoginForm() {
           )}
         />
 
-        {/* زر الدخول الأزرق الفخم */}
+        {/* زر الدخول الزمردي */}
         <Button
           type="submit"
           disabled={form.formState.isSubmitting}
           className={cn(
-            'w-full h-12 bg-[#0040D8] hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center cursor-pointer select-none mt-7',
+            'w-full h-12 bg-[#0B7B5E] hover:bg-[#09634C] active:scale-[0.98] text-white font-bold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center cursor-pointer select-none mt-7',
             form.formState.isSubmitting && 'opacity-70 pointer-events-none'
           )}
         >

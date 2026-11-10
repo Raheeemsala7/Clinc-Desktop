@@ -1,31 +1,17 @@
 'use client';
 
+import React from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { useTranslations, useLocale } from 'next-intl';
 import { Navbar } from './navbar';
 import { HeroSection } from './hero-section';
-import { ServicesSection } from './services-section';
-import { AboutSection } from './about-section';
-import { WhatsAppBookingSection } from './whatsapp-booking-section';
+import { ComparisonSection } from './comparison-section';
+import { FeaturesGridSection } from './features-grid-section';
+import { RolesSection } from './roles-section';
+import { HowItWorksSection } from './how-it-works-section';
+import { CtaSection } from './cta-section';
 import { Footer } from './footer';
-import { getWhatsAppUrl } from '../constants';
-import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
-import { cn } from 'cn';
-import { useSession } from 'next-auth/react';
 
-/**
- * المكون الرئيسي للصفحة الرئيسية - يتضمن شريط تقدم التمرير الانسيابي وزر الواتساب العائم التفاعلي
- */
 export const HomePageClient = () => {
-  const t = useTranslations('Common');
-  const locale = useLocale();
-  const isArabic = locale === 'ar';
-
-  const session = useSession()
-  console.log(session.data?.user);
-  
-
-  // شريط تقدم التمرير الرشيق في أعلى الصفحة
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -34,75 +20,39 @@ export const HomePageClient = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-[#F5B800] selection:text-slate-900 relative">
-      {/* شريط تقدم التمرير الفاخر في أعلى الشاشة */}
+    <div className="min-h-screen flex flex-col bg-[#F8FBF9] text-[#0B241D] selection:bg-[#45DBA5]/30 selection:text-[#0B7B5E] relative font-sans">
+      {/* شريط تقدم التمرير الزمردي الأنيق */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#F5B800] via-[#1D4ED8] to-[#F5B800] origin-left z-50 pointer-events-none"
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0B7B5E] via-[#45DBA5] to-[#0B7B5E] origin-left z-50 pointer-events-none"
         style={{ scaleX }}
       />
 
-      {/* شريط التنقل العلوي المتجاوب */}
+      {/* شريط التنقل العلوي الجديد */}
       <Navbar />
 
-      {/* المحتوى الرئيسي للموقع */}
-      <main className="flex-1">
-        {/* قسم الواجهة (Hero) */}
+      {/* المحتوى الرئيسي للمنظومة */}
+      <main className="flex-1 space-y-4">
+        {/* 1. قسم الواجهة والكرت التفاعلي */}
         <HeroSection />
 
-        {/* قسم الخدمات الطبية (Services) */}
-        <ServicesSection />
+        {/* 2. مقارنة قبل نَفَس ومع نَفَس */}
+        <ComparisonSection />
 
-        {/* قسم نبذة والمؤهلات (About & Qualifications) */}
-        <AboutSection />
+        {/* 3. شبكة المميزات */}
+        <FeaturesGridSection />
 
-        {/* قسم الحجز المباشر عبر واتساب (WhatsApp Booking) */}
-        <WhatsAppBookingSection />
+        {/* 4. الأدوار والصلاحيات */}
+        <RolesSection />
+
+        {/* 5. كيف نعمل في أربع خطوات */}
+        <HowItWorksSection />
+
+        {/* 6. كرت الدعوة للتسجيل والتجربة */}
+        <CtaSection />
       </main>
 
-      {/* تذييل الصفحة (Footer) */}
+      {/* التذييل الجديد */}
       <Footer />
-
-      {/* زر واتساب السريع العائم مع حلقة نبض وتأثير طفو حيوي */}
-      <div
-        className={cn(
-          'fixed bottom-5 z-40 flex items-center',
-          isArabic ? 'left-5' : 'right-5'
-        )}
-      >
-        <motion.div
-          animate={{ y: [0, -4, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          className="relative flex items-center"
-        >
-          {/* حلقة نبض رادارية تلفت انتباه الزائر بنعومة */}
-          <span
-            className="absolute -inset-1 rounded-full bg-emerald-500 opacity-35 animate-ping pointer-events-none"
-            aria-hidden="true"
-          />
-
-          <motion.a
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
-            href={getWhatsAppUrl(undefined, locale)}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={t('whatsappAria')}
-            className="relative p-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-xl hover:shadow-2xl flex items-center justify-center cursor-pointer group transition-colors duration-200"
-          >
-            <WhatsAppIcon className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200" />
-            <span
-              className={cn(
-                'max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 text-xs font-bold text-white',
-                isArabic
-                  ? 'group-hover:max-w-xs group-hover:mr-2'
-                  : 'group-hover:max-w-xs group-hover:ml-2'
-              )}
-            >
-              {t('whatsappChat')}
-            </span>
-          </motion.a>
-        </motion.div>
-      </div>
     </div>
   );
 };

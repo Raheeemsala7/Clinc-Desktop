@@ -2,163 +2,177 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { LogIn } from 'lucide-react';
-import { useTranslations, useLocale } from 'next-intl';
+import { LogIn, FileText, CheckCircle2, Users, Sparkles, Stethoscope } from 'lucide-react';
 import { getWhatsAppUrl } from '../constants';
-import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 
-/**
- * قسم الهيرو الرئيسي - أنيميشن ناعم وسريع للظهور، مع حركة طفو ثلاثية الأبعاد خفيفة لصورة الدكتور
- */
 export const HeroSection = () => {
-  const t = useTranslations('Hero');
-  const locale = useLocale();
-
-  const stats = [
-    { title: t('stat1Title'), desc: t('stat1Desc') },
-    { title: t('stat2Title'), desc: t('stat2Desc') },
-    { title: t('stat3Title'), desc: t('stat3Desc') },
-  ];
-
-  const whatsappHref = getWhatsAppUrl(undefined, locale);
+  const demoUrl = getWhatsAppUrl('مرحباً، أود طلب عرض تجريبي وتفاصيل منظومة نَفَس لإدارة العيادات.');
 
   return (
-    <section
-      id="hero"
-      className="relative overflow-hidden bg-gradient-to-br from-[#0B1A4F] via-[#0A164E] to-[#07133D] text-white pt-6 pb-14 lg:pt-12 lg:pb-20"
-    >
-      {/* إضاءات جمالية متوهجة تنبض بنعومة في الخلفية */}
-      <div
-        className="absolute top-1/4 -right-20 w-80 h-80 bg-blue-600/25 rounded-full blur-3xl pointer-events-none"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute bottom-10 left-10 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"
-        aria-hidden="true"
-      />
+    <section id="hero" className="relative pt-8 pb-16 lg:pt-14 lg:pb-24 overflow-hidden select-none" dir="rtl">
+      {/* خلفية جمالية خفيفة بالأخضر الزمردي والنعناعي */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#E3F5EE]/60 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-1/3 left-10 w-80 h-80 bg-[#45DBA5]/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* الجانب الأيمن (في RTL): النصوص والمعلومات وأزرار الإجراء - ظهور فوري 100% بدون أي تأخير عند الـ Refresh */}
-          <div className="lg:col-span-7 flex flex-col items-start text-start order-1">
-            {/* العنوان الإنجليزي الصغير باللون الأصفر الذهبي مع مؤشر نبضي حيوي */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F5B800] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F5B800]" />
-              </span>
-              <span className="text-[#F5B800] text-xs sm:text-sm font-bold tracking-widest uppercase inline-block">
-                {t('kicker')}
-              </span>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+          
+          {/* الجانب الأيمن (النص التعريفي والأزرار) */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-right">
+            {/* الشارة العلوية */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E3F5EE] border border-[#D0E5DC] text-[#0B7B5E] text-xs sm:text-sm font-bold shadow-2xs"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#0B7B5E] animate-pulse" />
+              <span>منظومة إدارة العيادات</span>
+            </motion.div>
 
-            {/* الاسم الرئيسي للطبيب بخط عريض وفخم */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-white mb-3 tracking-tight">
-              {t('doctorTitleFirst')}
+            {/* العنوان الرئيسي */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-heading font-black text-[#0B241D] tracking-tight leading-[1.25]"
+            >
+              نظّم عيادتك من الحجز
               <br />
-              {t('doctorTitleSecond')}
-            </h1>
+              <span className="text-[#0B7B5E]">حتى الروشتة</span>
+            </motion.h1>
 
-            {/* نبذة عن التخصص */}
-            <p className="text-white/85 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mb-7">
-              {t('speciality')}
-            </p>
+            {/* النص الوصفي لمنظومة نَفَس */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-base sm:text-lg text-[#4A635B] leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium"
+            >
+              &ldquo;نَفَس: منظومة متكاملة لإدارة العيادات، حجز وطابور حي، وروشتة إلكترونية، وملف لكل مريض، وتقارير مالية. كلها في مكان واحد وبصلاحيات واضحة لكل فرد في الفريق.&rdquo;
+            </motion.p>
 
-            {/* أزرار الحجز والخدمات وتسجيل الدخول */}
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-10">
-              {/* زر احجز كشف ينقل مباشرة إلى واتساب مع تأثير نبض وهوفر ناعم */}
-              <motion.a
-                whileHover={{ scale: 1.04, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ duration: 0.15 }}
-                href={whatsappHref}
+            {/* أزرار الإجراءات الرئيسية */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2"
+            >
+              <a
+                href={demoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative group bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-2xl text-sm sm:text-base inline-flex items-center justify-center gap-2.5 cursor-pointer"
+                className="bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-150 inline-flex items-center gap-2 cursor-pointer"
               >
-                <span
-                  className="absolute -inset-0.5 rounded-xl bg-amber-400 opacity-30 blur-xs animate-pulse -z-10"
-                  aria-hidden="true"
-                />
-                <WhatsAppIcon className="w-5 h-5 text-slate-950 group-hover:rotate-12 transition-transform duration-200" />
-                <span>{t('bookCheckup')}</span>
-              </motion.a>
+                <span>اطلب عرضاً تجريبياً</span>
+              </a>
 
-              {/* زر تسجيل الدخول للنظام الطبي */}
               <Link
                 href="/auth/login"
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-2xl text-sm sm:text-base inline-flex items-center justify-center gap-2.5 transition-all duration-150 cursor-pointer border border-blue-400/40"
+                className="bg-white hover:bg-[#F2F8F4] active:scale-95 text-[#0E3B5C] border-2 border-[#0E3B5C] font-bold text-sm sm:text-base px-6 sm:px-7 py-3.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2 cursor-pointer shadow-2xs"
               >
-                <LogIn className="w-5 h-5 text-[#F5B800]" />
-                <span>تسجيل الدخول للنظام</span>
+                <LogIn className="w-4 h-4 text-[#0E3B5C]" />
+                <span>تسجيل الدخول</span>
               </Link>
+            </motion.div>
 
-              {/* زر الخدمات الطبية للتمرير السلس */}
-              <motion.a
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ duration: 0.15 }}
-                href="#services"
-                className="border border-white/80 hover:border-white text-white hover:bg-white/10 font-medium px-7 py-3.5 rounded-xl text-sm sm:text-base inline-flex items-center justify-center backdrop-blur-xs transition-colors"
-              >
-                {t('medicalServices')}
-              </motion.a>
-            </div>
-
-            {/* شريط الإحصائيات والمميزات السريعة أسفل الهيرو */}
-            <div className="w-full pt-6 border-t border-white/10 grid grid-cols-3 gap-2 sm:gap-6">
-              {stats.map((stat, idx) => (
-                <div
-                  key={idx}
-                  className="flex flex-col cursor-default hover:-translate-y-0.5 transition-transform duration-150"
-                >
-                  <span className="text-[#F5B800] font-bold text-sm sm:text-base lg:text-lg">
-                    {stat.title}
-                  </span>
-                  <span className="text-white/75 text-xs sm:text-sm mt-0.5">
-                    {stat.desc}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {/* مميزات سريعة تحت الأزرار */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="pt-3 text-xs sm:text-sm font-semibold text-[#8D9D97] flex flex-wrap items-center justify-center lg:justify-start gap-4"
+            >
+              <span>يعمل أوفلاين</span>
+              <span>•</span>
+              <span>يستخدمه مئات العيادات</span>
+              <span>•</span>
+              <span>ملفاتك تحت أيديك</span>
+            </motion.div>
           </div>
 
-          {/* الجانب الأيسر (في RTL): خلفية الأشكال وصورة الدكتور - ثابتة تماماً دون أي حركة */}
-          <div className="lg:col-span-5 flex justify-center items-center order-2 relative">
-            <div className="relative w-full max-w-[430px] aspect-[560/710] mx-auto select-none">
-              <div className="relative w-full h-full">
-                {/* خلفية الأشكال الهندسية المنحنية */}
-                <Image
-                  src="/background-landing.svg"
-                  alt=""
-                  fill
-                  priority
-                  className="object-contain pointer-events-none select-none z-0"
-                />
+          {/* الجانب الأيسر: كرت الطابور الحي والروشتة الإلكترونية المطابق للصورة */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="lg:col-span-5 flex justify-center"
+          >
+            <div className="w-full max-w-md bg-white border border-[#D0E5DC] rounded-3xl p-6 shadow-xl space-y-5 relative">
+              {/* ترويسة كرت الطابور الحي */}
+              <div className="flex items-center justify-between pb-3 border-b border-[#D0E5DC]">
+                <h3 className="font-heading font-black text-base text-[#0B241D]">
+                  الطابور الحي
+                </h3>
+                <span className="px-3 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold border border-[#D0E5DC]">
+                  3 في الانتظار
+                </span>
+              </div>
 
-                {/* صورة الدكتور المفرغة المطابقة لقياسات وموضع الـ SVG بدقة - ثابتة تماماً ولا تتحرك نهائياً */}
-                <div
-                  className="absolute top-0 bottom-0 z-10 pointer-events-none"
-                  style={{
-                    left: '5.357%',
-                    width: '90.017%',
-                    height: '100%',
-                  }}
-                >
-                  <Image
-                    src="/profile-doctor.png"
-                    alt="د. إسلام عبدالله كريمة - أخصائي الأنف والأذن والحنجرة"
-                    fill
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 430px"
-                    className="object-contain object-bottom drop-shadow-2xl"
-                  />
+              {/* عناصر الطابور التفاعلية */}
+              <div className="space-y-2.5">
+                {/* 1. داخل الكشف (الحالة النشطة بالأخضر) */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-[#E3F5EE] border border-[#D0E5DC] transition-all">
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-xl bg-[#0B7B5E] text-white font-black text-xs flex items-center justify-center shadow-xs">
+                      12
+                    </span>
+                    <div>
+                      <p className="font-bold text-xs text-[#0B241D]">داخل الكشف</p>
+                      <p className="text-[11px] text-[#4A635B]">الطبيب المعالج</p>
+                    </div>
+                  </div>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E] animate-pulse" />
+                </div>
+
+                {/* 2. التالي */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#0B7B5E]/40 hover:border-[#0B7B5E] transition-all shadow-2xs">
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-xl bg-white border border-[#0B7B5E] text-[#0B7B5E] font-black text-xs flex items-center justify-center">
+                      13
+                    </span>
+                    <div>
+                      <p className="font-bold text-xs text-[#0B241D]">التالي</p>
+                      <p className="text-[11px] text-[#4A635B]">كشف جديد</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-[#0B7B5E]">جاهز</span>
+                </div>
+
+                {/* 3. في الانتظار */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-[#F8FBF9] border border-[#D0E5DC] text-[#4A635B]">
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-xl bg-white border border-[#D0E5DC] text-[#8D9D97] font-black text-xs flex items-center justify-center">
+                      14
+                    </span>
+                    <div>
+                      <p className="font-bold text-xs text-[#4A635B]">في الانتظار</p>
+                      <p className="text-[11px] text-[#8D9D97]">متابعة كشف</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-[#8D9D97]">في الصالة</span>
+                </div>
+              </div>
+
+              {/* كرت الروشتة الإلكترونية المطابق للديزاين */}
+              <div className="p-4 rounded-2xl bg-[#F8FBF9] border border-[#D0E5DC] flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-heading font-black text-xs text-[#0B241D]">
+                    روشتة إلكترونية
+                  </h4>
+                  <p className="text-[11px] text-[#4A635B] font-medium">
+                    تُطبع بضغطة واحدة، للقياس على كرت العيادة
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
+
         </div>
       </div>
     </section>

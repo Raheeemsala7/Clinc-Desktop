@@ -1,6 +1,6 @@
-appId: com.clinic.management.desktop
-productName: Clinic Management System
-copyright: Copyright © 2026 Dr. Eslam Clinic
+appId: com.nafs.clinic.desktop
+productName: Nafs Clinic Management
+copyright: Copyright © 2026 Nafs Clinic System
 
 directories:
   output: dist-installer
@@ -39,6 +39,6 @@ nsis:
   installerHeaderIcon: resources/icon.ico
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  shortcutName: Clinic Management
+  shortcutName: Nafs Clinic
   runAfterFinish: true
   deleteAppDataOnUninstall: false

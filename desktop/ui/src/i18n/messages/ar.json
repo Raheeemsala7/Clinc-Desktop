@@ -183,13 +183,13 @@
       "passwordPlaceholder": "••••••••",
       "submitBtn": "دخول",
       "submitting": "جاري التحقق...",
-      "brandTitle": "ENT Clinic",
-      "heroTitleLine1": "نظام إدارة",
-      "heroTitleLine2": "العيادة",
-      "heroDesc": "د. إسلام عبدالله كريمة — إدارة المواعيد والمرضى والمدفوعات في مكان واحد.",
+      "brandTitle": "نَفَس",
+      "heroTitleLine1": "نظام نَفَس",
+      "heroTitleLine2": "لإدارة العيادات",
+      "heroDesc": "منظومة متكاملة لإدارة المواعيد والمرضى والطابور الحي والروشتات الإلكترونية.",
       "switchLang": "ENGLISH",
       "backToHome": "العودة للرئيسية",
-      "footerCopyright": "نظام إدارة العيادة © د. إسلام عبدالله كريمة — جميع الحقوق محفوظة",
+      "footerCopyright": "نظام نَفَس لإدارة العيادات © 2026 — جميع الحقوق محفوظة",
       "heroAria": "معلومات نظام العيادة",
       "formAria": "تسجيل الدخول",
       "validationRequired": "يرجى إدخال اسم المستخدم وكلمة المرور",
@@ -203,7 +203,7 @@
     }
   },
   "Dashboard": {
-    "systemTitle": "نظام إدارة العيادة",
+    "systemTitle": "نَفَس · إدارة العيادات",
     "version": "v1.0",
     "notifications": "التنبيهات",
     "notificationMenu": {

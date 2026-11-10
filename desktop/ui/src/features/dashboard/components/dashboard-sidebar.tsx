@@ -20,6 +20,7 @@ import {
 } from '@/shared/components/ui/sidebar';
 import { UserRole } from '../types';
 import { ROLE_CONFIG } from '../constants';
+import { NafsIcon } from '@/shared/components/nafs-logo';
 
 interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
   role: UserRole;
@@ -57,11 +58,11 @@ export function DashboardSidebar({
       side={side}
       dir={dir}
       collapsible="icon"
-      className={cn('border-none bg-[#091336] text-white select-none shadow-xl', className)}
+      className={cn('border-none bg-[#0E3B5C] text-white select-none shadow-xl', className)}
       {...props}
     >
       {/* 1. رأس الشريط الجانبي: الشعار واسم العيادة */}
-      <SidebarHeader className="border-b border-white/10 px-4 py-5 group-data-[collapsible=icon]:p-2 bg-[#091336]">
+      <SidebarHeader className="border-b border-white/10 px-4 py-4 group-data-[collapsible=icon]:p-2 bg-[#0E3B5C]">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -70,19 +71,16 @@ export function DashboardSidebar({
               className="hover:bg-white/5 active:bg-white/10 text-white hover:text-white px-2 group-data-[collapsible=icon]:justify-center"
             >
               <div className="flex items-center justify-between w-full group-data-[collapsible=icon]:justify-center">
-                <span className="font-black text-base sm:text-lg text-white tracking-tight group-data-[collapsible=icon]:hidden">
-                  {t('systemTitle')}
-                </span>
-                {/* شعار العيادة المربّع المميّز بالألوان الأربعة */}
-                <div
-                  className="grid grid-cols-2 gap-1 w-6 h-6 shrink-0"
-                  aria-hidden="true"
-                >
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#1D4ED8]" />
-                  <span className="w-2.5 h-2.5 rounded-xs bg-white" />
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#081544]" />
-                  <span className="w-2.5 h-2.5 rounded-xs bg-brand-yellow" />
+                <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
+                  <span className="font-heading font-black text-xl text-white tracking-tight">
+                    نَفَس
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.5 rounded-md">
+                    إدارة العيادات
+                  </span>
                 </div>
+                {/* شعار نَفَس */}
+                <NafsIcon size={28} />
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -117,8 +115,8 @@ export function DashboardSidebar({
                       className={cn(
                         'h-11 px-3.5 rounded-xl font-bold transition-all text-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0',
                         isActive
-                          ? 'bg-brand-yellow text-slate-950 hover:bg-brand-yellow hover:text-slate-950 font-black shadow-md'
-                          : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium'
+                          ? 'bg-[#0B7B5E] text-white hover:bg-[#09634C] hover:text-white font-black shadow-md'
+                          : 'text-slate-200 hover:text-white hover:bg-white/10 font-medium'
                       )}
                     >
                       <div className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center">
@@ -128,8 +126,8 @@ export function DashboardSidebar({
                             className={cn(
                               'w-5 h-5 shrink-0 transition-transform duration-150',
                               isActive
-                                ? 'text-slate-950'
-                                : 'text-slate-400 group-hover:text-white'
+                                ? 'text-white'
+                                : 'text-emerald-300/70 group-hover:text-white'
                             )}
                           />
                         )}
@@ -139,13 +137,13 @@ export function DashboardSidebar({
                           {itemTitle}
                         </span>
 
-                        {/* أيقونة المربع المطابقة للتصميم الأصلي */}
+                        {/* مؤشر التبويب النشط */}
                         <span
                           className={cn(
-                            'w-3.5 h-3.5 rounded-xs border-2 flex items-center justify-center shrink-0 transition-colors group-data-[collapsible=icon]:hidden',
+                            'w-2 h-2 rounded-full shrink-0 transition-all group-data-[collapsible=icon]:hidden',
                             isActive
-                              ? 'border-slate-950 bg-slate-950'
-                              : 'border-slate-400 group-hover:border-slate-200'
+                              ? 'bg-[#45DBA5]'
+                              : 'bg-transparent'
                           )}
                           aria-hidden="true"
                         />
@@ -160,10 +158,10 @@ export function DashboardSidebar({
       </SidebarContent>
 
       {/* 3. أسفل الشريط الجانبي: رقم الإصدار ونوع اللوحة المترجمة */}
-      <SidebarFooter className="border-t border-white/10 p-0 bg-[#070F2B]">
-        <div className="py-4 px-5 flex items-center justify-between text-xs text-slate-400 font-semibold group-data-[collapsible=icon]:justify-center">
-          <span className="group-data-[collapsible=icon]:hidden">{t('version')}</span>
-          <span>{t(config.roleKey)}</span>
+      <SidebarFooter className="border-t border-white/10 p-0 bg-[#071510]">
+        <div className="py-4 px-5 flex items-center justify-between text-xs text-slate-300 font-semibold group-data-[collapsible=icon]:justify-center">
+          <span className="group-data-[collapsible=icon]:hidden font-mono">نَفَس v1.0</span>
+          <span className="text-emerald-400 font-bold">{t(config.roleKey)}</span>
         </div>
       </SidebarFooter>
 

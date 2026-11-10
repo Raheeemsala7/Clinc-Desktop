@@ -27,9 +27,9 @@ export function DashboardHeader({ role }: DashboardHeaderProps) {
     <header className="w-full bg-white/80 backdrop-blur-md border-b border-slate-200/70 py-3.5 px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 select-none shadow-xs">
       {/* الجانب الأيمن (في RTL): زر فتح/طي الـ Sidebar + الترحيب بالدور */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        <SidebarTrigger className="text-[#0A164E] hover:bg-slate-100 rounded-xl shrink-0" />
+        <SidebarTrigger className="text-[#0B241D] hover:bg-emerald-50 rounded-xl shrink-0" />
 
-        <h1 className="text-xs sm:text-base font-black text-[#0A164E] tracking-tight truncate">
+        <h1 className="text-xs sm:text-base font-black text-[#0B241D] tracking-tight truncate">
           {t(config.greetingKey)}
         </h1>
       </div>

@@ -223,13 +223,16 @@ function buildMenu() {
 async function createWindow() {
   buildMenu();
 
+  const iconPath = path.resolve(__dirname, '../../resources/icon.ico');
+
   mainWindow = new BrowserWindow({
     width: 1366,
     height: 850,
     minWidth: 1024,
     minHeight: 700,
-    title: 'عيادة د. إسلام - Clinic Management System',
-    backgroundColor: '#0A164E',
+    title: 'نظام نَفَس · إدارة العيادات',
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
+    backgroundColor: '#074C3A',
     show: true,
     autoHideMenuBar: false,
     webPreferences: {
@@ -249,28 +252,28 @@ async function createWindow() {
     <html lang="ar" dir="rtl">
     <head>
       <meta charset="UTF-8">
-      <title>جاري تشغيل النظام...</title>
+      <title>جاري تشغيل نظام نَفَس...</title>
       <style>
         body {
           margin: 0; padding: 0; display: flex; align-items: center; justify-content: center;
-          height: 100vh; background-color: #0A164E; color: white;
+          height: 100vh; background-color: #074C3A; color: white;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif;
         }
         .container { text-align: center; }
         .spinner {
           width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.2);
-          border-top: 4px solid #38bdf8; border-radius: 50%;
+          border-top: 4px solid #45DBA5; border-radius: 50%;
           animation: spin 1s linear infinite; margin: 0 auto 20px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        h2 { font-size: 22px; margin-bottom: 8px; font-weight: 700; }
-        p { font-size: 14px; color: #94a3b8; }
+        h2 { font-size: 24px; margin-bottom: 8px; font-weight: 700; color: #FFFFFF; }
+        p { font-size: 14px; color: #D0E5DC; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="spinner"></div>
-        <h2>عيادة د. إسلام عبدالله كريمة</h2>
+        <h2>نظام نَفَس لإدارة العيادات</h2>
         <p>جاري تشغيل الخدمات وقاعدة البيانات...</p>
       </div>
     </body>

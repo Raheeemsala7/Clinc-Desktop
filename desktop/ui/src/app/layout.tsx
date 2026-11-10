@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cairo, Geist, Geist_Mono, Inter } from "next/font/google";
+import { Cairo, Readex_Pro, Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "cn";
 import { getLocale } from "next-intl/server";
@@ -9,6 +9,12 @@ const cairo = Cairo({
   subsets: ["arabic", "latin"],
   variable: "--font-cairo",
   weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const readexPro = Readex_Pro({
+  subsets: ["arabic", "latin"],
+  variable: "--font-readex",
+  weight: ["400", "500", "600", "700"],
 });
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -24,7 +30,7 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0A164E",
+  themeColor: "#0B7B5E",
   width: "device-width",
   initialScale: 1,
 };
@@ -114,7 +120,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={locale === "ar" ? "rtl" : "ltr"}
-      className={cn("h-full", "antialiased", "scroll-smooth", cairo.variable, "font-sans", geistSans.variable, geistMono.variable)}
+      className={cn("h-full", "antialiased", "scroll-smooth", cairo.variable, readexPro.variable, "font-sans", geistSans.variable, geistMono.variable)}
     >
       <body className="min-h-full flex flex-col" dir={locale === "ar" ? "rtl" : "ltr"}>
         <Providers locale={locale}>{children}</Providers>
