@@ -1,0 +1,29 @@
+{
+  "name": "clinic-management-desktop",
+  "version": "1.0.0",
+  "description": "Clinic Management Desktop Application for Windows",
+  "main": "dist/main/index.js",
+  "author": "Clinic Team",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build:main": "tsc -p tsconfig.json && node -e \"const fs = require('fs'); if (fs.existsSync('src/renderer')) fs.cpSync('src/renderer', 'dist/renderer', {recursive: true, force: true});\"",
+    "build:server": "cd ../server && pnpm run build",
+    "build:next": "cd ui && pnpm run build",
+    "build": "pnpm run build:main",
+    "start": "electron .",
+    "dev": "tsc -p tsconfig.json && electron .",
+    "dist": "electron-builder --win --x64"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.5.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
+  }
+}

@@ -6,6 +6,8 @@ import { hashToken, generateToken, verifyPassword } from '../utils/crypto';
 import { UnauthorizedError, ForbiddenError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit, logAuditSystem } from '../utils/audit';
 
+import { TicketStore } from '../realtime/ticket-store';
+
 export class AuthService {
   private static async createTokenPair(
     userId: string,
@@ -176,9 +178,10 @@ export class AuthService {
     };
   }
 
-  static getSocketTicket() {
+  static getSocketTicket(user?: { id: string; role: 'ADMIN' | 'DOCTOR' | 'RECEPTION'; name: string }) {
+    const ticket = user ? TicketStore.createTicket(user) : uuidv4();
     return {
-      ticket: uuidv4(),
+      ticket,
       expiresInSeconds: 30,
     };
   }

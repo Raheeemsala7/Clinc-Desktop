@@ -7,19 +7,22 @@ import { logAudit } from '../utils/audit';
 import { DoctorScheduleService } from './doctor-schedule.service';
 
 const TRANSITIONS: Record<string, string[]> = {
-  BOOKED: ['WAITING', 'IN_PROGRESS', 'CANCELLED', 'NO_SHOW'],
-  WAITING: ['IN_PROGRESS', 'CANCELLED', 'WAITING'],
-  IN_PROGRESS: ['PENDING_CHECKOUT', 'COMPLETED'],
-  PENDING_CHECKOUT: ['COMPLETED', 'IN_PROGRESS', 'WAITING'],
-  COMPLETED: ['PENDING_CHECKOUT'],
-  CANCELLED: [],
-  NO_SHOW: [],
+  BOOKED: ['WAITING', 'IN_PROGRESS', 'PENDING_CHECKOUT', 'CANCELLED', 'NO_SHOW'],
+  WAITING: ['IN_PROGRESS', 'PENDING_CHECKOUT', 'CANCELLED', 'WAITING'],
+  IN_PROGRESS: ['PENDING_CHECKOUT', 'COMPLETED', 'WAITING'],
+  PENDING_CHECKOUT: ['COMPLETED', 'IN_PROGRESS', 'WAITING', 'PENDING_CHECKOUT'],
+  COMPLETED: ['PENDING_CHECKOUT', 'IN_PROGRESS'],
+  CANCELLED: ['WAITING'],
+  NO_SHOW: ['WAITING'],
 };
 
 const TYPE_MAP: Record<string, string> = {
   examination: 'EXAMINATION',
   revisit: 'FOLLOW_UP',
   surgery_followup: 'POST_OPERATIVE',
+  endoscopy: 'ENDOSCOPY',
+  surgery: 'SURGERY',
+  surgical_procedure: 'SURGERY',
   lab_radiology: 'LAB_TESTS_IMAGING',
   tests_review: 'TEST_RESULTS_REVIEW',
   consultation: 'CONSULTATION',
@@ -134,7 +137,11 @@ export class AppointmentsService {
     // Financial calculations: If exempt, fee is 0, paid is 0, status is EXEMPT
     const isExempt = Boolean(dto.isExempt);
     const exemptionReason = isExempt ? (dto.exemptionReason || 'إعفاء بقرار الطبيب/الإدارة') : null;
-    let totalAmount = isExempt ? 0 : Math.max(0, Number(dto.totalAmount ?? dto.fee ?? dto.examinationFee ?? 0));
+    const originalFee = isExempt
+      ? 0
+      : Math.max(0, Number(dto.originalFee ?? dto.totalAmount ?? dto.fee ?? dto.examinationFee ?? 0));
+    const discount = isExempt ? 0 : Math.max(0, Number(dto.discount ?? 0));
+    let totalAmount = isExempt ? 0 : Math.max(0, originalFee - discount);
     let paidAmount = isExempt ? 0 : Math.max(0, Number(dto.paidAmount ?? 0));
     if (paidAmount > totalAmount && totalAmount > 0) {
       paidAmount = totalAmount;
@@ -200,6 +207,8 @@ export class AppointmentsService {
       queueNumber,
       queueOrder,
       arrivedAt: (source === 'WALK_IN' || clinicDate === today) ? now : null,
+      originalFee,
+      discount,
       totalAmount,
       paidAmount,
       remainingAmount,
@@ -412,23 +421,24 @@ export class AppointmentsService {
     );
 
     const standardSlotTimes = [
-      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00'
+      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+      '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+      '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30',
+      '21:00', '21:30', '22:00',
     ];
 
     const allSlotTimeSet = new Set(standardSlotTimes);
-    populatedDayAppts.forEach((a) => {
-      if (a.startTime) allSlotTimeSet.add(a.startTime);
-    });
-    const sortedSlotTimes = Array.from(allSlotTimeSet).sort();
-
     const apptsByStartTime = new Map<string, typeof populatedDayAppts>();
+
     populatedDayAppts.forEach((a) => {
-      if (a.startTime) {
-        const list = apptsByStartTime.get(a.startTime) || [];
-        list.push(a);
-        apptsByStartTime.set(a.startTime, list);
-      }
+      const slotTime = a.startTime && a.startTime.trim() ? a.startTime.trim() : '09:00';
+      allSlotTimeSet.add(slotTime);
+      const list = apptsByStartTime.get(slotTime) || [];
+      list.push(a);
+      apptsByStartTime.set(slotTime, list);
     });
+
+    const sortedSlotTimes = Array.from(allSlotTimeSet).sort();
 
     const daySlots = sortedSlotTimes.map((time) => {
       const appts = apptsByStartTime.get(time);
@@ -715,7 +725,7 @@ export class AppointmentsService {
     ]);
 
     let visit = await Visit.findOne({ appointmentId: appt.id });
-    if (!visit && ['WAITING', 'IN_PROGRESS', 'BOOKED', 'PENDING_CHECKOUT'].includes(appt.status)) {
+    if (!visit) {
       visit = await Visit.create({
         appointmentId: appt.id,
         patientId: appt.patientId,
@@ -723,8 +733,10 @@ export class AppointmentsService {
       });
     }
 
+    const apptJson = appt.toJSON();
     return {
-      ...appt.toJSON(),
+      ...apptJson,
+      appointment: apptJson,
       patient: patient ? patient.toJSON() : null,
       doctor: doctor ? doctor.toJSON() : null,
       visit: visit ? visit.toJSON() : null,
@@ -793,6 +805,7 @@ export class AppointmentsService {
 
     if (action === 'arrive') appt.arrivedAt = now;
     if (action === 'start') appt.startedAt = now;
+    if (action === 'finish-exam' && !appt.startedAt) appt.startedAt = now;
     if (action === 'complete' || action === 'checkout') appt.completedAt = now;
     if (action === 'cancel') appt.cancelledAt = now;
 

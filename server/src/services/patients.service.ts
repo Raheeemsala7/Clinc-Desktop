@@ -16,7 +16,19 @@ function filterForReception(patient: any) {
 
 export class PatientsService {
   static async createPatient(dto: any, actor: { id: string; role: string }, ip = '') {
-    const { fullName, phone, gender, dateOfBirth, age, address, allergies, chronicConditions, generalNotes } = dto;
+    const {
+      fullName,
+      phone,
+      gender,
+      maritalStatus,
+      dateOfBirth,
+      age,
+      address,
+      allergies,
+      chronicConditions,
+      generalNotes,
+      fileNumber: customFileNo,
+    } = dto;
 
     const errors = [];
     if (!fullName) errors.push({ path: 'fullName', message: 'fullName is required' });
@@ -41,6 +53,12 @@ export class PatientsService {
       }
     }
 
+    let fileNumber = customFileNo ? String(customFileNo).trim() : '';
+    if (!fileNumber) {
+      const count = await Patient.countDocuments();
+      fileNumber = String(1001 + count);
+    }
+
     let parsedAge: number | undefined = undefined;
     if (age !== undefined && age !== null && age !== '') {
       parsedAge = Number(age);
@@ -61,10 +79,12 @@ export class PatientsService {
     }
 
     const patient = await Patient.create({
+      fileNumber,
       fullName,
       searchName: normalizeArabic(fullName),
       phone,
       gender,
+      maritalStatus: maritalStatus || 'MARRIED',
       age: parsedAge,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : (parsedAge !== undefined ? new Date(new Date().getFullYear() - parsedAge, 0, 1) : null),
       address: address || null,
@@ -203,6 +223,8 @@ export class PatientsService {
     }
     if (dto.phone !== undefined) patient.phone = dto.phone;
     if (dto.gender !== undefined) patient.gender = dto.gender;
+    if (dto.maritalStatus !== undefined) patient.maritalStatus = dto.maritalStatus;
+    if (dto.fileNumber !== undefined) patient.fileNumber = dto.fileNumber;
     if (dto.age !== undefined) {
       patient.age = dto.age !== null && dto.age !== '' ? Number(dto.age) : undefined;
     }

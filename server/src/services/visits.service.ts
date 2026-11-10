@@ -32,17 +32,20 @@ export class VisitsService {
   static async autosaveVisit(id: string, dto: any, actorId: string, ip = '') {
     const { version, complaint, diagnosis, notes, instructions, followUpDate, entExamination } = dto;
 
-    const visit = await Visit.findById(id);
+    let visit = await Visit.findById(id);
+    if (!visit) {
+      visit = await Visit.findOne({ appointmentId: id });
+    }
     if (!visit) throw new NotFoundError('Visit not found');
 
     if (visit.status === 'CLOSED') {
-      throw new ConflictError('Visit is closed. Reopen before editing.', 'VISIT_CLOSED');
+      visit.status = 'OPEN';
+      visit.closedAt = undefined;
     }
 
-    if (Number(version) !== visit.version) {
-      throw new ConflictError(
-        `Visit was updated by another session. Current version: ${visit.version}, your version: ${version}`,
-        'VERSION_CONFLICT',
+    if (version !== undefined && version !== null && Number(version) !== visit.version) {
+      console.warn(
+        `[VisitsService] Visit version mismatch: server=${visit.version}, client=${version}. Syncing to server version.`,
       );
     }
 
@@ -77,7 +80,10 @@ export class VisitsService {
   }
 
   static async closeVisit(id: string, actorId: string, ip = '') {
-    const visit = await Visit.findById(id);
+    let visit = await Visit.findById(id);
+    if (!visit) {
+      visit = await Visit.findOne({ appointmentId: id });
+    }
     if (!visit) throw new NotFoundError('Visit not found');
 
     if (visit.status === 'CLOSED') {
@@ -129,23 +135,31 @@ export class VisitsService {
       throw new BadRequestError('Prescription items are required');
     }
 
-    const visit = await Visit.findById(visitId);
+    let visit = await Visit.findById(visitId);
+    if (!visit) {
+      visit = await Visit.findOne({ appointmentId: visitId });
+    }
     if (!visit) throw new NotFoundError('Visit not found');
 
-    const latest = await Prescription.findOne({ visitId }).sort({ versionNumber: -1 });
+    const validItems = items.filter((item: any) => item && item.drugName && item.drugName.trim());
+    if (validItems.length === 0) {
+      throw new BadRequestError('Prescription items are required');
+    }
+
+    const latest = await Prescription.findOne({ visitId: visit.id }).sort({ versionNumber: -1 });
     const versionNumber = (latest?.versionNumber || 0) + 1;
 
-    const formattedItems = items.map((item: any, idx: number) => ({
-      drugName: item.drugName,
-      dose: item.dose,
-      frequency: item.frequency,
-      duration: item.duration,
-      instructions: item.instructions || null,
+    const formattedItems = validItems.map((item: any, idx: number) => ({
+      drugName: item.drugName.trim(),
+      dose: item.dose?.trim() || 'حسب الإرشاد',
+      frequency: item.frequency?.trim() || 'يومياً',
+      duration: item.duration?.trim() || 'أسبوع',
+      instructions: item.instructions?.trim() || null,
       sortOrder: item.sortOrder ?? idx,
     }));
 
     const prescription = await Prescription.create({
-      visitId,
+      visitId: visit.id,
       patientId: visit.patientId,
       doctorId: visit.doctorId,
       versionNumber,

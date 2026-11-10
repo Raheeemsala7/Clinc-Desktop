@@ -1,36 +1,20 @@
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 import FileType from 'file-type';
 import { BadRequestError } from '../utils/errors';
 import { StorageService } from './storage.service';
 import { config } from '../config/env';
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 5MB
-const MAX_FILES_PER_BATCH = 5;
-
-// On serverless environments (like Vercel / AWS Lambda), the root filesystem (/var/task)
-// is read-only. Only /tmp (os.tmpdir()) is writable.
-const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-const UPLOAD_DIR = isServerless
-  ? path.join(os.tmpdir(), 'clinic_uploads', 'appointments')
-  : path.resolve(process.cwd(), process.env.LOCAL_STORAGE_PATH || 'uploads/appointments');
-
-function ensureUploadDir(): void {
-  try {
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    }
-  } catch (err) {
-    // Non-fatal warning so module load never crashes on read-only environments
-    console.warn('⚠️ [STORAGE] Upload directory warning:', err);
-  }
-}
-
-// Attempt initialization without throwing on import
-ensureUploadDir();
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+];
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25MB
+const MAX_FILES_PER_BATCH = 100; // Unlimited / large batch support
 
 export interface StoredAttachment {
   id: string;
@@ -43,12 +27,29 @@ export interface StoredAttachment {
 
 export class AttachmentsService {
   /**
+   * Resolves the target upload directory on local disk
+   */
+  private static getTargetDir(category = 'appointments'): string {
+    const baseDir = StorageService.getBaseUploadDir();
+    const targetDir = path.join(baseDir, category);
+    if (!fs.existsSync(targetDir)) {
+      try {
+        fs.mkdirSync(targetDir, { recursive: true });
+      } catch (err) {
+        console.warn('⚠️ [STORAGE] Directory creation warning:', err);
+      }
+    }
+    return targetDir;
+  }
+
+  /**
    * Validates and saves an uploaded file (from base64 or raw buffer).
    * Verifies real file signature (magic bytes) to prevent forged file extensions.
    */
   static async saveFile(
     fileName: string,
     dataInput: string | Buffer,
+    category = 'appointments',
   ): Promise<StoredAttachment> {
     let buffer: Buffer;
 
@@ -69,30 +70,30 @@ export class AttachmentsService {
     }
 
     if (buffer.length > MAX_FILE_SIZE_BYTES) {
-      throw new BadRequestError('File size exceeds the 5MB limit');
+      throw new BadRequestError('حجم الملف يتجاوز الحد الأقصى المسموح به (10 ميجابايت)');
     }
 
     // Inspect real file signature (magic bytes)
     const detectedType = await FileType.fromBuffer(buffer);
     if (!detectedType || !ALLOWED_MIME_TYPES.includes(detectedType.mime)) {
       throw new BadRequestError(
-        'Invalid file type. Only JPEG, PNG, and WebP images are permitted',
+        'نوع الملف غير صالح أو تم التلاعب به. الصيغ المسموح بها هي صور (JPEG, PNG, WebP) وملفات PDF',
       );
     }
 
     const safeExt = detectedType.ext;
     const fileId = uuidv4();
     const storedFileName = `${fileId}.${safeExt}`;
-    const safeOriginalName = path.basename(fileName || `attachment.${safeExt}`);
+    const safeOriginalName = path.basename(fileName || `attachment.${safeExt}`).substring(0, 100);
 
-    // If S3 / Tigris driver is active, upload to Tigris S3
+    // If S3 / Tigris cloud driver is explicitly enabled with valid credentials
     if (config.storage.driver === 's3' && config.storage.accessKeyId) {
       try {
         const uploadResult = await StorageService.uploadBuffer(
           buffer,
           storedFileName,
           detectedType.mime,
-          'appointments'
+          category,
         );
 
         return {
@@ -108,9 +109,9 @@ export class AttachmentsService {
       }
     }
 
-    // Ensure directory exists right before write to local disk
-    ensureUploadDir();
-    const destinationPath = path.join(UPLOAD_DIR, storedFileName);
+    // Local Disk Storage on Reception Server
+    const targetDir = this.getTargetDir(category);
+    const destinationPath = path.join(targetDir, storedFileName);
 
     await fs.promises.writeFile(destinationPath, buffer);
 
@@ -125,19 +126,21 @@ export class AttachmentsService {
   }
 
   static async saveMultipleFiles(
-    files: Array<{ name: string; data: string | Buffer }>,
+    files: Array<{ name: string; data: string | Buffer; category?: string }>,
+    defaultCategory = 'appointments',
   ): Promise<StoredAttachment[]> {
     if (!Array.isArray(files) || files.length === 0) {
       throw new BadRequestError('No files provided');
     }
 
     if (files.length > MAX_FILES_PER_BATCH) {
-      throw new BadRequestError(`Maximum ${MAX_FILES_PER_BATCH} files allowed per upload`);
+      throw new BadRequestError(`الحد الأقصى المسموح به هو ${MAX_FILES_PER_BATCH} ملفات في المرة الواحدة`);
     }
 
     const results: StoredAttachment[] = [];
     for (const file of files) {
-      const stored = await this.saveFile(file.name, file.data);
+      const category = file.category || defaultCategory;
+      const stored = await this.saveFile(file.name, file.data, category);
       results.push(stored);
     }
 
@@ -147,9 +150,35 @@ export class AttachmentsService {
   static getFilePath(filename: string): { filePath: string; mimeType: string } {
     // Sanitize filename to prevent directory traversal
     const safeName = path.basename(filename);
-    const filePath = path.join(UPLOAD_DIR, safeName);
+    const baseDir = StorageService.getBaseUploadDir();
 
-    if (!fs.existsSync(filePath)) {
+    const candidateFolders = [
+      'appointments',
+      'patients',
+      'reports',
+      'prescriptions',
+      'examination',
+      '',
+    ];
+
+    let foundPath: string | null = null;
+    for (const folder of candidateFolders) {
+      const candidate = folder ? path.join(baseDir, folder, safeName) : path.join(baseDir, safeName);
+      if (fs.existsSync(candidate)) {
+        foundPath = candidate;
+        break;
+      }
+    }
+
+    // Legacy fallback check
+    if (!foundPath) {
+      const legacyPath = path.resolve(process.cwd(), 'uploads/appointments', safeName);
+      if (fs.existsSync(legacyPath)) {
+        foundPath = legacyPath;
+      }
+    }
+
+    if (!foundPath) {
       throw new BadRequestError('File not found');
     }
 
@@ -159,10 +188,12 @@ export class AttachmentsService {
       '.jpeg': 'image/jpeg',
       '.png': 'image/png',
       '.webp': 'image/webp',
+      '.gif': 'image/gif',
+      '.pdf': 'application/pdf',
     };
 
     return {
-      filePath,
+      filePath: foundPath,
       mimeType: mimeMap[ext] || 'application/octet-stream',
     };
   }

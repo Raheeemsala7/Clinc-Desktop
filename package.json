@@ -1,0 +1,19 @@
+{
+  "name": "clinic-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-Computer Clinic Management Windows Desktop Application",
+  "scripts": {
+    "desktop:start": "cd desktop && pnpm start",
+    "desktop:dev": "cd desktop && pnpm dev",
+    "desktop:build": "cd desktop && pnpm build",
+    "server:dev": "cd server && pnpm run dev",
+    "server:build": "cd server && pnpm run build",
+    "server:test": "cd server && npm test -- --forceExit",
+    "server:seed": "cd server && pnpm run seed",
+    "next:dev": "cd desktop/ui && pnpm dev",
+    "next:build": "cd desktop/ui && pnpm build",
+    "build:all": "pnpm run server:build && pnpm run next:build && pnpm run desktop:build",
+    "desktop:dist": "cd desktop && pnpm run dist"
+  }
+}

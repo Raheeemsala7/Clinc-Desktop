@@ -1,0 +1,40 @@
+const fs = require('fs');
+const path = require('path');
+
+const uiDir = path.resolve(__dirname, '../desktop/ui');
+const standaloneDir = path.join(uiDir, '.next', 'standalone');
+const nestedUiDir = path.join(standaloneDir, 'desktop', 'ui');
+
+console.log('📦 [FRONTEND] Preparing Next.js standalone static and public files...');
+
+const staticSrc = path.join(uiDir, '.next', 'static');
+const publicSrc = path.join(uiDir, 'public');
+
+// Copy .next/static to nested and root
+if (fs.existsSync(staticSrc)) {
+  const target1 = path.join(nestedUiDir, '.next', 'static');
+  const target2 = path.join(standaloneDir, '.next', 'static');
+  fs.cpSync(staticSrc, target1, { recursive: true, force: true });
+  fs.cpSync(staticSrc, target2, { recursive: true, force: true });
+  console.log('✅ Copied .next/static to standalone');
+}
+
+// Copy public to nested and root
+if (fs.existsSync(publicSrc)) {
+  const target1 = path.join(nestedUiDir, 'public');
+  const target2 = path.join(standaloneDir, 'public');
+  fs.cpSync(publicSrc, target1, { recursive: true, force: true });
+  fs.cpSync(publicSrc, target2, { recursive: true, force: true });
+  console.log('✅ Copied public to standalone');
+}
+
+// Copy .env to nested and root
+const envSrc = path.join(uiDir, '.env');
+if (fs.existsSync(envSrc)) {
+  fs.copyFileSync(envSrc, path.join(nestedUiDir, '.env'));
+  fs.copyFileSync(envSrc, path.join(standaloneDir, '.env'));
+  console.log('✅ Copied .env to standalone');
+}
+
+console.log('🎉 [FRONTEND] Standalone Next.js assets ready.');
+

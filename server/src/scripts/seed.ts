@@ -1,31 +1,31 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import path from 'path';
 import argon2 from 'argon2';
 import { connectDB } from '../db/connection';
 import { User, Setting, ExpenseCategory, Drug, DoctorStatus } from '../models';
 
-async function seed() {
-  console.log('--- Starting MongoDB Database Seed ---');
-  await connectDB();
+export async function ensureSeedData() {
+  console.log('--- Ensuring MongoDB Database Seed Data ---');
 
   // 1. Seed Users
   const usersToSeed = [
     {
       username: (process.env.SEED_ADMIN_USERNAME || 'admin').toLowerCase().trim(),
-      password: process.env.SEED_ADMIN_PASSWORD || 'Adm@150b852037c3026d',
+      password: process.env.SEED_ADMIN_PASSWORD || 'Admin@123456',
       name: 'System Administrator',
       role: 'ADMIN',
     },
     {
       username: (process.env.SEED_DOCTOR_USERNAME || 'doctor').toLowerCase().trim(),
-      password: process.env.SEED_DOCTOR_PASSWORD || 'Doc@bf087ab4791a2d9a',
+      password: process.env.SEED_DOCTOR_PASSWORD || 'Doctor@123456',
       name: 'Dr. Ahmed Mostafa',
       role: 'DOCTOR',
     },
     {
       username: (process.env.SEED_RECEPTION_USERNAME || 'reception').toLowerCase().trim(),
-      password: process.env.SEED_RECEPTION_PASSWORD || 'Rec@f3d78b0ea25db701',
+      password: process.env.SEED_RECEPTION_PASSWORD || 'Reception@123456',
       name: 'Reception Staff',
       role: 'RECEPTION',
     },
@@ -90,7 +90,6 @@ async function seed() {
       { upsert: true },
     );
   }
-  console.log('Seeded default clinic settings.');
 
   // 3. Seed Expense Categories
   const categories = [
@@ -108,7 +107,6 @@ async function seed() {
       { upsert: true },
     );
   }
-  console.log(`Seeded ${categories.length} expense categories.`);
 
   // 4. Seed Popular Drugs
   const drugs = [
@@ -131,13 +129,20 @@ async function seed() {
       { upsert: true },
     );
   }
-  console.log(`Seeded ${drugs.length} catalog drugs.`);
 
-  console.log('--- MongoDB Seed Completed Successfully! ---');
-  process.exit(0);
+  console.log('✅ [SEED] Database Seed Verified & Ready.');
 }
 
-seed().catch((err) => {
-  console.error('Seed script error:', err);
-  process.exit(1);
-});
+export default ensureSeedData;
+
+// Run directly from CLI only if explicitly executing the seed script
+if (require.main === module && process.argv[1] && path.basename(process.argv[1]).toLowerCase().includes('seed')) {
+  (async () => {
+    await connectDB();
+    await ensureSeedData();
+    process.exit(0);
+  })().catch((err) => {
+    console.error('Seed script error:', err);
+    process.exit(1);
+  });
+}

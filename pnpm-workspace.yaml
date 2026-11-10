@@ -1,0 +1,11 @@
+packages:
+  - 'server'
+  - 'desktop'
+  - 'desktop/ui'
+allowBuilds:
+  '@parcel/watcher': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  argon2: true
+  electron: true
+  esbuild: true

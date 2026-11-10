@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تهيئة نظام إدارة العيادة - عيادة د. إسلام</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-light: #e0f2fe;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', Tahoma, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #f0f9ff 100%);
+      color: var(--slate-800);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
+      padding: 40px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--slate-900);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--slate-600);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      border: 2px solid var(--slate-200);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .card.selected {
+      border-color: var(--primary);
+      background-color: #f8fbff;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .card-icon {
+      font-size: 32px;
+      margin-bottom: 14px;
+      display: inline-block;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 13.5px;
+      color: var(--slate-600);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .feature-list li {
+      font-size: 13px;
+      color: var(--slate-700);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-list li::before {
+      content: "✓";
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--slate-300);
+      color: var(--slate-700);
+    }
+
+    .btn-outline:hover {
+      background: var(--slate-100);
+      border-color: var(--slate-400);
+    }
+
+    .client-form {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--slate-300);
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+      text-align: right;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-bottom: 4px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--slate-300);
+      border-radius: 8px;
+      font-size: 14px;
+      direction: ltr;
+      text-align: left;
+      font-family: monospace;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .status-box {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .status-box.success {
+      display: block;
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .status-box.error {
+      display: block;
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .ip-banner {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      font-size: 13.5px;
+      color: #1e40af;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ip-banner strong {
+      font-family: monospace;
+      font-size: 15px;
+      direction: ltr;
+      display: inline-block;
+      background: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #93c5fd;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--slate-600);
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="badge">🏥 نظام عيادة د. إسلام التخصصية</div>
+      <h1 class="title">تهيئة وضع تشغيل البرنامج</h1>
+      <p class="subtitle">اختر دور هذا الجهاز في العيادة للبدء في تشغيل النظام</p>
+      <div style="margin-top: 16px;">
+        <button class="btn btn-outline" onclick="goToLoginDirectly(event)" style="display: inline-flex; width: auto; padding: 10px 24px; font-size: 14.5px; gap: 8px; border-color: var(--primary); color: var(--primary); font-weight: 700;">
+          🔐 الانتقال المباشر إلى صفحة تسجيل الدخول (Login)
+        </button>
+      </div>
+    </div>
+
+    <div class="ip-banner" id="ipBanner" style="display: none;">
+      <span>📡 عنوان هذا الجهاز على الشبكة المحلية (LAN):</span>
+      <strong id="localIpText">192.168.1.X</strong>
+    </div>
+
+    <div class="grid">
+      <!-- الخيار الأول: الجهاز الرئيسي (الخادم وقاعدة البيانات) -->
+      <div class="card" id="serverCard" onclick="selectMode('server')">
+        <div>
+          <span class="card-icon">🖥️</span>
+          <h2 class="card-title">الجهاز الرئيسي (الخادم وقاعدة البيانات)</h2>
+          <p class="card-desc">
+            الجهاز الأساسي في العيادة (كمبيوتر الطبيب). يستضيف قاعدة بيانات MongoDB محلياً للأبد، ويخزن كافة السجلات، ويتصل به الجهاز الآخر عبر الشبكة.
+          </p>
+          <ul class="feature-list">
+            <li>يستضيف قاعدة بيانات العيادة محلياً ومدى الحياة</li>
+            <li>يخزن كافة الكشوفات والروشتات والمرفقات بأمان</li>
+            <li>يعمل كخادم مركزي يتيح لجهاز الاستقبال الاتصال به فورياً</li>
+            <li>يتيح تسجيل الدخول لحساب الطبيب وحساب الإدارة</li>
+          </ul>
+        </div>
+        <button class="btn btn-primary" onclick="confirmServerMode(event)">
+          تشغيل كجهاز رئيسي (خادم وقاعدة بيانات)
+        </button>
+      </div>
+
+      <!-- الخيار الثاني: الجهاز الفرعي (محطة العمل المتصلة) -->
+      <div class="card" id="clientCard" onclick="selectMode('client')">
+        <div>
+          <span class="card-icon">🔗</span>
+          <h2 class="card-title">الجهاز الفرعي (محطة العمل المتصلة بالشبكة)</h2>
+          <p class="card-desc">
+            الجهاز الثاني في العيادة (كمبيوتر الاستقبال). يتصل بالجهاز الرئيسي عبر الراوتر أو شبكة Wi-Fi الداخلية بدون الحاجة لتثبيت قاعدة بيانات مستقلة.
+          </p>
+          <ul class="feature-list">
+            <li>يتصل بالجهاز الرئيسي لمشاركة نفس قاعدة البيانات فورياً</li>
+            <li>واجهة سريعة وخفيفة جداً لحجز المواعيد واستقبال المرضى</li>
+            <li>لا يحتاج إلى تثبيت قاعدة بيانات على هذا الجهاز</li>
+            <li>مزامنة لحظية للكشوفات والانتظار مع جهاز الطبيب</li>
+          </ul>
+
+          <div class="client-form" id="clientForm">
+            <div class="form-group">
+              <label class="form-label">عنوان IP للجهاز الرئيسي (الخادم):</label>
+              <input type="text" id="serverIpInput" class="form-input" placeholder="مثال: 192.168.1.5" value="192.168.1.5">
+            </div>
+            <div class="form-group">
+              <label class="form-label">رقم المنفذ (Port):</label>
+              <input type="number" id="serverPortInput" class="form-input" value="4000">
+            </div>
+            <button class="btn btn-outline" type="button" onclick="testConnection(event)" style="margin-bottom: 8px;">
+              🔍 اختبار الاتصال بالجهاز الرئيسي
+            </button>
+            <div id="connectionStatus" class="status-box"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="clientConfirmBtn" onclick="confirmClientMode(event)" style="margin-top: 14px;">
+          اتصال بالجهاز الرئيسي وبدء التشغيل
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">
+      جميع البيانات مشفرة ومحفوظة محلياً على جهاز العيادة بنسبة 100% بدون أي اعتماد على سيرفرات خارجية.
+    </div>
+  </div>
+
+  <script>
+    let selectedMode = null;
+
+    // Load detected LAN IPs on launch
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.electronAPI && window.electronAPI.getLanIps) {
+        try {
+          const ips = await window.electronAPI.getLanIps();
+          if (ips && ips.length > 0) {
+            document.getElementById('localIpText').textContent = ips[0].ip;
+            document.getElementById('ipBanner').style.display = 'flex';
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    });
+
+    function selectMode(mode) {
+      selectedMode = mode;
+      const serverCard = document.getElementById('serverCard');
+      const clientCard = document.getElementById('clientCard');
+      const clientForm = document.getElementById('clientForm');
+
+      if (mode === 'server') {
+        serverCard.classList.add('selected');
+        clientCard.classList.remove('selected');
+        clientForm.style.display = 'none';
+      } else {
+        clientCard.classList.add('selected');
+        serverCard.classList.remove('selected');
+        clientForm.style.display = 'block';
+      }
+    }
+
+    async function testConnection(event) {
+      if (event) event.stopPropagation();
+      const ip = document.getElementById('serverIpInput').value.trim();
+      const port = parseInt(document.getElementById('serverPortInput').value.trim(), 10) || 4000;
+      const statusBox = document.getElementById('connectionStatus');
+
+      statusBox.className = 'status-box';
+      statusBox.style.display = 'block';
+      statusBox.textContent = 'جاري اختبار الاتصال بالخادم...';
+
+      try {
+        if (window.electronAPI && window.electronAPI.testServerConnection) {
+          const res = await window.electronAPI.testServerConnection(ip, port);
+          if (res.success) {
+            statusBox.className = 'status-box success';
+            statusBox.textContent = `✅ تم الاتصال بنجاح بالخادم المركزي (${ip}:${port}) - سرعة الاستجابة: ${res.latency}ms`;
+          } else {
+            statusBox.className = 'status-box error';
+            statusBox.textContent = `❌ فشل الاتصال: ${res.error || 'تأكد من تشغيل جهاز الاستقبال وصلاحيات الجدار الناري'}`;
+          }
+        } else {
+          // Fallback fetch
+          const start = Date.now();
+          const resp = await fetch(`http://${ip}:${port}/health`);
+          if (resp.ok) {
+            statusBox.className = 'status-box success';
+            statusBox.textContent = `✅ تم الاتصال بنجاح بالخادم المركزي (${ip}:${port}) - سرعة الاستجابة: ${Date.now() - start}ms`;
+          } else {
+            throw new Error(`HTTP ${resp.status}`);
+          }
+        }
+      } catch (err) {
+        statusBox.className = 'status-box error';
+        statusBox.textContent = `❌ تعذر الوصول للخادم (${ip}:${port}) - تأكد من توصيل الجهازين بنفس الراوتر / شبكة LAN`;
+      }
+    }
+
+    async function confirmServerMode(event) {
+      if (event) event.stopPropagation();
+      const btn = event.target;
+      btn.textContent = '⏳ جاري بدء تشغيل السيرفر وقاعدة البيانات...';
+      btn.disabled = true;
+
+      try {
+        if (window.electronAPI && window.electronAPI.saveConfig) {
+          await window.electronAPI.saveConfig({
+            mode: 'server',
+            serverIp: '127.0.0.1',
+            serverPort: 4000,
+          });
+        }
+        if (window.electronAPI && window.electronAPI.startApp) {
+          await window.electronAPI.startApp();
+        }
+      } catch (err) {
+        alert('حدث خطأ أثناء حفظ الإعدادات: ' + err.message);
+        btn.textContent = 'تشغيل كجهاز رئيسي (خادم وقاعدة بيانات)';
+        btn.disabled = false;
+      }
+    }
+
+    async function confirmClientMode(event) {
+      if (event) event.stopPropagation();
+      const ip = document.getElementById('serverIpInput').value.trim();
+      const port = parseInt(document.getElementById('serverPortInput').value.trim(), 10) || 4000;
+
+      if (!ip) {
+        alert('يرجى إدخال عنوان IP الخاص بالجهاز الرئيسي');
+        return;
+      }
+
+      const btn = document.getElementById('clientConfirmBtn');
+      btn.textContent = '⏳ جاري الربط مع الجهاز الرئيسي...';
+      btn.disabled = true;
+
+      try {
+        if (window.electronAPI && window.electronAPI.saveConfig) {
+          await window.electronAPI.saveConfig({
+            mode: 'client',
+            serverIp: ip,
+            serverPort: port,
+          });
+        }
+        if (window.electronAPI && window.electronAPI.startApp) {
+          await window.electronAPI.startApp();
+        }
+      } catch (err) {
+        alert('حدث خطأ أثناء حفظ الإعدادات: ' + err.message);
+        btn.textContent = 'اتصال بالجهاز الرئيسي وبدء التشغيل';
+        btn.disabled = false;
+      }
+    }
+
+    async function goToLoginDirectly(event) {
+      if (event) event.stopPropagation();
+      const btn = event.currentTarget || event.target;
+      if (btn) {
+        btn.textContent = '⏳ جاري فتح صفحة تسجيل الدخول...';
+        btn.disabled = true;
+      }
+      try {
+        if (window.electronAPI && window.electronAPI.goToLogin) {
+          await window.electronAPI.goToLogin();
+        } else {
+          window.location.href = 'http://localhost:3000/auth/login';
+        }
+      } catch (err) {
+        window.location.href = 'http://localhost:3000/auth/login';
+      }
+    }
+  </script>
+</body>
+</html>
+

@@ -15,6 +15,9 @@ export type AppointmentType =
   | 'EXAMINATION'
   | 'FOLLOW_UP'
   | 'POST_OPERATIVE'
+  | 'OPERATION_FOLLOWUP'
+  | 'ENDOSCOPY'
+  | 'SURGERY'
   | 'LAB_TESTS_IMAGING'
   | 'TEST_RESULTS_REVIEW'
   | 'CONSULTATION';
@@ -37,6 +40,8 @@ export interface IAppointment extends Document {
   cancelledAt?: Date;
   startTime?: string;
   endTime?: string;
+  originalFee?: number;
+  discount?: number;
   totalAmount: number;
   paidAmount: number;
   remainingAmount: number;
@@ -66,6 +71,9 @@ const AppointmentSchema = new Schema(
         'EXAMINATION',
         'FOLLOW_UP',
         'POST_OPERATIVE',
+        'OPERATION_FOLLOWUP',
+        'ENDOSCOPY',
+        'SURGERY',
         'LAB_TESTS_IMAGING',
         'TEST_RESULTS_REVIEW',
         'CONSULTATION',
@@ -85,6 +93,8 @@ const AppointmentSchema = new Schema(
     startedAt: { type: Date },
     completedAt: { type: Date },
     cancelledAt: { type: Date },
+    originalFee: { type: Number, default: 0 },
+    discount: { type: Number, default: 0 },
     totalAmount: { type: Number, default: 0 },
     paidAmount: { type: Number, default: 0 },
     remainingAmount: { type: Number, default: 0 },

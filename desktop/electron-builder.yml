@@ -1,0 +1,44 @@
+appId: com.clinic.management.desktop
+productName: Clinic Management System
+copyright: Copyright © 2026 Dr. Eslam Clinic
+
+directories:
+  output: dist-installer
+  buildResources: resources
+
+files:
+  - "dist/**/*"
+  - "package.json"
+
+extraResources:
+  - from: "resources/bin/node.exe"
+    to: "bin/node.exe"
+  - from: "resources/server"
+    to: "server"
+    filter: ["**/*"]
+  - from: "ui/.next/standalone"
+    to: "frontend"
+    filter: ["**/*"]
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: dir
+      arch:
+        - x64
+  icon: resources/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  installerHeaderIcon: resources/icon.ico
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Clinic Management
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false

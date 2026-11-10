@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -13,8 +14,6 @@ const ALLOWED_MIME_TYPES = [
   'application/pdf',
 ];
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
-
 export interface PresignedUrlResult {
   uploadUrl: string;
   fileUrl: string;
@@ -24,6 +23,23 @@ export interface PresignedUrlResult {
 
 export class StorageService {
   private static s3Client: S3Client | null = null;
+
+  public static getBaseUploadDir(): string {
+    const configuredPath = config.storage.localPath || process.env.LOCAL_STORAGE_PATH || 'D:/ClinicData/uploads';
+    try {
+      if (!fs.existsSync(configuredPath)) {
+        fs.mkdirSync(configuredPath, { recursive: true });
+      }
+      return configuredPath;
+    } catch {
+      // Fallback to project root ./uploads if D: is inaccessible
+      const fallback = path.resolve(process.cwd(), 'uploads');
+      if (!fs.existsSync(fallback)) {
+        fs.mkdirSync(fallback, { recursive: true });
+      }
+      return fallback;
+    }
+  }
 
   private static getClient(): S3Client {
     if (!this.s3Client) {
@@ -40,7 +56,9 @@ export class StorageService {
   }
 
   /**
-   * Generates a Presigned PUT URL allowing clients to upload directly to Tigris Data (S3)
+   * Generates an upload URL.
+   * If local storage driver is active, points directly to local API upload endpoint.
+   * If S3 driver is active, generates an S3 presigned PUT URL.
    */
   static async getPresignedUploadUrl(
     fileName: string,
@@ -58,11 +76,23 @@ export class StorageService {
       );
     }
 
-    const client = this.getClient();
-    const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
     const extension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
     const uniqueId = uuidv4();
     const fileKey = `${folder}/${uniqueId}.${extension}`;
+
+    // Local Storage Mode (Standard for Clinic Desktop)
+    if (config.storage.driver !== 's3' || !config.storage.accessKeyId) {
+      return {
+        uploadUrl: '/api/v1/attachments/upload',
+        fileUrl: `/api/v1/attachments/file/${uniqueId}.${extension}`,
+        fileKey,
+        expiresInSeconds: 3600,
+      };
+    }
+
+    // S3 Cloud Fallback
+    const client = this.getClient();
+    const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
 
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -75,7 +105,6 @@ export class StorageService {
       expiresIn: expiresInSeconds,
     });
 
-    // Public readable URL on Tigris S3 endpoint
     const endpointUrl = config.storage.endpoint.replace(/\/+$/, '');
     const fileUrl = `${endpointUrl}/${bucket}/${fileKey}`;
 
@@ -88,7 +117,7 @@ export class StorageService {
   }
 
   /**
-   * Directly uploads a binary Buffer to Tigris Data (S3)
+   * Directly uploads a binary Buffer to local storage (or S3 if configured)
    */
   static async uploadBuffer(
     buffer: Buffer,
@@ -103,12 +132,33 @@ export class StorageService {
       );
     }
 
-    const client = this.getClient();
-    const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
     const extension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
     const fileId = path.parse(fileName).name || uuidv4();
     const storedFileName = `${fileId}.${extension}`;
     const fileKey = `${folder}/${storedFileName}`;
+
+    // Local Disk Storage Mode
+    if (config.storage.driver !== 's3' || !config.storage.accessKeyId) {
+      const baseDir = this.getBaseUploadDir();
+      const targetFolder = path.join(baseDir, folder);
+      if (!fs.existsSync(targetFolder)) {
+        fs.mkdirSync(targetFolder, { recursive: true });
+      }
+
+      const filePath = path.join(targetFolder, storedFileName);
+      await fs.promises.writeFile(filePath, buffer);
+
+      return {
+        fileUrl: `/api/v1/attachments/file/${storedFileName}`,
+        fileKey,
+        id: fileId,
+        fileName: storedFileName,
+      };
+    }
+
+    // S3 Cloud Fallback
+    const client = this.getClient();
+    const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
 
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -131,11 +181,50 @@ export class StorageService {
   }
 
   /**
-   * Fetches the S3 object from Tigris as a readable stream
+   * Fetches file as a readable stream from local disk (or S3)
    */
   static async getFileStream(
     fileKey: string,
   ): Promise<{ stream: any; contentType: string; contentLength?: number }> {
+    if (config.storage.driver !== 's3' || !config.storage.accessKeyId) {
+      const baseDir = this.getBaseUploadDir();
+      let filePath = path.join(baseDir, fileKey);
+
+      if (!fs.existsSync(filePath)) {
+        const fileName = path.basename(fileKey);
+        // Search subfolders
+        const subfolders = ['appointments', 'patients', 'reports', 'prescriptions', 'examination'];
+        for (const sub of subfolders) {
+          const candidate = path.join(baseDir, sub, fileName);
+          if (fs.existsSync(candidate)) {
+            filePath = candidate;
+            break;
+          }
+        }
+      }
+
+      if (!fs.existsSync(filePath)) {
+        throw new BadRequestError('File not found');
+      }
+
+      const stat = await fs.promises.stat(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeMap: Record<string, string> = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.gif': 'image/gif',
+        '.pdf': 'application/pdf',
+      };
+
+      return {
+        stream: fs.createReadStream(filePath),
+        contentType: mimeMap[ext] || 'application/octet-stream',
+        contentLength: stat.size,
+      };
+    }
+
     const client = this.getClient();
     const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
     const command = new GetObjectCommand({
@@ -151,9 +240,18 @@ export class StorageService {
   }
 
   /**
-   * Deletes a file from Tigris Data if needed
+   * Deletes a file from local disk (or S3)
    */
   static async deleteFile(fileKey: string): Promise<void> {
+    if (config.storage.driver !== 's3' || !config.storage.accessKeyId) {
+      const baseDir = this.getBaseUploadDir();
+      const filePath = path.join(baseDir, fileKey);
+      if (fs.existsSync(filePath)) {
+        await fs.promises.unlink(filePath);
+      }
+      return;
+    }
+
     const client = this.getClient();
     const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
 
@@ -165,4 +263,3 @@ export class StorageService {
     await client.send(command);
   }
 }
-

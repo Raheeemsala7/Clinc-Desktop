@@ -12,6 +12,9 @@ export interface IPayment extends Document {
     | 'EXAMINATION'
     | 'FOLLOW_UP'
     | 'POST_OPERATIVE'
+    | 'OPERATION_FOLLOWUP'
+    | 'ENDOSCOPY'
+    | 'SURGERY'
     | 'LAB_TESTS_IMAGING'
     | 'TEST_RESULTS_REVIEW'
     | 'CONSULTATION'
@@ -38,6 +41,9 @@ const PaymentSchema = new Schema(
         'EXAMINATION',
         'FOLLOW_UP',
         'POST_OPERATIVE',
+        'OPERATION_FOLLOWUP',
+        'ENDOSCOPY',
+        'SURGERY',
         'LAB_TESTS_IMAGING',
         'TEST_RESULTS_REVIEW',
         'CONSULTATION',

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { QueueService } from '../services/queue.service';
+import { RealtimeService } from '../realtime/socket.server';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { sendSuccess } from '../utils/response';
 
@@ -34,6 +35,10 @@ export class QueueController {
   setDoctorStatus = asyncHandler(async (req: Request, res: Response) => {
     const doctorId = req.user!.id;
     const status = await QueueService.setDoctorStatus(doctorId, req.body.status);
+    RealtimeService.emitDoctorStatusChanged({
+      doctorId,
+      status: (status as any).status || req.body.status,
+    });
     sendSuccess(res, status, { message: 'Doctor status updated successfully' });
   });
 }

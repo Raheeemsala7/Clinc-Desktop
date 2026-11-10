@@ -33,8 +33,8 @@ export class AuthController {
     sendSuccess(res, user);
   });
 
-  getSocketTicket = asyncHandler(async (_req: Request, res: Response) => {
-    const result = authService.getSocketTicket();
+  getSocketTicket = asyncHandler(async (req: Request, res: Response) => {
+    const result = authService.getSocketTicket(req.user);
     sendSuccess(res, result);
   });
 }

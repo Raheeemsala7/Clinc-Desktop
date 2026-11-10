@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AppointmentsService } from '../services/appointments.service';
+import { RealtimeService } from '../realtime/socket.server';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/response';
 
@@ -11,6 +12,14 @@ export class AppointmentsController {
       { id: req.user!.id },
       ip,
     );
+    RealtimeService.emitAppointmentCreated({
+      appointmentId: result.id,
+      patientId: result.patientId,
+      patientName: (result as any).patientName || '',
+      clinicDate: result.clinicDate,
+      doctorId: result.doctorId,
+      queueNumber: result.queueNumber,
+    });
     sendSuccess(res, result, { code: 201, message: 'Appointment created successfully' });
   });
 
@@ -22,6 +31,7 @@ export class AppointmentsController {
       { id: req.user!.id },
       ip,
     );
+    RealtimeService.emitQueueUpdate({ appointmentId: req.params.id, doctorId: result.doctorId });
     sendSuccess(res, result, { message: 'Appointment updated successfully' });
   });
 
@@ -49,6 +59,13 @@ export class AppointmentsController {
         { id: req.user!.id, role: req.user!.role },
         ip,
       );
+      RealtimeService.emitAppointmentStatusChanged({
+        appointmentId: result.id,
+        patientId: result.patientId,
+        status: result.status,
+        clinicDate: result.clinicDate,
+        doctorId: result.doctorId,
+      });
       sendSuccess(res, result, { message: `Appointment transitioned to ${action}` });
     });
 
@@ -60,6 +77,13 @@ export class AppointmentsController {
       { id: req.user!.id },
       ip,
     );
+    RealtimeService.emitAppointmentStatusChanged({
+      appointmentId: result.id,
+      patientId: result.patientId,
+      status: result.status,
+      clinicDate: result.clinicDate,
+      doctorId: result.doctorId,
+    });
     sendSuccess(res, result, { message: 'Appointment checked out successfully' });
   });
 
@@ -71,6 +95,7 @@ export class AppointmentsController {
       { id: req.user!.id },
       ip,
     );
+    RealtimeService.emitQueueUpdate({ appointmentId: req.params.id });
     sendSuccess(res, result, { message: 'Remaining balance paid successfully' });
   });
 }

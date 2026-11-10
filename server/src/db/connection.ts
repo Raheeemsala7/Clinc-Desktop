@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import os from 'os';
 
 let cachedConnection: typeof mongoose | null = null;
 let connectionPromise: Promise<typeof mongoose> | null = null;
@@ -20,7 +21,7 @@ export async function connectDB(): Promise<typeof mongoose> {
           'Missing MONGODB_URI environment variable in production. Please configure MONGODB_URI in your server environment variables.'
         );
       }
-      mongoUri = 'mongodb://localhost:27017/clinic-management';
+      mongoUri = 'mongodb://127.0.0.1:27017/clinic-management';
     }
 
     // Mask password in logs
@@ -31,6 +32,8 @@ export async function connectDB(): Promise<typeof mongoose> {
       .connect(mongoUri, {
         serverSelectionTimeoutMS: 10000,
         connectTimeoutMS: 10000,
+        // @ts-ignore
+        runtimeAdapters: { os },
       })
       .then((m) => {
         cachedConnection = m;

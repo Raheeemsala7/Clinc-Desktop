@@ -18,8 +18,11 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('💥 [FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
+import http from 'http';
 import app from './app';
 import { connectDB } from './db/connection';
+import { RealtimeService } from './realtime/socket.server';
+import { ensureSeedData } from './scripts/seed';
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = '0.0.0.0';
@@ -30,17 +33,23 @@ async function bootstrap() {
     await connectDB();
     console.log('✅ [DB] MongoDB connection established successfully.');
 
-    const server = app.listen(PORT, HOST, () => {
+    await ensureSeedData();
+
+    const httpServer = http.createServer(app);
+    RealtimeService.initialize(httpServer);
+
+    const server = httpServer.listen(PORT, HOST, () => {
       console.log(`🌐 [SERVER] Clinic Management Server running on http://${HOST}:${PORT}`);
       console.log(`📡 [API] Base URL: http://${HOST}:${PORT}/api/v1`);
       console.log(`📚 [DOCS] Swagger UI: http://${HOST}:${PORT}/api-docs`);
+      console.log(`⚡ [REALTIME] WebSocket ready on http://${HOST}:${PORT}`);
       console.log(`❤️  [HEALTH] Health check: http://${HOST}:${PORT}/health`);
     });
 
     const shutdown = async (signal: string) => {
       console.log(`\n🛑 Received ${signal}. Shutting down gracefully...`);
       server.close(() => {
-        console.log('👋 HTTP server closed.');
+        console.log('👋 HTTP & WebSocket server closed.');
         process.exit(0);
       });
     };

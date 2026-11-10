@@ -4,10 +4,12 @@ import { transformOptions } from './base';
 
 export interface IPatient extends Document {
   id: string;
+  fileNumber?: string;
   fullName: string;
   searchName: string;
   phone: string;
   gender: 'MALE' | 'FEMALE';
+  maritalStatus?: 'SINGLE' | 'MARRIED' | 'WIDOWED' | 'DIVORCED';
   age?: number;
   dateOfBirth?: Date;
   address?: string;
@@ -25,10 +27,16 @@ export interface IPatient extends Document {
 const PatientSchema = new Schema(
   {
     _id: { type: String, default: uuidv4 },
+    fileNumber: { type: String, index: true },
     fullName: { type: String, required: true },
     searchName: { type: String, required: true, index: true },
     phone: { type: String, required: true, index: true },
     gender: { type: String, enum: ['MALE', 'FEMALE'], required: true },
+    maritalStatus: {
+      type: String,
+      enum: ['SINGLE', 'MARRIED', 'WIDOWED', 'DIVORCED'],
+      default: 'MARRIED',
+    },
     age: { type: Number },
     dateOfBirth: { type: Date },
     address: { type: String },

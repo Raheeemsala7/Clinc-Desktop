@@ -15,6 +15,7 @@ import settingsRoutes from './settings.routes';
 import auditRoutes from './audit.routes';
 import doctorScheduleRoutes from './doctor-schedule.routes';
 import attachmentsRoutes from './attachments.routes';
+import backupRoutes from './backup.routes';
 
 const apiRouter = Router();
 
@@ -30,6 +31,7 @@ apiRouter.use('/closing', closingRoutes);
 apiRouter.use('/reports', reportsRoutes);
 apiRouter.use('/settings', settingsRoutes);
 apiRouter.use('/audit-logs', auditRoutes);
+apiRouter.use('/backup', backupRoutes);
 
 // Contextual & nested routers (queue, prescriptions, payments, expenses)
 apiRouter.use(queueRoutes);

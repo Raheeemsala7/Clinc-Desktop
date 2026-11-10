@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { VisitsService } from '../services/visits.service';
+import { RealtimeService } from '../realtime/socket.server';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { sendSuccess } from '../utils/response';
 
@@ -23,6 +24,12 @@ export class VisitsController {
   closeVisit = asyncHandler(async (req: Request, res: Response) => {
     const ip = req.ip || req.socket.remoteAddress || '';
     const result = await VisitsService.closeVisit(req.params.id, req.user!.id, ip);
+    RealtimeService.emitExaminationCompleted({
+      visitId: result.id,
+      appointmentId: result.appointmentId,
+      patientId: result.patientId,
+      doctorId: req.user!.id,
+    });
     sendSuccess(res, result, { message: 'Visit closed successfully' });
   });
 

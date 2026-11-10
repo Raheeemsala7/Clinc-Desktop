@@ -269,7 +269,7 @@ export const swaggerSpec = {
           scheduledAt: { type: 'string', format: 'date-time' },
           type: {
             type: 'string',
-            enum: ['EXAMINATION', 'FOLLOW_UP', 'POST_OPERATIVE', 'LAB_TESTS_IMAGING', 'TEST_RESULTS_REVIEW', 'CONSULTATION'],
+            enum: ['EXAMINATION', 'FOLLOW_UP', 'POST_OPERATIVE', 'OPERATION_FOLLOWUP', 'ENDOSCOPY', 'SURGERY', 'LAB_TESTS_IMAGING', 'TEST_RESULTS_REVIEW', 'CONSULTATION'],
             example: 'EXAMINATION',
           },
           status: {
@@ -303,7 +303,7 @@ export const swaggerSpec = {
           scheduledAt: { type: 'string', format: 'date-time', example: '2026-11-03T16:30:00.000Z' },
           type: {
             type: 'string',
-            enum: ['EXAMINATION', 'FOLLOW_UP', 'POST_OPERATIVE', 'LAB_TESTS_IMAGING', 'TEST_RESULTS_REVIEW', 'CONSULTATION', 'examination', 'revisit', 'surgery_followup', 'lab_radiology', 'tests_review'],
+            enum: ['EXAMINATION', 'FOLLOW_UP', 'POST_OPERATIVE', 'OPERATION_FOLLOWUP', 'ENDOSCOPY', 'SURGERY', 'LAB_TESTS_IMAGING', 'TEST_RESULTS_REVIEW', 'CONSULTATION', 'examination', 'revisit', 'surgery_followup', 'endoscopy', 'surgery', 'lab_radiology', 'tests_review'],
             example: 'EXAMINATION',
             description: 'نوع الكشف (كشف جديد، إعادة كشف، متابعة عملية، تحاليل، استشارة)',
           },
@@ -483,7 +483,7 @@ export const swaggerSpec = {
           method: { type: 'string', enum: ['CASH', 'CARD', 'WALLET'], example: 'CASH' },
           kind: {
             type: 'string',
-            enum: ['EXAMINATION', 'FOLLOW_UP', 'POST_OPERATIVE', 'LAB_TESTS_IMAGING', 'TEST_RESULTS_REVIEW', 'CONSULTATION', 'OTHER'],
+            enum: ['EXAMINATION', 'FOLLOW_UP', 'POST_OPERATIVE', 'OPERATION_FOLLOWUP', 'ENDOSCOPY', 'SURGERY', 'LAB_TESTS_IMAGING', 'TEST_RESULTS_REVIEW', 'CONSULTATION', 'OTHER'],
             example: 'EXAMINATION',
           },
           paymentType: { type: 'string', enum: ['FULL', 'DEPOSIT', 'REMAINING', 'OTHER'], default: 'FULL' },
