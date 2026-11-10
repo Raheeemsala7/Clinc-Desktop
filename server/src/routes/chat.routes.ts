@@ -9,3 +9,4 @@ router.get('/messages', chatController.listMessages);
 router.post('/messages', chatController.sendMessage);
 
 export default router;
+

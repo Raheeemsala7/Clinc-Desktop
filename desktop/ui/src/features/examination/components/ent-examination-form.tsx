@@ -258,7 +258,7 @@ export function EntExaminationForm({
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={activeTab === 'exam' ? handlePrintExam : handlePrintRx}
+            onClick={activeTab === 'exam' ? handlePrintExam : () => handlePrintRx('full')}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <Printer className="w-4 h-4 text-slate-500" />

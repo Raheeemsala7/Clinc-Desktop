@@ -4,6 +4,7 @@ import React from 'react';
 import { DashboardLayout } from '@/shared/components/dashboard-layout';
 import { DashboardSidebar } from './dashboard-sidebar';
 import { DashboardHeader } from './dashboard-header';
+import { ClinicChatWidget } from '@/features/chat/components/clinic-chat-widget';
 import { UserRole } from '../types';
 
 interface DashboardLayoutClientProps {
@@ -25,6 +26,7 @@ export const DashboardLayoutClient = ({
       header={<DashboardHeader role={role} />}
     >
       {children}
+      <ClinicChatWidget />
     </DashboardLayout>
   );
 };
