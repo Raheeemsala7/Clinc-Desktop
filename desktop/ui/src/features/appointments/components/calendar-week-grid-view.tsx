@@ -189,9 +189,14 @@ export function CalendarWeekGridView({
                             return (
                               <Link
                                 key={appt.id}
-                                href={`/dashboard/appointments?date=${day.date}${
-                                  selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
-                                }`}
+                                href={
+                                  isDoctorView
+                                    ? `/dashboard/examination/${appt.id}`
+                                    : `/dashboard/appointments?date=${day.date}${
+                                        selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
+                                      }`
+                                }
+                                title={isDoctorView ? 'اضغط لفتح استمارة الكشف والروشتة 🩺' : 'عرض تفاصيل الموعد'}
                                 onClick={(e) => e.stopPropagation()}
                                 className={`block p-2 rounded-xl border text-[11px] font-bold shadow-2xs hover:shadow-xs transition-all ${cardStyle}`}
                               >

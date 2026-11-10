@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { FileText, Pill } from 'lucide-react';
 import { PatientVisitItem } from '../types/patient';
 
 interface PatientVisitsTableProps {
@@ -123,6 +125,7 @@ export function PatientVisitsTable({ visits }: PatientVisitsTableProps) {
             <th className="py-3 px-4 text-center">الطبيب</th>
             <th className="py-3 px-4 text-center">الحالة</th>
             <th className="py-3 px-4 text-end">الرسوم</th>
+            <th className="py-3 px-4 text-center">الإجراءات الطبية</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 font-bold">
@@ -157,6 +160,28 @@ export function PatientVisitsTable({ visits }: PatientVisitsTableProps) {
                     {v.totalAmount} ج.م
                   </span>
                 )}
+              </td>
+
+              {/* الإجراءات الطبية */}
+              <td className="py-3 px-4 text-center">
+                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                  <Link
+                    href={`/dashboard/examination/${v.id}`}
+                    title="عرض استمارة الفحص والكشف الطبي"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#0040D8] text-[11px] font-bold border border-blue-200/60 transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>استمارة الكشف</span>
+                  </Link>
+                  <Link
+                    href={`/dashboard/examination/${v.id}?tab=prescription`}
+                    title="عرض وطباعة الروشتة الطبية"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200/60 transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    <Pill className="w-3.5 h-3.5" />
+                    <span>الروشتة (Rx)</span>
+                  </Link>
+                </div>
               </td>
             </tr>
           ))}

@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { TodayQueueItem } from '@/features/appointments/apis/appointment.api';
 import { AppointmentsCalendarData } from '@/features/appointments/types/calendar';
 import { CalendarDayTimelineView } from '@/features/appointments/components/calendar-day-timeline-view';
+import { CalendarWeekGridView } from '@/features/appointments/components/calendar-week-grid-view';
 import {
   useTodayQueueQuery,
   useDoctorStatusQuery,
@@ -95,6 +96,7 @@ export const DoctorDashboardView = ({
     selectedDate || initialCalendarData?.date || new Date().toISOString().slice(0, 10)
   );
   const [calendarData, setCalendarData] = useState<AppointmentsCalendarData | null>(initialCalendarData || null);
+  const [calendarDisplayMode, setCalendarDisplayMode] = useState<'grid' | 'timeline'>('grid');
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'all' | 'waiting' | 'in_progress' | 'done' | 'past'>('all');
@@ -111,7 +113,7 @@ export const DoctorDashboardView = ({
     setIsCalendarLoading(true);
     setCurrentDate(newDate);
     try {
-      const res = await fetch(`/api/calendar?date=${newDate}&view=day`);
+      const res = await fetch(`/api/calendar?date=${newDate}&view=week`);
       if (res.ok) {
         const json = await res.json();
         if (json.status && json.payload) {
@@ -278,7 +280,7 @@ export const DoctorDashboardView = ({
 
       {/* تنبيه وجود كشوفات سابقة غير مكتملة من أيام ماضية */}
       {pastCount > 0 && (
-        <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-start shadow-2xs animate-in fade-in-50">
+        <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-start shadow-2xs">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
               <AlertTriangle className="w-5 h-5 stroke-[2.2]" />
@@ -319,7 +321,7 @@ export const DoctorDashboardView = ({
               {tDoctorStatus('title')}
             </span>
             {isStatusFetching && (
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" />
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -390,7 +392,7 @@ export const DoctorDashboardView = ({
 
       {dashboardView === 'calendar' ? (
         /* ================== وضع عرض التقويم بالساعات (Hourly Calendar View) ================== */
-        <div className="space-y-4 animate-in fade-in-50">
+        <div className="space-y-4">
           {/* شريط التحكم بالتقويم اليومي للطبيب */}
           <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -410,28 +412,56 @@ export const DoctorDashboardView = ({
               </div>
             </div>
 
-            {/* أزرار التنقل بين الأيام */}
-            <div className="flex items-center gap-2">
+            {/* أزرار نمط عرض التقويم والتنقل بين الأيام */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* تبديل بين شبكة الساعات وقائمة الفترات */}
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/60 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setCalendarDisplayMode('grid')}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg transition-all cursor-pointer',
+                    calendarDisplayMode === 'grid'
+                      ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  )}
+                >
+                  شبكة الساعات 📅
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCalendarDisplayMode('timeline')}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg transition-all cursor-pointer',
+                    calendarDisplayMode === 'timeline'
+                      ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  )}
+                >
+                  قائمة الفترات 📋
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() => handleShiftDate(-1)}
-                className="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                onClick={() => handleShiftDate(-7)}
+                className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
               >
-                اليوم السابق →
+                الأسبوع السابق →
               </button>
               <button
                 type="button"
                 onClick={handleResetToToday}
                 className="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0040D8] text-xs font-black transition-all shadow-2xs cursor-pointer border border-blue-200/60"
               >
-                اليوم الحالي
+                اليوم
               </button>
               <button
                 type="button"
-                onClick={() => handleShiftDate(1)}
-                className="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                onClick={() => handleShiftDate(7)}
+                className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
               >
-                ← اليوم التالي
+                ← الأسبوع التالي
               </button>
             </div>
           </div>
@@ -442,6 +472,12 @@ export const DoctorDashboardView = ({
               <RefreshCw className="w-8 h-8 text-[#0040D8] animate-spin mx-auto mb-3" />
               <p className="text-xs font-bold text-slate-400">جاري تحميل جدول المواعيد بالساعات...</p>
             </div>
+          ) : calendarDisplayMode === 'grid' ? (
+            <CalendarWeekGridView
+              days={calendarData?.weekRange?.days || []}
+              appointments={calendarData?.weekAppointments || []}
+              isDoctorView={true}
+            />
           ) : (
             <CalendarDayTimelineView
               slots={calendarData?.daySlots || []}
@@ -458,7 +494,7 @@ export const DoctorDashboardView = ({
         </div>
       ) : (
         /* ================== وضع قائمة المرضى الموجودين (Full-Width Patient List) ================== */
-        <div className="space-y-4 animate-in fade-in-50">
+        <div className="space-y-4">
           {/* شريط المريض النشط في غرفة الكشف (Hero Banner) - يظهر بأناقة في الأعلى دون حجز نصف الشاشة */}
           {inProgressPatient && (
             <div className="bg-gradient-to-r from-emerald-50 via-white to-emerald-50/70 border-2 border-emerald-500 rounded-3xl p-5 shadow-sm relative overflow-hidden text-start">
@@ -472,7 +508,7 @@ export const DoctorDashboardView = ({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2.5 flex-wrap">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow-2xs">
-                        <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                        <span className="w-2 h-2 rounded-full bg-white" />
                         <span>كشف جاري الآن في الغرفة 🩺</span>
                       </span>
 
@@ -589,7 +625,7 @@ export const DoctorDashboardView = ({
                         : 'text-emerald-700 hover:bg-emerald-100/60'
                     )}
                   >
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span>كشف جاري ({inProgressCount})</span>
                   </button>
                 )}
@@ -703,7 +739,7 @@ export const DoctorDashboardView = ({
 
                             {isInProgress && (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-600 text-white shadow-2xs">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
                                 <span>كشف جاري الآن</span>
                               </span>
                             )}

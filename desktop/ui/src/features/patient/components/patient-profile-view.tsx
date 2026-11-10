@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ArrowRight, Plus, Edit2, Trash2 } from 'lucide-react';
+import { ArrowRight, Plus, Edit2, Trash2, Pill, Printer, FileText } from 'lucide-react';
 import { PatientDetails, Patient } from '../types/patient';
 import { PatientHeroBanner } from './patient-hero-banner';
 import { PatientMetricCards } from './patient-metric-cards';
@@ -19,7 +19,7 @@ interface PatientProfileViewProps {
   details: PatientDetails;
 }
 
-type TabType = 'overview' | 'visits' | 'payments' | 'attachments' | 'notes';
+type TabType = 'overview' | 'visits' | 'prescriptions' | 'payments' | 'attachments' | 'notes';
 
 export function PatientProfileView({ details }: PatientProfileViewProps) {
   const router = useRouter();
@@ -39,12 +39,14 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
     age: patient.age,
     dateOfBirth: patient.dateOfBirth || undefined,
     address: patient.address || undefined,
+    occupation: patient.occupation || undefined,
     chronicConditions: patient.chronicConditions,
   };
 
   const tabs: Array<{ id: TabType; label: string }> = [
     { id: 'overview', label: 'نظرة عامة' },
-    { id: 'visits', label: 'الزيارات' },
+    { id: 'visits', label: `الزيارات (${details.previousAppointments?.length || 0})` },
+    { id: 'prescriptions', label: `الروشتات الطبية (${details.prescriptions?.length || 0})` },
     { id: 'payments', label: 'المدفوعات' },
     { id: 'attachments', label: 'المرفقات' },
     { id: 'notes', label: 'ملاحظات' },
@@ -140,6 +142,84 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
             <div className="p-4 sm:p-5">
               {activeTab === 'visits' && (
                 <PatientVisitsTable visits={details.previousAppointments || []} />
+              )}
+
+              {activeTab === 'prescriptions' && (
+                <div className="space-y-4">
+                  {(!details.prescriptions || details.prescriptions.length === 0) ? (
+                    <div className="p-8 text-center text-slate-400 text-xs bg-slate-50/50 rounded-2xl">
+                      لا توجد روشتات علاجية مسجلة سابقة لهذا المريض
+                    </div>
+                  ) : (
+                    details.prescriptions.map((rx, idx) => (
+                      <div
+                        key={rx.id || idx}
+                        className="bg-white border-2 border-slate-100 hover:border-blue-200 rounded-2xl p-4 sm:p-5 shadow-xs transition-all space-y-3"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0040D8] flex items-center justify-center">
+                              <Pill className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <h4 className="font-black text-sm text-[#0A164E]">
+                                روشتة علاجية #{details.prescriptions!.length - idx}
+                              </h4>
+                              <p className="text-[11px] text-slate-400 font-mono">
+                                {rx.createdAt ? new Date(rx.createdAt).toLocaleDateString('ar-EG') : '—'} · الطبيب: {rx.doctorName || 'د. إسلام'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {rx.visitId && (
+                              <Link
+                                href={`/dashboard/examination/${rx.visitId}?tab=prescription`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                                <span>طباعة ومعاينة الروشتة</span>
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* جدول الأدوية */}
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-start text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
+                                <th className="py-2 px-3 text-start">الدواء</th>
+                                <th className="py-2 px-3 text-center">الجرعة</th>
+                                <th className="py-2 px-3 text-center">التكرار</th>
+                                <th className="py-2 px-3 text-center">المدة</th>
+                                <th className="py-2 px-3 text-start">تعليمات</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 font-medium">
+                              {rx.items?.map((item: any, i: number) => (
+                                <tr key={item.id || i} className="hover:bg-slate-50/50">
+                                  <td className="py-2 px-3 font-bold text-[#0A164E] font-mono">{item.drugName}</td>
+                                  <td className="py-2 px-3 text-center font-bold text-slate-700">{item.dose || '—'}</td>
+                                  <td className="py-2 px-3 text-center text-slate-600">{item.frequency || '—'}</td>
+                                  <td className="py-2 px-3 text-center text-slate-600">{item.duration || '—'}</td>
+                                  <td className="py-2 px-3 text-slate-500">{item.instructions || '—'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {rx.notes && (
+                          <div className="bg-slate-50 p-2.5 rounded-xl text-xs text-slate-600">
+                            <span className="font-bold text-slate-800">ملاحظات الطبيب: </span>
+                            <span>{rx.notes}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               )}
 
               {activeTab === 'overview' && (

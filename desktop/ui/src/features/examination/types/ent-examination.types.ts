@@ -70,11 +70,27 @@ export interface EntLarynxExam {
   drawing?: string; // Base64 transparent drawing layer by the doctor
 }
 
+export interface InvestigationItem {
+  id: string;
+  name: string;
+  revealed?: string;
+}
+
 export interface EntInvestigations {
   present?: string;
   presentRevealed?: string;
   need?: string;
   needRevealed?: string;
+  presentList?: InvestigationItem[];
+  needList?: InvestigationItem[];
+}
+
+export interface AdditionalVisit {
+  id: string;
+  visitNumber: number;
+  label?: string;
+  date?: string;
+  notes?: string;
 }
 
 export interface PrescriptionMedicine {
@@ -133,5 +149,6 @@ export interface EntExaminationData {
   operativeData?: string;
   secondVisitNotes?: string;
   thirdVisitNotes?: string;
+  additionalVisits?: AdditionalVisit[];
 }
 

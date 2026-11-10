@@ -40,6 +40,7 @@ export function PatientPersonalInfoCard({ details }: PatientPersonalInfoCardProp
     { label: 'النوع', value: patient.gender === 'MALE' ? 'ذكر' : 'أنثى' },
     { label: 'الحالة الاجتماعية', value: maritalStatusLabel },
     { label: 'الهاتف', value: patient.phone, isLtr: true },
+    { label: 'الوظيفة', value: patient.occupation || '—' },
     { label: 'العنوان', value: patient.address || '—' },
     { label: 'تاريخ التسجيل', value: formatDate(patient.createdAt) },
   ];

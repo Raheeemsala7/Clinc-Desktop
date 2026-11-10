@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import {
   EntExaminationData,
 } from '../types/ent-examination.types';
@@ -17,6 +18,50 @@ interface EntPaperSheetProps {
   doctor?: any;
   onChange: (updater: (prev: EntExaminationData) => EntExaminationData) => void;
   isPrintOnly?: boolean;
+}
+
+/**
+ * مكون حقل كتابة متعدد الأسطر بمظهر الشيت الورقي (خط منقط سفلي مع إمكانية النزول لسطر جديد تلقائياً)
+ */
+function PaperTextarea({
+  value,
+  onChange,
+  className = '',
+  placeholder = '',
+  rows = 1,
+  readOnly = false,
+}: {
+  value?: string;
+  onChange?: (val: string) => void;
+  className?: string;
+  placeholder?: string;
+  rows?: number;
+  readOnly?: boolean;
+}) {
+  const ref = React.useRef<HTMLTextAreaElement>(null);
+
+  React.useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = 'auto';
+      ref.current.style.height = `${Math.max(ref.current.scrollHeight, rows * 20)}px`;
+    }
+  }, [value, rows]);
+
+  return (
+    <textarea
+      ref={ref}
+      rows={rows}
+      value={value || ''}
+      readOnly={readOnly}
+      placeholder={placeholder}
+      onChange={(e) => {
+        onChange?.(e.target.value);
+        e.target.style.height = 'auto';
+        e.target.style.height = `${e.target.scrollHeight}px`;
+      }}
+      className={`w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none resize-none leading-snug overflow-hidden ${className}`}
+    />
+  );
 }
 
 /**
@@ -121,6 +166,150 @@ export function EntPaperSheet({
     { id: 'others', label: 'Others' },
   ];
 
+  // قوائم الفحوصات المتعددة (Investigations: Present & Need)
+  const presentList = examData.investigations?.presentList && examData.investigations.presentList.length > 0
+    ? examData.investigations.presentList
+    : (
+        examData.investigations?.present
+          ? [{ id: 'p1', name: examData.investigations.present, revealed: examData.investigations.presentRevealed || '' }]
+          : [{ id: 'p1', name: '', revealed: '' }]
+      );
+
+  const needList = examData.investigations?.needList && examData.investigations.needList.length > 0
+    ? examData.investigations.needList
+    : (
+        examData.investigations?.need
+          ? [{ id: 'n1', name: examData.investigations.need, revealed: examData.investigations.needRevealed || '' }]
+          : [{ id: 'n1', name: '', revealed: '' }]
+      );
+
+  const updatePresentItem = (index: number, field: 'name' | 'revealed', value: string) => {
+    const updated = [...presentList];
+    updated[index] = { ...updated[index], [field]: value };
+    onChange((prev) => ({
+      ...prev,
+      investigations: {
+        ...prev.investigations,
+        presentList: updated,
+        present: updated[0]?.name || '',
+        presentRevealed: updated[0]?.revealed || '',
+      },
+    }));
+  };
+
+  const addPresentItem = () => {
+    const updated = [...presentList, { id: 'p_' + Date.now(), name: '', revealed: '' }];
+    onChange((prev) => ({
+      ...prev,
+      investigations: { ...prev.investigations, presentList: updated },
+    }));
+  };
+
+  const removePresentItem = (index: number) => {
+    const updated = presentList.filter((_, i) => i !== index);
+    const final = updated.length > 0 ? updated : [{ id: 'p_' + Date.now(), name: '', revealed: '' }];
+    onChange((prev) => ({
+      ...prev,
+      investigations: {
+        ...prev.investigations,
+        presentList: final,
+        present: final[0]?.name || '',
+        presentRevealed: final[0]?.revealed || '',
+      },
+    }));
+  };
+
+  const updateNeedItem = (index: number, field: 'name' | 'revealed', value: string) => {
+    const updated = [...needList];
+    updated[index] = { ...updated[index], [field]: value };
+    onChange((prev) => ({
+      ...prev,
+      investigations: {
+        ...prev.investigations,
+        needList: updated,
+        need: updated[0]?.name || '',
+        needRevealed: updated[0]?.revealed || '',
+      },
+    }));
+  };
+
+  const addNeedItem = () => {
+    const updated = [...needList, { id: 'n_' + Date.now(), name: '', revealed: '' }];
+    onChange((prev) => ({
+      ...prev,
+      investigations: { ...prev.investigations, needList: updated },
+    }));
+  };
+
+  const removeNeedItem = (index: number) => {
+    const updated = needList.filter((_, i) => i !== index);
+    const final = updated.length > 0 ? updated : [{ id: 'n_' + Date.now(), name: '', revealed: '' }];
+    onChange((prev) => ({
+      ...prev,
+      investigations: {
+        ...prev.investigations,
+        needList: final,
+        need: final[0]?.name || '',
+        needRevealed: final[0]?.revealed || '',
+      },
+    }));
+  };
+
+  // قائمة الزيارات الإضافية المتعددة (Visits: 2nd, 3rd, 4th, 5th...)
+  const getOrdinalLabel = (n: number) => {
+    if (n === 2) return '2nd Visit:';
+    if (n === 3) return '3rd Visit:';
+    return `${n}th Visit:`;
+  };
+
+  const visitsList = examData.additionalVisits && examData.additionalVisits.length > 0
+    ? examData.additionalVisits
+    : [
+        { id: 'v2', visitNumber: 2, label: '2nd Visit:', date: '', notes: examData.secondVisitNotes || '' },
+        { id: 'v3', visitNumber: 3, label: '3rd Visit:', date: '', notes: examData.thirdVisitNotes || '' },
+      ];
+
+  const updateVisit = (index: number, field: 'date' | 'notes', val: string) => {
+    const updated = [...visitsList];
+    updated[index] = { ...updated[index], [field]: val };
+    onChange((prev) => ({
+      ...prev,
+      additionalVisits: updated,
+      secondVisitNotes: updated[0]?.notes || '',
+      thirdVisitNotes: updated[1]?.notes || '',
+    }));
+  };
+
+  const addVisit = () => {
+    const nextNum = visitsList.length + 2;
+    const newVisit = {
+      id: 'v_' + Date.now(),
+      visitNumber: nextNum,
+      label: getOrdinalLabel(nextNum),
+      date: '',
+      notes: '',
+    };
+    const updated = [...visitsList, newVisit];
+    onChange((prev) => ({
+      ...prev,
+      additionalVisits: updated,
+    }));
+  };
+
+  const removeVisit = (index: number) => {
+    const updated = visitsList.filter((_, i) => i !== index).map((v, i) => ({
+      ...v,
+      visitNumber: i + 2,
+      label: getOrdinalLabel(i + 2),
+    }));
+    onChange((prev) => ({
+      ...prev,
+      additionalVisits: updated,
+      secondVisitNotes: updated[0]?.notes || '',
+      thirdVisitNotes: updated[1]?.notes || '',
+    }));
+  };
+
   return (
     <div
       dir="ltr"
@@ -199,20 +388,20 @@ export function EntPaperSheet({
           </div>
           <div className="col-span-4 flex items-baseline gap-1">
             <span className="font-bold shrink-0">Residence:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.residence || ''}
-              onChange={(e) => setField('residence', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 text-[12px] focus:outline-none"
+              onChange={(val) => setField('residence', val)}
+              className="text-[12px]"
             />
           </div>
           <div className="col-span-4 flex items-baseline gap-1">
             <span className="font-bold shrink-0">Marital states:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.maritalStatus || ''}
-              onChange={(e) => setField('maritalStatus', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 text-[12px] focus:outline-none"
+              onChange={(val) => setField('maritalStatus', val)}
+              className="text-[12px]"
             />
           </div>
         </div>
@@ -221,29 +410,29 @@ export function EntPaperSheet({
         <div className="grid grid-cols-12 gap-2 text-[12px]">
           <div className="col-span-3 flex items-baseline gap-1">
             <span className="font-bold shrink-0">Work:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.work || ''}
-              onChange={(e) => setField('work', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 text-[12px] focus:outline-none"
+              onChange={(val) => setField('work', val)}
+              className="text-[12px]"
             />
           </div>
           <div className="col-span-3 flex items-baseline gap-1">
             <span className="font-bold shrink-0">Habits:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.habits || ''}
-              onChange={(e) => setField('habits', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 text-[12px] focus:outline-none"
+              onChange={(val) => setField('habits', val)}
+              className="text-[12px]"
             />
           </div>
           <div className="col-span-3 flex items-baseline gap-1">
             <span className="font-bold shrink-0">Smoking index:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.smokingIndex || ''}
-              onChange={(e) => setField('smokingIndex', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 text-[12px] focus:outline-none"
+              onChange={(val) => setField('smokingIndex', val)}
+              className="text-[12px]"
             />
           </div>
           <div className="col-span-3 flex items-baseline gap-1">
@@ -284,51 +473,46 @@ export function EntPaperSheet({
 
           <div className="flex items-baseline gap-1">
             <span className="font-bold shrink-0">- Medical problems:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.medicalProblems || ''}
-              onChange={(e) => setField('medicalProblems', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
+              onChange={(val) => setField('medicalProblems', val)}
             />
           </div>
 
           <div className="flex items-baseline gap-1">
             <span className="font-bold shrink-0">- Drugs:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.drugs || ''}
-              onChange={(e) => setField('drugs', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
+              onChange={(val) => setField('drugs', val)}
             />
           </div>
 
           <div className="flex items-baseline gap-1">
             <span className="font-bold shrink-0">- Previous operations: (Not related)</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.previousOperationsNotRelated || ''}
-              onChange={(e) => setField('previousOperationsNotRelated', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
+              onChange={(val) => setField('previousOperationsNotRelated', val)}
             />
           </div>
 
           <div className="flex items-baseline gap-1 pl-6">
             <span className="font-bold shrink-0">(Related)</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.previousOperationsRelated || ''}
-              onChange={(e) => setField('previousOperationsRelated', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
+              onChange={(val) => setField('previousOperationsRelated', val)}
             />
           </div>
 
           <div className="flex items-baseline gap-1">
             <span className="font-bold text-[13px] shrink-0">Family history:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.familyHistory || ''}
-              onChange={(e) => setField('familyHistory', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
+              onChange={(val) => setField('familyHistory', val)}
             />
           </div>
         </div>
@@ -348,11 +532,11 @@ export function EntPaperSheet({
               {earItems.map((it) => (
                 <div key={it.id} className="flex items-baseline gap-1">
                   <span className="font-bold shrink-0 text-[10px] sm:text-[11px]">- {it.label}:</span>
-                  <input
-                    type="text"
+                  <PaperTextarea
+                    rows={1}
                     value={(examData.ear.rt as any)?.[it.id] || ''}
-                    onChange={(e) => updateEar('rt', it.id, e.target.value)}
-                    className="w-full border-b border-dotted border-black bg-transparent px-1 py-0.5 text-[11px] focus:outline-none"
+                    onChange={(val) => updateEar('rt', it.id, val)}
+                    className="py-0.5 text-[11px]"
                   />
                 </div>
               ))}
@@ -384,11 +568,11 @@ export function EntPaperSheet({
               {earItems.map((it) => (
                 <div key={it.id} className="flex items-baseline gap-1">
                   <span className="font-bold shrink-0 text-[10px] sm:text-[11px]">- {it.label}:</span>
-                  <input
-                    type="text"
+                  <PaperTextarea
+                    rows={1}
                     value={(examData.ear.lt as any)?.[it.id] || ''}
-                    onChange={(e) => updateEar('lt', it.id, e.target.value)}
-                    className="w-full border-b border-dotted border-black bg-transparent px-1 py-0.5 text-[11px] focus:outline-none"
+                    onChange={(val) => updateEar('lt', it.id, val)}
+                    className="py-0.5 text-[11px]"
                   />
                 </div>
               ))}
@@ -408,29 +592,29 @@ export function EntPaperSheet({
             <div className="col-span-4 space-y-1">
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">- Romberg test:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.ear.vestibular?.rombergTest || ''}
-                  onChange={(e) => updateVestibular('rombergTest', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateVestibular('rombergTest', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">- Head Shaking:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.ear.vestibular?.headShaking || ''}
-                  onChange={(e) => updateVestibular('headShaking', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateVestibular('headShaking', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">- Others:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.ear.vestibular?.others || ''}
-                  onChange={(e) => updateVestibular('others', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateVestibular('others', val)}
+                  className="text-[11px]"
                 />
               </div>
             </div>
@@ -439,20 +623,20 @@ export function EntPaperSheet({
             <div className="col-span-4 space-y-1">
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">- Dexahallpike:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.ear.vestibular?.dexahallpike || ''}
-                  onChange={(e) => updateVestibular('dexahallpike', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateVestibular('dexahallpike', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">- Head Thrust (Impulse):</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.ear.vestibular?.headThrust || ''}
-                  onChange={(e) => updateVestibular('headThrust', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateVestibular('headThrust', val)}
+                  className="text-[11px]"
                 />
               </div>
             </div>
@@ -461,20 +645,20 @@ export function EntPaperSheet({
             <div className="col-span-4 space-y-1">
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">- High steppage:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.ear.vestibular?.highSteppage || ''}
-                  onChange={(e) => updateVestibular('highSteppage', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateVestibular('highSteppage', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">- Caloric test:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.ear.vestibular?.caloricTest || ''}
-                  onChange={(e) => updateVestibular('caloricTest', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateVestibular('caloricTest', val)}
+                  className="text-[11px]"
                 />
               </div>
             </div>
@@ -498,11 +682,11 @@ export function EntPaperSheet({
             {noseItems.map((it) => (
               <div key={it.id} className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">{it.label}:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={(examData.nose.rt as any)?.[it.id] || ''}
-                  onChange={(e) => updateNose('rt', it.id, e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 py-0.5 text-[11px] focus:outline-none"
+                  onChange={(val) => updateNose('rt', it.id, val)}
+                  className="py-0.5 text-[11px]"
                 />
               </div>
             ))}
@@ -523,25 +707,25 @@ export function EntPaperSheet({
             <div className="w-full space-y-1 text-[11px]">
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Deformity:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.nose.deformity || ''}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     onChange((prev) => ({
                       ...prev,
-                      nose: { ...prev.nose, deformity: e.target.value },
+                      nose: { ...prev.nose, deformity: val },
                     }))
                   }
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Edema:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.nose.rt?.edema || ''}
-                  onChange={(e) => updateNose('rt', 'edema', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
+                  onChange={(val) => updateNose('rt', 'edema', val)}
+                  className="text-[11px]"
                 />
               </div>
             </div>
@@ -552,11 +736,11 @@ export function EntPaperSheet({
             {noseItems.map((it) => (
               <div key={it.id} className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">{it.label}:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={(examData.nose.lt as any)?.[it.id] || ''}
-                  onChange={(e) => updateNose('lt', it.id, e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 py-0.5 text-[11px] focus:outline-none"
+                  onChange={(val) => updateNose('lt', it.id, val)}
+                  className="py-0.5 text-[11px]"
                 />
               </div>
             ))}
@@ -573,74 +757,74 @@ export function EntPaperSheet({
             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Tonsils:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.oropharynx.tonsils || ''}
-                  onChange={(e) => updateOropharynx('tonsils', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateOropharynx('tonsils', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Adenoid:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.oropharynx.adenoid || ''}
-                  onChange={(e) => updateOropharynx('adenoid', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateOropharynx('adenoid', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Soft palate:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.oropharynx.softPalate || ''}
-                  onChange={(e) => updateOropharynx('softPalate', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateOropharynx('softPalate', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Uvula:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.oropharynx.uvula || ''}
-                  onChange={(e) => updateOropharynx('uvula', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateOropharynx('uvula', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Tongue:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.oropharynx.tongue || ''}
-                  onChange={(e) => updateOropharynx('tongue', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateOropharynx('tongue', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Sublingual area:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.oropharynx.sublingualArea || ''}
-                  onChange={(e) => updateOropharynx('sublingualArea', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateOropharynx('sublingualArea', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Buccal mucosa:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.oropharynx.buccalMucosa || ''}
-                  onChange={(e) => updateOropharynx('buccalMucosa', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateOropharynx('buccalMucosa', val)}
+                  className="text-[11px]"
                 />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Signs of reflux:</span>
-                <input
-                  type="text"
+                <PaperTextarea
+                  rows={1}
                   value={examData.oropharynx.signsOfReflux || ''}
-                  onChange={(e) => updateOropharynx('signsOfReflux', e.target.value)}
-                  className="w-full border-b border-dotted border-black bg-transparent px-1 text-[11px] focus:outline-none"
+                  onChange={(val) => updateOropharynx('signsOfReflux', val)}
+                  className="text-[11px]"
                 />
               </div>
             </div>
@@ -673,11 +857,11 @@ export function EntPaperSheet({
               {larynxItems.map((it) => (
                 <div key={it.id} className="flex items-baseline gap-1">
                   <span className="font-bold shrink-0">{it.label}:</span>
-                  <input
-                    type="text"
+                  <PaperTextarea
+                    rows={1}
                     value={(examData.larynx as any)?.[it.id] || ''}
-                    onChange={(e) => updateLarynx(it.id, e.target.value)}
-                    className="w-full border-b border-dotted border-black bg-transparent px-1 py-0.5 text-[11px] focus:outline-none"
+                    onChange={(val) => updateLarynx(it.id, val)}
+                    className="py-0.5 text-[11px]"
                   />
                 </div>
               ))}
@@ -701,69 +885,129 @@ export function EntPaperSheet({
         {/* خط فاصل منقط */}
         <div className="border-b border-dotted border-black my-2" />
 
-        {/* Investigations */}
-        <div className="space-y-1.5 text-[12px]">
+        {/* Investigations (فحوصات الحاضر والمطلوب مع إمكانية إضافة وحذف أكثر من فحص) */}
+        <div className="space-y-2 text-[12px]">
           <span className="font-bold text-[13px] underline block">Investigations:</span>
-          <div className="grid grid-cols-12 gap-2">
-            <div className="col-span-6 flex items-baseline gap-1">
-              <span className="font-bold shrink-0">- Present:</span>
-              <input
-                type="text"
-                value={examData.investigations.present || ''}
-                onChange={(e) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    investigations: { ...prev.investigations, present: e.target.value },
-                  }))
-                }
-                className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
-              />
+
+          {/* قسم Present (الفحوصات الحاضرة مع المريض) */}
+          <div className="space-y-1 pl-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[11px] text-slate-800 uppercase">- Present:</span>
+              {!isPrintOnly && (
+                <button
+                  type="button"
+                  onClick={addPresentItem}
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 hover:text-blue-900 cursor-pointer print:hidden"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ Add Present</span>
+                </button>
+              )}
             </div>
-            <div className="col-span-6 flex items-baseline gap-1">
-              <span className="font-bold shrink-0">Revealed:</span>
-              <input
-                type="text"
-                value={examData.investigations.presentRevealed || ''}
-                onChange={(e) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    investigations: { ...prev.investigations, presentRevealed: e.target.value },
-                  }))
-                }
-                className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
-              />
-            </div>
+
+            {presentList.map((item, idx) => (
+              <div key={item.id || idx} className="grid grid-cols-12 gap-2 items-baseline">
+                <div className="col-span-6 flex items-baseline gap-1">
+                  <span className="font-bold shrink-0 text-[11px]">{idx + 1}.</span>
+                  <PaperTextarea
+                    rows={1}
+                    value={item.name || ''}
+                    onChange={(val) => updatePresentItem(idx, 'name', val)}
+                    placeholder="Investigation..."
+                    className="text-[11px]"
+                  />
+                </div>
+                <div className="col-span-6 flex items-baseline gap-1">
+                  <span className="font-bold shrink-0 text-[11px]">Revealed:</span>
+                  <PaperTextarea
+                    rows={1}
+                    value={item.revealed || ''}
+                    onChange={(val) => updatePresentItem(idx, 'revealed', val)}
+                    placeholder="Revealed results..."
+                    className="text-[11px]"
+                  />
+                  {!isPrintOnly && presentList.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removePresentItem(idx)}
+                      title="حذف هذا الفحص"
+                      className="text-slate-400 hover:text-rose-600 transition-colors p-0.5 cursor-pointer print:hidden"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="grid grid-cols-12 gap-2">
-            <div className="col-span-6 flex items-baseline gap-1">
-              <span className="font-bold shrink-0">- Need:</span>
-              <input
-                type="text"
-                value={examData.investigations.need || ''}
-                onChange={(e) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    investigations: { ...prev.investigations, need: e.target.value },
-                  }))
-                }
-                className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
-              />
+          {/* قسم Need (الفحوصات المطلوبة) */}
+          <div className="space-y-1 pl-1 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[11px] text-slate-800 uppercase">- Need:</span>
+              {!isPrintOnly && (
+                <button
+                  type="button"
+                  onClick={addNeedItem}
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 hover:text-blue-900 cursor-pointer print:hidden"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ Add Need</span>
+                </button>
+              )}
             </div>
-            <div className="col-span-6 flex items-baseline gap-1">
-              <span className="font-bold shrink-0">Revealed:</span>
-              <input
-                type="text"
-                value={examData.investigations.needRevealed || ''}
-                onChange={(e) =>
-                  onChange((prev) => ({
-                    ...prev,
-                    investigations: { ...prev.investigations, needRevealed: e.target.value },
-                  }))
-                }
-                className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
-              />
-            </div>
+
+            {needList.map((item, idx) => (
+              <div key={item.id || idx} className="grid grid-cols-12 gap-2 items-baseline">
+                <div className="col-span-6 flex items-baseline gap-1">
+                  <span className="font-bold shrink-0 text-[11px]">{idx + 1}.</span>
+                  <PaperTextarea
+                    rows={1}
+                    value={item.name || ''}
+                    onChange={(val) => updateNeedItem(idx, 'name', val)}
+                    placeholder="Investigation needed..."
+                    className="text-[11px]"
+                  />
+                </div>
+                <div className="col-span-6 flex items-baseline gap-1">
+                  <span className="font-bold shrink-0 text-[11px]">Revealed:</span>
+                  <PaperTextarea
+                    rows={1}
+                    value={item.revealed || ''}
+                    onChange={(val) => updateNeedItem(idx, 'revealed', val)}
+                    placeholder="Results if any..."
+                    className="text-[11px]"
+                  />
+                  {!isPrintOnly && needList.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeNeedItem(idx)}
+                      title="حذف هذا الفحص"
+                      className="text-slate-400 hover:text-rose-600 transition-colors p-0.5 cursor-pointer print:hidden"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* خط فاصل منقط */}
+        <div className="border-b border-dotted border-black my-2" />
+
+        {/* Diagnosis (التشخيص الطبي) - تم وضعه قبل Treatment مباشرة بناءً على طلب الدكتور */}
+        <div className="space-y-1">
+          <div className="flex items-baseline gap-1">
+            <span className="font-bold text-[13px] underline shrink-0">Diagnosis:</span>
+            <PaperTextarea
+              rows={1}
+              value={examData.diagnosis || ''}
+              onChange={(val) => setField('diagnosis', val)}
+              placeholder="اكتب التشخيص الطبي للحالة..."
+              className="font-bold text-[13px]"
+            />
           </div>
         </div>
 
@@ -773,77 +1017,109 @@ export function EntPaperSheet({
         {/* Treatment (ملاحظات العلاج الأساسية بالورقة) */}
         <div className="space-y-1">
           <span className="font-bold text-[13px] underline block">Treatment:</span>
-          <textarea
+          <PaperTextarea
             rows={2}
             value={examData.treatmentNotes || ''}
-            onChange={(e) => setField('treatmentNotes', e.target.value)}
-            className="w-full border-b border-dotted border-black bg-transparent px-1 text-[12px] leading-6 focus:outline-none resize-none"
+            onChange={(val) => setField('treatmentNotes', val)}
+            placeholder="ملاحظات وتفاصيل خطة العلاج..."
+            className="text-[12px] leading-6"
           />
         </div>
 
         {/* خط فاصل منقط */}
         <div className="border-b border-dotted border-black my-2" />
 
-        {/* Follow up & Diagnosis & Operations */}
+        {/* Follow up & Operations */}
         <div className="space-y-1.5 text-[12px]">
           <div className="flex items-baseline gap-1">
             <span className="font-bold text-[13px] underline shrink-0">Follow up:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.followUpDate || ''}
-              onChange={(e) => setField('followUpDate', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none font-bold"
-            />
-          </div>
-
-          <div className="flex items-baseline gap-1">
-            <span className="font-bold text-[13px] underline shrink-0">Diagnosis:</span>
-            <input
-              type="text"
-              value={examData.diagnosis || ''}
-              onChange={(e) => setField('diagnosis', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none font-bold text-[13px]"
+              onChange={(val) => setField('followUpDate', val)}
+              placeholder="تاريخ أو موعد المتابعة..."
+              className="font-bold text-[12px]"
             />
           </div>
 
           <div className="flex items-baseline gap-1">
             <span className="font-bold text-[13px] underline shrink-0">Operation Needed:</span>
-            <input
-              type="text"
+            <PaperTextarea
+              rows={1}
               value={examData.operationNeeded || ''}
-              onChange={(e) => setField('operationNeeded', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
+              onChange={(val) => setField('operationNeeded', val)}
+              placeholder="العملية المطلوبة إن وجدت..."
+              className="text-[12px]"
             />
           </div>
 
           <div className="space-y-1">
             <span className="font-bold text-[13px] underline block">Operative data:</span>
-            <textarea
+            <PaperTextarea
               rows={2}
               value={examData.operativeData || ''}
-              onChange={(e) => setField('operativeData', e.target.value)}
-              className="w-full border-b border-dotted border-black bg-transparent px-1 text-[12px] leading-6 focus:outline-none resize-none"
+              onChange={(val) => setField('operativeData', val)}
+              placeholder="تفاصيل وبيانات التدخل الجراحي..."
+              className="text-[12px] leading-6"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-1">
-            <div className="flex items-baseline gap-1">
-              <span className="font-bold shrink-0">2nd Visit:</span>
-              <input
-                type="text"
-                value={examData.secondVisitNotes || ''}
-                onChange={(e) => setField('secondVisitNotes', e.target.value)}
-                className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
-              />
+          {/* خط فاصل منقط */}
+          <div className="border-b border-dotted border-black my-2" />
+
+          {/* قسم الزيارات الإضافية المتعددة (2nd, 3rd, 4th, 5th... Visits) */}
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[13px] underline block">Visits History:</span>
+              {!isPrintOnly && (
+                <button
+                  type="button"
+                  onClick={addVisit}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold cursor-pointer transition-all border border-slate-300 print:hidden"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ إضافة زيارة ({getOrdinalLabel(visitsList.length + 2)})</span>
+                </button>
+              )}
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="font-bold shrink-0">3rd Visit:</span>
-              <input
-                type="text"
-                value={examData.thirdVisitNotes || ''}
-                onChange={(e) => setField('thirdVisitNotes', e.target.value)}
-                className="w-full border-b border-dotted border-black bg-transparent px-1 focus:outline-none"
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+              {visitsList.map((visit, idx) => (
+                <div key={visit.id || idx} className="space-y-1 border-b border-dotted border-slate-300 pb-2">
+                  <div className="flex items-baseline justify-between gap-1">
+                    <span className="font-bold shrink-0 text-[12px]">
+                      {visit.label || getOrdinalLabel(visit.visitNumber || idx + 2)}
+                    </span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-bold text-[11px] text-slate-600 shrink-0">Date:</span>
+                      <input
+                        type="text"
+                        value={visit.date || ''}
+                        onChange={(e) => updateVisit(idx, 'date', e.target.value)}
+                        placeholder="DD/MM/YYYY"
+                        className="w-24 border-b border-dotted border-black bg-transparent px-1 text-[11px] font-mono focus:outline-none"
+                      />
+                      {!isPrintOnly && visitsList.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => removeVisit(idx)}
+                          title="حذف هذه الزيارة"
+                          className="text-slate-400 hover:text-rose-600 transition-colors p-0.5 cursor-pointer print:hidden"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <PaperTextarea
+                    rows={1}
+                    value={visit.notes || ''}
+                    onChange={(val) => updateVisit(idx, 'notes', val)}
+                    placeholder="ملاحظات الزيارة والعلاج..."
+                    className="text-[11px]"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>

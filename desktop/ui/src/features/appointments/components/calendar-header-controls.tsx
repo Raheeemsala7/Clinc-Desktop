@@ -95,7 +95,12 @@ export function CalendarHeaderControls({
         {/* زر اليوم */}
         <button
           type="button"
-          onClick={() => onDateChange(getTodayIso())}
+          onClick={() => {
+            onDateChange(getTodayIso());
+            if (viewMode === 'month' || viewMode === 'list') {
+              onViewModeChange('week');
+            }
+          }}
           className="h-10 px-4 rounded-xl bg-[#0A164E] hover:bg-[#111f68] active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
         >
           اليوم

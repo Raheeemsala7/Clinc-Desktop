@@ -21,7 +21,7 @@ async function DoctorDashboardData({ searchParams }: DoctorPageProps) {
   try {
     const [queueRes, calendarData] = await Promise.all([
       getTodayWaitingAppointmentsApi(),
-      getCalendarAppointmentsApi({ date: selectedDate, view: 'day' }).catch(() => null),
+      getCalendarAppointmentsApi({ date: selectedDate, view: 'week' }).catch(() => null),
     ]);
 
     if (!queueRes || !queueRes.status) {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowRight,
   ArrowLeft,
@@ -40,12 +40,18 @@ export function EntExaminationForm({
   visit,
 }: EntExaminationFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams?.get('tab');
 
   // الحالة النشطة: 'exam' (شيت الكشف الطبي) أو 'prescription' (الروشتة)
-  const [activeTab, setActiveTab] = useState<'exam' | 'prescription'>('exam');
+  const [activeTab, setActiveTab] = useState<'exam' | 'prescription'>(
+    requestedTab === 'prescription' ? 'prescription' : 'exam'
+  );
 
   // هدف الطباعة: 'exam' (شيت الكشف طبق الأصل الورقي) أو 'prescription' (الروشتة الطبية)
-  const [printTarget, setPrintTarget] = useState<'exam' | 'prescription'>('exam');
+  const [printTarget, setPrintTarget] = useState<'exam' | 'prescription'>(
+    requestedTab === 'prescription' ? 'prescription' : 'exam'
+  );
 
   // الحالة الابتدائية لبيانات الفحص
   const existingExam = visit?.entExamination || {};
@@ -112,6 +118,7 @@ export function EntExaminationForm({
     operativeData: existingExam.operativeData || '',
     secondVisitNotes: existingExam.secondVisitNotes || '',
     thirdVisitNotes: existingExam.thirdVisitNotes || '',
+    additionalVisits: existingExam.additionalVisits || [],
   });
 
   const [version, setVersion] = useState<number>(visit?.version || 1);
