@@ -905,23 +905,26 @@ export function PrintablePrescriptionSlip({
                     )}
                   </div>
 
-                  {/* السطر الثاني: الجرعة والتكرار بالإنجليزي وفي نهايته المدة بالعربي */}
-                  <div className="pl-7 text-xs font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
+                  {/* السطر الثاني: الجرعة والتكرار والمدة - اتجاه من اليمين للشمال RTL */}
+                  <div
+                    dir="rtl"
+                    className="pr-6 text-xs font-bold text-slate-900 text-right flex items-center justify-start gap-2 flex-wrap"
+                  >
                     {item.dose && <span>{item.dose}</span>}
                     {item.frequency && (
                       <span>{item.dose ? `• ${item.frequency}` : item.frequency}</span>
                     )}
                     {item.duration && (
-                      <span className="text-slate-900 font-bold" dir="rtl">
-                        - لمدة {item.duration}
+                      <span className="font-black text-black">
+                        • لمدة {item.duration}
                       </span>
                     )}
                   </div>
 
-                  {/* سطر الإرشادات إن وجد */}
+                  {/* سطر الإرشادات إن وجد - اتجاه من اليمين للشمال RTL */}
                   {item.instructions && (
-                    <div className="pl-7 text-[11px] font-medium text-slate-600">
-                      <span>◄ Note: {item.instructions}</span>
+                    <div dir="rtl" className="pr-6 text-[11px] font-semibold text-slate-700 text-right">
+                      <span>◄ {item.instructions}</span>
                     </div>
                   )}
                 </div>
@@ -933,7 +936,7 @@ export function PrintablePrescriptionSlip({
 
       {/* ملاحظات العلاج */}
       {examData.treatmentNotes && (
-        <div className="border-t border-dotted border-black pt-3 text-xs">
+        <div dir="rtl" className="border-t border-dotted border-black pt-3 text-xs text-right">
           <span className="font-bold text-black block mb-1">تعليمات إضافية:</span>
           <p className="text-slate-800 whitespace-pre-line leading-5">
             {examData.treatmentNotes}
