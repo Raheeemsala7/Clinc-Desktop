@@ -78,3 +78,4 @@ if (fs.existsSync(standaloneFrontend)) {
 }
 
 console.log('🎉 [DE-JUNCTION] All junctions successfully replaced with portable real directories!');
+
