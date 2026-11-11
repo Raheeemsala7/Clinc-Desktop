@@ -314,30 +314,6 @@ export function EntPaperSheet({
       dir="ltr"
       className="w-full text-black font-serif select-text space-y-8 print:space-y-0 print:p-0 print:m-0"
     >
-      <style jsx global>{`
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 6mm 6mm 6mm 6mm;
-          }
-          html, body {
-            overflow: visible !important;
-            height: auto !important;
-            min-height: auto !important;
-            background: white !important;
-          }
-          .sheet-page-1 {
-            page-break-after: always !important;
-            break-after: page !important;
-            display: block !important;
-          }
-          .sheet-page-2 {
-            page-break-before: always !important;
-            break-before: page !important;
-            display: block !important;
-          }
-        }
-      `}</style>
 
       {/* ============================================================== */}
       {/* 📄 الورقة الأولى (Sheet 1) - مطابقة تماماً للصورة الأولى         */}

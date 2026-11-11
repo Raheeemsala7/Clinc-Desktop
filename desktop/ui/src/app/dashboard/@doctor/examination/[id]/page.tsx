@@ -5,6 +5,8 @@ import { EntExaminationForm } from '@/features/examination/components/ent-examin
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 interface ExaminationPageProps {
   params: Promise<{ id: string }>;
 }
