@@ -18,6 +18,7 @@ import {
   X,
   UserCheck,
   UserX,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -26,6 +27,7 @@ import {
   updateUserAction,
   resetUserPasswordAction,
   deactivateUserAction,
+  deleteUserAction,
   UserItem,
 } from '@/features/users/apis/users.action';
 
@@ -230,6 +232,24 @@ export default function AdminUsersPage() {
     }
   };
 
+  // Delete User
+  const handleDeleteUser = async (user: UserItem) => {
+    if (!confirm(`هل أنت متأكد تماماً من رغبتك في حذف المستخدم (${user.name}) نهائياً من النظام؟`)) {
+      return;
+    }
+    try {
+      const res = await deleteUserAction(user.id);
+      if (res.status) {
+        toast.success(`تم حذف المستخدم (${user.name}) بنجاح`);
+        setUsers((prev) => prev.filter((u) => u.id !== user.id));
+      } else {
+        toast.error(res.message || 'فشل حذف المستخدم');
+      }
+    } catch {
+      toast.error('حدث خطأ أثناء محاولة حذف المستخدم');
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'ADMIN':
@@ -420,12 +440,21 @@ export default function AdminUsersPage() {
                           onClick={() => handleToggleStatus(u)}
                           className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
                             u.isActive
-                              ? 'border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                              ? 'border-slate-200 text-slate-400 hover:text-amber-600 hover:bg-amber-50'
                               : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
                           }`}
                           title={u.isActive ? 'تعطيل الحساب' : 'تفعيل الحساب'}
                         >
                           {u.isActive ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(u)}
+                          className="p-1.5 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-rose-600 hover:text-rose-700 transition-all cursor-pointer"
+                          title="حذف المستخدم نهائياً"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>

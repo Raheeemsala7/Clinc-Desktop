@@ -9,7 +9,7 @@ router.get('/doctors', usersController.getDoctors);
 router.get('/', requireRoles('ADMIN'), usersController.listUsers);
 router.post('/', requireRoles('ADMIN'), usersController.createUser);
 router.put('/:id', requireRoles('ADMIN'), usersController.updateUser);
-router.delete('/:id', requireRoles('ADMIN'), usersController.deactivateUser);
+router.delete('/:id', requireRoles('ADMIN'), usersController.deleteUser);
 router.post('/:id/reset-password', requireRoles('ADMIN'), usersController.resetPassword);
 
 export default router;

@@ -10,6 +10,7 @@ router.get('/', appointmentsController.listAppointments);
 router.get('/calendar', appointmentsController.getCalendar);
 router.get('/:id', appointmentsController.getAppointmentById);
 router.put('/:id', appointmentsController.updateAppointment);
+router.delete('/:id', requireRoles('ADMIN', 'RECEPTION'), appointmentsController.deleteAppointment);
 
 // Appointment lifecycle transition endpoints
 router.post('/:id/arrive', appointmentsController.transition('arrive'));

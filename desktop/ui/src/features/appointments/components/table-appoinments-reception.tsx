@@ -250,6 +250,10 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
                       remainingAmount={patient.remainingAmount}
                       totalAmount={patient.totalAmount}
                       paidAmount={patient.paidAmount}
+                      doctorId={patient.doctorId}
+                      doctorName={patient.doctorName}
+                      type={patient.type}
+                      notes={(patient as any).notes}
                     />
                   </td>
                 </tr>

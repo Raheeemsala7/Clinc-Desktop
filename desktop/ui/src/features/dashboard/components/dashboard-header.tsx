@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { useSession } from 'next-auth/react';
 import { SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { AuthLanguageBtn } from '@/features/auth/components/auth-language-btn';
 import { DashboardNotifications } from './dashboard-notifications';
@@ -21,7 +22,24 @@ interface DashboardHeaderProps {
  */
 export function DashboardHeader({ role }: DashboardHeaderProps) {
   const t = useTranslations('Dashboard');
+  const { data: session } = useSession();
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.ADMIN;
+
+  const rawName = session?.user?.name;
+  let dynamicGreeting = t(config.greetingKey);
+  if (rawName) {
+    if (role === 'DOCTOR') {
+      const cleanDoctorName =
+        rawName.startsWith('د.') || rawName.startsWith('د/') || rawName.startsWith('Dr.')
+          ? rawName
+          : `د. ${rawName}`;
+      dynamicGreeting = `مرحباً ${cleanDoctorName}`;
+    } else if (role === 'ADMIN') {
+      dynamicGreeting = `مرحباً، ${rawName} (المدير)`;
+    } else {
+      dynamicGreeting = `مرحباً، ${rawName}`;
+    }
+  }
 
   return (
     <header className="w-full bg-white/80 backdrop-blur-md border-b border-slate-200/70 py-3.5 px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 select-none shadow-xs">
@@ -30,7 +48,7 @@ export function DashboardHeader({ role }: DashboardHeaderProps) {
         <SidebarTrigger className="text-[#0B241D] hover:bg-emerald-50 rounded-xl shrink-0" />
 
         <h1 className="text-xs sm:text-base font-black text-[#0B241D] tracking-tight truncate">
-          {t(config.greetingKey)}
+          {dynamicGreeting}
         </h1>
       </div>
 

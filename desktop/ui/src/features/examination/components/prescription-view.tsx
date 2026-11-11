@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import  { useState, useEffect, useMemo } from 'react';
 import {
   Pill,
   Printer,
@@ -10,11 +10,8 @@ import {
   ArrowLeft,
   CheckCircle2,
   Save,
-  AlertCircle,
-  FileText,
   User,
   Calendar,
-  Layers,
   FileCheck,
   Search,
   X,
@@ -73,6 +70,27 @@ export const DRUG_FORMS = [
   { id: 'Patch', labelEn: 'Patch', labelAr: 'لصقات جلدية' },
   { id: 'Mouthwash', labelEn: 'Mouthwash', labelAr: 'غسول فم' },
   { id: 'Oral Spray', labelEn: 'Oral Spray', labelAr: 'بخاخ فم' },
+];
+
+export const FREQUENCY_SUGGESTIONS = [
+  'كل 24 ساعة',
+  'مرتين في اليوم',
+  '3 مرات في اليوم',
+  '4 مرات في اليوم',
+  'عند اللزوم',
+  'قبل النوم',
+  'كل 12 ساعة',
+  'كل 8 ساعات',
+];
+
+export const DURATION_SUGGESTIONS = [
+  'يومياً',
+  '3 أيام',
+  '5 أيام',
+  'أسبوع',
+  'أسبوعين',
+  'شهر',
+  'لحين انتهاء الأعراض',
 ];
 
 interface PrescriptionViewProps {
@@ -606,7 +624,7 @@ export function PrescriptionView({
                   </div>
 
                   {/* 4. الجرعة */}
-                  <div className="sm:col-span-3 space-y-1">
+                  <div className="sm:col-span-12 sm:col-span-3 space-y-1">
                     <label className="font-bold text-[11px] text-slate-700">الجرعة (Dose)</label>
                     <input
                       type="text"
@@ -617,28 +635,66 @@ export function PrescriptionView({
                     />
                   </div>
 
-                  {/* 5. التكرار */}
-                  <div className="sm:col-span-4 space-y-1">
-                    <label className="font-bold text-[11px] text-slate-700">التكرار (Frequency)</label>
+                  {/* 5. التكرار مع الاقتراحات السريعة والكتابة اليدوية */}
+                  <div className="sm:col-span-6 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-[11px] text-slate-700">التكرار (Frequency)</label>
+                      <span className="text-[10px] text-slate-400">اختر أو اكتب بحرية</span>
+                    </div>
                     <input
                       type="text"
                       value={item.frequency}
                       onChange={(e) => updateItem(item.id, 'frequency', e.target.value)}
-                      placeholder="كل 12 ساعة، 3 مرات يومياً..."
+                      placeholder="اكتب أو اختر (مثال: كل 24 ساعة، مرتين في اليوم)..."
                       className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      {FREQUENCY_SUGGESTIONS.map((freq) => (
+                        <button
+                          key={freq}
+                          type="button"
+                          onClick={() => updateItem(item.id, 'frequency', freq)}
+                          className={`text-[10px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                            item.frequency === freq
+                              ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
+                              : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
+                          }`}
+                        >
+                          {freq}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* 6. المدة */}
-                  <div className="sm:col-span-5 space-y-1">
-                    <label className="font-bold text-[11px] text-slate-700">المدة (Duration)</label>
+                  {/* 6. المدة مع الاقتراحات السريعة والكتابة اليدوية */}
+                  <div className="sm:col-span-6 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-[11px] text-slate-700">المدة (Duration)</label>
+                      <span className="text-[10px] text-slate-400">اختر أو اكتب بحرية</span>
+                    </div>
                     <input
                       type="text"
                       value={item.duration}
                       onChange={(e) => updateItem(item.id, 'duration', e.target.value)}
-                      placeholder="5 أيام، أسبوع، شهر..."
+                      placeholder="اكتب أو اختر (مثال: أسبوع، شهر، 5 أيام)..."
                       className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      {DURATION_SUGGESTIONS.map((dur) => (
+                        <button
+                          key={dur}
+                          type="button"
+                          onClick={() => updateItem(item.id, 'duration', dur)}
+                          className={`text-[10px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                            item.duration === dur
+                              ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
+                              : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
+                          }`}
+                        >
+                          {dur}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* 7. تعليمات وإرشادات الاستخدام */}
@@ -784,85 +840,90 @@ export function PrintablePrescriptionSlip({
         </div>
       )}
 
-      {/* بيانات المريض والزيارة */}
+      {/* بيانات المريض والزيارة - اسم المريض يظهر بالكامل في سطر واحد */}
       <div
-        className={`pb-2 grid grid-cols-4 gap-2 text-xs font-bold items-baseline ${
-          isPlain ? 'border-b border-slate-400' : 'border-b border-black'
+        className={`pb-3 ${
+          isPlain ? 'border-b border-slate-400' : 'border-b-2 border-black'
         }`}
       >
-        <div>
-          <span className="text-slate-600">اسم المريض: </span>
-          <span className="font-black text-sm">{patient?.fullName}</span>
+        <div className="flex items-baseline justify-between gap-4 flex-nowrap overflow-x-hidden">
+          <div className="flex items-baseline gap-2 min-w-0">
+            <span className="text-slate-600 text-xs font-bold whitespace-nowrap">اسم المريض:</span>
+            <span className="font-black text-base text-black whitespace-nowrap tracking-wide">
+              {patient?.fullName}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs font-bold text-slate-700 whitespace-nowrap shrink-0">
+            {patient?.age && (
+              <span>السن: <strong>{patient.age} سنة</strong></span>
+            )}
+            <span>رقم الملف: <strong className="font-mono">{examData.fileNo || (patient as any)?.fileNumber || '---'}</strong></span>
+            <span dir="ltr">Date: <strong>{examData.date || new Date().toISOString().slice(0, 10)}</strong></span>
+          </div>
         </div>
-        <div>
-          <span className="text-slate-600">رقم الملف: </span>
-          <span className="font-mono font-black text-sm">
-            {examData.fileNo || (patient as any)?.fileNumber || '---'}
-          </span>
-        </div>
-        <div>
-          <span className="text-slate-600">السن: </span>
-          <span>{patient?.age ? `${patient.age} سنة` : '---'}</span>
-        </div>
-        <div className="text-left" dir="ltr">
-          <span className="text-slate-600">Date: </span>
-          <span>{examData.date || new Date().toISOString().slice(0, 10)}</span>
-        </div>
+
+        {examData.diagnosis && (
+          <div className="text-xs font-bold mt-2 pt-1 border-t border-slate-100 flex items-center gap-2">
+            <span className="text-slate-600">التشخيص (Diagnosis): </span>
+            <span className="font-black text-black underline">{examData.diagnosis}</span>
+          </div>
+        )}
       </div>
 
-      {examData.diagnosis && (
-        <div className="text-xs font-bold">
-          <span className="text-slate-600">التشخيص (Diagnosis): </span>
-          <span className="font-black text-black underline">{examData.diagnosis}</span>
-        </div>
-      )}
-
-      {/* رمز الروشتة ℞ والأدوية */}
-      <div className="space-y-4 min-h-[350px]">
-        <div className="text-3xl font-black text-black">
+      {/* رمز الروشتة ℞ والأدوية - تبدأ من الشمال بالكامل LTR */}
+      <div className="space-y-4 min-h-[350px]" dir="ltr">
+        <div className="text-3xl font-black text-black select-none">
           ℞
         </div>
 
         {items.length === 0 ? (
-          <p className="text-xs text-slate-400 italic">لا توجد أدوية مضافة.</p>
+          <p className="text-xs text-slate-400 italic">No medications prescribed.</p>
         ) : (
-          <div className="space-y-3.5 pr-4">
+          <div className="space-y-4 pl-2 text-left">
             {items.map((item, idx) => {
               const formObj = DRUG_FORMS.find((f) => f.id === item.form);
-              const formLabel = formObj ? formObj.labelAr : item.form;
+              const formEnglish = formObj ? formObj.labelEn : (item.form || 'Tablet');
 
               return (
-                <div key={item.id || idx} className="space-y-0.5 text-xs">
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="font-black text-sm">{idx + 1}.</span>
-                    <span className="font-black text-sm tracking-wide text-black">
+                <div key={item.id || idx} className="space-y-1">
+                  {/* السطر الأول: اسم الدواء (DrugName) التركيز الفورم (نوع الدواء) بالإنجليزي */}
+                  <div className="flex items-baseline gap-2 flex-wrap text-sm font-black text-black">
+                    <span className="text-base font-black min-w-[20px]">{idx + 1}.</span>
+                    <span className="text-base tracking-wide font-black">
                       {item.drugName}
                     </span>
-                    {formLabel && (
-                      <span className="text-slate-700 font-bold bg-slate-100 px-1.5 py-0.5 rounded text-[11px] print:bg-transparent print:border print:border-black">
-                        ({formLabel})
-                      </span>
-                    )}
                     {item.concentration && (
-                      <span className="font-mono font-bold text-slate-800 text-[11px]">
-                        [{item.concentration}]
+                      <span className="font-mono font-bold text-slate-900 text-xs px-1.5 py-0.5 rounded bg-slate-100 print:bg-transparent print:border print:border-black">
+                        {item.concentration}
                       </span>
                     )}
-                    {item.dose && (
-                      <span className="text-slate-800 font-bold">
-                        - {item.dose}
-                      </span>
-                    )}
-                  </div>
-                  <div className="pr-5 text-slate-700 font-medium">
-                    {item.frequency && <span>{item.frequency}</span>}
-                    {item.duration && <span> - لمدة {item.duration}</span>}
-                    {item.instructions && (
-                      <span className="block text-slate-800 text-[11px] font-bold mt-0.5">
-                        ◄ {item.instructions}
+                    {formEnglish && (
+                      <span className="font-bold text-slate-700 text-xs">
+                        {formEnglish}
                       </span>
                     )}
                   </div>
+
+                  {/* السطر الثاني: الجرعة والتكرار بالإنجليزي وفي نهايته المدة بالعربي */}
+                  <div className="pl-7 text-xs font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
+                    {item.dose && <span>{item.dose}</span>}
+                    {item.frequency && (
+                      <span>{item.dose ? `• ${item.frequency}` : item.frequency}</span>
+                    )}
+                    {item.duration && (
+                      <span className="text-slate-900 font-bold" dir="rtl">
+                        - لمدة {item.duration}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* سطر الإرشادات إن وجد */}
+                  {item.instructions && (
+                    <div className="pl-7 text-[11px] font-medium text-slate-600">
+                      <span>◄ Note: {item.instructions}</span>
+                    </div>
+                  )}
                 </div>
               );
             })}

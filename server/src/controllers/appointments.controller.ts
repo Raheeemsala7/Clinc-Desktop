@@ -35,6 +35,17 @@ export class AppointmentsController {
     sendSuccess(res, result, { message: 'Appointment updated successfully' });
   });
 
+  deleteAppointment = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const result = await AppointmentsService.deleteAppointment(
+      req.params.id,
+      req.user!.id,
+      ip,
+    );
+    RealtimeService.emitQueueUpdate({ appointmentId: req.params.id });
+    sendSuccess(res, result, { message: 'Appointment deleted successfully' });
+  });
+
   listAppointments = asyncHandler(async (req: Request, res: Response) => {
     const query = { ...req.query };
     if (req.user?.role === 'DOCTOR') {

@@ -37,7 +37,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
 
   // جلب بيانات الأطباء من الكاش
   const { data: doctorsData } = useDoctorsQuery();
-  const doctorsList = doctorsData && doctorsData.length > 0 ? doctorsData : SAMPLE_DOCTORS;
+  const doctorsList = doctorsData && doctorsData.length > 0 ? doctorsData : [];
   const currentDoctor = doctorsList.find((d) => d.id === doctorId) || doctorsList[0];
 
   // إيجاد مسمى نوع الموعد

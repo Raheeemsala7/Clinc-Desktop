@@ -29,6 +29,12 @@ export class UsersController {
     sendSuccess(res, user, { message: 'User updated successfully' });
   });
 
+  deleteUser = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const result = await UsersService.deleteUser(req.params.id, req.user!.id, ip);
+    sendSuccess(res, result, { message: 'User deleted successfully' });
+  });
+
   deactivateUser = asyncHandler(async (req: Request, res: Response) => {
     const ip = req.ip || req.socket.remoteAddress || '';
     const user = await UsersService.deactivateUser(req.params.id, req.user!.id, ip);

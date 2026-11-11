@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from 'cn';
 import { Controller, useForm } from 'react-hook-form';
@@ -9,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldError, FieldLabel, Field } from '@/shared/components/ui/field';
 import { Button } from '@/shared/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { Loader2, ExternalLink } from 'lucide-react';
+import { Loader2, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ import { toast } from 'sonner';
  */
 export function LoginForm() {
   const t = useTranslations('Auth.login');
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema(t)),
@@ -114,19 +116,29 @@ export function LoginForm() {
                 {t('passwordLabel')}
               </FieldLabel>
 
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder={t('passwordPlaceholder')}
-                className={cn(
-                  'w-full h-12 px-4 rounded-xl border border-[#D0E5DC] bg-white text-[#0B241D] text-sm placeholder:text-[#8D9D97] transition-all duration-150',
-                  'focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15',
-                  'disabled:opacity-60 disabled:cursor-not-allowed',
-                  fieldState.invalid && 'border-destructive focus:border-destructive focus:ring-destructive/10'
-                )}
-                {...field}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder={t('passwordPlaceholder')}
+                  className={cn(
+                    'w-full h-12 pr-4 pl-12 rounded-xl border border-[#D0E5DC] bg-white text-[#0B241D] text-sm placeholder:text-[#8D9D97] transition-all duration-150',
+                    'focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15',
+                    'disabled:opacity-60 disabled:cursor-not-allowed',
+                    fieldState.invalid && 'border-destructive focus:border-destructive focus:ring-destructive/10'
+                  )}
+                  {...field}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0B7B5E] p-1 rounded-lg transition-colors cursor-pointer select-none"
+                  title={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
 
               {fieldState.invalid && (
                 <FieldError errors={[fieldState.error]} />

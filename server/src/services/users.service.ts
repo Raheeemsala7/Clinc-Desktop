@@ -131,6 +131,31 @@ export class UsersService {
     };
   }
 
+  static async deleteUser(id: string, actorId: string, ip = '') {
+    if (id === actorId) {
+      throw new BadRequestError('لا يمكنك حذف حسابك الشخصي الحالي');
+    }
+
+    const user = await User.findById(id);
+    if (!user || user.deletedAt) {
+      throw new NotFoundError('User not found');
+    }
+
+    user.deletedAt = new Date();
+    user.isActive = false;
+    await user.save();
+
+    await logAudit({
+      userId: actorId,
+      action: 'DELETE',
+      entityType: 'User',
+      entityId: user.id,
+      ip,
+    });
+
+    return { id: user.id, success: true, message: 'تم حذف المستخدم بنجاح' };
+  }
+
   static async deactivateUser(id: string, actorId: string, ip = '') {
     const user = await User.findById(id);
     if (!user || user.deletedAt) {

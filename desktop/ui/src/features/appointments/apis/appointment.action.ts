@@ -229,3 +229,69 @@ export async function updateDoctorStatusAction(status: 'AVAILABLE' | 'BREAK'): P
     return { status: false, code: 500, message: 'فشل تحديث حالة الطبيب' };
   }
 }
+
+/**
+ * تعديل بيانات الحجز وتغيير الطبيب المعالج
+ * المسار: PUT /api/v1/appointments/:id
+ */
+export async function updateAppointmentAction(
+  id: string,
+  payload: {
+    doctorId?: string;
+    type?: string;
+    startTime?: string;
+    clinicDate?: string;
+    totalAmount?: number;
+    paidAmount?: number;
+    notes?: string;
+    isExempt?: boolean;
+    exemptionReason?: string;
+  }
+): Promise<ApiResponse<any>> {
+  const token = await getNextAuthToken();
+  if (!token?.accessToken) return RESPONSES.unauthorized;
+
+  try {
+    const res = await fetch(`${process.env.API_URL}/appointments/${id}`, {
+      method: 'PUT',
+      headers: {
+        ...HEADERS.JsonBody,
+        ...HEADERS.authorize(token.accessToken),
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.status) {
+      await revalidateAppointmentsCache();
+    }
+    return data;
+  } catch (error) {
+    return { status: false, code: 500, message: 'فشل تعديل بيانات الحجز' };
+  }
+}
+
+/**
+ * حذف الحجز نهائياً وإلغاء مدفوعاته
+ * المسار: DELETE /api/v1/appointments/:id
+ */
+export async function deleteAppointmentAction(id: string): Promise<ApiResponse<any>> {
+  const token = await getNextAuthToken();
+  if (!token?.accessToken) return RESPONSES.unauthorized;
+
+  try {
+    const res = await fetch(`${process.env.API_URL}/appointments/${id}`, {
+      method: 'DELETE',
+      headers: {
+        ...HEADERS.JsonBody,
+        ...HEADERS.authorize(token.accessToken),
+      },
+    });
+    const data = await res.json();
+    if (data.status) {
+      await revalidateAppointmentsCache();
+    }
+    return data;
+  } catch (error) {
+    return { status: false, code: 500, message: 'فشل حذف الحجز' };
+  }
+}

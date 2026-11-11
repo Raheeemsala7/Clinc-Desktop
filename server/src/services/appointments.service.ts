@@ -421,10 +421,10 @@ export class AppointmentsService {
     );
 
     const standardSlotTimes = [
-      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+      '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
       '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
       '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30',
-      '21:00', '21:30', '22:00',
+      '21:00', '21:30', '22:00', '22:30', '23:00', '23:30',
     ];
 
     const allSlotTimeSet = new Set(standardSlotTimes);
@@ -880,7 +880,11 @@ export class AppointmentsService {
     if (action === 'start') appt.startedAt = now;
     if (action === 'finish-exam' && !appt.startedAt) appt.startedAt = now;
     if (action === 'complete' || action === 'checkout') appt.completedAt = now;
-    if (action === 'cancel') appt.cancelledAt = now;
+    if (action === 'cancel') {
+      appt.cancelledAt = now;
+      const { Payment } = await import('../models');
+      await Payment.deleteMany({ appointmentId: appt.id });
+    }
 
     if (action === 'postpone') {
       const maxOrder = await Appointment.findOne({
@@ -1039,11 +1043,46 @@ export class AppointmentsService {
     return appt.toJSON();
   }
 
+  static async deleteAppointment(id: string, actorId: string, ip = '') {
+    const appt = await Appointment.findById(id);
+    if (!appt) throw new NotFoundError('Appointment not found');
+
+    const before = appt.toJSON();
+    const { Payment, Visit } = await import('../models');
+
+    // حذف إيصالات الدفع والزيارات المرتبطة بالحجز فوراً حتى لا تُحسب في المدفوعات والخزينة
+    await Payment.deleteMany({ appointmentId: appt.id });
+    await Visit.deleteMany({ appointmentId: appt.id });
+    await Appointment.deleteOne({ _id: appt.id });
+
+    await logAudit({
+      userId: actorId,
+      action: 'DELETE',
+      entityType: 'Appointment',
+      entityId: appt.id,
+      before,
+      ip,
+    });
+
+    return { id: appt.id, success: true, message: 'تم حذف الحجز وإلغاء مدفوعاته بنجاح' };
+  }
+
   static async updateAppointment(id: string, dto: any, actor: { id: string }, ip = '') {
     const appt = await Appointment.findById(id);
     if (!appt) throw new NotFoundError('Appointment not found');
 
     const before = appt.toJSON();
+
+    // إمكانية تغيير الطبيب المعالج للحجز من قِبل الاستقبال وتحديث المدفوعات والزيارة المفتوحة
+    if (dto.doctorId !== undefined && dto.doctorId && dto.doctorId !== appt.doctorId) {
+      const doctor = await User.findOne({ _id: dto.doctorId, role: 'DOCTOR', deletedAt: null });
+      if (doctor) {
+        appt.doctorId = dto.doctorId;
+        const { Payment, Visit } = await import('../models');
+        await Payment.updateMany({ appointmentId: appt.id }, { doctorId: dto.doctorId });
+        await Visit.updateMany({ appointmentId: appt.id, status: 'OPEN' }, { doctorId: dto.doctorId });
+      }
+    }
 
     if (dto.type !== undefined) appt.type = dto.type;
     if (dto.clinicDate !== undefined) appt.clinicDate = dto.clinicDate;

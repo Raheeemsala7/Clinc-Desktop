@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Clock, XCircle, CreditCard, LogIn, Stethoscope } from 'lucide-react';
+import { Clock, XCircle, CreditCard, LogIn, Stethoscope, Edit2 } from 'lucide-react';
 import {
   useAdmitAppointmentMutation,
   useFinishExamAppointmentMutation,
@@ -10,6 +10,7 @@ import {
   useCancelAppointmentMutation,
 } from '../hooks/appointments.hook';
 import { CheckoutPaymentModal } from './checkout-payment-modal';
+import { EditAppointmentModal } from './edit-appointment-modal';
 
 interface TableAppointmentsRowActionsProps {
   appointmentId: string;
@@ -19,6 +20,10 @@ interface TableAppointmentsRowActionsProps {
   remainingAmount: number;
   totalAmount: number;
   paidAmount: number;
+  doctorId?: string;
+  doctorName?: string;
+  type?: string;
+  notes?: string;
 }
 
 export function TableAppointmentsRowActions({
@@ -29,9 +34,14 @@ export function TableAppointmentsRowActions({
   remainingAmount,
   totalAmount,
   paidAmount,
+  doctorId,
+  doctorName,
+  type,
+  notes,
 }: TableAppointmentsRowActionsProps) {
   const t = useTranslations('Dashboard.receptionist.table');
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const admitMutation = useAdmitAppointmentMutation();
   const finishExamMutation = useFinishExamAppointmentMutation();
@@ -110,6 +120,17 @@ export function TableAppointmentsRowActions({
           </button>
         )}
 
+        {/* زر تعديل بيانات الحجز والطبيب */}
+        <button
+          type="button"
+          onClick={() => setIsEditModalOpen(true)}
+          disabled={isAnyPending}
+          title="تعديل بيانات الحجز والطبيب والرسوم"
+          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 hover:text-[#0B7B5E] active:scale-95 disabled:opacity-60 text-slate-500 transition-colors cursor-pointer"
+        >
+          <Edit2 className="w-3.5 h-3.5" />
+        </button>
+
         {/* زر تأجيل الدور (متاح في الانتظار فقط) */}
         {(status === 'WAITING' || status === 'BOOKED') && (
           <button
@@ -146,6 +167,24 @@ export function TableAppointmentsRowActions({
         remainingAmount={remainingAmount}
         totalAmount={totalAmount}
         paidAmount={paidAmount}
+        onSuccess={() => {}}
+      />
+
+      {/* نافذة تعديل بيانات الحجز والطبيب */}
+      <EditAppointmentModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        appointment={{
+          id: appointmentId,
+          patientName,
+          doctorId: doctorId || '',
+          doctorName,
+          type: type || 'EXAMINATION',
+          totalAmount,
+          paidAmount,
+          remainingAmount,
+          notes,
+        }}
         onSuccess={() => {}}
       />
     </>

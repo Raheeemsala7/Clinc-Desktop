@@ -32,22 +32,29 @@ export function DoctorTimingStepCard() {
 
   // 1. استعلام الأطباء وتخزينهم في الـ Cache
   const { data: doctorsData, isLoading: isLoadingDoctors } = useDoctorsQuery();
-  const doctorsList = doctorsData && doctorsData.length > 0 ? doctorsData : SAMPLE_DOCTORS;
+  const doctorsList = doctorsData && doctorsData.length > 0 ? doctorsData : [];
 
-  // تعيين الطبيب المحدد من الرابط أو أول طبيب تلقائياً
+  const userChangedDoctorRef = React.useRef(false);
+  const initializedRef = React.useRef(false);
+
+  // تعيين الطبيب المحدد من الرابط أو أول طبيب تلقائياً عند أول تحميل فقط وبدون الكتابة فوق اختيار المستخدم
   useEffect(() => {
-    if (doctorsList.length > 0) {
-      const urlDoc = urlDoctorId ? doctorsList.find((d) => d.id === urlDoctorId) : null;
-      const targetDoctorId = urlDoc ? urlDoc.id : doctorsList[0].id;
-      const exists = doctorsList.some((d) => d.id === doctorId);
+    if (userChangedDoctorRef.current) return;
+    if (initializedRef.current && doctorId) return;
+
+    if (doctorsData && doctorsData.length > 0) {
+      const urlDoc = urlDoctorId ? doctorsData.find((d) => d.id === urlDoctorId) : null;
+      const targetDoctorId = urlDoc ? urlDoc.id : doctorsData[0].id;
+      const exists = doctorsData.some((d) => d.id === doctorId);
       if (!doctorId || !exists) {
         setValue('doctorId', targetDoctorId, {
           shouldValidate: true,
           shouldDirty: false,
         });
+        initializedRef.current = true;
       }
     }
-  }, [doctorsList, doctorId, urlDoctorId, setValue]);
+  }, [doctorsData, doctorId, urlDoctorId, setValue]);
 
   // 2. استعلام المواعيد المتاحة للطبيب واليوم المختار
   const effectiveDoctorId = doctorId || doctorsList[0]?.id;
@@ -156,7 +163,10 @@ export function DoctorTimingStepCard() {
               <div className="relative">
                 <select
                   value={field.value || ''}
-                  onChange={field.onChange}
+                  onChange={(e) => {
+                    userChangedDoctorRef.current = true;
+                    field.onChange(e);
+                  }}
                   disabled={isLoadingDoctors}
                   className={cn(
                     'w-full h-11 pr-3.5 pl-9 rounded-2xl border bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all appearance-none cursor-pointer disabled:opacity-60',

@@ -138,6 +138,33 @@ export async function resetUserPasswordAction(
 }
 
 /**
+ * حذف المستخدم نهائياً من النظام (صلاحية المدير Admin)
+ */
+export async function deleteUserAction(id: string): Promise<ApiResponse<any>> {
+  const token = await getNextAuthToken();
+  if (!token?.accessToken) return RESPONSES.unauthorized;
+
+  try {
+    const res = await fetch(`${process.env.API_URL}/users/${id}`, {
+      method: 'DELETE',
+      headers: {
+        ...HEADERS.JsonBody,
+        ...HEADERS.authorize(token.accessToken),
+      },
+    });
+
+    const data = await res.json();
+    if (data.status) {
+      revalidatePath('/dashboard/users');
+    }
+    return data;
+  } catch (error) {
+    console.error('deleteUserAction error:', error);
+    return { status: false, code: 500, message: 'فشل حذف المستخدم' };
+  }
+}
+
+/**
  * إلغاء تفعيل أو حذف المستخدم
  */
 export async function deactivateUserAction(id: string): Promise<ApiResponse<any>> {
