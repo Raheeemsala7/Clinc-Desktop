@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { Menu, X, LogIn, PhoneCall } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NafsLogo } from '@/shared/components/nafs-logo';
-import { getWhatsAppUrl } from '../constants';
+import { COMPANY_WEBSITE_URL } from '../constants';
+import { toast } from 'sonner';
 import { useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +29,11 @@ export const Navbar = () => {
     { label: 'كيف نعمل', href: '#how-it-works' },
   ];
 
-  const demoUrl = getWhatsAppUrl('مرحباً، أود الاستفسار وطلب عرض تجريبي لمنظومة نَفَس لإدارة العيادات.');
+  const handleTryDemo = () => {
+    toast.info('تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en', {
+      duration: 6000,
+    });
+  };
 
   return (
     <header
@@ -73,12 +78,13 @@ export const Navbar = () => {
             <motion.a
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              href={demoUrl}
+              href={COMPANY_WEBSITE_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={handleTryDemo}
               className="bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors"
             >
-              <span>اطلب عرضاً تجريبياً</span>
+              <span>جرب الموقع تجريبياً</span>
             </motion.a>
 
             {/* زر القائمة للشاشات الصغيرة */}

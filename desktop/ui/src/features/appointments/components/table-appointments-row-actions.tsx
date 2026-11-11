@@ -92,17 +92,21 @@ export function TableAppointmentsRowActions({
           </button>
         )}
 
-        {/* الحالة 3: خرج من الكشف وبانتظار المحاسبة والخروج -> زر تحصيل المتبقي وإنهاء الزيارة */}
-        {status === 'PENDING_CHECKOUT' && (
+        {/* الحالة 3: خرج من الكشف أو لديه متبقي مالي -> زر تحصيل / إعفاء المتبقي وإنهاء الزيارة */}
+        {(status === 'PENDING_CHECKOUT' || hasRemaining) && (
           <button
             type="button"
             onClick={() => setIsCheckoutModalOpen(true)}
             disabled={isAnyPending}
-            title={hasRemaining ? t('checkoutAndSettle') : t('checkout')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:scale-95 disabled:opacity-60 text-white font-bold text-xs transition-all cursor-pointer shadow-md animate-pulse"
+            title={hasRemaining ? 'تسوية المتبقي (سداد كامل / جزء / إعفاء)' : t('checkout')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg active:scale-95 disabled:opacity-60 text-white font-bold text-xs transition-all cursor-pointer shadow-sm ${
+              status === 'PENDING_CHECKOUT'
+                ? 'bg-amber-600 hover:bg-amber-700 animate-pulse'
+                : 'bg-[#0B7B5E] hover:bg-[#09634C]'
+            }`}
           >
             <CreditCard className="w-3.5 h-3.5" />
-            <span>{hasRemaining ? t('checkoutAndSettle') : t('checkout')}</span>
+            <span>{hasRemaining ? 'تسوية المتبقي' : t('checkout')}</span>
           </button>
         )}
 

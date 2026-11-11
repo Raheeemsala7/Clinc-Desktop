@@ -172778,6 +172778,22 @@ var AppointmentsService = class {
   static async payRemaining(appointmentId, dto, actor, ip = "") {
     const appt = await Appointment.findById(appointmentId);
     if (!appt) throw new NotFoundError("Appointment not found");
+    if (dto.isExempt) {
+      appt.isExempt = true;
+      appt.exemptionReason = dto.exemptionReason || dto.notes || "\u0625\u0639\u0641\u0627\u0621 \u0645\u0646 \u0628\u0627\u0642\u064A \u0627\u0644\u0645\u0628\u0644\u063A";
+      appt.remainingAmount = 0;
+      appt.paymentStatus = appt.paidAmount > 0 ? "PAID" : "EXEMPT";
+      await appt.save();
+      await logAudit({
+        userId: actor.id,
+        action: "UPDATE",
+        entityType: "Appointment",
+        entityId: appt.id,
+        after: { isExempt: true, remainingAmount: 0, exemptionReason: appt.exemptionReason },
+        ip
+      });
+      return appt.toJSON();
+    }
     if (appt.isExempt) {
       throw new BadRequestError("\u0647\u0630\u0627 \u0627\u0644\u0645\u0648\u0639\u062F \u0645\u0639\u0641\u064A \u0645\u0646 \u0627\u0644\u0631\u0633\u0648\u0645");
     }
@@ -172991,11 +173007,13 @@ var AppointmentsService = class {
   static async checkout(id, dto = {}, actor, ip = "") {
     const appt = await Appointment.findById(id);
     if (!appt) throw new NotFoundError("Appointment not found");
-    if (appt.status === "COMPLETED") {
-      return appt.toJSON();
-    }
     const now = /* @__PURE__ */ new Date();
-    if (!appt.isExempt && appt.remainingAmount > 0) {
+    if (dto.isExempt || dto.settlementType === "EXEMPT") {
+      appt.isExempt = true;
+      appt.exemptionReason = dto.exemptionReason || dto.notes || "\u0625\u0639\u0641\u0627\u0621 \u0645\u0646 \u0628\u0627\u0642\u064A \u0627\u0644\u0645\u0628\u0644\u063A \u0639\u0646\u062F \u0645\u063A\u0627\u062F\u0631\u0629 \u0627\u0644\u0627\u0633\u062A\u0642\u0628\u0627\u0644";
+      appt.remainingAmount = 0;
+      appt.paymentStatus = appt.paidAmount > 0 ? "PAID" : "EXEMPT";
+    } else if (!appt.isExempt && appt.remainingAmount > 0) {
       const payAmount = Number(dto.amount !== void 0 ? dto.amount : appt.remainingAmount);
       if (payAmount > 0) {
         appt.paidAmount += payAmount;
@@ -173028,18 +173046,20 @@ var AppointmentsService = class {
         }
       }
     }
-    appt.status = "COMPLETED";
-    appt.completedAt = now;
+    if (appt.status !== "COMPLETED") {
+      appt.status = "COMPLETED";
+      appt.completedAt = now;
+      await Visit.updateMany(
+        { appointmentId: appt.id, status: "OPEN" },
+        { status: "CLOSED", closedAt: now }
+      );
+      await DoctorStatus.findByIdAndUpdate(
+        appt.doctorId,
+        { _id: appt.doctorId, status: "AVAILABLE" },
+        { upsert: true, returnDocument: "after" }
+      );
+    }
     await appt.save();
-    await Visit.updateMany(
-      { appointmentId: appt.id, status: "OPEN" },
-      { status: "CLOSED", closedAt: now }
-    );
-    await DoctorStatus.findByIdAndUpdate(
-      appt.doctorId,
-      { _id: appt.doctorId, status: "AVAILABLE" },
-      { upsert: true, returnDocument: "after" }
-    );
     await logAudit({
       userId: actor.id,
       action: "CHECKOUT",

@@ -3,11 +3,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { LogIn, FileText, CheckCircle2, Users, Sparkles, Stethoscope } from 'lucide-react';
-import { getWhatsAppUrl } from '../constants';
+import { ExternalLink, LogIn, FileText, CheckCircle2, Users, Sparkles, Stethoscope } from 'lucide-react';
+import { COMPANY_WEBSITE_URL } from '../constants';
+import { toast } from 'sonner';
 
 export const HeroSection = () => {
-  const demoUrl = getWhatsAppUrl('مرحباً، أود طلب عرض تجريبي وتفاصيل منظومة نَفَس لإدارة العيادات.');
+  const handleTryDemo = (e: React.MouseEvent) => {
+    toast.info('تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en', {
+      duration: 6000,
+    });
+  };
 
   return (
     <section id="hero" className="relative pt-8 pb-16 lg:pt-14 lg:pb-24 overflow-hidden select-none" dir="rtl">
@@ -61,12 +66,14 @@ export const HeroSection = () => {
               className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2"
             >
               <a
-                href={demoUrl}
+                href={COMPANY_WEBSITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={handleTryDemo}
                 className="bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-150 inline-flex items-center gap-2 cursor-pointer"
               >
-                <span>اطلب عرضاً تجريبياً</span>
+                <span>جرب الموقع تجريبياً</span>
+                <ExternalLink className="w-4 h-4 opacity-80" />
               </a>
 
               <Link

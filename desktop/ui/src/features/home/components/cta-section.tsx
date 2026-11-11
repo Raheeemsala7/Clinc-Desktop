@@ -3,11 +3,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { LogIn } from 'lucide-react';
-import { getWhatsAppUrl } from '../constants';
+import { ExternalLink, LogIn } from 'lucide-react';
+import { COMPANY_WEBSITE_URL } from '../constants';
+import { toast } from 'sonner';
 
 export const CtaSection = () => {
-  const demoUrl = getWhatsAppUrl('مرحباً، أود تجربة منظومة نَفَس لإدارة العيادات وطلب عرض تجريبي.');
+  const handleTryDemo = () => {
+    toast.info('تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en', {
+      duration: 6000,
+    });
+  };
 
   return (
     <section className="py-12 select-none" dir="rtl">
@@ -31,12 +36,14 @@ export const CtaSection = () => {
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <a
-              href={demoUrl}
+              href={COMPANY_WEBSITE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white hover:bg-emerald-50 active:scale-95 text-[#074C3A] font-black text-sm sm:text-base px-7 py-3.5 rounded-xl shadow-lg transition-all duration-150 cursor-pointer"
+              onClick={handleTryDemo}
+              className="bg-white hover:bg-emerald-50 active:scale-95 text-[#074C3A] font-black text-sm sm:text-base px-7 py-3.5 rounded-xl shadow-lg transition-all duration-150 cursor-pointer inline-flex items-center gap-2"
             >
-              اطلب عرضاً تجريبياً
+              <span>جرب الموقع تجريبياً</span>
+              <ExternalLink className="w-4 h-4 opacity-70" />
             </a>
 
             <Link

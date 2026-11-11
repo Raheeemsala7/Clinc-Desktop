@@ -120,7 +120,14 @@ export async function finishExamAppointmentAction(id: string): Promise<ApiRespon
  */
 export async function checkoutAppointmentAction(
   id: string,
-  payload: { method?: 'CASH' | 'CARD' | 'WALLET'; amount?: number; notes?: string } = {},
+  payload: {
+    method?: 'CASH' | 'CARD' | 'WALLET';
+    amount?: number;
+    notes?: string;
+    settlementType?: 'FULL' | 'PARTIAL' | 'EXEMPT';
+    isExempt?: boolean;
+    exemptionReason?: string;
+  } = {},
 ): Promise<ApiResponse<any>> {
   const token = await getNextAuthToken();
   if (!token?.accessToken) return RESPONSES.unauthorized;

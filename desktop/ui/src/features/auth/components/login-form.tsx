@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldError, FieldLabel, Field } from '@/shared/components/ui/field';
 import { Button } from '@/shared/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ExternalLink } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
 
@@ -154,6 +154,27 @@ export function LoginForm() {
           )}
         </Button>
       </form>
+
+      {/* رابط تجربة البرنامج والتواصل مع الشركة المطورة */}
+      <div className="mt-8 pt-5 border-t border-[#D0E5DC]/80 text-center select-none">
+        <p className="text-xs text-[#4A635B] mb-2 font-medium">
+          تريد تجربة المنظومة لعيادتك أو معرفة الأسعار؟
+        </p>
+        <a
+          href="https://www.vyro.software/en"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => {
+            toast.info('تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en', {
+              duration: 6000,
+            });
+          }}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#E3F5EE] border border-[#D0E5DC] text-[#0B7B5E] hover:text-[#09634C] hover:bg-[#d5eee4] text-xs font-bold transition-all shadow-2xs"
+        >
+          <span>جرب الموقع تجريبياً · تواصل مع Vyro Software</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
     </div>
   );
 }

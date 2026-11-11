@@ -638,12 +638,37 @@ export class AppointmentsService {
 
   static async payRemaining(
     appointmentId: string,
-    dto: { amount?: number; method?: 'CASH' | 'CARD' | 'WALLET'; notes?: string },
+    dto: {
+      amount?: number;
+      method?: 'CASH' | 'CARD' | 'WALLET';
+      notes?: string;
+      isExempt?: boolean;
+      exemptionReason?: string;
+    },
     actor: { id: string },
     ip = '',
   ) {
     const appt = await Appointment.findById(appointmentId);
     if (!appt) throw new NotFoundError('Appointment not found');
+
+    if (dto.isExempt) {
+      appt.isExempt = true;
+      appt.exemptionReason = dto.exemptionReason || dto.notes || 'إعفاء من باقي المبلغ';
+      appt.remainingAmount = 0;
+      appt.paymentStatus = appt.paidAmount > 0 ? 'PAID' : 'EXEMPT';
+      await appt.save();
+
+      await logAudit({
+        userId: actor.id,
+        action: 'UPDATE',
+        entityType: 'Appointment',
+        entityId: appt.id,
+        after: { isExempt: true, remainingAmount: 0, exemptionReason: appt.exemptionReason },
+        ip,
+      });
+
+      return appt.toJSON();
+    }
 
     if (appt.isExempt) {
       throw new BadRequestError('هذا الموعد معفي من الرسوم');
@@ -912,21 +937,31 @@ export class AppointmentsService {
 
   static async checkout(
     id: string,
-    dto: { method?: 'CASH' | 'CARD' | 'WALLET'; amount?: number; notes?: string } = {},
+    dto: {
+      method?: 'CASH' | 'CARD' | 'WALLET';
+      amount?: number;
+      notes?: string;
+      settlementType?: 'FULL' | 'PARTIAL' | 'EXEMPT';
+      isExempt?: boolean;
+      exemptionReason?: string;
+    } = {},
     actor: { id: string },
     ip = '',
   ) {
     const appt = await Appointment.findById(id);
     if (!appt) throw new NotFoundError('Appointment not found');
 
-    if (appt.status === 'COMPLETED') {
-      return appt.toJSON();
-    }
-
     const now = new Date();
 
-    // إذا كان المريض غير معفى وعليه متبقي، نسجل دفعة السداد
-    if (!appt.isExempt && appt.remainingAmount > 0) {
+    // 1. معالجة الإعفاء من باقي المبلغ (Exemption)
+    if (dto.isExempt || dto.settlementType === 'EXEMPT') {
+      appt.isExempt = true;
+      appt.exemptionReason =
+        dto.exemptionReason || dto.notes || 'إعفاء من باقي المبلغ عند مغادرة الاستقبال';
+      appt.remainingAmount = 0;
+      appt.paymentStatus = appt.paidAmount > 0 ? 'PAID' : 'EXEMPT';
+    } else if (!appt.isExempt && appt.remainingAmount > 0) {
+      // 2. معالجة سداد المتبقي (سواء بالكامل أو دفعة جزئية)
       const payAmount = Number(dto.amount !== undefined ? dto.amount : appt.remainingAmount);
       if (payAmount > 0) {
         appt.paidAmount += payAmount;
@@ -943,7 +978,11 @@ export class AppointmentsService {
           existingPayment.amount = totalPaidForAppt;
           existingPayment.paymentType = isFullyPaid ? 'FULL' : 'DEPOSIT';
           existingPayment.method = dto.method || existingPayment.method || 'CASH';
-          existingPayment.notes = dto.notes || (isFullyPaid ? 'سداد كامل لقيمة الكشف' : `سداد جزئي - متبقي ${appt.remainingAmount} ج.م`);
+          existingPayment.notes =
+            dto.notes ||
+            (isFullyPaid
+              ? 'سداد كامل لقيمة الكشف'
+              : `سداد جزئي - متبقي ${appt.remainingAmount} ج.م`);
           existingPayment.receivedById = actor.id;
           await existingPayment.save();
           await Payment.deleteMany({ appointmentId: appt.id, _id: { $ne: existingPayment._id } });
@@ -955,7 +994,11 @@ export class AppointmentsService {
             method: dto.method || 'CASH',
             kind: appt.type === 'CONSULTATION' ? 'EXAMINATION' : appt.type,
             paymentType: isFullyPaid ? 'FULL' : 'DEPOSIT',
-            notes: dto.notes || (isFullyPaid ? 'سداد كامل لقيمة الكشف' : `سداد جزئي - متبقي ${appt.remainingAmount} ج.م`),
+            notes:
+              dto.notes ||
+              (isFullyPaid
+                ? 'سداد كامل لقيمة الكشف'
+                : `سداد جزئي - متبقي ${appt.remainingAmount} ج.م`),
             receivedById: actor.id,
             status: 'RECORDED',
           });
@@ -963,20 +1006,22 @@ export class AppointmentsService {
       }
     }
 
-    appt.status = 'COMPLETED';
-    appt.completedAt = now;
+    if (appt.status !== 'COMPLETED') {
+      appt.status = 'COMPLETED';
+      appt.completedAt = now;
+      await Visit.updateMany(
+        { appointmentId: appt.id, status: 'OPEN' },
+        { status: 'CLOSED', closedAt: now },
+      );
+
+      await DoctorStatus.findByIdAndUpdate(
+        appt.doctorId,
+        { _id: appt.doctorId, status: 'AVAILABLE' },
+        { upsert: true, returnDocument: 'after' },
+      );
+    }
+
     await appt.save();
-
-    await Visit.updateMany(
-      { appointmentId: appt.id, status: 'OPEN' },
-      { status: 'CLOSED', closedAt: now },
-    );
-
-    await DoctorStatus.findByIdAndUpdate(
-      appt.doctorId,
-      { _id: appt.doctorId, status: 'AVAILABLE' },
-      { upsert: true, returnDocument: 'after' },
-    );
 
     await logAudit({
       userId: actor.id,

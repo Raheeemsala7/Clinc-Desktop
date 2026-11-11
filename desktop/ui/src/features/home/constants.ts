@@ -8,6 +8,11 @@ import {
 } from './types';
 
 /**
+ * الموقع الرسمي للشركة المطورة لمنظومة نَفَس (Vyro Software)
+ */
+export const COMPANY_WEBSITE_URL = 'https://www.vyro.software/en';
+
+/**
  * رقم واتساب العيادة المخصص للحجز والاستفسارات
  */
 export const CLINIC_WHATSAPP_NUMBER = '201050792622';

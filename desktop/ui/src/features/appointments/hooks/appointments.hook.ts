@@ -215,7 +215,14 @@ export function useCheckoutAppointmentMutation() {
             payload,
         }: {
             id: string;
-            payload?: { method?: "CASH" | "CARD" | "WALLET"; amount?: number; notes?: string };
+            payload?: {
+                method?: "CASH" | "CARD" | "WALLET";
+                amount?: number;
+                notes?: string;
+                settlementType?: 'FULL' | 'PARTIAL' | 'EXEMPT';
+                isExempt?: boolean;
+                exemptionReason?: string;
+            };
         }) => {
             const res = await checkoutAppointmentAction(id, payload);
             if (res.code === 401) {
