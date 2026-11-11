@@ -113,41 +113,39 @@ export function DashboardSidebar({
                         />
                       }
                       className={cn(
-                        'h-11 px-3.5 rounded-xl font-bold transition-all text-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0',
+                        'h-11 px-3.5 rounded-xl font-bold transition-all text-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:p-0',
                         isActive
                           ? 'bg-[#0B7B5E] text-white hover:bg-[#09634C] hover:text-white font-black shadow-md'
                           : 'text-slate-200 hover:text-white hover:bg-white/10 font-medium'
                       )}
                     >
-                      <div className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center">
-                        {/* أيقونة العنصر من lucide-react */}
-                        {Icon && (
-                          <Icon
-                            className={cn(
-                              'w-5 h-5 shrink-0 transition-transform duration-150',
-                              isActive
-                                ? 'text-white'
-                                : 'text-emerald-300/70 group-hover:text-white'
-                            )}
-                          />
-                        )}
-
-                        {/* نص الرابط المترجم */}
-                        <span className="truncate flex-1 group-data-[collapsible=icon]:hidden">
-                          {itemTitle}
-                        </span>
-
-                        {/* مؤشر التبويب النشط */}
-                        <span
+                      {/* أيقونة العنصر من lucide-react */}
+                      {Icon && (
+                        <Icon
                           className={cn(
-                            'w-2 h-2 rounded-full shrink-0 transition-all group-data-[collapsible=icon]:hidden',
+                            'w-5 h-5 shrink-0 transition-transform duration-150',
                             isActive
-                              ? 'bg-[#45DBA5]'
-                              : 'bg-transparent'
+                              ? 'text-white'
+                              : 'text-emerald-300/80 group-hover:text-white'
                           )}
-                          aria-hidden="true"
                         />
-                      </div>
+                      )}
+
+                      {/* نص الرابط المترجم */}
+                      <span className="truncate flex-1 group-data-[collapsible=icon]:hidden">
+                        {itemTitle}
+                      </span>
+
+                      {/* مؤشر التبويب النشط */}
+                      <span
+                        className={cn(
+                          'w-2 h-2 rounded-full shrink-0 transition-all group-data-[collapsible=icon]:hidden',
+                          isActive
+                            ? 'bg-[#45DBA5]'
+                            : 'bg-transparent'
+                        )}
+                        aria-hidden="true"
+                      />
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

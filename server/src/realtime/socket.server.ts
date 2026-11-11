@@ -111,7 +111,7 @@ export class RealtimeService {
     action?: string;
   }) {
     if (!this.io) return;
-    this.io.to('clinic:queue').emit('queue:updated', {
+    this.io.emit('queue:updated', {
       ...payload,
       timestamp: new Date().toISOString(),
     });
@@ -125,7 +125,7 @@ export class RealtimeService {
     doctorId: string;
   }) {
     if (!this.io) return;
-    this.io.to('clinic:queue').emit('queue:next_patient', {
+    this.io.emit('queue:next_patient', {
       ...payload,
       timestamp: new Date().toISOString(),
     });
@@ -140,12 +140,12 @@ export class RealtimeService {
     queueNumber: number;
   }) {
     if (!this.io) return;
-    this.io.to('clinic:queue').emit('appointment:created', {
+    this.io.emit('appointment:created', {
       ...payload,
       timestamp: new Date().toISOString(),
     });
     // Invalidate queue board
-    this.emitQueueUpdate({ clinicDate: payload.clinicDate, doctorId: payload.doctorId });
+    this.emitQueueUpdate({ clinicDate: payload.clinicDate, doctorId: payload.doctorId, appointmentId: payload.appointmentId });
   }
 
   static emitAppointmentStatusChanged(payload: {
@@ -156,11 +156,27 @@ export class RealtimeService {
     doctorId: string;
   }) {
     if (!this.io) return;
-    this.io.to('clinic:queue').emit('appointment:status_changed', {
+    this.io.emit('appointment:status_changed', {
       ...payload,
       timestamp: new Date().toISOString(),
     });
-    this.emitQueueUpdate({ clinicDate: payload.clinicDate, doctorId: payload.doctorId });
+    this.emitQueueUpdate({ clinicDate: payload.clinicDate, doctorId: payload.doctorId, appointmentId: payload.appointmentId });
+  }
+
+  static emitAppointmentUpdated(payload: {
+    appointmentId: string;
+    patientId?: string;
+    doctorId?: string;
+    clinicDate?: string;
+    type?: string;
+    status?: string;
+  }) {
+    if (!this.io) return;
+    this.io.emit('appointment:updated', {
+      ...payload,
+      timestamp: new Date().toISOString(),
+    });
+    this.emitQueueUpdate({ clinicDate: payload.clinicDate, doctorId: payload.doctorId, appointmentId: payload.appointmentId });
   }
 
   static emitDoctorStatusChanged(payload: {

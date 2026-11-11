@@ -7,6 +7,7 @@ import { updateAppointmentAction, deleteAppointmentAction } from '../apis/appoin
 import { useDoctorsQuery } from '../hooks/appointments.hook';
 import { APPOINTMENT_TYPES } from '../constants/booking.constant';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EditAppointmentModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export function EditAppointmentModal({
   onSuccess,
 }: EditAppointmentModalProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: doctorsData } = useDoctorsQuery();
   const doctors = doctorsData || [];
 
@@ -68,6 +70,9 @@ export function EditAppointmentModal({
 
       if (res.status) {
         toast.success('تم تعديل بيانات الحجز وتحديث الطبيب بنجاح');
+        queryClient.invalidateQueries({ queryKey: ['queue'] });
+        queryClient.invalidateQueries({ queryKey: ['appointments'] });
+        queryClient.invalidateQueries({ queryKey: ['doctors'] });
         onClose();
         if (onSuccess) onSuccess();
         router.refresh();
@@ -90,6 +95,9 @@ export function EditAppointmentModal({
       const res = await deleteAppointmentAction(appointment.id);
       if (res.status) {
         toast.success('تم حذف الحجز وإلغاء مدفوعاته بنجاح');
+        queryClient.invalidateQueries({ queryKey: ['queue'] });
+        queryClient.invalidateQueries({ queryKey: ['appointments'] });
+        queryClient.invalidateQueries({ queryKey: ['payments'] });
         onClose();
         if (onSuccess) onSuccess();
         router.refresh();

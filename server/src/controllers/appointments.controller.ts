@@ -31,7 +31,14 @@ export class AppointmentsController {
       { id: req.user!.id },
       ip,
     );
-    RealtimeService.emitQueueUpdate({ appointmentId: req.params.id, doctorId: result.doctorId });
+    RealtimeService.emitAppointmentUpdated({
+      appointmentId: req.params.id,
+      patientId: result.patientId,
+      doctorId: result.doctorId,
+      clinicDate: result.clinicDate,
+      type: result.type,
+      status: result.status,
+    });
     sendSuccess(res, result, { message: 'Appointment updated successfully' });
   });
 

@@ -72,6 +72,33 @@ export const DRUG_FORMS = [
   { id: 'Oral Spray', labelEn: 'Oral Spray', labelAr: 'بخاخ فم' },
 ];
 
+export const DOSE_SUGGESTIONS = [
+  '1 قرص',
+  '2 قرص',
+  '1 كبسولة',
+  '1 ملعقة كبيرة',
+  '1 ملعقة صغيرة',
+  '5 سم',
+  'بخة واحدة',
+  'بختين',
+  '3 نقط',
+  'حقنة واحدة',
+];
+
+export const CONCENTRATION_SUGGESTIONS = [
+  '100mg',
+  '250mg',
+  '500mg',
+  '1000mg',
+  '1gm',
+  '0.1%',
+  '0.05%',
+  '5mg',
+  '10mg',
+  '20mg',
+  '50mg',
+];
+
 export const FREQUENCY_SUGGESTIONS = [
   'كل 24 ساعة',
   'مرتين في اليوم',
@@ -134,6 +161,94 @@ export function PrescriptionView({
   const [savedDrugs, setSavedDrugs] = useState<SavedDrugItem[]>([]);
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
   const [activeDropdownRowId, setActiveDropdownRowId] = useState<string | null>(null);
+
+  // 1. الاقتراحات المخصصة المحفوظة للدكتور (الجرعة، التركيز، التكرار، المدة)
+  const [customSuggestions, setCustomSuggestions] = useState<{
+    dose: string[];
+    concentration: string[];
+    frequency: string[];
+    duration: string[];
+  }>({
+    dose: [],
+    concentration: [],
+    frequency: [],
+    duration: [],
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('clinic_rx_custom_suggestions');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          setCustomSuggestions({
+            dose: Array.isArray(parsed.dose) ? parsed.dose : [],
+            concentration: Array.isArray(parsed.concentration) ? parsed.concentration : [],
+            frequency: Array.isArray(parsed.frequency) ? parsed.frequency : [],
+            duration: Array.isArray(parsed.duration) ? parsed.duration : [],
+          });
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleAddCustomSuggestion = (
+    field: 'dose' | 'concentration' | 'frequency' | 'duration',
+    titleAr: string
+  ) => {
+    const input = window.prompt(`اكتب الاقتراح الجديد لإضافته لقائمة (${titleAr}):`);
+    if (!input || !input.trim()) return;
+    const clean = input.trim();
+
+    setCustomSuggestions((prev) => {
+      if (prev[field].includes(clean)) {
+        toast.info(`"${clean}" موجود بالفعل في الاقتراحات`);
+        return prev;
+      }
+      const next = { ...prev, [field]: [...prev[field], clean] };
+      try {
+        localStorage.setItem('clinic_rx_custom_suggestions', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+    toast.success(`تمت إضافة "${clean}" إلى اقتراحات ${titleAr} بنجاح`);
+  };
+
+  const handleRemoveCustomSuggestion = (
+    field: 'dose' | 'concentration' | 'frequency' | 'duration',
+    val: string
+  ) => {
+    setCustomSuggestions((prev) => {
+      const next = { ...prev, [field]: prev[field].filter((x) => x !== val) };
+      try {
+        localStorage.setItem('clinic_rx_custom_suggestions', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  const allDoseList = useMemo(
+    () => Array.from(new Set([...DOSE_SUGGESTIONS, ...customSuggestions.dose])),
+    [customSuggestions.dose]
+  );
+  const allConcentrationList = useMemo(
+    () => Array.from(new Set([...CONCENTRATION_SUGGESTIONS, ...customSuggestions.concentration])),
+    [customSuggestions.concentration]
+  );
+  const allFrequencyList = useMemo(
+    () => Array.from(new Set([...FREQUENCY_SUGGESTIONS, ...customSuggestions.frequency])),
+    [customSuggestions.frequency]
+  );
+  const allDurationList = useMemo(
+    () => Array.from(new Set([...DURATION_SUGGESTIONS, ...customSuggestions.duration])),
+    [customSuggestions.duration]
+  );
 
   // 1. جلب الأدوية المسجلة مسبقاً من الخادم
   useEffect(() => {
@@ -596,7 +711,7 @@ export function PrescriptionView({
                   </div>
 
                   {/* 2. نوع / شكل الدواء (Form) */}
-                  <div className="sm:col-span-4 space-y-1">
+                  <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 space-y-1">
                     <label className="font-bold text-[11px] text-slate-700">نوع / شكل الدواء (Form)</label>
                     <select
                       value={item.form || 'Tablet'}
@@ -611,21 +726,78 @@ export function PrescriptionView({
                     </select>
                   </div>
 
-                  {/* 3. التركيز (Concentration / Strength) */}
-                  <div className="sm:col-span-3 space-y-1">
-                    <label className="font-bold text-[11px] text-slate-700">التركيز (Concentration)</label>
+                  {/* 3. التركيز (Concentration / Strength) مع اقتراحات وزر إضافة مخصص */}
+                  <div className="col-span-12 sm:col-span-6 md:col-span-12 lg:col-span-3 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-[11px] text-slate-700">التركيز (Concentration)</label>
+                      <button
+                        type="button"
+                        onClick={() => handleAddCustomSuggestion('concentration', 'التركيز')}
+                        className="text-[10px] font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>إضافة</span>
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={item.concentration || ''}
                       onChange={(e) => updateItem(item.id, 'concentration', e.target.value)}
-                      placeholder="مثال: 500mg, 1gm, 0.1%..."
+                      placeholder="500mg, 1gm, 0.1%..."
                       className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
+                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
+                      {allConcentrationList.map((conc) => {
+                        const isCustom = customSuggestions.concentration.includes(conc);
+                        const isSelected = item.concentration === conc;
+                        return (
+                          <div
+                            key={conc}
+                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg border transition-all ${
+                              isSelected
+                                ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
+                                : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => updateItem(item.id, 'concentration', conc)}
+                              className="cursor-pointer font-mono"
+                            >
+                              {conc}
+                            </button>
+                            {isCustom && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveCustomSuggestion('concentration', conc);
+                                }}
+                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-[11px] leading-none"
+                                title="حذف من الاقتراحات المخصصة"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {/* 4. الجرعة */}
-                  <div className="sm:col-span-12 sm:col-span-3 space-y-1">
-                    <label className="font-bold text-[11px] text-slate-700">الجرعة (Dose)</label>
+                  {/* 4. الجرعة (Dose) مع اقتراحات وزر إضافة مخصص */}
+                  <div className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-4 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-[11px] text-slate-700">الجرعة (Dose)</label>
+                      <button
+                        type="button"
+                        onClick={() => handleAddCustomSuggestion('dose', 'الجرعة')}
+                        className="text-[10px] font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>إضافة</span>
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={item.dose}
@@ -633,44 +805,116 @@ export function PrescriptionView({
                       placeholder="1 قرص، بخة، ملعقة..."
                       className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
+                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
+                      {allDoseList.map((dose) => {
+                        const isCustom = customSuggestions.dose.includes(dose);
+                        const isSelected = item.dose === dose;
+                        return (
+                          <div
+                            key={dose}
+                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg border transition-all ${
+                              isSelected
+                                ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
+                                : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => updateItem(item.id, 'dose', dose)}
+                              className="cursor-pointer"
+                            >
+                              {dose}
+                            </button>
+                            {isCustom && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveCustomSuggestion('dose', dose);
+                                }}
+                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-[11px] leading-none"
+                                title="حذف من الاقتراحات المخصصة"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {/* 5. التكرار مع الاقتراحات السريعة والكتابة اليدوية */}
-                  <div className="sm:col-span-6 space-y-1.5">
+                  {/* 5. التكرار (Frequency) مع الاقتراحات وإمكانية إضافة مخصص */}
+                  <div className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="font-bold text-[11px] text-slate-700">التكرار (Frequency)</label>
-                      <span className="text-[10px] text-slate-400">اختر أو اكتب بحرية</span>
+                      <button
+                        type="button"
+                        onClick={() => handleAddCustomSuggestion('frequency', 'التكرار')}
+                        className="text-[10px] font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>إضافة</span>
+                      </button>
                     </div>
                     <input
                       type="text"
                       value={item.frequency}
                       onChange={(e) => updateItem(item.id, 'frequency', e.target.value)}
-                      placeholder="اكتب أو اختر (مثال: كل 24 ساعة، مرتين في اليوم)..."
+                      placeholder="اكتب أو اختر (مثال: كل 24 ساعة)..."
                       className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
-                    <div className="flex flex-wrap gap-1 pt-0.5">
-                      {FREQUENCY_SUGGESTIONS.map((freq) => (
-                        <button
-                          key={freq}
-                          type="button"
-                          onClick={() => updateItem(item.id, 'frequency', freq)}
-                          className={`text-[10px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
-                            item.frequency === freq
-                              ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
-                              : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
-                          }`}
-                        >
-                          {freq}
-                        </button>
-                      ))}
+                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
+                      {allFrequencyList.map((freq) => {
+                        const isCustom = customSuggestions.frequency.includes(freq);
+                        const isSelected = item.frequency === freq;
+                        return (
+                          <div
+                            key={freq}
+                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg border transition-all ${
+                              isSelected
+                                ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
+                                : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => updateItem(item.id, 'frequency', freq)}
+                              className="cursor-pointer"
+                            >
+                              {freq}
+                            </button>
+                            {isCustom && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveCustomSuggestion('frequency', freq);
+                                }}
+                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-[11px] leading-none"
+                                title="حذف من الاقتراحات المخصصة"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  {/* 6. المدة مع الاقتراحات السريعة والكتابة اليدوية */}
-                  <div className="sm:col-span-6 space-y-1.5">
+                  {/* 6. المدة (Duration) مع الاقتراحات وإمكانية إضافة مخصص */}
+                  <div className="col-span-12 sm:col-span-12 md:col-span-4 lg:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="font-bold text-[11px] text-slate-700">المدة (Duration)</label>
-                      <span className="text-[10px] text-slate-400">اختر أو اكتب بحرية</span>
+                      <button
+                        type="button"
+                        onClick={() => handleAddCustomSuggestion('duration', 'المدة')}
+                        className="text-[10px] font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>إضافة</span>
+                      </button>
                     </div>
                     <input
                       type="text"
@@ -679,26 +923,47 @@ export function PrescriptionView({
                       placeholder="اكتب أو اختر (مثال: أسبوع، شهر، 5 أيام)..."
                       className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                     />
-                    <div className="flex flex-wrap gap-1 pt-0.5">
-                      {DURATION_SUGGESTIONS.map((dur) => (
-                        <button
-                          key={dur}
-                          type="button"
-                          onClick={() => updateItem(item.id, 'duration', dur)}
-                          className={`text-[10px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
-                            item.duration === dur
-                              ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
-                              : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
-                          }`}
-                        >
-                          {dur}
-                        </button>
-                      ))}
+                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
+                      {allDurationList.map((dur) => {
+                        const isCustom = customSuggestions.duration.includes(dur);
+                        const isSelected = item.duration === dur;
+                        return (
+                          <div
+                            key={dur}
+                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg border transition-all ${
+                              isSelected
+                                ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
+                                : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => updateItem(item.id, 'duration', dur)}
+                              className="cursor-pointer"
+                            >
+                              {dur}
+                            </button>
+                            {isCustom && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveCustomSuggestion('duration', dur);
+                                }}
+                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-[11px] leading-none"
+                                title="حذف من الاقتراحات المخصصة"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* 7. تعليمات وإرشادات الاستخدام */}
-                  <div className="sm:col-span-12 space-y-1">
+                  <div className="col-span-12 space-y-1">
                     <label className="font-bold text-[11px] text-slate-700">تعليمات وإرشادات الاستخدام (Instructions)</label>
                     <input
                       type="text"
@@ -905,21 +1170,28 @@ export function PrintablePrescriptionSlip({
                     )}
                   </div>
 
-                  {/* السطر الثاني: الجرعة والتكرار والمدة - مباشرة تحت اسم الدواء */}
-                  <div className="pl-6 space-y-0.5">
-                    <div className="text-xs font-bold text-slate-900 flex items-center gap-2 flex-wrap">
-                      {item.dose && <span>{item.dose}</span>}
+                  {/* السطر الثاني: الجرعة والتكرار والمدة - مباشرة تحت اسم الدواء من اليسار */}
+                  <div className="pl-6 space-y-0.5 text-left" dir="ltr">
+                    <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                      {item.dose && (
+                        <span className="text-black font-bold">{item.dose}</span>
+                      )}
                       {item.frequency && (
-                        <span>{item.dose ? `• ${item.frequency}` : item.frequency}</span>
+                        <span>
+                          {item.dose ? '▪ ' : ''}{item.frequency}
+                        </span>
                       )}
                       {item.duration && (
                         <span className="font-black text-black">
-                          • لمدة {item.duration}
+                          {(item.dose || item.frequency) ? '▪ ' : ''}
+                          {item.duration.trim().startsWith('لمدة')
+                            ? item.duration.trim()
+                            : `لمدة ${item.duration.trim()}`}
                         </span>
                       )}
                     </div>
 
-                    {/* سطر الإرشادات إن وجد - مباشرة تحت اسم الدواء */}
+                    {/* سطر الإرشادات والتعليمات إن وجد - مباشرة تحت اسم الدواء */}
                     {item.instructions && (
                       <div className="text-[11px] font-semibold text-slate-700">
                         <span>◄ {item.instructions}</span>

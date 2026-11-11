@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 
@@ -9,6 +10,7 @@ export type RealtimeStatus = 'connected' | 'connecting' | 'disconnected';
 
 export function useClinicRealtime() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [status, setStatus] = useState<RealtimeStatus>('connecting');
   const socketRef = useRef<Socket | null>(null);
 
@@ -57,14 +59,17 @@ export function useClinicRealtime() {
         });
 
         // 2. Real-Time Event Handlers
-        socket.on('queue:updated', () => {
+        const handleRefresh = () => {
           queryClient.invalidateQueries({ queryKey: ['queue'] });
           queryClient.invalidateQueries({ queryKey: ['appointments'] });
-        });
+          queryClient.invalidateQueries({ queryKey: ['doctors'] });
+          router.refresh();
+        };
+
+        socket.on('queue:updated', handleRefresh);
 
         socket.on('queue:next_patient', (payload: any) => {
-          queryClient.invalidateQueries({ queryKey: ['queue'] });
-          queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          handleRefresh();
           if (payload?.patientName) {
             toast.info(`المريض التالي: ${payload.patientName} (رقم ${payload.queueNumber})`, {
               duration: 5000,
@@ -72,30 +77,30 @@ export function useClinicRealtime() {
           }
         });
 
-        socket.on('appointment:created', () => {
-          queryClient.invalidateQueries({ queryKey: ['queue'] });
-          queryClient.invalidateQueries({ queryKey: ['appointments'] });
-        });
+        socket.on('appointment:created', handleRefresh);
 
-        socket.on('appointment:status_changed', () => {
-          queryClient.invalidateQueries({ queryKey: ['queue'] });
-          queryClient.invalidateQueries({ queryKey: ['appointments'] });
+        socket.on('appointment:updated', handleRefresh);
+
+        socket.on('appointment:status_changed', (payload: any) => {
+          handleRefresh();
+          if (payload?.status === 'IN_PROGRESS') {
+            toast.info('تم إدخال مريض جديد لغرفة الكشف 🚪');
+          }
         });
 
         socket.on('doctor:status_changed', () => {
           queryClient.invalidateQueries({ queryKey: ['doctor-status'] });
           queryClient.invalidateQueries({ queryKey: ['doctors'] });
+          router.refresh();
         });
 
-        socket.on('examination:completed', () => {
-          queryClient.invalidateQueries({ queryKey: ['queue'] });
-          queryClient.invalidateQueries({ queryKey: ['appointments'] });
-        });
+        socket.on('examination:completed', handleRefresh);
 
         socket.on('payment:recorded', () => {
           queryClient.invalidateQueries({ queryKey: ['queue'] });
           queryClient.invalidateQueries({ queryKey: ['payments'] });
           queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          router.refresh();
         });
       } catch (err) {
         if (active) setStatus('disconnected');
