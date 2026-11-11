@@ -579,6 +579,53 @@ export const DoctorDashboardView = ({
             </div>
           )}
 
+          {/* شريط دعوة المريض التالي عند عدم وجود مريض في الغرفة */}
+          {!inProgressPatient && waitingPatients.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50/70 border-2 border-amber-400 rounded-3xl p-5 shadow-sm text-start flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white font-black text-lg flex items-center justify-center shadow-xs shrink-0">
+                  #{String(waitingPatients[0].queueNumber).padStart(2, '0')}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                      الدور التالي جاهز في الانتظار 🚪
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-[#074C3A] mt-0.5">
+                    {waitingPatients[0].patientName}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {getAppointmentTypeLabel(waitingPatients[0].type)} • {formatWaitingTime(waitingPatients[0].waitingMinutes)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => admitMutation.mutate(waitingPatients[0].id)}
+                  disabled={admitMutation.isPending}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer disabled:opacity-60 whitespace-nowrap"
+                >
+                  <LogIn className={`w-4 h-4 ${admitMutation.isPending ? 'animate-spin' : ''}`} />
+                  <span>
+                    {admitMutation.isPending && admitMutation.variables === waitingPatients[0].id
+                      ? 'جاري الإدخال...'
+                      : 'إدخال المريض للعيادة 🚪'}
+                  </span>
+                </button>
+                <Link
+                  href={`/dashboard/examination/${waitingPatients[0].id}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs whitespace-nowrap"
+                >
+                  <Stethoscope className="w-4 h-4 text-[#0B7B5E]" />
+                  <span>فتح الكشف مباشرة</span>
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* بطاقة قائمة المرضى الرئيسية بكامل العرض */}
           <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-xs border border-slate-100">
             {/* شريط البحث وتصفية التبويبات */}

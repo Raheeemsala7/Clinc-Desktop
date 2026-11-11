@@ -275,19 +275,30 @@ export function PatientStepCard() {
                   })}
                 </div>
 
-                {/* تفاصيل أو أدوية يتناولها المريض */}
-                <Controller
-                  name="chronicNotes"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      placeholder="تفاصيل أو أدوية يتناولها المريض (اختياري)..."
-                      className="w-full h-10 px-3.5 rounded-xl border border-amber-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-amber-400 focus:ring-3 focus:ring-amber-200/30 transition-all"
-                      {...field}
-                    />
+                {/* تفاصيل أو أدوية يتناولها المريض أو تحديد المرض الآخر */}
+                <div className="space-y-1">
+                  {selectedDiseases.includes('other') && (
+                    <label className="block text-[11px] font-bold text-amber-900">
+                      حدد اسم المرض المزمن الآخر:
+                    </label>
                   )}
-                />
+                  <Controller
+                    name="chronicNotes"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        type="text"
+                        placeholder={
+                          selectedDiseases.includes('other')
+                            ? 'اكتب اسم المرض المزمن الآخر هنا (مثال: حساسية بنسلين، روماتيزم)...'
+                            : 'تفاصيل أو أدوية يتناولها المريض (اختياري)...'
+                        }
+                        className="w-full h-10 px-3.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-amber-500 focus:ring-3 focus:ring-amber-200/30 transition-all shadow-2xs"
+                        {...field}
+                      />
+                    )}
+                  />
+                </div>
 
                 {errors.chronicDiseases && (
                   <p className="text-xs text-rose-500 font-semibold">{errors.chronicDiseases.message}</p>

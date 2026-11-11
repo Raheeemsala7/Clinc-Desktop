@@ -4,6 +4,7 @@ export const CHRONIC_DISEASES = [
   { id: 'diabetes', label: 'السكر' },
   { id: 'hypertension', label: 'الضغط' },
   { id: 'heart', label: 'القلب' },
+  { id: 'allergy', label: 'الحساسية' },
   { id: 'asthma', label: 'الربو' },
   { id: 'kidney', label: 'الكلى' },
   { id: 'thyroid', label: 'الغدة الدرقية' },

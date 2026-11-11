@@ -26,7 +26,10 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
   const [occupation, setOccupation] = useState('');
   const [hasChronic, setHasChronic] = useState(false);
   const [selectedDiseases, setSelectedDiseases] = useState<string[]>([]);
+  const [otherDiseaseText, setOtherDiseaseText] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+
+  const isChild = typeof age === 'number' && age < 18;
 
   if (!isOpen) return null;
 
@@ -60,15 +63,23 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
     }
 
     startTransition(async () => {
+      let finalChronic = hasChronic ? [...selectedDiseases] : [];
+      if (finalChronic.includes('أخرى')) {
+        finalChronic = finalChronic.filter((d) => d !== 'أخرى');
+        if (otherDiseaseText.trim()) {
+          finalChronic.push(`أخرى: ${otherDiseaseText.trim()}`);
+        }
+      }
+
       const res = await createNewPatientAction({
         fullName: fullName.trim(),
         phone: phoneClean,
         gender,
-        maritalStatus,
+        maritalStatus: isChild ? 'SINGLE' : maritalStatus,
         age: Number(age),
         address: address.trim() || undefined,
         occupation: occupation.trim() || undefined,
-        chronicConditions: hasChronic ? selectedDiseases : [],
+        chronicConditions: finalChronic,
       });
 
       if (res.status) {
@@ -218,30 +229,39 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
             />
           </div>
 
-          {/* الحالة الاجتماعية */}
+          {/* الحالة الاجتماعية - تختفي تلقائياً إذا كان المريض طفلاً */}
           <div>
             <label className="block mb-1.5 text-slate-700">الحالة الاجتماعية *</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {[
-                { id: 'MARRIED', label: 'متزوج' },
-                { id: 'SINGLE', label: 'أعزب' },
-                { id: 'WIDOWED', label: 'أرمل / أرملة' },
-                { id: 'DIVORCED', label: 'مطلق / مطلقة' },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setMaritalStatus(item.id as any)}
-                  className={`h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center select-none ${
-                    maritalStatus === item.id
-                      ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            {!isChild ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { id: 'MARRIED', label: 'متزوج' },
+                  { id: 'SINGLE', label: 'أعزب' },
+                  { id: 'WIDOWED', label: 'أرمل / أرملة' },
+                  { id: 'DIVORCED', label: 'مطلق / مطلقة' },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setMaritalStatus(item.id as any)}
+                    className={`h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center select-none ${
+                      maritalStatus === item.id
+                        ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 font-bold flex items-center justify-between">
+                <span>الحالة الاجتماعية:</span>
+                <span className="text-[#0B7B5E] bg-[#E3F5EE] px-2.5 py-0.5 rounded-lg border border-[#D0E5DC]">
+                  طفل / قاصر (أعزب تلقائياً)
+                </span>
+              </div>
+            )}
           </div>
 
           {/* الأمراض المزمنة */}
@@ -264,24 +284,42 @@ export function CreatePatientModal({ isOpen, onClose, onSuccess }: CreatePatient
             </div>
 
             {hasChronic && (
-              <div className="flex flex-wrap gap-1.5 pt-1.5">
-                {CHRONIC_DISEASES.map((disease) => {
-                  const isSelected = selectedDiseases.includes(disease.label);
-                  return (
-                    <button
-                      key={disease.id}
-                      type="button"
-                      onClick={() => toggleDisease(disease.label)}
-                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs'
-                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {disease.label}
-                    </button>
-                  );
-                })}
+              <div className="space-y-2 pt-1.5">
+                <div className="flex flex-wrap gap-1.5">
+                  {CHRONIC_DISEASES.map((disease) => {
+                    const isSelected = selectedDiseases.includes(disease.label);
+                    return (
+                      <button
+                        key={disease.id}
+                        type="button"
+                        onClick={() => toggleDisease(disease.label)}
+                        className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {disease.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* حقل إدخال مرض مزمن آخر عند اختيار "أخرى" */}
+                {selectedDiseases.includes('أخرى') && (
+                  <div className="pt-1.5 animate-in fade-in-50">
+                    <label className="block mb-1 text-[11px] font-bold text-amber-900">
+                      حدد اسم المرض المزمن الآخر:
+                    </label>
+                    <input
+                      type="text"
+                      value={otherDiseaseText}
+                      onChange={(e) => setOtherDiseaseText(e.target.value)}
+                      placeholder="مثال: سيولة الدم، روماتيزم، حساسية بنسلين..."
+                      className="w-full h-9 px-3 rounded-xl border border-amber-300 bg-amber-50/50 text-xs font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-amber-500 focus:bg-white transition-all shadow-2xs"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

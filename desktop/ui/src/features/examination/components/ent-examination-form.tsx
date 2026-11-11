@@ -16,6 +16,7 @@ import {
   Clock,
   Check,
   AlertCircle,
+  LogIn,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EntExaminationData } from '../types/ent-examination.types';
@@ -25,6 +26,7 @@ import {
   saveAppointmentExaminationAction,
   finishAndSubmitExamAction,
 } from '../apis/examination.action';
+import { admitAppointmentAction } from '@/features/appointments/apis/appointment.action';
 
 interface EntExaminationFormProps {
   appointment: any;
@@ -125,7 +127,30 @@ export function EntExaminationForm({
   const [version, setVersion] = useState<number>(visit?.version || 1);
   const [isSaving, setIsSaving] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isAdmitting, setIsAdmitting] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<string>(appointment?.status || 'IN_PROGRESS');
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+
+  // إدخال المريض وبدء الكشف
+  const handleAdmit = async () => {
+    const targetApptId = appointment?.id || appointment?._id || '';
+    if (!targetApptId) return;
+    setIsAdmitting(true);
+    try {
+      const res = await admitAppointmentAction(targetApptId);
+      if (res.status) {
+        toast.success('تم إدخال المريض وبدء الكشف بنجاح 🚪');
+        setCurrentStatus('IN_PROGRESS');
+        router.refresh();
+      } else {
+        toast.error(res.message || 'فشل إدخال المريض');
+      }
+    } catch {
+      toast.error('حدث خطأ أثناء إدخال المريض');
+    } finally {
+      setIsAdmitting(false);
+    }
+  };
 
   // دالة الحفظ
   const handleSave = async (showToast = true) => {
@@ -256,13 +281,37 @@ export function EntExaminationForm({
 
         {/* أزرار الإجراءات العلوية السريعة */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* زر إدخال المريض إذا كان لا يزال في الانتظار */}
+          {(currentStatus === 'WAITING' || currentStatus === 'BOOKED') && (
+            <button
+              type="button"
+              onClick={handleAdmit}
+              disabled={isAdmitting}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer disabled:opacity-60"
+            >
+              <LogIn className={`w-4 h-4 ${isAdmitting ? 'animate-spin' : ''}`} />
+              <span>{isAdmitting ? 'جاري الإدخال...' : 'إدخال للكشف 🚪'}</span>
+            </button>
+          )}
+
+          {/* زر إنهاء الكشف وتسليم للاستقبال متاح دائماً للطبيب */}
+          <button
+            type="button"
+            onClick={handleFinish}
+            disabled={isFinishing || isSaving}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer disabled:opacity-60"
+          >
+            <CheckCircle2 className={`w-4 h-4 ${isFinishing ? 'animate-spin' : ''}`} />
+            <span>{isFinishing ? 'جاري الإنهاء...' : 'إنهاء الكشف ✓'}</span>
+          </button>
+
           <button
             type="button"
             onClick={activeTab === 'exam' ? handlePrintExam : () => handlePrintRx('full')}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <Printer className="w-4 h-4 text-slate-500" />
-            <span>{activeTab === 'exam' ? 'طباعة شيت الكشف (طبق الأصل)' : 'طباعة الروشتة'}</span>
+            <span>{activeTab === 'exam' ? 'طباعة الكشف' : 'طباعة الروشتة'}</span>
           </button>
 
           <button
@@ -373,15 +422,27 @@ export function EntExaminationForm({
             </button>
           </div>
 
-          {/* الزر الرئيسي: حفظ والانتقال للروشتة */}
-          <button
-            type="button"
-            onClick={handleProceedToPrescription}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black shadow-md transition-all cursor-pointer"
-          >
-            <span>حفظ ومتابعة إلى كتابة الروشتة (Rx)</span>
-            <ArrowLeft className="w-4 h-4" />
-          </button>
+          {/* أزرار الحفظ والانتقال والإنهاء */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={handleFinish}
+              disabled={isFinishing || isSaving}
+              className="inline-flex items-center gap-1.5 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-60"
+            >
+              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+              <span>{isFinishing ? 'جاري الإنهاء...' : 'إنهاء الكشف وتسليم للاستقبال ✓'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleProceedToPrescription}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black shadow-md transition-all cursor-pointer"
+            >
+              <span>حفظ ومتابعة إلى كتابة الروشتة (Rx)</span>
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
