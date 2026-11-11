@@ -16,7 +16,11 @@ export class PaymentsController {
   });
 
   listPayments = asyncHandler(async (req: Request, res: Response) => {
-    const result = await PaymentsService.listPayments(req.query, req.user!.role);
+    const query = { ...req.query };
+    if (req.user?.role === 'DOCTOR') {
+      query.doctorId = req.user.id;
+    }
+    const result = await PaymentsService.listPayments(query, req.user!.role);
     sendPaginated(res, result);
   });
 

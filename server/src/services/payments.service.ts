@@ -47,7 +47,7 @@ export class PaymentsService {
   }
 
   static async listPayments(query: any, _actorRole?: string) {
-    const { date, page: pageQuery, pageSize: pageSizeQuery } = query;
+    const { date, page: pageQuery, pageSize: pageSizeQuery, doctorId } = query;
     const today = getTodayClinicDate();
 
     // Allow filtering by date (today or previous dates)
@@ -61,21 +61,34 @@ export class PaymentsService {
     let paymentFilter: any = {};
     let apptsOnDate: any[] = [];
 
-    if (effectiveDate && effectiveDate !== 'all') {
-      const startOfDay = new Date(`${effectiveDate}T00:00:00.000Z`);
-      const endOfDay = new Date(`${effectiveDate}T23:59:59.999Z`);
+    const hasDoctorFilter = doctorId && doctorId !== 'all';
+    const apptFilter: any = {};
 
-      apptsOnDate = await Appointment.find({ clinicDate: effectiveDate }).select(
-        '_id totalAmount paidAmount remainingAmount paymentStatus isExempt',
+    if (effectiveDate && effectiveDate !== 'all') {
+      apptFilter.clinicDate = effectiveDate;
+    }
+    if (hasDoctorFilter) {
+      apptFilter.doctorId = doctorId;
+    }
+
+    if (Object.keys(apptFilter).length > 0) {
+      apptsOnDate = await Appointment.find(apptFilter).select(
+        '_id totalAmount paidAmount remainingAmount paymentStatus isExempt doctorId',
       );
       const apptIds = apptsOnDate.map((a) => a.id);
 
-      paymentFilter = {
-        $or: [
-          { appointmentId: { $in: apptIds } },
-          { createdAt: { $gte: startOfDay, $lte: endOfDay } },
-        ],
-      };
+      if (hasDoctorFilter) {
+        paymentFilter = { appointmentId: { $in: apptIds } };
+      } else {
+        const startOfDay = new Date(`${effectiveDate}T00:00:00.000Z`);
+        const endOfDay = new Date(`${effectiveDate}T23:59:59.999Z`);
+        paymentFilter = {
+          $or: [
+            { appointmentId: { $in: apptIds } },
+            { createdAt: { $gte: startOfDay, $lte: endOfDay } },
+          ],
+        };
+      }
     }
 
     const [payments, total, allRecordedPayments] = await Promise.all([

@@ -10,17 +10,7 @@ export class QueueController {
     const isDoctor = req.user?.role === 'DOCTOR';
     const doctorId = (rawDoctorId && rawDoctorId !== 'all') ? rawDoctorId : (isDoctor ? req.user!.id : undefined);
 
-    let queue = await QueueService.getTodayQueue(doctorId);
-
-    // إذا كان الطبيب مسجل ولم يجد أي حالات مخصصة له، ولكن هناك حالات بالعيادة غير مسندة أو مسجلة
-    // نعيد طابور العيادة كاملاً حتى لا يختفي المريض إذا سجله الاستقبال بدون تحديد الطبيب أو بتحديد طبيب بديل
-    if (doctorId && isDoctor && queue.length === 0) {
-      const allClinicQueue = await QueueService.getTodayQueue();
-      if (allClinicQueue.length > 0) {
-        queue = allClinicQueue;
-      }
-    }
-
+    const queue = await QueueService.getTodayQueue(doctorId);
     sendSuccess(res, queue);
   });
 

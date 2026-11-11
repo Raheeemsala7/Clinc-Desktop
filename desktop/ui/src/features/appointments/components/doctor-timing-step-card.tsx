@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType } from '../types/booking';
 import { SAMPLE_DOCTORS, SAMPLE_SLOTS } from '../constants/booking.constant';
@@ -21,6 +22,9 @@ export function DoctorTimingStepCard() {
     formState: { errors },
   } = useFormContext<BookingFormType>();
 
+  const searchParams = useSearchParams();
+  const urlDoctorId = searchParams.get('doctorId');
+
   const doctorId = useWatch({ control, name: 'doctorId' });
   const appointmentDate = useWatch({ control, name: 'appointmentDate' });
   const selectedTime = useWatch({ control, name: 'appointmentTime' });
@@ -30,18 +34,20 @@ export function DoctorTimingStepCard() {
   const { data: doctorsData, isLoading: isLoadingDoctors } = useDoctorsQuery();
   const doctorsList = doctorsData && doctorsData.length > 0 ? doctorsData : SAMPLE_DOCTORS;
 
-  // تعيين أول طبيب تلقائياً إذا كان الحقل فارغاً أو غير موجود في القائمة
+  // تعيين الطبيب المحدد من الرابط أو أول طبيب تلقائياً
   useEffect(() => {
     if (doctorsList.length > 0) {
+      const urlDoc = urlDoctorId ? doctorsList.find((d) => d.id === urlDoctorId) : null;
+      const targetDoctorId = urlDoc ? urlDoc.id : doctorsList[0].id;
       const exists = doctorsList.some((d) => d.id === doctorId);
       if (!doctorId || !exists) {
-        setValue('doctorId', doctorsList[0].id, {
+        setValue('doctorId', targetDoctorId, {
           shouldValidate: true,
           shouldDirty: false,
         });
       }
     }
-  }, [doctorsList, doctorId, setValue]);
+  }, [doctorsList, doctorId, urlDoctorId, setValue]);
 
   // 2. استعلام المواعيد المتاحة للطبيب واليوم المختار
   const effectiveDoctorId = doctorId || doctorsList[0]?.id;

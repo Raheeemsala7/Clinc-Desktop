@@ -3,7 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { PaymentFilterTab, PaymentsSummaryCounts } from '../types/payments';
-import { Search, Calendar, Download } from 'lucide-react';
+import { Search, Calendar, Download, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PaymentsFiltersBarProps {
@@ -14,6 +14,9 @@ interface PaymentsFiltersBarProps {
   onSearchChange: (q: string) => void;
   selectedDate: string;
   onDateChange: (date: string) => void;
+  selectedDoctorId: string;
+  onDoctorChange: (doctorId: string) => void;
+  doctors?: Array<{ id: string; name: string }>;
   onExport: () => void;
 }
 
@@ -25,6 +28,9 @@ export function PaymentsFiltersBar({
   onSearchChange,
   selectedDate,
   onDateChange,
+  selectedDoctorId,
+  onDoctorChange,
+  doctors = [],
   onExport,
 }: PaymentsFiltersBarProps) {
   const t = useTranslations('Payments');
@@ -68,10 +74,27 @@ export function PaymentsFiltersBar({
         })}
       </div>
 
-      {/* 2. أدوات البحث واختيار اليوم والتصدير */}
+      {/* 2. أدوات البحث واختيار الطبيب واليوم والتصدير */}
       <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+        {/* فلتر الطبيب */}
+        <div className="relative shrink-0">
+          <select
+            value={selectedDoctorId || 'all'}
+            onChange={(e) => onDoctorChange(e.target.value)}
+            className="h-10 pr-9 pl-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer appearance-none shadow-2xs"
+          >
+            <option value="all">جميع الأطباء (إجمالي الدخل)</option>
+            {doctors.map((doc) => (
+              <option key={doc.id} value={doc.id}>
+                {doc.name}
+              </option>
+            ))}
+          </select>
+          <Stethoscope className="w-4 h-4 text-[#0B7B5E] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
+
         {/* حقل البحث بالاسم أو رقم الهاتف */}
-        <div className="relative flex-1 sm:w-64">
+        <div className="relative flex-1 sm:w-56">
           <input
             type="text"
             value={searchQuery}

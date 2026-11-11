@@ -341,7 +341,7 @@
           <div class="client-form" id="clientForm">
             <div class="form-group">
               <label class="form-label">عنوان IP للجهاز الرئيسي (الخادم):</label>
-              <input type="text" id="serverIpInput" class="form-input" placeholder="مثال: 192.168.1.5" value="192.168.1.5">
+              <input type="text" id="serverIpInput" class="form-input" placeholder="مثال: 192.168.1.2" value="192.168.1.2">
             </div>
             <div class="form-group">
               <label class="form-label">رقم المنفذ (Port):</label>
@@ -351,12 +351,12 @@
               🔍 اختبار الاتصال بالجهاز الرئيسي
             </button>
             <div id="connectionStatus" class="status-box"></div>
+
+            <button class="btn btn-primary" id="clientConfirmBtn" onclick="confirmClientMode(event)" style="margin-top: 14px;">
+              اتصال بالجهاز الرئيسي وبدء التشغيل
+            </button>
           </div>
         </div>
-
-        <button class="btn btn-primary" id="clientConfirmBtn" onclick="confirmClientMode(event)" style="margin-top: 14px;">
-          اتصال بالجهاز الرئيسي وبدء التشغيل
-        </button>
       </div>
     </div>
 

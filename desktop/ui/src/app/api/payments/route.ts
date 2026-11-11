@@ -15,12 +15,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const date = searchParams.get('date') || '';
+    const doctorId = searchParams.get('doctorId') || '';
     const page = searchParams.get('page') || '1';
     const pageSize = searchParams.get('pageSize') || '50';
 
     const apiUrl = process.env.API_URL || 'http://localhost:4000/api/v1';
     const url = new URL(`${apiUrl}/payments`);
     if (date) url.searchParams.set('date', date);
+    if (doctorId && doctorId !== 'all') url.searchParams.set('doctorId', doctorId);
     url.searchParams.set('page', page);
     url.searchParams.set('pageSize', pageSize);
 

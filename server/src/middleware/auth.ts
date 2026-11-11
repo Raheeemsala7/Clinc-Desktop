@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models';
+import { config } from '../config/env';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
 
 export interface AuthUser {
@@ -26,7 +27,7 @@ export async function authMiddleware(req: Request, _res: Response, next: NextFun
     }
 
     const token = authHeader.substring(7);
-    const secret = process.env.JWT_ACCESS_SECRET;
+    const secret = config.jwt.accessSecret;
     if (!secret) {
       throw new Error('JWT_ACCESS_SECRET is not configured');
     }

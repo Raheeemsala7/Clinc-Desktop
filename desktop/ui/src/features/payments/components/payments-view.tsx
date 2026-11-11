@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePaymentsQuery } from '../hooks/payments.hook';
+import { useDoctorsQuery } from '@/features/appointments/hooks/appointments.hook';
 import { PaymentFilterTab, PaymentItem, PaymentsSummary } from '../types/payments';
 import { PaymentsSummaryCards } from './payments-summary-cards';
 import { PaymentsFiltersBar } from './payments-filters-bar';
@@ -25,18 +26,23 @@ function getTodayIsoDate(): string {
 export function PaymentsView() {
   const t = useTranslations('Payments');
   const [selectedDate, setSelectedDate] = useState<string>(getTodayIsoDate);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all');
   const [currentTab, setCurrentTab] = useState<PaymentFilterTab>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedPaymentForPay, setSelectedPaymentForPay] = useState<PaymentItem | null>(null);
 
-  // استعلام المدفوعات باستخدام React Query كاش حسب التاريخ المختار
+  // جلب قائمة أطباء العيادة للفلترة
+  const { data: doctorsData } = useDoctorsQuery();
+  const doctors = doctorsData || [];
+
+  // استعلام المدفوعات باستخدام React Query كاش حسب التاريخ المختار والطبيب المحدد
   const {
     data: paymentsResponse,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = usePaymentsQuery(selectedDate);
+  } = usePaymentsQuery(selectedDate, selectedDoctorId);
 
   const rawPayments = paymentsResponse?.data || [];
   const backendSummary = paymentsResponse?.meta?.summary;
@@ -275,6 +281,9 @@ export function PaymentsView() {
         onSearchChange={setSearchQuery}
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
+        selectedDoctorId={selectedDoctorId}
+        onDoctorChange={setSelectedDoctorId}
+        doctors={doctors}
         onExport={handleExportCsv}
       />
 

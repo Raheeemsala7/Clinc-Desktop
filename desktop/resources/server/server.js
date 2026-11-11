@@ -171096,7 +171096,7 @@ async function authMiddleware(req, _res, next) {
       throw new UnauthorizedError("Authentication token missing or invalid");
     }
     const token = authHeader.substring(7);
-    const secret = process.env.JWT_ACCESS_SECRET;
+    const secret = config.jwt.accessSecret;
     if (!secret) {
       throw new Error("JWT_ACCESS_SECRET is not configured");
     }
@@ -173268,7 +173268,11 @@ var AppointmentsController = class {
       sendSuccess(res, result, { message: "Appointment updated successfully" });
     });
     this.listAppointments = asyncHandler(async (req, res) => {
-      const result = await AppointmentsService.listAppointments(req.query);
+      const query = { ...req.query };
+      if (req.user?.role === "DOCTOR") {
+        query.doctorId = req.user.id;
+      }
+      const result = await AppointmentsService.listAppointments(query);
       sendPaginated(res, result);
     });
     this.getCalendar = asyncHandler(async (req, res) => {
@@ -173485,13 +173489,7 @@ var QueueController = class {
       const rawDoctorId = req.query.doctorId;
       const isDoctor = req.user?.role === "DOCTOR";
       const doctorId = rawDoctorId && rawDoctorId !== "all" ? rawDoctorId : isDoctor ? req.user.id : void 0;
-      let queue = await QueueService.getTodayQueue(doctorId);
-      if (doctorId && isDoctor && queue.length === 0) {
-        const allClinicQueue = await QueueService.getTodayQueue();
-        if (allClinicQueue.length > 0) {
-          queue = allClinicQueue;
-        }
-      }
+      const queue = await QueueService.getTodayQueue(doctorId);
       sendSuccess(res, queue);
     });
     this.getDoctorStatus = asyncHandler(async (req, res) => {
@@ -173975,7 +173973,7 @@ var PaymentsService = class {
     return payment.toJSON();
   }
   static async listPayments(query, _actorRole) {
-    const { date: date2, page: pageQuery, pageSize: pageSizeQuery } = query;
+    const { date: date2, page: pageQuery, pageSize: pageSizeQuery, doctorId } = query;
     const today = getTodayClinicDate();
     const effectiveDate = date2 || today;
     const { skip, take: take2, page, pageSize } = parsePagination({
@@ -173984,19 +173982,31 @@ var PaymentsService = class {
     });
     let paymentFilter = {};
     let apptsOnDate = [];
+    const hasDoctorFilter = doctorId && doctorId !== "all";
+    const apptFilter = {};
     if (effectiveDate && effectiveDate !== "all") {
-      const startOfDay = /* @__PURE__ */ new Date(`${effectiveDate}T00:00:00.000Z`);
-      const endOfDay = /* @__PURE__ */ new Date(`${effectiveDate}T23:59:59.999Z`);
-      apptsOnDate = await Appointment.find({ clinicDate: effectiveDate }).select(
-        "_id totalAmount paidAmount remainingAmount paymentStatus isExempt"
+      apptFilter.clinicDate = effectiveDate;
+    }
+    if (hasDoctorFilter) {
+      apptFilter.doctorId = doctorId;
+    }
+    if (Object.keys(apptFilter).length > 0) {
+      apptsOnDate = await Appointment.find(apptFilter).select(
+        "_id totalAmount paidAmount remainingAmount paymentStatus isExempt doctorId"
       );
       const apptIds = apptsOnDate.map((a5) => a5.id);
-      paymentFilter = {
-        $or: [
-          { appointmentId: { $in: apptIds } },
-          { createdAt: { $gte: startOfDay, $lte: endOfDay } }
-        ]
-      };
+      if (hasDoctorFilter) {
+        paymentFilter = { appointmentId: { $in: apptIds } };
+      } else {
+        const startOfDay = /* @__PURE__ */ new Date(`${effectiveDate}T00:00:00.000Z`);
+        const endOfDay = /* @__PURE__ */ new Date(`${effectiveDate}T23:59:59.999Z`);
+        paymentFilter = {
+          $or: [
+            { appointmentId: { $in: apptIds } },
+            { createdAt: { $gte: startOfDay, $lte: endOfDay } }
+          ]
+        };
+      }
     }
     const [payments, total, allRecordedPayments] = await Promise.all([
       Payment.find(paymentFilter).sort({ createdAt: -1 }).skip(skip).limit(take2),
@@ -174113,7 +174123,11 @@ var PaymentsController = class {
       sendSuccess(res, payment, { code: 201, message: "Payment recorded successfully" });
     });
     this.listPayments = asyncHandler(async (req, res) => {
-      const result = await PaymentsService.listPayments(req.query, req.user.role);
+      const query = { ...req.query };
+      if (req.user?.role === "DOCTOR") {
+        query.doctorId = req.user.id;
+      }
+      const result = await PaymentsService.listPayments(query, req.user.role);
       sendPaginated(res, result);
     });
     this.voidPayment = asyncHandler(async (req, res) => {

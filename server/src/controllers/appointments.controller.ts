@@ -36,7 +36,11 @@ export class AppointmentsController {
   });
 
   listAppointments = asyncHandler(async (req: Request, res: Response) => {
-    const result = await AppointmentsService.listAppointments(req.query);
+    const query = { ...req.query };
+    if (req.user?.role === 'DOCTOR') {
+      query.doctorId = req.user.id;
+    }
+    const result = await AppointmentsService.listAppointments(query);
     sendPaginated(res, result);
   });
 

@@ -2,13 +2,18 @@ import { signOut } from 'next-auth/react';
 import { PaymentsListResponse } from '../types/payments';
 
 /**
- * جلب سجل المدفوعات حسب اليوم المحدد
+ * جلب سجل المدفوعات حسب اليوم المحدد والطبيب
  */
 export async function fetchPayments(
   date: string,
+  doctorId?: string,
   signal?: AbortSignal
 ): Promise<PaymentsListResponse> {
-  const url = date ? `/api/payments?date=${encodeURIComponent(date)}` : '/api/payments';
+  const params = new URLSearchParams();
+  if (date) params.set('date', date);
+  if (doctorId && doctorId !== 'all') params.set('doctorId', doctorId);
+  const qs = params.toString();
+  const url = qs ? `/api/payments?${qs}` : '/api/payments';
 
   const response = await fetch(url, {
     method: 'GET',

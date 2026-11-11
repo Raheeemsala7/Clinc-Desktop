@@ -9,16 +9,16 @@ import { toast } from 'sonner';
 
 export const paymentKeys = {
   all: ['payments'] as const,
-  list: (date: string) => [...paymentKeys.all, 'list', date] as const,
+  list: (date: string, doctorId?: string) => [...paymentKeys.all, 'list', date, doctorId || 'all'] as const,
 };
 
 /**
- * هوك استعلام المدفوعات مع دعم الكاش حسب اليوم المحدد
+ * هوك استعلام المدفوعات مع دعم الكاش حسب اليوم المحدد والطبيب
  */
-export function usePaymentsQuery(date: string) {
+export function usePaymentsQuery(date: string, doctorId?: string) {
   return useQuery({
-    queryKey: paymentKeys.list(date),
-    queryFn: ({ signal }) => fetchPayments(date, signal),
+    queryKey: paymentKeys.list(date, doctorId),
+    queryFn: ({ signal }) => fetchPayments(date, doctorId, signal),
     staleTime: 1000 * 60, // دقيقة واحدة لتجنب الطلبات المتكررة
     gcTime: 1000 * 60 * 10, // 10 دقائق في ذاكرة التخزين المؤقت
     refetchOnWindowFocus: true,

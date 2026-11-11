@@ -1,0 +1,23 @@
+◇ injected env (0) from .env
+◇ injected env (0) from .env
+◇ injected env (0) from .env
+◇ injected env (0) from .env
+🚀 [INIT] Booting Clinic Management API Server...
+⚙️ [CONFIG] NODE_ENV: development
+⚙️ [CONFIG] PORT: 4000
+⚙️ [CONFIG] MONGODB_URI set: false
+⏳ [DB] Connecting to MongoDB...
+🔌 [DB] Connecting to MongoDB at: mongodb://127.0.0.1:27017/clinic-management
+🍃 [DB] MongoDB Connected successfully
+✅ [DB] MongoDB connection established successfully.
+--- Ensuring MongoDB Database Seed Data ---
+Updated existing user: admin (ADMIN) [ID: 8a763fa5-def2-431a-97c8-1a36221c9980]
+Updated existing user: doctor (DOCTOR) [ID: 18b75d33-613d-4100-a4ef-48ec66add761]
+Updated existing user: reception (RECEPTION) [ID: 42064da0-8280-4951-8838-b592115af321]
+✅ [SEED] Database Seed Verified & Ready.
+⚡ [SOCKET] Socket.IO Server initialized successfully
+🌐 [SERVER] Clinic Management Server running on http://0.0.0.0:4000
+📡 [API] Base URL: http://0.0.0.0:4000/api/v1
+📚 [DOCS] Swagger UI: http://0.0.0.0:4000/api-docs
+⚡ [REALTIME] WebSocket ready on http://0.0.0.0:4000
+❤️  [HEALTH] Health check: http://0.0.0.0:4000/health
