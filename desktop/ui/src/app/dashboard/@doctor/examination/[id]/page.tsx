@@ -1,11 +1,9 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import { getAppointmentExaminationAction } from '@/features/examination/apis/examination.action';
 import { EntExaminationForm } from '@/features/examination/components/ent-examination-form';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
-
-export const dynamic = 'force-dynamic';
 
 interface ExaminationPageProps {
   params: Promise<{ id: string }>;
@@ -18,7 +16,16 @@ export async function generateMetadata({ params }: ExaminationPageProps) {
   };
 }
 
-export default async function ExaminationPage({ params }: ExaminationPageProps) {
+function ExaminationSkeleton() {
+  return (
+    <div className="bg-white rounded-3xl p-12 border border-slate-100 text-center shadow-xs flex flex-col items-center justify-center min-h-[400px]">
+      <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mb-3" />
+      <p className="text-xs font-bold text-slate-500">جاري تحميل استمارة فحص المريض...</p>
+    </div>
+  );
+}
+
+async function ExaminationContent({ params }: ExaminationPageProps) {
   const { id } = await params;
 
   const res = await getAppointmentExaminationAction(id);
@@ -61,6 +68,14 @@ export default async function ExaminationPage({ params }: ExaminationPageProps) 
       doctor={doctor}
       visit={visit}
     />
+  );
+}
+
+export default function ExaminationPage(props: ExaminationPageProps) {
+  return (
+    <Suspense fallback={<ExaminationSkeleton />}>
+      <ExaminationContent {...props} />
+    </Suspense>
   );
 }
 
