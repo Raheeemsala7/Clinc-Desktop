@@ -182,13 +182,26 @@ export class VisitsService {
     });
 
     await Promise.all(
-      formattedItems.map((item: any) =>
-        Drug.findOneAndUpdate(
-          { name: item.drugName.toLowerCase().trim() },
-          { $inc: { usageCount: 1 }, $setOnInsert: { isActive: true } },
-          { upsert: true },
-        ),
-      ),
+      formattedItems.map((item: any) => {
+        const drugName = item.drugName.trim();
+        return Drug.findOneAndUpdate(
+          { name: drugName },
+          {
+            $inc: { usageCount: 1 },
+            $setOnInsert: { name: drugName },
+            $set: {
+              isActive: true,
+              ...(item.form ? { form: item.form } : {}),
+              ...(item.concentration ? { concentration: item.concentration } : {}),
+              ...(item.dose ? { dose: item.dose } : {}),
+              ...(item.frequency ? { frequency: item.frequency } : {}),
+              ...(item.duration ? { duration: item.duration } : {}),
+              ...(item.instructions ? { instructions: item.instructions } : {}),
+            },
+          },
+          { upsert: true, new: true },
+        );
+      }),
     );
 
     await logAudit({

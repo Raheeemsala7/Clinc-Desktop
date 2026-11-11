@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Pill,
   Printer,
@@ -16,11 +16,26 @@ import {
   Calendar,
   Layers,
   FileCheck,
+  Search,
+  X,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   PrescriptionMedicine,
   EntExaminationData,
 } from '../types/ent-examination.types';
+
+export interface SavedDrugItem {
+  id?: string;
+  drugName: string;
+  form?: string;
+  concentration?: string;
+  dose?: string;
+  frequency?: string;
+  duration?: string;
+  instructions?: string;
+  usageCount?: number;
+}
 
 export const DRUG_FORMS = [
   { id: 'Tablet', labelEn: 'Tablet', labelAr: 'أقراص' },
@@ -98,6 +113,108 @@ export function PrescriptionView({
   isFinishing,
 }: PrescriptionViewProps) {
   const items = examData.prescriptionItems || [];
+  const [savedDrugs, setSavedDrugs] = useState<SavedDrugItem[]>([]);
+  const [drugSearchQuery, setDrugSearchQuery] = useState('');
+  const [activeDropdownRowId, setActiveDropdownRowId] = useState<string | null>(null);
+
+  // 1. جلب الأدوية المسجلة مسبقاً من الخادم
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/drugs')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data) return;
+        const list = Array.isArray(data.payload)
+          ? data.payload
+          : Array.isArray(data.data)
+          ? data.data
+          : Array.isArray(data)
+          ? data
+          : [];
+        setSavedDrugs(
+          list.map((d: any) => ({
+            id: d.id || d._id,
+            drugName: d.name || d.drugName,
+            form: d.form || 'Tablet',
+            concentration: d.concentration || '',
+            dose: d.dose || '',
+            frequency: d.frequency || '',
+            duration: d.duration || '',
+            instructions: d.instructions || '',
+            usageCount: d.usageCount || 0,
+          }))
+        );
+      })
+      .catch((e) => console.warn('Failed to load saved drugs', e));
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. حذف دواء من الاقتراحات
+  const handleDeleteDrug = async (drugId?: string, drugName?: string) => {
+    if (!drugId) return;
+    try {
+      const res = await fetch(`/api/drugs/${encodeURIComponent(drugId)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setSavedDrugs((prev) => prev.filter((d) => d.id !== drugId));
+        toast.success(`تم حذف "${drugName || 'الدواء'}" من الاقتراحات`);
+      } else {
+        toast.error('فشل حذف الدواء من الاقتراحات');
+      }
+    } catch {
+      toast.error('حدث خطأ أثناء حذف الدواء');
+    }
+  };
+
+  // 3. دمج الأدوية المسجلة من زيارات سابقة مع الأدوية الشائعة
+  const combinedSuggestions: SavedDrugItem[] = useMemo(() => {
+    const list: SavedDrugItem[] = [...savedDrugs];
+    QUICK_ENT_DRUGS.forEach((quick) => {
+      const exists = list.some(
+        (s) => s.drugName.trim().toLowerCase() === quick.drugName.trim().toLowerCase()
+      );
+      if (!exists) {
+        list.push({ ...quick });
+      }
+    });
+    return list;
+  }, [savedDrugs]);
+
+  // 4. فلترة الأدوية في الشريط العلوي حسب البحث السريع
+  const filteredChips = useMemo(() => {
+    if (!drugSearchQuery.trim()) return combinedSuggestions;
+    const q = drugSearchQuery.trim().toLowerCase();
+    return combinedSuggestions.filter((d) =>
+      d.drugName.toLowerCase().includes(q) ||
+      (d.concentration && d.concentration.toLowerCase().includes(q)) ||
+      (d.dose && d.dose.toLowerCase().includes(q))
+    );
+  }, [combinedSuggestions, drugSearchQuery]);
+
+  // 5. اختيار دواء مقترح لتعبئة حقول السطر المحدد بضغطة واحدة
+  const selectSuggestionForRow = (rowId: string, drug: SavedDrugItem) => {
+    onChange((prev) => ({
+      ...prev,
+      prescriptionItems: (prev.prescriptionItems || []).map((it) =>
+        it.id === rowId
+          ? {
+              ...it,
+              drugName: drug.drugName,
+              form: drug.form || it.form || 'Tablet',
+              concentration: drug.concentration || it.concentration || '',
+              dose: drug.dose || it.dose || '',
+              frequency: drug.frequency || it.frequency || '',
+              duration: drug.duration || it.duration || '',
+              instructions: drug.instructions || it.instructions || '',
+            }
+          : it
+      ),
+    }));
+    setActiveDropdownRowId(null);
+  };
 
   const addItem = () => {
     const newItem: PrescriptionMedicine = {
@@ -132,10 +249,16 @@ export function PrescriptionView({
     }));
   };
 
-  const addQuickDrug = (drug: Omit<PrescriptionMedicine, 'id'>) => {
+  const addQuickDrug = (drug: SavedDrugItem | Omit<PrescriptionMedicine, 'id'>) => {
     const newItem: PrescriptionMedicine = {
-      ...drug,
       id: Math.random().toString(36).substring(2, 9),
+      drugName: drug.drugName || '',
+      form: (drug.form as any) || 'Tablet',
+      concentration: drug.concentration || '',
+      dose: drug.dose || '',
+      frequency: drug.frequency || '',
+      duration: drug.duration || '',
+      instructions: drug.instructions || '',
     };
     onChange((prev) => ({
       ...prev,
@@ -193,31 +316,82 @@ export function PrescriptionView({
         </div>
       </div>
 
-      {/* 2. الأدوية السريعة الشائعة */}
-      <div className="p-4 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-2.5">
-        <div className="flex items-center justify-between">
+      {/* 2. قاموس الأدوية الشائعة والمسجلة للدكتور مع البحث السريع والحذف */}
+      <div className="p-4 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
             <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>أدوية الأنف والأذن والحنجرة الشائعة (إضافة سريعة بضغطة واحدة):</span>
+            <span>قاموس أدوية العيادة والاقتراحات السابقة (إضافة سريعة بضغطة واحدة):</span>
           </div>
-          <span className="text-[11px] text-slate-500 font-medium">
-            تضاف مباشرة لجدول الروشتة مع النوع والتركيز والجرعة
-          </span>
+
+          {/* حقل البحث السريع في الأدوية السابقة */}
+          <div className="relative w-full sm:w-72">
+            <input
+              type="text"
+              value={drugSearchQuery}
+              onChange={(e) => setDrugSearchQuery(e.target.value)}
+              placeholder="ابحث في أدوية العيادة السابقة..."
+              className="w-full h-8 pr-8 pl-6 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
+            />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            {drugSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setDrugSearchQuery('')}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {QUICK_ENT_DRUGS.map((d, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => addQuickDrug(d)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-[#E3F5EE] hover:border-[#D0E5DC] text-slate-700 hover:text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
-            >
-              <Plus className="w-3 h-3 text-[#0B7B5E]" />
-              <span>{d.drugName}</span>
-              {d.concentration && <span className="text-[10px] text-[#0B7B5E] font-mono font-normal">({d.concentration})</span>}
-            </button>
-          ))}
+        {/* أشرطة الأدوية المقترحة */}
+        <div className="flex items-center gap-1.5 flex-wrap max-h-36 overflow-y-auto pr-1">
+          {filteredChips.length === 0 ? (
+            <span className="text-xs text-slate-400 italic py-1">
+              لا توجد أدوية مطابقة لبحثك. يمكنك كتابة الدواء مباشرة بالأسفل وسيتم حفظه تلقائياً!
+            </span>
+          ) : (
+            filteredChips.map((d, i) => (
+              <div
+                key={d.id || `${d.drugName}-${i}`}
+                className="group inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-[#E3F5EE] hover:border-[#D0E5DC] text-slate-700 hover:text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs overflow-hidden select-none"
+              >
+                <button
+                  type="button"
+                  onClick={() => addQuickDrug(d)}
+                  className="px-2.5 py-1.5 flex items-center gap-1 cursor-pointer active:scale-95"
+                  title="إضافة للروشتة مباشرة بجميع الجرعات"
+                >
+                  <Plus className="w-3 h-3 text-[#0B7B5E]" />
+                  <span>{d.drugName}</span>
+                  {d.concentration && (
+                    <span className="text-[10px] text-[#0B7B5E] font-mono font-normal">
+                      ({d.concentration})
+                    </span>
+                  )}
+                </button>
+
+                {/* زر الحذف من الاقتراحات */}
+                {d.id && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`هل تريد حذف "${d.drugName}" من الاقتراحات نهائياً؟`)) {
+                        handleDeleteDrug(d.id, d.drugName);
+                      }
+                    }}
+                    className="h-full px-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border-r border-slate-200/60"
+                    title="حذف هذا الدواء من الاقتراحات"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -311,16 +485,96 @@ export function PrescriptionView({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 text-xs">
-                  {/* 1. اسم الدواء */}
-                  <div className="sm:col-span-5 space-y-1">
+                  {/* 1. اسم الدواء مع البحث والإكمال التلقائي الذكي */}
+                  <div className="sm:col-span-5 space-y-1 relative">
                     <label className="font-bold text-[11px] text-slate-700">اسم الدواء (Drug Name) *</label>
                     <input
                       type="text"
                       value={item.drugName}
-                      onChange={(e) => updateItem(item.id, 'drugName', e.target.value)}
+                      onFocus={() => setActiveDropdownRowId(item.id)}
+                      onChange={(e) => {
+                        updateItem(item.id, 'drugName', e.target.value);
+                        setActiveDropdownRowId(item.id);
+                      }}
                       placeholder="Augmentin, Otrivin, Cataflam..."
                       className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
                     />
+
+                    {/* قائمة الاقتراحات التلقائية المنسدلة للسطر */}
+                    {activeDropdownRowId === item.id && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50">
+                        {combinedSuggestions
+                          .filter((sug) =>
+                            !item.drugName.trim() ||
+                            sug.drugName.toLowerCase().includes(item.drugName.trim().toLowerCase()) ||
+                            (sug.dose && sug.dose.toLowerCase().includes(item.drugName.trim().toLowerCase()))
+                          )
+                          .slice(0, 8)
+                          .map((sug, sIdx) => (
+                            <div
+                              key={sug.id || `${sug.drugName}-${sIdx}`}
+                              className="px-3 py-2 hover:bg-[#E3F5EE] flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                selectSuggestionForRow(item.id, sug);
+                              }}
+                            >
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-black text-xs text-[#074C3A]">
+                                  {sug.drugName}
+                                </span>
+                                {sug.concentration && (
+                                  <span className="text-[10px] text-slate-500 font-mono font-bold">
+                                    ({sug.concentration})
+                                  </span>
+                                )}
+                                {sug.form && (
+                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                    {sug.form}
+                                  </span>
+                                )}
+                                {sug.dose && (
+                                  <span className="text-[11px] text-slate-500">
+                                    · {sug.dose}
+                                  </span>
+                                )}
+                                {sug.frequency && (
+                                  <span className="text-[11px] text-slate-500">
+                                    · {sug.frequency}
+                                  </span>
+                                )}
+                              </div>
+
+                              {sug.id && (
+                                <button
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (confirm(`هل تريد حذف "${sug.drugName}" من الاقتراحات؟`)) {
+                                      handleDeleteDrug(sug.id, sug.drugName);
+                                    }
+                                  }}
+                                  className="text-slate-300 hover:text-rose-600 p-1 rounded-lg transition-colors"
+                                  title="حذف من الاقتراحات"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+
+                        <div
+                          className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 font-medium text-center cursor-pointer hover:bg-slate-100"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setActiveDropdownRowId(null);
+                          }}
+                        >
+                          إغلاق الاقتراحات ✕
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* 2. نوع / شكل الدواء (Form) */}

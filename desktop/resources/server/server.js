@@ -100621,7 +100621,13 @@ var init_drug_model = __esm({
     DrugSchema = new import_mongoose8.Schema(
       {
         _id: { type: String, default: v4_default },
-        name: { type: String, required: true, unique: true, lowercase: true, trim: true },
+        name: { type: String, required: true, unique: true, trim: true },
+        form: { type: String, default: "Tablet" },
+        concentration: { type: String, default: null },
+        dose: { type: String, default: null },
+        frequency: { type: String, default: null },
+        duration: { type: String, default: null },
+        instructions: { type: String, default: null },
         usageCount: { type: Number, default: 0 },
         isActive: { type: Boolean, default: true }
       },
@@ -173670,13 +173676,26 @@ var VisitsService = class {
       items: formattedItems
     });
     await Promise.all(
-      formattedItems.map(
-        (item) => Drug.findOneAndUpdate(
-          { name: item.drugName.toLowerCase().trim() },
-          { $inc: { usageCount: 1 }, $setOnInsert: { isActive: true } },
-          { upsert: true }
-        )
-      )
+      formattedItems.map((item) => {
+        const drugName = item.drugName.trim();
+        return Drug.findOneAndUpdate(
+          { name: drugName },
+          {
+            $inc: { usageCount: 1 },
+            $setOnInsert: { name: drugName },
+            $set: {
+              isActive: true,
+              ...item.form ? { form: item.form } : {},
+              ...item.concentration ? { concentration: item.concentration } : {},
+              ...item.dose ? { dose: item.dose } : {},
+              ...item.frequency ? { frequency: item.frequency } : {},
+              ...item.duration ? { duration: item.duration } : {},
+              ...item.instructions ? { instructions: item.instructions } : {}
+            }
+          },
+          { upsert: true, new: true }
+        );
+      })
     );
     await logAudit({
       userId: actorId,
@@ -173909,8 +173928,44 @@ var DrugsService = class {
       const safeQuery = query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.name = { $regex: safeQuery, $options: "i" };
     }
-    const drugs = await Drug.find(filter).sort({ usageCount: -1, name: 1 }).limit(20).select("id name");
-    return drugs.map((d5) => ({ id: d5.id, name: d5.name }));
+    const drugs = await Drug.find(filter).sort({ usageCount: -1, name: 1 }).limit(50);
+    return drugs.map((d5) => ({
+      id: d5.id,
+      name: d5.name,
+      form: d5.form || "Tablet",
+      concentration: d5.concentration || "",
+      dose: d5.dose || "",
+      frequency: d5.frequency || "",
+      duration: d5.duration || "",
+      instructions: d5.instructions || "",
+      usageCount: d5.usageCount || 0
+    }));
+  }
+  static async deleteDrug(id) {
+    await Drug.findByIdAndDelete(id);
+    return { success: true };
+  }
+  static async saveDrug(dto) {
+    const name = dto.name.trim();
+    if (!name) return null;
+    const drug = await Drug.findOneAndUpdate(
+      { name },
+      {
+        $inc: { usageCount: 1 },
+        $setOnInsert: { name },
+        $set: {
+          isActive: true,
+          form: dto.form || "Tablet",
+          concentration: dto.concentration || "",
+          dose: dto.dose || "",
+          frequency: dto.frequency || "",
+          duration: dto.duration || "",
+          instructions: dto.instructions || ""
+        }
+      },
+      { upsert: true, new: true }
+    );
+    return drug.toJSON();
   }
 };
 
@@ -173922,6 +173977,15 @@ var DrugsController = class {
       const drugs = await DrugsService.searchDrugs(q3);
       sendSuccess(res, drugs);
     });
+    this.deleteDrug = asyncHandler(async (req, res) => {
+      const { id } = req.params;
+      await DrugsService.deleteDrug(id);
+      sendSuccess(res, { success: true, message: "\u062A\u0645 \u062D\u0630\u0641 \u0627\u0644\u062F\u0648\u0627\u0621 \u0645\u0646 \u0627\u0644\u0627\u0642\u062A\u0631\u0627\u062D\u0627\u062A \u0628\u0646\u062C\u0627\u062D" });
+    });
+    this.saveDrug = asyncHandler(async (req, res) => {
+      const result = await DrugsService.saveDrug(req.body);
+      sendSuccess(res, result, { message: "\u062A\u0645 \u062D\u0641\u0638 \u0627\u0644\u062F\u0648\u0627\u0621 \u0641\u064A \u0627\u0644\u0627\u0642\u062A\u0631\u0627\u062D\u0627\u062A \u0628\u0646\u062C\u0627\u062D" });
+    });
   }
 };
 var drugsController = new DrugsController();
@@ -173930,6 +173994,8 @@ var drugsController = new DrugsController();
 var router8 = (0, import_express8.Router)();
 router8.use(authMiddleware);
 router8.get("/", requireRoles("ADMIN", "DOCTOR"), drugsController.searchDrugs);
+router8.post("/", requireRoles("ADMIN", "DOCTOR"), drugsController.saveDrug);
+router8.delete("/:id", requireRoles("ADMIN", "DOCTOR"), drugsController.deleteDrug);
 var drugs_routes_default = router8;
 
 // src/routes/payments.routes.ts
