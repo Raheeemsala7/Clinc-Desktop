@@ -7,7 +7,7 @@ import { app } from 'electron';
 
 function supervisorLog(msg: string) {
   try {
-    const logPath = 'D:\\realy-projects\\desktop\\dr-eslam\\desktop.log';
+    const logPath = path.join(app.getPath('userData'), 'desktop.log');
     fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${msg}\n`, 'utf8');
   } catch {}
   console.log(msg);

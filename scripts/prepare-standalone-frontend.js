@@ -36,5 +36,12 @@ if (fs.existsSync(envSrc)) {
   console.log('✅ Copied .env to standalone');
 }
 
+// Convert all symlinks / junctions into real portable directories
+try {
+  require('./un-symlink-frontend');
+} catch (e) {
+  console.warn('⚠️ Warning running un-symlink-frontend:', e.message);
+}
+
 console.log('🎉 [FRONTEND] Standalone Next.js assets ready.');
 
