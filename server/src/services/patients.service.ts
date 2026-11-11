@@ -146,8 +146,11 @@ export class PatientsService {
       const safeNormalized = normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
       filter.$or = [
+        { fileNumber: { $regex: safeQuery, $options: 'i' } },
         { searchName: { $regex: safeNormalized, $options: 'i' } },
+        { fullName: { $regex: safeQuery, $options: 'i' } },
         { phone: { $regex: safeQuery, $options: 'i' } },
+        { _id: { $regex: safeQuery, $options: 'i' } },
       ];
     }
 

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get("q")?.trim() ?? "";
 
-  if (query.length < 2) {
+  if (query.length < 1) {
     return NextResponse.json([]);
   }
 

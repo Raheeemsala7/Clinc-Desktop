@@ -27,7 +27,7 @@ export function SearchPatientInput({}) {
 
 
     const shouldShowSearchResults =
-        searchQuery.trim().length >= 2;
+        searchQuery.trim().length >= 1;
     const isDebouncing =
         searchQuery.trim() !== debouncedSearchQuery;
 
@@ -55,7 +55,7 @@ export function SearchPatientInput({}) {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="ابحث بالاسم أو رقم الهاتف أو المعرف..."
+                placeholder="ابحث بكود المريض (رقم الملف) أو الاسم أو رقم الهاتف..."
                 className="w-full h-11 pl-4 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all"
             />
 
@@ -111,9 +111,16 @@ export function SearchPatientInput({}) {
                                     </div>
 
                                     <div>
-                                        <p className="font-bold text-xs text-[#074C3A]">
-                                            {patient.name || patient.fullName}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-xs text-[#074C3A]">
+                                                {patient.name || patient.fullName}
+                                            </p>
+                                            {((patient as any).fileNumber || (patient as any).fileNo) && (
+                                                <span className="font-mono text-[10px] bg-slate-100 text-slate-700 font-bold px-1.5 py-0.5 rounded">
+                                                    كود: {(patient as any).fileNumber || (patient as any).fileNo}
+                                                </span>
+                                            )}
+                                        </div>
 
                                         <p className="text-[11px] text-slate-400">
                                             {patient.phone}

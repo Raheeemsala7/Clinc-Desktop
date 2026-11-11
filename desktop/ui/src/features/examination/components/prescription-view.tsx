@@ -905,28 +905,27 @@ export function PrintablePrescriptionSlip({
                     )}
                   </div>
 
-                  {/* السطر الثاني: الجرعة والتكرار والمدة - اتجاه من اليمين للشمال RTL */}
-                  <div
-                    dir="rtl"
-                    className="pr-6 text-xs font-bold text-slate-900 text-right flex items-center justify-start gap-2 flex-wrap"
-                  >
-                    {item.dose && <span>{item.dose}</span>}
-                    {item.frequency && (
-                      <span>{item.dose ? `• ${item.frequency}` : item.frequency}</span>
-                    )}
-                    {item.duration && (
-                      <span className="font-black text-black">
-                        • لمدة {item.duration}
-                      </span>
+                  {/* السطر الثاني: الجرعة والتكرار والمدة - مباشرة تحت اسم الدواء */}
+                  <div className="pl-6 space-y-0.5">
+                    <div className="text-xs font-bold text-slate-900 flex items-center gap-2 flex-wrap">
+                      {item.dose && <span>{item.dose}</span>}
+                      {item.frequency && (
+                        <span>{item.dose ? `• ${item.frequency}` : item.frequency}</span>
+                      )}
+                      {item.duration && (
+                        <span className="font-black text-black">
+                          • لمدة {item.duration}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* سطر الإرشادات إن وجد - مباشرة تحت اسم الدواء */}
+                    {item.instructions && (
+                      <div className="text-[11px] font-semibold text-slate-700">
+                        <span>◄ {item.instructions}</span>
+                      </div>
                     )}
                   </div>
-
-                  {/* سطر الإرشادات إن وجد - اتجاه من اليمين للشمال RTL */}
-                  {item.instructions && (
-                    <div dir="rtl" className="pr-6 text-[11px] font-semibold text-slate-700 text-right">
-                      <span>◄ {item.instructions}</span>
-                    </div>
-                  )}
                 </div>
               );
             })}
