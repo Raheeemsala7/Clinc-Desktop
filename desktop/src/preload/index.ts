@@ -15,6 +15,9 @@ export interface IElectronAPI {
   triggerBackup: () => Promise<any>;
   restoreBackup: (filePath: string) => Promise<any>;
   selectBackupFile: () => Promise<string | null>;
+  getMachineId: () => Promise<string>;
+  checkLicense: () => Promise<any>;
+  activateLicense: (key: string) => Promise<any>;
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -32,4 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   triggerBackup: () => ipcRenderer.invoke('backup:trigger'),
   restoreBackup: (filePath: string) => ipcRenderer.invoke('backup:restore', filePath),
   selectBackupFile: () => ipcRenderer.invoke('dialog:select-backup-file'),
+  getMachineId: () => ipcRenderer.invoke('license:get-machine-id'),
+  checkLicense: () => ipcRenderer.invoke('license:check'),
+  activateLicense: (key: string) => ipcRenderer.invoke('license:activate', key),
 });

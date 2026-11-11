@@ -16,7 +16,7 @@ if (!fs.existsSync(outDir)) {
 // 1. Run esbuild to bundle server into a single file
 console.log('📦 [BUNDLE] Running esbuild on server/src/server.ts...');
 const esbuildExe = path.join(serverDir, 'node_modules', '.pnpm', '@esbuild+win32-x64@0.27.0', 'node_modules', '@esbuild', 'win32-x64', 'esbuild.exe');
-const esbuildCmd = `"${esbuildExe}" src/server.ts --bundle --platform=node --target=node20 --outfile="${path.join(outDir, 'server.js')}" --external:argon2`;
+const esbuildCmd = `"${esbuildExe}" src/server.ts --bundle --platform=node --target=node20 --minify --legal-comments=none --outfile="${path.join(outDir, 'server.js')}" --external:argon2`;
 execSync(esbuildCmd, { cwd: serverDir, stdio: 'inherit' });
 
 // 2. Prepare standalone argon2 and @phc/format inside outDir/node_modules

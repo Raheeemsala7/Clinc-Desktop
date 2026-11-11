@@ -5,6 +5,7 @@ import http from 'http';
 import fs from 'fs';
 import { ConfigManager } from './config-manager';
 import { ProcessSupervisor } from './process-supervisor';
+import { LicenseManager } from './license-manager';
 
 export function appLog(msg: string) {
   try {
@@ -94,6 +95,17 @@ async function testConnection(ip: string, port: number): Promise<{ success: bool
 
 async function bootServicesAndLoadUrl() {
   if (!mainWindow) return;
+
+  // 1. التحقق من الترخيص وبصمة الجهاز (Machine Lock Security)
+  const licenseCheck = LicenseManager.checkInstalledLicense();
+  if (!licenseCheck.valid) {
+    const hwid = LicenseManager.getMachineId();
+    appLog(`🔒 [LICENSE] Machine is not activated (${hwid}). Showing activation screen. Reason: ${licenseCheck.error}`);
+    const activateHtmlPath = path.resolve(__dirname, '../renderer/activate.html');
+    mainWindow.loadFile(activateHtmlPath);
+    return;
+  }
+  appLog(`✅ [LICENSE] Valid license verified for: ${licenseCheck.info?.clientName} (HWID: ${licenseCheck.info?.machineId})`);
 
   const config = ConfigManager.load();
   appLog(`🔧 [CONFIG] Loaded mode: ${config.mode}, ip: ${config.serverIp}, port: ${config.serverPort}`);
@@ -187,6 +199,23 @@ function buildMenu() {
               type: 'info',
               title: 'عناوين الشبكة المحلية (LAN)',
               message: `عناوين هذا الجهاز على الشبكة:\n\n${ipList}\n\nاستخدم هذا العنوان للربط من جهاز الطبيب.`,
+            });
+          },
+        },
+      ],
+    },
+    {
+      label: 'الترخيص والأمان',
+      submenu: [
+        {
+          label: 'معلومات ترخيص هذا الجهاز',
+          click: () => {
+            const hwid = LicenseManager.getMachineId();
+            const lic = LicenseManager.checkInstalledLicense();
+            dialog.showMessageBox({
+              type: lic.valid ? 'info' : 'warning',
+              title: 'ترخيص منظومة نَفَس',
+              message: `كود بصمة هذا الجهاز (Machine ID):\n${hwid}\n\nحالة الترخيص: ${lic.valid ? 'مرخص ومفعل قانونياً بنجاح ✅' : 'غير مرخص ⚠️'}\nالمالك: ${lic.info?.clientName || 'غير مسجل'}\nالفئة: ${lic.info?.tier || '—'}`,
             });
           },
         },
@@ -401,6 +430,18 @@ ipcMain.handle('print:receipt', async (_event, htmlContent: string) => {
       resolve(success);
     });
   });
+});
+
+ipcMain.handle('license:get-machine-id', async () => {
+  return LicenseManager.getMachineId();
+});
+
+ipcMain.handle('license:check', async () => {
+  return LicenseManager.checkInstalledLicense();
+});
+
+ipcMain.handle('license:activate', async (_event, key: string) => {
+  return LicenseManager.saveLicense(key);
 });
 
 // App Lifecycle

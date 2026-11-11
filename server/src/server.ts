@@ -23,12 +23,17 @@ import app from './app';
 import { connectDB } from './db/connection';
 import { RealtimeService } from './realtime/socket.server';
 import { ensureSeedData } from './scripts/seed';
+import { verifyServerLicense } from './security/license-verifier';
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = '0.0.0.0';
 
 async function bootstrap() {
   try {
+    if (!verifyServerLicense()) {
+      console.error('❌ [FATAL] Unauthorized server execution. Machine license missing or invalid.');
+      process.exit(1);
+    }
     console.log('⏳ [DB] Connecting to MongoDB...');
     await connectDB();
     console.log('✅ [DB] MongoDB connection established successfully.');

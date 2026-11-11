@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفعيل ترخيص المنظومة - نَفَس</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Readex+Pro:wght@600;700;800&display=swap');
+
+    :root {
+      --primary: #0B7B5E;
+      --primary-hover: #09634C;
+      --primary-dark: #074C3A;
+      --primary-light: #E3F5EE;
+      --accent-mint: #45DBA5;
+      --danger: #C0282E;
+      --danger-light: #FDE8E8;
+      --bg: #F8FBF9;
+      --surface: #FFFFFF;
+      --border: #D0E5DC;
+      --text: #0B241D;
+      --text-muted: #4A635B;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', Tahoma, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #074C3A 0%, #0B7B5E 60%, #0E3B5C 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 580px;
+      background: var(--surface);
+      border-radius: 28px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3), 0 0 1px 1px rgba(255, 255, 255, 0.1);
+      padding: 38px 34px;
+      text-align: center;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #0B7B5E, #45DBA5, #0B7B5E);
+    }
+
+    .logo-container {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: var(--primary);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(11, 123, 94, 0.25);
+    }
+
+    .title {
+      font-family: 'Readex Pro', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .hwid-box {
+      background: var(--primary-light);
+      border: 1.5px dashed var(--primary);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 22px;
+      text-align: start;
+    }
+
+    .hwid-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .hwid-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hwid-value {
+      flex: 1;
+      font-family: monospace;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: white;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: var(--text);
+      direction: ltr;
+      text-align: center;
+      user-select: all;
+    }
+
+    .copy-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .form-group {
+      text-align: start;
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .key-textarea {
+      width: 100%;
+      height: 95px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      font-family: monospace;
+      font-size: 12px;
+      direction: ltr;
+      resize: none;
+      outline: none;
+      transition: all 0.2s;
+      background: #FAFCFA;
+    }
+
+    .key-textarea:focus {
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(11, 123, 94, 0.15);
+    }
+
+    .activate-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Readex Pro', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 6px 16px rgba(11, 123, 94, 0.25);
+    }
+
+    .activate-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .activate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .alert {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+      text-align: start;
+    }
+
+    .alert-error {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid #F8B4B4;
+    }
+
+    .alert-success {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid var(--border);
+    }
+
+    .footer-help {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="top-bar"></div>
+
+    <!-- شعار نَفَس -->
+    <div class="logo-container">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:78%;height:78%;">
+        <circle cx="50" cy="30" r="13" fill="#45DBA5" />
+        <path d="M23 48C23 64 35 74 50 74C65 74 77 64 77 48" stroke="white" stroke-width="11" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <h1 class="title">تفعيل ترخيص المنظومة</h1>
+    <p class="subtitle">
+      هذه النسخة محمية ومخصصة للاستخدام الحصري على أجهزة عيادتك المعتمدة. يرجى إدخال كود التفعيل للبدء.
+    </p>
+
+    <!-- كود بصمة الجهاز -->
+    <div class="hwid-box">
+      <div class="hwid-label">
+        <span>🔒 كود بصمة هذا الجهاز (Machine ID):</span>
+        <span style="font-size: 11px; color: var(--primary);">خاص بهذا اللابتوب فقط</span>
+      </div>
+      <div class="hwid-row">
+        <input type="text" id="machineIdText" class="hwid-value" value="جاري قراءة كود الجهاز..." readonly />
+        <button type="button" class="copy-btn" id="copyBtn" onclick="copyMachineId()">
+          📋 نسخ الكود
+        </button>
+      </div>
+    </div>
+
+    <!-- حقل كود الترخيص -->
+    <div class="form-group">
+      <label class="form-label" for="licenseKeyInput">
+        🔑 مفتاح الترخيص والتفعيل (Activation License Key):
+      </label>
+      <textarea
+        id="licenseKeyInput"
+        class="key-textarea"
+        placeholder="الصق هنا كود الترخيص المعتمد من المطور..."
+      ></textarea>
+    </div>
+
+    <!-- زر التفعيل -->
+    <button type="button" class="activate-btn" id="activateBtn" onclick="activateLicense()">
+      تفعيل المنظومة وبدء التشغيل ✨
+    </button>
+
+    <div id="alertBox" class="alert"></div>
+
+    <div class="footer-help">
+      لطلب كود الترخيص أو نقله إلى جهاز آخر، انسخ <strong>كود بصمة الجهاز</strong> في الأعلى وأرسله إلى إدارة النظام.
+    </div>
+  </div>
+
+  <script>
+    let currentHwid = '';
+
+    // عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        if (window.electronAPI && window.electronAPI.getMachineId) {
+          currentHwid = await window.electronAPI.getMachineId();
+          document.getElementById('machineIdText').value = currentHwid;
+        } else {
+          document.getElementById('machineIdText').value = 'NAFS-UNKNOWN-HWID';
+        }
+      } catch (err) {
+        document.getElementById('machineIdText').value = 'NAFS-ERROR-READING';
+      }
+    });
+
+    // نسخ كود البصمة
+    function copyMachineId() {
+      const input = document.getElementById('machineIdText');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.getElementById('copyBtn');
+        const oldText = btn.textContent;
+        btn.textContent = '✓ تم النسخ!';
+        btn.style.background = '#074C3A';
+        setTimeout(() => {
+          btn.textContent = oldText;
+          btn.style.background = '';
+        }, 2000);
+      }).catch(() => {
+        alert('كود الجهاز: ' + input.value);
+      });
+    }
+
+    // تفعيل الترخيص
+    async function activateLicense() {
+      const keyInput = document.getElementById('licenseKeyInput');
+      const key = keyInput.value.trim();
+      const alertBox = document.getElementById('alertBox');
+      const btn = document.getElementById('activateBtn');
+
+      if (!key) {
+        showAlert('يرجى لصق كود الترخيص في المربع المخصص أولاً', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ جاري التحقق من الترخيص وتشفيره...';
+      hideAlert();
+
+      try {
+        if (window.electronAPI && window.electronAPI.activateLicense) {
+          const res = await window.electronAPI.activateLicense(key);
+          if (res.valid) {
+            showAlert('✓ تم تفعيل المنظومة بنجاح! مرحباً بك يا دكتور. جاري فتح النظام...', 'success');
+            setTimeout(() => {
+              if (window.electronAPI.startApp) {
+                window.electronAPI.startApp();
+              } else {
+                window.location.reload();
+              }
+            }, 1200);
+            return;
+          } else {
+            showAlert(res.error || 'كود الترخيص غير صالح أو غير متطابق مع هذا الجهاز', 'error');
+          }
+        } else {
+          showAlert('خدمة التفعيل غير متوفرة في بيئة المتصفح المباشرة', 'error');
+        }
+      } catch (err) {
+        showAlert('حدث خطأ أثناء التفعيل: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'تفعيل المنظومة وبدء التشغيل ✨';
+      }
+    }
+
+    function showAlert(msg, type) {
+      const box = document.getElementById('alertBox');
+      box.textContent = msg;
+      box.className = 'alert ' + (type === 'error' ? 'alert-error' : 'alert-success');
+      box.style.display = 'block';
+    }
+
+    function hideAlert() {
+      const box = document.getElementById('alertBox');
+      box.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
+

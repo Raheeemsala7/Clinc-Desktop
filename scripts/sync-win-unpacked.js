@@ -47,4 +47,12 @@ if (fs.existsSync(standaloneDir)) {
   console.log('✅ Copied updated Next.js frontend to win-unpacked/resources/frontend');
 }
 
+// 3. Sync clinic-license.lic
+const licSrc = path.join(root, 'desktop', 'resources', 'clinic-license.lic');
+const licDest = path.join(winUnpacked, 'clinic-license.lic');
+if (fs.existsSync(licSrc)) {
+  fs.copyFileSync(licSrc, licDest);
+  console.log('✅ Copied clinic-license.lic to win-unpacked/resources');
+}
+
 console.log('🎉 Fast sync completed successfully!');
