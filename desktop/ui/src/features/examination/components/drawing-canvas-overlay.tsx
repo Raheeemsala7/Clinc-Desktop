@@ -27,9 +27,9 @@ interface DrawingCanvasOverlayProps {
 }
 
 const PEN_COLORS = [
-  { id: 'blue', value: '#0B7B5E', label: 'أزرق (قلم كشف)' },
-  { id: 'red', value: '#DC2626', label: 'أحمر (التهاب / ثقب)' },
-  { id: 'black', value: '#000000', label: 'أسود' },
+  { id: 'green', value: '#16A34A', label: 'أخضر' },
+  { id: 'red', value: '#DC2626', label: 'أحمر' },
+  { id: 'blue', value: '#2563EB', label: 'أزرق' },
 ];
 
 export function DrawingCanvasOverlay({
@@ -47,7 +47,7 @@ export function DrawingCanvasOverlay({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [activeTool, setActiveTool] = useState<'pen' | 'eraser'>('pen');
-  const [selectedColor, setSelectedColor] = useState<string>('#0B7B5E'); // أزرق افتراضي
+  const [selectedColor, setSelectedColor] = useState<string>('#16A34A'); // أخضر افتراضي
   const [lineWidth, setLineWidth] = useState<number>(2.5);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -378,17 +378,17 @@ export function DrawingCanvasOverlay({
 
           {/* ألوان القلم */}
           {activeTool === 'pen' && (
-            <div className="flex items-center gap-1 px-1 border-x border-slate-200">
+            <div className="flex items-center gap-1.5 px-1.5 border-x border-slate-200">
               {PEN_COLORS.map((c) => (
                 <button
                   key={c.id}
                   type="button"
                   onClick={() => setSelectedColor(c.value)}
                   style={{ backgroundColor: c.value }}
-                  className={`w-3.5 h-3.5 rounded-full transition-transform cursor-pointer ${
+                  className={`w-4 h-4 rounded-full transition-transform cursor-pointer shadow-2xs ${
                     selectedColor === c.value
-                      ? 'ring-2 ring-offset-1 ring-slate-800 scale-110'
-                      : 'opacity-70 hover:opacity-100'
+                      ? 'ring-2 ring-offset-1 ring-slate-800 scale-125'
+                      : 'opacity-80 hover:opacity-100 hover:scale-110'
                   }`}
                   title={c.label}
                 />
