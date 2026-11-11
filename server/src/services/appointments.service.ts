@@ -60,7 +60,14 @@ export class AppointmentsService {
     const patientId = dto.patientId;
     let doctorId = dto.doctorId;
     if (!doctorId) {
-      const defaultDoctor = await User.findOne({ role: 'DOCTOR', deletedAt: null, isActive: true });
+      const defaultDoctor = await User.findOne({
+        $or: [
+          { role: 'DOCTOR' },
+          { role: 'ADMIN', name: { $regex: /(د\.|دكتور|doctor|dr\.|إسلام|eslam)/i } },
+        ],
+        deletedAt: null,
+        isActive: true,
+      });
       if (defaultDoctor) {
         doctorId = defaultDoctor.id;
       }
@@ -97,7 +104,7 @@ export class AppointmentsService {
       throw new ValidationError('Validation failed', errors);
     }
 
-    const doctor = await User.findOne({ _id: doctorId, role: 'DOCTOR', deletedAt: null, isActive: true });
+    const doctor = await User.findOne({ _id: doctorId, role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null, isActive: true });
     if (!doctor) throw new NotFoundError('Doctor not found');
 
     const patient = await Patient.findOne({ _id: patientId, deletedAt: null });
@@ -334,8 +341,18 @@ export class AppointmentsService {
       }
     } else {
       // موظف الاستقبال أو المدير: جلب جميع الأطباء المتاحين في العيادة
-      const doctorsFromDb = await User.find({ role: 'DOCTOR', deletedAt: null, isActive: true }).select('id name');
-      allDoctors = doctorsFromDb.map((d) => ({ id: d.id, name: d.name }));
+      const doctorsFromDb = await User.find({
+        $or: [
+          { role: 'DOCTOR' },
+          { role: 'ADMIN', name: { $regex: /(د\.|دكتور|doctor|dr\.|إسلام|eslam)/i } },
+        ],
+        deletedAt: null,
+        isActive: true,
+      }).select('id name role');
+      allDoctors = doctorsFromDb.map((d) => ({
+        id: d.id,
+        name: d.name.startsWith('د.') || d.name.startsWith('Dr.') ? d.name : `د. ${d.name}`,
+      }));
 
       if (doctorId && doctorId !== 'ALL' && doctorId.trim() !== '') {
         currentDoctor = allDoctors.find((d) => d.id === doctorId) || null;
@@ -351,14 +368,22 @@ export class AppointmentsService {
 
     // دالة مساعدة لجلب اسم الطبيب بدقة
     const getDocName = async (docId?: string) => {
-      if (!docId) return 'طبيب العيادة';
-      if (doctorMap.has(docId)) return doctorMap.get(docId)!;
+      if (!docId) {
+        const fallback = allDoctors[0]?.name || 'د. إسلام عبدالله';
+        return fallback.startsWith('د.') || fallback.startsWith('Dr.') ? fallback : `د. ${fallback}`;
+      }
+      if (doctorMap.has(docId)) {
+        const n = doctorMap.get(docId)!;
+        return n.startsWith('د.') || n.startsWith('Dr.') ? n : `د. ${n}`;
+      }
       const found = await User.findById(docId).select('name');
       if (found?.name) {
-        doctorMap.set(docId, found.name);
-        return found.name;
+        const formatted = found.name.startsWith('د.') || found.name.startsWith('Dr.') ? found.name : `د. ${found.name}`;
+        doctorMap.set(docId, formatted);
+        return formatted;
       }
-      return 'طبيب العيادة';
+      const fallback = allDoctors[0]?.name || 'د. إسلام عبدالله';
+      return fallback.startsWith('د.') || fallback.startsWith('Dr.') ? fallback : `د. ${fallback}`;
     };
 
     // 1. حساب الإحصائيات الأربع (KPI Cards) لليوم المحدد
@@ -1075,7 +1100,7 @@ export class AppointmentsService {
 
     // إمكانية تغيير الطبيب المعالج للحجز من قِبل الاستقبال وتحديث المدفوعات والزيارة المفتوحة
     if (dto.doctorId !== undefined && dto.doctorId && dto.doctorId !== appt.doctorId) {
-      const doctor = await User.findOne({ _id: dto.doctorId, role: 'DOCTOR', deletedAt: null });
+      const doctor = await User.findOne({ _id: dto.doctorId, role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
       if (doctor) {
         appt.doctorId = dto.doctorId;
         const { Payment, Visit } = await import('../models');

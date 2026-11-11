@@ -50,6 +50,15 @@ export function CalendarMonthGridView({
     }
   };
 
+  const formatDoctorName = (name?: string) => {
+    if (!name || !name.trim()) return 'د. إسلام عبدالله';
+    const clean = name.trim();
+    if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
+      return clean;
+    }
+    return `د. ${clean}`;
+  };
+
   const ARABIC_DAYS_HEADER = [
     'السبت',
     'الأحد',
@@ -178,7 +187,7 @@ export function CalendarMonthGridView({
                           <div
                             key={appt.id}
                             className={`p-1.5 rounded-lg border text-[10px] font-bold truncate shadow-2xs ${pillColor}`}
-                            title={`${appt.patientName} (${appt.startTime}) - ${appt.doctorName}`}
+                            title={`${appt.patientName} (${appt.startTime}) - ${formatDoctorName(appt.doctorName)}`}
                           >
                             <div className="flex items-center justify-between font-mono text-[9px]">
                               <span>{appt.startTime}</span>
@@ -189,11 +198,10 @@ export function CalendarMonthGridView({
                             <div className="font-black truncate mt-0.5">
                               {appt.patientName}
                             </div>
-                            {appt.doctorName && (
-                              <div className="opacity-80 text-[9px] truncate">
-                                👨‍⚕️ {appt.doctorName}
-                              </div>
-                            )}
+                            <div className="mt-1 px-1 py-0.5 rounded bg-white/95 text-[#074C3A] text-[9px] font-black truncate border border-black/10 flex items-center gap-1 shadow-2xs">
+                              <span className="shrink-0 text-[10px]">👨‍⚕️</span>
+                              <span className="truncate">{formatDoctorName(appt.doctorName)}</span>
+                            </div>
                           </div>
                         );
                       })}

@@ -39,6 +39,15 @@ function getTodayIso(): string {
   return `${year}-${month}-${day}`;
 }
 
+function formatDoctorName(name?: string): string {
+  if (!name || !name.trim()) return 'د. إسلام عبدالله';
+  const clean = name.trim();
+  if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
+    return clean;
+  }
+  return `د. ${clean}`;
+}
+
 export function CalendarHeaderControls({
   currentDate,
   onDateChange,
@@ -238,9 +247,9 @@ export function CalendarHeaderControls({
 
         {/* اختيار الطبيب أو عرض شارة الطبيب الخاصة */}
         {isDoctorView ? (
-          <div className="h-10 px-3.5 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE]/60 text-xs font-bold text-[#074C3A] shadow-2xs flex items-center gap-2">
+          <div className="h-10 px-3.5 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE]/60 text-xs font-black text-[#074C3A] shadow-2xs flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-[#0B7B5E]" />
-            <span>{doctorName || 'جدول مواعيدي الخاصة'}</span>
+            <span>{doctorName ? formatDoctorName(doctorName) : 'جدول مواعيدي الخاصة'}</span>
           </div>
         ) : (
           <div className="relative">
@@ -253,7 +262,7 @@ export function CalendarHeaderControls({
               {doctors && doctors.length > 0
                 ? doctors.map((doc) => (
                     <option key={doc.id} value={doc.id}>
-                      {doc.name}
+                      {formatDoctorName(doc.name)}
                     </option>
                   ))
                 : null}

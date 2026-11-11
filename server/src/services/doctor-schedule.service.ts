@@ -80,7 +80,7 @@ function minutesToTime(minutes: number): string {
 
 export class DoctorScheduleService {
   static async getDoctorSchedule(doctorId: string) {
-    const doctor = await User.findOne({ _id: doctorId, role: 'DOCTOR', deletedAt: null });
+    const doctor = await User.findOne({ _id: doctorId, role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
     if (!doctor) throw new NotFoundError('Doctor not found');
 
     let schedule = await DoctorSchedule.findOne({ doctorId });
@@ -96,7 +96,7 @@ export class DoctorScheduleService {
   }
 
   static async updateDoctorSchedule(doctorId: string, dto: { slotDurationMinutes?: number; weeklySchedule: IDoctorDaySchedule[] }) {
-    const doctor = await User.findOne({ _id: doctorId, role: 'DOCTOR', deletedAt: null });
+    const doctor = await User.findOne({ _id: doctorId, role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
     if (!doctor) throw new NotFoundError('Doctor not found');
 
     const slotDurationMinutes = dto.slotDurationMinutes && dto.slotDurationMinutes > 0 ? dto.slotDurationMinutes : 30;
@@ -156,7 +156,7 @@ export class DoctorScheduleService {
       };
     }
 
-    const doctor = await User.findOne({ _id: doctorId, role: 'DOCTOR', deletedAt: null });
+    const doctor = await User.findOne({ _id: doctorId, role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
     if (!doctor) throw new NotFoundError('Doctor not found');
 
     const scheduleDoc = await DoctorSchedule.findOne({ doctorId });

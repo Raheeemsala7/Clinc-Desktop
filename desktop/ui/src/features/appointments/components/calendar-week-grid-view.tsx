@@ -72,6 +72,15 @@ export function CalendarWeekGridView({
     }
   };
 
+  const formatDoctorName = (name?: string) => {
+    if (!name || !name.trim()) return 'د. إسلام عبدالله';
+    const clean = name.trim();
+    if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
+      return clean;
+    }
+    return `د. ${clean}`;
+  };
+
   return (
     <div className="space-y-4 select-none" dir="rtl">
       {/* 1. الشريط الفرعي التوضيحي ودليل الألوان (Legend) مع الإشارة للخط الأحمر مطابقة للصورة 2 */}
@@ -221,13 +230,11 @@ export function CalendarWeekGridView({
                                   {appt.patientName}
                                 </div>
 
-                                {/* السطر الثالث: اسم الطبيب (للريسبشن أو لتوضيح الطبيب المعالج) */}
-                                {appt.doctorName && (
-                                  <div className="mt-1 text-[10px] opacity-85 truncate flex items-center gap-1 font-bold border-t border-black/5 pt-1">
-                                    <span className="text-[11px]">👨‍⚕️</span>
-                                    <span>{appt.doctorName}</span>
-                                  </div>
-                                )}
+                                {/* السطر الثالث: اسم الطبيب المعالج بشكل بارز وواضح */}
+                                <div className="mt-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/95 text-[#074C3A] border border-[#0B7B5E]/20 text-[10px] font-black shadow-2xs truncate">
+                                  <span className="text-[11px] shrink-0">👨‍⚕️</span>
+                                  <span className="truncate">{formatDoctorName(appt.doctorName)}</span>
+                                </div>
                               </Link>
                             );
                           })}

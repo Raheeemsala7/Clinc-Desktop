@@ -85,7 +85,11 @@ export class QueueService {
           patientGender: patient?.gender,
           patientAge: patient?.age,
           doctorId: appt.doctorId,
-          doctorName: doctor?.name || '',
+          doctorName: doctor?.name
+            ? doctor.name.startsWith('د.') || doctor.name.startsWith('Dr.')
+              ? doctor.name
+              : `د. ${doctor.name}`
+            : 'د. إسلام عبدالله',
           visitId: visit?.id || null,
           waitingMinutes,
           totalAmount: appt.totalAmount || 0,
@@ -103,7 +107,14 @@ export class QueueService {
   static async getDoctorStatus(doctorId?: string) {
     let targetDoctorId = doctorId;
     if (!targetDoctorId) {
-      const activeDoctor = await User.findOne({ role: 'DOCTOR', isActive: true, deletedAt: null });
+      const activeDoctor = await User.findOne({
+        $or: [
+          { role: 'DOCTOR' },
+          { role: 'ADMIN', name: { $regex: /(د\.|دكتور|doctor|dr\.|إسلام|eslam)/i } },
+        ],
+        isActive: true,
+        deletedAt: null,
+      });
       if (activeDoctor) {
         targetDoctorId = activeDoctor.id;
       }

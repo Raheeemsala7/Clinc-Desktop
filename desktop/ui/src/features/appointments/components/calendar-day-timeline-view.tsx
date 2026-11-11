@@ -88,6 +88,15 @@ export function CalendarDayTimelineView({
     }
   };
 
+  const formatDoctorName = (name?: string) => {
+    if (!name || !name.trim()) return 'د. إسلام عبدالله';
+    const clean = name.trim();
+    if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
+      return clean;
+    }
+    return `د. ${clean}`;
+  };
+
   const renderAppointmentCard = (appt: DaySlotAppointment, slotTime: string, totalInSlot: number) => {
     const isInProgress = appt.status === 'IN_PROGRESS';
     const isWaiting = appt.status === 'WAITING';
@@ -181,13 +190,11 @@ export function CalendarDayTimelineView({
                 </span>
               )}
 
-              {/* شارة اسم الطبيب */}
-              {appt.doctorName && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white/80 text-slate-700 text-xs font-bold border border-slate-200">
-                  <Stethoscope className="w-3.5 h-3.5 text-[#0B7B5E]" />
-                  <span>{appt.doctorName}</span>
-                </span>
-              )}
+              {/* شارة اسم الطبيب البارزة */}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#E3F5EE] text-[#074C3A] text-xs font-black border border-[#D0E5DC] shadow-2xs">
+                <Stethoscope className="w-3.5 h-3.5 text-[#0B7B5E]" />
+                <span>الطبيب: {formatDoctorName(appt.doctorName)}</span>
+              </span>
             </div>
 
             <div className="text-xs text-slate-500 flex items-center gap-2 flex-wrap font-medium">

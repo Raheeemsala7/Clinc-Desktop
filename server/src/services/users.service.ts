@@ -6,10 +6,23 @@ import { hashPassword } from '../utils/crypto';
 
 export class UsersService {
   static async getDoctors() {
-    return User.find(
-      { role: 'DOCTOR', isActive: true, deletedAt: null },
+    const doctors = await User.find(
+      {
+        $or: [
+          { role: 'DOCTOR' },
+          { role: 'ADMIN', name: { $regex: /(د\.|دكتور|doctor|dr\.|إسلام|eslam)/i } },
+        ],
+        isActive: true,
+        deletedAt: null,
+      },
       { id: 1, name: 1, username: 1 },
     ).sort({ name: 1 });
+
+    return doctors.map((d) => ({
+      id: d.id,
+      username: d.username,
+      name: d.name.startsWith('د.') || d.name.startsWith('Dr.') ? d.name : `د. ${d.name}`,
+    }));
   }
 
   static async listUsers(pageQuery?: string, pageSizeQuery?: string) {

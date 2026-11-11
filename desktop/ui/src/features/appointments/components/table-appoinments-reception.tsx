@@ -131,7 +131,13 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
                   <td className="py-4 px-6 text-start">
                     <div className="flex items-center gap-1.5 text-slate-700">
                       <User className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="font-semibold text-xs">{patient.doctorName || '-'}</span>
+                      <span className="font-bold text-xs text-[#074C3A]">
+                        {patient.doctorName
+                          ? patient.doctorName.startsWith('د.') || patient.doctorName.startsWith('Dr.')
+                            ? patient.doctorName
+                            : `د. ${patient.doctorName}`
+                          : 'د. إسلام عبدالله'}
+                      </span>
                     </div>
                   </td>
 
