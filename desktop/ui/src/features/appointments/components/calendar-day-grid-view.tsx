@@ -601,7 +601,7 @@ export function CalendarDayGridView({
               لا توجد فترات مطابقة للفلتر المحدد
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
               {visibleSlotBoxes.map((slotBox) => {
                 const { time, isBooked, appointment, appointments, isPast, hasWaitingPatient } = slotBox;
                 const isCurrentHour = dayInfo.isToday && time.startsWith(currentHourStr.slice(0, 2));
@@ -612,7 +612,7 @@ export function CalendarDayGridView({
                     <div
                       key={time}
                       onClick={() => handleEmptySlotClick(time)}
-                      className={`p-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-emerald-50/40 hover:border-[#0B7B5E] transition-all flex flex-col justify-between min-h-[92px] group relative ${
+                      className={`p-3.5 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-emerald-50/40 hover:border-[#0B7B5E] transition-all flex flex-col justify-between min-h-[96px] group relative ${
                         isDoctorView ? 'cursor-default' : 'cursor-pointer hover:shadow-xs'
                       } ${isCurrentHour ? 'ring-2 ring-emerald-500/30 border-[#0B7B5E]' : ''}`}
                     >
@@ -667,7 +667,7 @@ export function CalendarDayGridView({
                 return (
                   <div
                     key={time}
-                    className={`p-3 rounded-2xl border-2 transition-all flex flex-col justify-between min-h-[96px] relative ${boxStyle} ${
+                    className={`p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-between min-h-[102px] relative ${boxStyle} ${
                       isCurrentHour ? 'ring-2 ring-rose-400' : ''
                     }`}
                   >
