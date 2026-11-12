@@ -6,6 +6,7 @@ import { AppointmentsCalendarData, CalendarViewMode } from '../types/calendar';
 import { CalendarHeaderControls } from './calendar-header-controls';
 import { CalendarSummaryCards } from './calendar-summary-cards';
 import { CalendarDayTimelineView } from './calendar-day-timeline-view';
+import { CalendarDayGridView } from './calendar-day-grid-view';
 import { CalendarWeekGridView } from './calendar-week-grid-view';
 import { CalendarMonthGridView } from './calendar-month-grid-view';
 
@@ -91,7 +92,7 @@ export function AppointmentsCalendarView({
   };
 
   const handleSelectDay = (dateStr: string) => {
-    updateUrlParams({ date: dateStr, view: 'list' });
+    updateUrlParams({ date: dateStr, view: 'day' });
   };
 
   return (
@@ -120,11 +121,12 @@ export function AppointmentsCalendarView({
         <CalendarSummaryCards summary={data.summary} />
       )}
 
-      {/* 3. عرض المواعيد بحسب النمط المختار (قائمة الفترات / أسبوع / شهر) */}
-      {currentView === 'list' ? (
-        <CalendarDayTimelineView
+      {/* 3. عرض المواعيد بحسب النمط المختار (يوم / أسبوع / شهر / قائمة الفترات) */}
+      {currentView === 'day' ? (
+        <CalendarDayGridView
+          date={currentDate}
           slots={data.daySlots || []}
-          selectedDate={currentDate}
+          appointments={data.weekAppointments || []}
           selectedDoctorId={currentDoctorId}
           isDoctorView={data.isDoctorView}
         />
@@ -135,13 +137,20 @@ export function AppointmentsCalendarView({
           selectedDoctorId={currentDoctorId}
           isDoctorView={data.isDoctorView}
         />
-      ) : (
+      ) : currentView === 'month' ? (
         <CalendarMonthGridView
           days={data.monthRange?.days || []}
           appointments={data.monthAppointments || []}
           selectedDoctorId={currentDoctorId}
           isDoctorView={data.isDoctorView}
           onSelectDay={handleSelectDay}
+        />
+      ) : (
+        <CalendarDayTimelineView
+          slots={data.daySlots || []}
+          selectedDate={currentDate}
+          selectedDoctorId={currentDoctorId}
+          isDoctorView={data.isDoctorView}
         />
       )}
     </div>

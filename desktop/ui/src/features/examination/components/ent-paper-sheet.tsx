@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import {
   EntExaminationData,
@@ -79,6 +79,65 @@ export function EntPaperSheet({
   const setField = <K extends keyof EntExaminationData>(key: K, value: EntExaminationData[K]) => {
     onChange((prev) => ({ ...prev, [key]: value }));
   };
+
+  // 🚀 وظيفة القفز الفوري لأقسام الشيت وتركيز المؤشر
+  const jumpToSection = (sectionId: string, focusSelector?: string) => {
+    const el = document.getElementById(sectionId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // وميض تأكيدي هادئ لإرشاد عين الطبيب للقسم المقصود
+    el.classList.add('ring-4', 'ring-[#0B7B5E]/60', 'bg-emerald-50/50', 'rounded-xl', 'transition-all');
+    setTimeout(() => {
+      el.classList.remove('ring-4', 'ring-[#0B7B5E]/60', 'bg-emerald-50/50');
+    }, 1500);
+
+    // توجيه مؤشر الكتابة تلقائياً للحقل
+    if (focusSelector) {
+      setTimeout(() => {
+        const input = el.querySelector<HTMLInputElement | HTMLTextAreaElement>(focusSelector);
+        if (input) {
+          input.focus();
+        }
+      }, 350);
+    }
+  };
+
+  // الاستماع لاختصارات لوحة المفاتيح H, E, D, V أو Alt+H, Alt+E, Alt+D, Alt+V
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const targetTag = (e.target as HTMLElement)?.tagName?.toUpperCase();
+      const isInputFocused =
+        targetTag === 'INPUT' ||
+        targetTag === 'TEXTAREA' ||
+        (e.target as HTMLElement)?.isContentEditable;
+
+      const key = e.key.toUpperCase();
+      const match = (letter: string) =>
+        (e.altKey && key === letter) ||
+        (!isInputFocused && !e.ctrlKey && !e.altKey && !e.metaKey && key === letter);
+
+      if (match('H')) {
+        e.preventDefault();
+        jumpToSection('section-history', 'textarea');
+      } else if (match('E')) {
+        e.preventDefault();
+        jumpToSection('section-examination', 'input, textarea');
+      } else if (match('D')) {
+        e.preventDefault();
+        jumpToSection('section-diagnosis', 'textarea, input');
+      } else if (match('V')) {
+        e.preventDefault();
+        jumpToSection('section-visits', 'textarea, input');
+      } else if (match('C') && !isInputFocused) {
+        e.preventDefault();
+        jumpToSection('section-complaint', 'textarea');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // تحديث فحص الأذن
   const updateEar = (side: 'rt' | 'lt', prop: string, val: string) => {
@@ -312,8 +371,75 @@ export function EntPaperSheet({
   return (
     <div
       dir="ltr"
-      className="w-full text-black font-serif select-text space-y-8 print:space-y-0 print:p-0 print:m-0"
+      className="w-full text-black font-serif select-text space-y-8 print:space-y-0 print:p-0 print:m-0 relative"
     >
+      {/* 🚀 شريط التنقل والاختصارات السريعة على الجانب الأيسر (طلب د. إسلام) */}
+      {!isPrintOnly && (
+        <aside
+          aria-label="اختصارات الانتقال السريع"
+          className="fixed left-3 top-1/2 -translate-y-1/2 z-40 print:hidden flex flex-col items-center gap-1.5 p-2 bg-white/95 backdrop-blur-md border border-slate-300 rounded-2xl shadow-xl transition-all"
+        >
+          <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider pb-1 border-b border-slate-200 px-1 text-center select-none font-sans">
+            JUMP
+          </div>
+
+          {/* H -> History of present illness */}
+          <button
+            type="button"
+            onClick={() => jumpToSection('section-history', 'textarea')}
+            title="History of present illness (اضغط H أو Alt+H)"
+            className="group relative w-11 h-11 rounded-xl bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-800 border border-sky-300 flex flex-col items-center justify-center font-black font-sans transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <span className="text-sm leading-none font-black">H</span>
+            <span className="text-[8px] font-bold leading-none opacity-80 group-hover:opacity-100">History</span>
+            <span className="absolute left-full ml-2.5 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50 font-sans">
+              History of present illness (H)
+            </span>
+          </button>
+
+          {/* E -> Examination */}
+          <button
+            type="button"
+            onClick={() => jumpToSection('section-examination', 'input, textarea')}
+            title="Examination (اضغط E أو Alt+E)"
+            className="group relative w-11 h-11 rounded-xl bg-emerald-50 hover:bg-[#0B7B5E] hover:text-white text-[#0B7B5E] border border-emerald-300 flex flex-col items-center justify-center font-black font-sans transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <span className="text-sm leading-none font-black">E</span>
+            <span className="text-[8px] font-bold leading-none opacity-80 group-hover:opacity-100">Exam</span>
+            <span className="absolute left-full ml-2.5 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50 font-sans">
+              Examination : (E)
+            </span>
+          </button>
+
+          {/* D -> Diagnosis */}
+          <button
+            type="button"
+            onClick={() => jumpToSection('section-diagnosis', 'textarea, input')}
+            title="Diagnosis (اضغط D أو Alt+D)"
+            className="group relative w-11 h-11 rounded-xl bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-800 border border-purple-300 flex flex-col items-center justify-center font-black font-sans transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <span className="text-sm leading-none font-black">D</span>
+            <span className="text-[8px] font-bold leading-none opacity-80 group-hover:opacity-100">Diag</span>
+            <span className="absolute left-full ml-2.5 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50 font-sans">
+              Diagnosis : (D)
+            </span>
+          </button>
+
+          {/* V -> Visits History */}
+          <button
+            type="button"
+            onClick={() => jumpToSection('section-visits', 'textarea, input')}
+            title="Visits History (اضغط V أو Alt+V)"
+            className="group relative w-11 h-11 rounded-xl bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-800 border border-amber-300 flex flex-col items-center justify-center font-black font-sans transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <span className="text-sm leading-none font-black">V</span>
+            <span className="text-[8px] font-bold leading-none opacity-80 group-hover:opacity-100">Visits</span>
+            <span className="absolute left-full ml-2.5 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50 font-sans">
+              Visits History : (V)
+            </span>
+          </button>
+        </aside>
+      )}
 
       {/* ============================================================== */}
       {/* 📄 الورقة الأولى (Sheet 1) - مطابقة تماماً للصورة الأولى         */}
@@ -419,7 +545,7 @@ export function EntPaperSheet({
         </div>
 
         {/* Complaint (الشكوى الرئيسية) */}
-        <div className="space-y-1 pt-1">
+        <div id="section-complaint" className="space-y-1 pt-1 scroll-mt-24 transition-all duration-300">
           <span className="font-bold text-[13px] underline block">Complaint:</span>
           <textarea
             rows={2}
@@ -431,7 +557,7 @@ export function EntPaperSheet({
         </div>
 
         {/* History of present illness (تاريخ المرض الحالي) */}
-        <div className="space-y-1">
+        <div id="section-history" className="space-y-1 scroll-mt-24 transition-all duration-300">
           <span className="font-bold text-[13px] underline block">History of present illness:</span>
           <textarea
             rows={5}
@@ -443,7 +569,7 @@ export function EntPaperSheet({
         </div>
 
         {/* Past history (التاريخ المرضي السابق) */}
-        <div className="space-y-1.5 text-[12px]">
+        <div id="section-past-history" className="space-y-1.5 text-[12px] scroll-mt-24 transition-all duration-300">
           <span className="font-bold text-[13px] underline block">Past history:</span>
 
           <div className="flex items-baseline gap-1">
@@ -496,7 +622,7 @@ export function EntPaperSheet({
         <div className="border-b border-dotted border-black my-2" />
 
         {/* Examination : & فحص الأذن (Ear) المكبّر والمطابق للصورة المرفقة */}
-        <div className="space-y-1">
+        <div id="section-examination" className="space-y-1 scroll-mt-24 transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="font-bold text-[13px] underline block">Examination :</span>
           </div>
@@ -1003,7 +1129,7 @@ export function EntPaperSheet({
         <div className="border-b border-dotted border-black my-2" />
 
         {/* Diagnosis (التشخيص الطبي) - تم وضعه قبل Treatment مباشرة بناءً على طلب الدكتور */}
-        <div className="space-y-1">
+        <div id="section-diagnosis" className="space-y-1 scroll-mt-24 transition-all duration-300">
           <div className="flex items-baseline gap-1">
             <span className="font-bold text-[13px] underline shrink-0">Diagnosis:</span>
             <PaperTextarea
@@ -1073,7 +1199,7 @@ export function EntPaperSheet({
           <div className="border-b border-dotted border-black my-2" />
 
           {/* قسم الزيارات الإضافية المتعددة (2nd, 3rd, 4th, 5th... Visits) */}
-          <div className="space-y-2 pt-1">
+          <div id="section-visits" className="space-y-2 pt-1 scroll-mt-24 transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="font-bold text-[13px] underline block">Visits History:</span>
               {!isPrintOnly && (

@@ -76,6 +76,20 @@ export function CalendarHeaderControls({
 
   const formattedDisplayDate = currentDate.replace(/-/g, ' / ');
 
+  const formatDayDisplayLabel = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr + 'T12:00:00Z');
+      const arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+      const dayName = arabicDays[d.getUTCDay()];
+      const day = d.getUTCDate().toString().padStart(2, '0');
+      const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+      const year = d.getUTCFullYear();
+      return `${dayName} ${day}/${month}/${year}`;
+    } catch {
+      return dateStr.replace(/-/g, ' / ');
+    }
+  };
+
   const formatWeekRangeLabel = (start?: string, end?: string) => {
     if (!start || !end) return formattedDisplayDate;
     try {
@@ -92,7 +106,7 @@ export function CalendarHeaderControls({
     }
   };
 
-  const isCalendarMode = viewMode === 'week' || viewMode === 'month';
+  const isCalendarMode = viewMode === 'day' || viewMode === 'week' || viewMode === 'month';
 
   return (
     <div
@@ -106,9 +120,6 @@ export function CalendarHeaderControls({
           type="button"
           onClick={() => {
             onDateChange(getTodayIso());
-            if (viewMode === 'month' || viewMode === 'list') {
-              onViewModeChange('week');
-            }
           }}
           className="h-10 px-4 rounded-xl bg-[#074C3A] hover:bg-[#111f68] active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
         >
@@ -171,7 +182,7 @@ export function CalendarHeaderControls({
             </button>
           </div>
         ) : (
-          /* وضع القائمة: ملاح اليوم الفردي */
+          /* وضع اليوم والقائمة: ملاح اليوم الفردي */
           <div className="h-10 px-2.5 rounded-xl border border-slate-200 bg-white shadow-2xs flex items-center gap-2">
             <button
               type="button"
@@ -186,7 +197,7 @@ export function CalendarHeaderControls({
               onClick={() => dateInputRef.current?.showPicker?.()}
               className="flex items-center gap-2 cursor-pointer px-1 text-xs font-bold text-[#074C3A] font-sans"
             >
-              <span>{formattedDisplayDate}</span>
+              <span>{formatDayDisplayLabel(currentDate)}</span>
               <CalendarIcon className="w-4 h-4 text-[#0B7B5E]" />
               <input
                 ref={dateInputRef}
@@ -210,13 +221,17 @@ export function CalendarHeaderControls({
           </div>
         )}
 
-        {/* في وضع التقويم (أسبوع أو شهر): أزرار التبديل (يوم / أسبوع / شهر) */}
+        {/* في وضع التقويم (يوم أو أسبوع أو شهر): أزرار التبديل (يوم / أسبوع / شهر) */}
         {isCalendarMode && (
           <div className="h-10 p-1 rounded-xl bg-slate-100 border border-slate-200/60 flex items-center gap-1 text-xs font-bold">
             <button
               type="button"
-              onClick={() => onViewModeChange('list')}
-              className="h-8 px-3 rounded-lg text-slate-600 hover:text-slate-900 cursor-pointer transition-all"
+              onClick={() => onViewModeChange('day')}
+              className={`h-8 px-3 rounded-lg cursor-pointer transition-all ${
+                viewMode === 'day'
+                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
               يوم
             </button>
@@ -291,7 +306,7 @@ export function CalendarHeaderControls({
 
           <button
             type="button"
-            onClick={() => onViewModeChange('week')}
+            onClick={() => onViewModeChange('day')}
             className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               isCalendarMode
                 ? 'bg-[#074C3A] text-white shadow-xs font-black'

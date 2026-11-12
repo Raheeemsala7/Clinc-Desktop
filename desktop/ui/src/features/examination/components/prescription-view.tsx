@@ -27,6 +27,7 @@ import {
   formatDuration,
   getDoseSuggestionsForForm,
   getDefaultDoseForForm,
+  parseDoseShortcut,
 } from '../utils/prescription-formatter';
 
 export interface SavedDrugItem {
@@ -849,20 +850,47 @@ export function PrescriptionView({
                 key={item.id}
                 className="p-4 bg-slate-50/80 hover:bg-[#E3F5EE]/40 rounded-2xl border border-slate-200 transition-all space-y-3"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/60">
+                  <div className="flex items-center gap-2.5 flex-wrap">
                     <span className="w-6 h-6 rounded-full bg-[#0B7B5E] text-white font-black text-xs flex items-center justify-center">
                       {index + 1}
                     </span>
-                    <span className="text-xs font-bold text-slate-700">
-                      الصنف #{index + 1}:
+                    <span className="text-xs font-black text-slate-800">
+                      الصنف #{index + 1}
                     </span>
+
+                    {/* اختصار الجرعة السريع (1/2/5 ثم Enter) */}
+                    <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-xl shadow-2xs">
+                      <span className="text-[11px] font-black text-[#074C3A] whitespace-nowrap">⚡ اختصار الجرعة:</span>
+                      <input
+                        type="text"
+                        placeholder="1/2/5 ثم Enter"
+                        title="اكتب اختصار الجرعة مثل 1/2/5 واضغط Enter للترجمة الفورية"
+                        className="h-6 w-32 sm:w-40 px-2 rounded-lg border border-emerald-300 bg-white font-mono text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-[#0B7B5E]"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const parsed = parseDoseShortcut(e.currentTarget.value, item.form);
+                            if (parsed) {
+                              updateItem(item.id, 'dose', parsed.dose);
+                              updateItem(item.id, 'frequency', parsed.frequency);
+                              if (parsed.duration) {
+                                updateItem(item.id, 'duration', parsed.duration);
+                              }
+                              toast.success(`✓ تمت ترجمة الاختصار: ${parsed.summary}`);
+                            } else {
+                              toast.info('اكتب الاختصار بالشكل: 1/2/5 (الجرعة / التكرار / المدة)');
+                            }
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => removeItem(item.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer self-end sm:self-center"
                     title="حذف هذا الدواء"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -872,7 +900,10 @@ export function PrescriptionView({
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 text-xs">
                   {/* 1. اسم الدواء مع البحث والإكمال التلقائي الذكي */}
                   <div className="sm:col-span-5 space-y-1">
-                    <label className="font-bold text-[11px] text-slate-700">اسم الدواء (Drug Name) *</label>
+                    <label className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-slate-700" />
+                      <span>اسم الدواء (Drug Name) *</span>
+                    </label>
                     <div className="relative" data-combobox-root="drug">
                       <input
                         type="text"
@@ -967,7 +998,10 @@ export function PrescriptionView({
                   {/* 2. نوع / شكل الدواء (Form) - Combobox ذكي ملاصق للـ input تماماً مع إضافة وحذف خيارات */}
                   <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 space-y-1">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-slate-700">نوع / شكل الدواء (Form)</label>
+                      <label className="font-bold text-xs sm:text-sm text-emerald-800 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                        <span>نوع / شكل الدواء (Form)</span>
+                      </label>
                       <button
                         type="button"
                         onClick={openAddFormModal}
@@ -1121,7 +1155,10 @@ export function PrescriptionView({
                   {/* 3. التركيز (Concentration / Strength) مع اقتراحات وإمكانية الحذف والإضافة */}
                   <div className="col-span-12 sm:col-span-6 md:col-span-12 lg:col-span-3 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-slate-700">التركيز (Concentration)</label>
+                      <label className="font-bold text-xs sm:text-sm text-sky-800 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-sky-600" />
+                        <span>التركيز (Concentration)</span>
+                      </label>
                       <button
                         type="button"
                         onClick={() => openAddSuggestionModal('concentration', 'التركيز', '500mg, 1gm, 0.1%...')}
@@ -1177,10 +1214,13 @@ export function PrescriptionView({
                     </div>
                   </div>
 
-                  {/* 4. الجرعة (Dose) - تتكيف تلقائياً مع نوع الدواء (حقنة، قرص، بخة، نقطة...) */}
+                  {/* 4. الجرعة (Dose) - تدعم اختصارات 1/2/5 أو أرقام مجردة وتتكيف تلقائياً مع نوع الدواء */}
                   <div className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-slate-700">الجرعة (Dose)</label>
+                      <label className="font-bold text-xs sm:text-sm text-amber-800 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-600" />
+                        <span>الجرعة (Dose)</span>
+                      </label>
                       <button
                         type="button"
                         onClick={() => openAddSuggestionModal('dose', 'الجرعة', '1 قرص، حقنة واحدة، 3 نقط...')}
@@ -1195,13 +1235,34 @@ export function PrescriptionView({
                       type="text"
                       value={item.dose}
                       onChange={(e) => updateItem(item.id, 'dose', e.target.value)}
-                      onBlur={(e) => {
-                        const formatted = formatDose(e.target.value, item.form);
-                        if (formatted !== e.target.value) {
-                          updateItem(item.id, 'dose', formatted);
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const val = e.currentTarget.value.trim();
+                          const parsed = parseDoseShortcut(val, item.form);
+                          if (parsed) {
+                            e.preventDefault();
+                            updateItem(item.id, 'dose', parsed.dose);
+                            updateItem(item.id, 'frequency', parsed.frequency);
+                            if (parsed.duration) updateItem(item.id, 'duration', parsed.duration);
+                            toast.success(`✓ تمت ترجمة الاختصار: ${parsed.summary}`);
+                          }
                         }
                       }}
-                      placeholder="1 أو 3 (تترجم لـ 3 أقراص أو 3 حقن حسب النوع)..."
+                      onBlur={(e) => {
+                        const val = e.target.value.trim();
+                        const parsed = parseDoseShortcut(val, item.form);
+                        if (parsed) {
+                          updateItem(item.id, 'dose', parsed.dose);
+                          updateItem(item.id, 'frequency', parsed.frequency);
+                          if (parsed.duration) updateItem(item.id, 'duration', parsed.duration);
+                        } else {
+                          const formatted = formatDose(val, item.form);
+                          if (formatted !== val) {
+                            updateItem(item.id, 'dose', formatted);
+                          }
+                        }
+                      }}
+                      placeholder="1 أو 1/2/5 (تترجم لـ قرص واحد أو جرعة متكاملة)..."
                       className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
                     />
                     <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
@@ -1245,7 +1306,10 @@ export function PrescriptionView({
                   {/* 5. التكرار (Frequency) مع الترجمة التلقائية الفورية للأرقام */}
                   <div className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-slate-700">التكرار (Frequency)</label>
+                      <label className="font-bold text-xs sm:text-sm text-indigo-800 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                        <span>التكرار (Frequency)</span>
+                      </label>
                       <button
                         type="button"
                         onClick={() => openAddSuggestionModal('frequency', 'التكرار', 'كل 12 ساعة، 3 مرات يومياً...')}
@@ -1310,7 +1374,10 @@ export function PrescriptionView({
                   {/* 6. المدة (Duration) مع الترجمة التلقائية الفورية للأيام */}
                   <div className="col-span-12 sm:col-span-12 md:col-span-4 lg:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-slate-700">المدة (Duration)</label>
+                      <label className="font-bold text-xs sm:text-sm text-purple-800 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-purple-600" />
+                        <span>المدة (Duration)</span>
+                      </label>
                       <button
                         type="button"
                         onClick={() => openAddSuggestionModal('duration', 'المدة', '5 أيام، أسبوع، شهر...')}
@@ -1374,7 +1441,10 @@ export function PrescriptionView({
 
                   {/* 7. تعليمات وإرشادات الاستخدام */}
                   <div className="col-span-12 space-y-1">
-                    <label className="font-bold text-[11px] text-slate-700">تعليمات وإرشادات الاستخدام (Instructions)</label>
+                    <label className="font-bold text-xs sm:text-sm text-rose-800 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-600" />
+                      <span>تعليمات وإرشادات الاستخدام (Instructions)</span>
+                    </label>
                     <input
                       type="text"
                       value={item.instructions || ''}
@@ -1651,9 +1721,9 @@ export function PrintablePrescriptionSlip({
         </div>
 
         {examData.diagnosis && (
-          <div className="text-sm font-bold mt-2 pt-1 border-t border-slate-100 flex items-start gap-2">
-            <span className="text-slate-600 shrink-0">التشخيص (Diagnosis): </span>
-            <span className="font-black text-black underline text-sm whitespace-pre-line leading-relaxed">
+          <div className="text-sm font-bold mt-2 pt-1 border-t border-slate-200 flex items-start gap-2 bg-purple-50/70 p-2 rounded-xl border border-purple-200">
+            <span className="text-purple-800 shrink-0 font-black">التشخيص (Diagnosis): </span>
+            <span className="font-black text-purple-950 text-sm whitespace-pre-line leading-relaxed">
               {examData.diagnosis}
             </span>
           </div>
@@ -1662,7 +1732,7 @@ export function PrintablePrescriptionSlip({
 
       {/* رمز الروشتة ℞ والأدوية - تبدأ من الشمال بالكامل LTR */}
       <div className="space-y-4 min-h-[350px]" dir="ltr">
-        <div className="text-4xl font-black text-black select-none">
+        <div className="text-4xl font-black text-[#0B7B5E] select-none">
           ℞
         </div>
 
@@ -1686,35 +1756,35 @@ export function PrintablePrescriptionSlip({
                 <div key={item.id || idx} className="space-y-1">
                   {/* السطر الأول: اسم الدواء (DrugName) التركيز الفورم (نوع الدواء) بالإنجليزي */}
                   <div className="flex items-baseline gap-2 flex-wrap font-black text-black">
-                    <span className="text-lg font-black min-w-[22px]">{idx + 1}.</span>
-                    <span className="text-lg tracking-wide font-black">
+                    <span className="text-lg font-black min-w-[22px] text-[#0B7B5E]">{idx + 1}.</span>
+                    <span className="text-lg tracking-wide font-black text-slate-950">
                       {item.drugName}
                     </span>
                     {item.concentration && (
-                      <span className="font-mono font-bold text-slate-900 text-sm px-1.5 py-0.5 rounded bg-slate-100 print:bg-transparent print:border print:border-black">
+                      <span className="font-mono font-bold text-sky-800 bg-sky-50 border border-sky-300 text-xs px-1.5 py-0.5 rounded print:bg-transparent print:border print:border-black">
                         {item.concentration}
                       </span>
                     )}
                     {formEnglish && (
-                      <span className="font-bold text-slate-800 text-sm">
+                      <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 text-xs px-2 py-0.5 rounded print:bg-transparent print:border print:border-black">
                         {formEnglish}
                       </span>
                     )}
                   </div>
 
-                  {/* السطر الثاني: الجرعة والتكرار والمدة - مباشرة تحت اسم الدواء من اليسار */}
+                  {/* السطر الثاني: الجرعة والتكرار والمدة - مباشرة تحت اسم الدواء من اليسار بألوان مميزة */}
                   <div className="pl-6 space-y-0.5 text-left" dir="ltr">
-                    <div className="text-sm font-bold text-slate-900 flex items-center gap-2 flex-wrap">
+                    <div className="text-sm font-bold flex items-center gap-2 flex-wrap">
                       {displayDose && (
-                        <span className="text-black font-black">{displayDose}</span>
+                        <span className="text-[#9A3412] font-black">{displayDose}</span>
                       )}
                       {displayFrequency && (
-                        <span>
+                        <span className="text-[#3730A3] font-bold">
                           {displayDose ? '▪ ' : ''}{displayFrequency}
                         </span>
                       )}
                       {displayDuration && (
-                        <span className="font-black text-black">
+                        <span className="text-[#581C87] font-black">
                           {(displayDose || displayFrequency) ? '▪ ' : ''}
                           {displayDuration}
                         </span>
@@ -1723,7 +1793,7 @@ export function PrintablePrescriptionSlip({
 
                     {/* سطر الإرشادات والتعليمات إن وجد - مباشرة تحت اسم الدواء */}
                     {item.instructions && (
-                      <div className="text-xs sm:text-sm font-semibold text-slate-800">
+                      <div className="text-xs sm:text-sm font-semibold text-[#9F1239]">
                         <span>◄ {item.instructions}</span>
                       </div>
                     )}

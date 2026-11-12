@@ -215,4 +215,189 @@ export class VisitsService {
 
     return prescription.toJSON();
   }
+
+  /**
+   * 🔍 البحث الطبي السريري الشامل عبر كافة استمارات الكشف والروشتات
+   * يتيح للطبيب كتابة أي كلمة (مثال: x-ray, Augmentin, انحراف حاجز) والحصول على قائمة المرضى فوراً
+   */
+  static async clinicalSearch(query: string, actorId: string) {
+    const term = (query || '').trim();
+    if (!term || term.length < 1) {
+      return [];
+    }
+
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+
+    // 1. البحث في الروشتات والأدوية
+    const matchingPrescriptions = await Prescription.find({
+      $or: [
+        { 'items.drugName': regex },
+        { 'items.instructions': regex },
+        { 'items.dose': regex },
+        { 'items.form': regex },
+        { 'items.concentration': regex },
+        { notes: regex },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    // 2. البحث في استمارات وزيارات الكشف (الشكوى، التشخيص، الملاحظات، استمارة ENT)
+    const matchingVisits = await Visit.find({
+      $or: [
+        { complaint: regex },
+        { diagnosis: regex },
+        { notes: regex },
+        { instructions: regex },
+        { 'entExamination.complaint': regex },
+        { 'entExamination.diagnosis': regex },
+        { 'entExamination.historyOfPresentIllness': regex },
+        { 'entExamination.investigations': regex },
+        { 'entExamination.treatmentNotes': regex },
+        { 'entExamination.operationNeeded': regex },
+        { 'entExamination.operativeData': regex },
+        { 'entExamination.secondVisitNotes': regex },
+        { 'entExamination.thirdVisitNotes': regex },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    // 3. جمع كافة معرّفات المرضى المكتشفين
+    const patientIds = Array.from(
+      new Set([
+        ...matchingPrescriptions.map((p) => p.patientId),
+        ...matchingVisits.map((v) => v.patientId),
+      ]),
+    );
+
+    if (patientIds.length === 0) {
+      return [];
+    }
+
+    const patients = await Patient.find({ _id: { $in: patientIds } }).select(
+      'id fullName phone age gender fileNumber dateOfBirth allergies chronicConditions',
+    );
+    const patientMap = new Map<string, any>(patients.map((p) => [p.id || p._id.toString(), p]));
+
+    const resultsMap = new Map<string, any>();
+
+    for (const v of matchingVisits) {
+      const p = patientMap.get(v.patientId);
+      if (!p) continue;
+
+      const visitMatches: Array<{ category: string; field: string; text: string }> = [];
+
+      if (v.diagnosis && regex.test(v.diagnosis)) {
+        visitMatches.push({ category: 'DIAGNOSIS', field: 'التشخيص الطبي', text: v.diagnosis });
+      }
+      if (v.complaint && regex.test(v.complaint)) {
+        visitMatches.push({ category: 'COMPLAINT', field: 'الشكوى الرئيسية', text: v.complaint });
+      }
+      if (v.notes && regex.test(v.notes)) {
+        visitMatches.push({ category: 'NOTES', field: 'ملاحظات الكشف', text: v.notes });
+      }
+      if (v.instructions && regex.test(v.instructions)) {
+        visitMatches.push({ category: 'INSTRUCTIONS', field: 'التعليمات', text: v.instructions });
+      }
+      if (v.entExamination) {
+        const ent = v.entExamination as Record<string, any>;
+        if (ent.historyOfPresentIllness && regex.test(ent.historyOfPresentIllness)) {
+          visitMatches.push({
+            category: 'HISTORY',
+            field: 'تاريخ المرض الحالي (History)',
+            text: ent.historyOfPresentIllness,
+          });
+        }
+        if (ent.investigations && regex.test(ent.investigations)) {
+          visitMatches.push({
+            category: 'INVESTIGATIONS',
+            field: 'الفحوصات والأشعة (Investigations)',
+            text: ent.investigations,
+          });
+        }
+        if (ent.treatmentNotes && regex.test(ent.treatmentNotes)) {
+          visitMatches.push({
+            category: 'TREATMENT',
+            field: 'تعليمات وإرشادات العلاج',
+            text: ent.treatmentNotes,
+          });
+        }
+        if (ent.operationNeeded && regex.test(ent.operationNeeded)) {
+          visitMatches.push({
+            category: 'OPERATION',
+            field: 'العملية المطلوبة',
+            text: ent.operationNeeded,
+          });
+        }
+      }
+
+      if (visitMatches.length > 0) {
+        const key = `${v.patientId}_${v.id}`;
+        resultsMap.set(key, {
+          patientId: p.id || p._id,
+          patientName: p.fullName,
+          patientPhone: p.phone,
+          patientAge: p.age,
+          patientGender: p.gender,
+          fileNumber: p.fileNumber || p.id?.slice(0, 8),
+          appointmentId: v.appointmentId,
+          visitId: v.id || v._id,
+          visitDate: v.createdAt ? new Date(v.createdAt).toISOString().slice(0, 10) : '',
+          matches: visitMatches,
+        });
+      }
+    }
+
+    for (const rx of matchingPrescriptions) {
+      const p = patientMap.get(rx.patientId);
+      if (!p) continue;
+
+      const rxMatches: Array<{ category: string; field: string; text: string }> = [];
+
+      for (const item of rx.items || []) {
+        if (regex.test(item.drugName)) {
+          rxMatches.push({
+            category: 'DRUG',
+            field: 'اسم الدواء بالروشتة',
+            text: `${item.drugName} ${item.concentration || ''} ${item.form || ''} - ${item.dose || ''} (${item.frequency || ''})`,
+          });
+        } else if (item.instructions && regex.test(item.instructions)) {
+          rxMatches.push({
+            category: 'DRUG_INSTRUCTIONS',
+            field: 'إرشادات الدواء',
+            text: `${item.drugName}: ${item.instructions}`,
+          });
+        }
+      }
+
+      if (rx.notes && regex.test(rx.notes)) {
+        rxMatches.push({ category: 'RX_NOTES', field: 'ملاحظات الروشتة', text: rx.notes });
+      }
+
+      if (rxMatches.length > 0) {
+        const key = `${rx.patientId}_${rx.visitId || rx.id}`;
+        const existing = resultsMap.get(key);
+        if (existing) {
+          existing.matches = [...existing.matches, ...rxMatches];
+        } else {
+          resultsMap.set(key, {
+            patientId: p.id || p._id,
+            patientName: p.fullName,
+            patientPhone: p.phone,
+            patientAge: p.age,
+            patientGender: p.gender,
+            fileNumber: p.fileNumber || p.id?.slice(0, 8),
+            appointmentId: rx.visitId,
+            visitId: rx.visitId,
+            visitDate: rx.createdAt ? new Date(rx.createdAt).toISOString().slice(0, 10) : '',
+            matches: rxMatches,
+          });
+        }
+      }
+    }
+
+    return Array.from(resultsMap.values());
+  }
 }

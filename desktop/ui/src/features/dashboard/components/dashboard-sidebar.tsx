@@ -99,7 +99,7 @@ export function DashboardSidebar({
                     : pathname?.startsWith(item.href);
 
                 const Icon = item.icon;
-                const itemTitle = t(`nav.${item.id}`);
+                const itemTitle = (t as any).has?.(`nav.${item.id}`) ? t(`nav.${item.id}`) : (item.title || item.id);
 
                 return (
                   <SidebarMenuItem key={item.id}>

@@ -49,6 +49,12 @@ export class VisitsController {
     );
     sendSuccess(res, result, { code: 201, message: 'Prescription added successfully' });
   });
+
+  clinicalSearch = asyncHandler(async (req: Request, res: Response) => {
+    const query = (req.query.q as string) || (req.query.query as string) || '';
+    const results = await VisitsService.clinicalSearch(query, req.user!.id);
+    sendSuccess(res, results);
+  });
 }
 
 export const visitsController = new VisitsController();

@@ -93,4 +93,4 @@ export interface AppointmentsCalendarData {
   monthAppointments?: WeekAppointmentItem[];
 }
 
-export type CalendarViewMode = 'list' | 'week' | 'month';
+export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';

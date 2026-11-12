@@ -259,6 +259,7 @@
       "audit": "Audit Log",
       "settings": "Settings",
       "todayCheckup": "Today's Clinic",
+      "clinicalSearch": "Clinical Search",
       "calendar": "Calendar & Schedule",
       "weeklyHours": "Weekly Hours",
       "queue": "Waiting Queue"

@@ -324,3 +324,88 @@ export function formatDuration(rawDuration?: string): string {
   if (num <= 10) return `${num} أيام`;
   return `${num} يوماً`;
 }
+
+export interface ParsedDoseShortcut {
+  dose: string;
+  frequency: string;
+  duration: string;
+  summary: string;
+}
+
+/**
+ * تحليل وترجمة اختصارات الجرعات السريعة مثل 1/2/5 أو 1-3-7 أو 2/2/5
+ * مثال: 1/2/5 => قرص واحد مرتين كل خمس أيام
+ */
+export function parseDoseShortcut(rawShortcut?: string, form?: string): ParsedDoseShortcut | null {
+  if (!rawShortcut) return null;
+
+  // تحويل الأرقام المشرقية
+  const clean = rawShortcut
+    .trim()
+    .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+
+  // تجزئة المدخل بواسطة / أو - أو مسافات أو علامة + أو فاصلة
+  const parts = clean.split(/[/\\,\-–—\s+]+/).filter(Boolean);
+  if (parts.length < 2) return null;
+
+  const [rawD, rawF, rawDur] = parts;
+
+  // 1. ترجمة الجرعة
+  let dose = formatDose(rawD, form);
+  if (!dose) {
+    dose = rawD;
+  }
+  const normalizedForm = (form || '').toLowerCase();
+  if (rawD === '1' && (normalizedForm.includes('tablet') || normalizedForm.includes('odt') || !form)) {
+    dose = 'قرص واحد';
+  } else if (rawD === '2' && (normalizedForm.includes('tablet') || normalizedForm.includes('odt') || !form)) {
+    dose = 'قرصين';
+  }
+
+  // 2. ترجمة التكرار
+  let frequency = '';
+  const fNum = parseInt(rawF, 10);
+  if (!isNaN(fNum)) {
+    if (fNum === 1) frequency = 'مرة واحدة في اليوم';
+    else if (fNum === 2) frequency = 'مرتين في اليوم';
+    else if (fNum === 3) frequency = '3 مرات في اليوم';
+    else if (fNum === 4) frequency = '4 مرات في اليوم';
+    else if (fNum === 6) frequency = 'كل 4 ساعات';
+    else if (fNum === 8) frequency = 'كل 8 ساعات';
+    else if (fNum === 12) frequency = 'كل 12 ساعة (مرتين يومياً)';
+    else if (fNum === 24) frequency = 'كل 24 ساعة';
+    else frequency = `${fNum} مرات في اليوم`;
+  } else {
+    frequency = formatFrequency(rawF);
+  }
+
+  // 3. ترجمة المدة
+  let duration = '';
+  if (rawDur !== undefined && rawDur !== null) {
+    const durNum = parseInt(rawDur, 10);
+    if (!isNaN(durNum)) {
+      if (durNum === 1) duration = 'يوم واحد';
+      else if (durNum === 2) duration = 'يومين';
+      else if (durNum === 3) duration = 'لمدة 3 أيام';
+      else if (durNum === 5) duration = 'كل خمس أيام'; // صياغة د. إسلام
+      else if (durNum === 7) duration = 'لمدة أسبوع';
+      else if (durNum === 10) duration = 'لمدة 10 أيام';
+      else if (durNum === 14) duration = 'لمدة أسبوعين';
+      else if (durNum === 30) duration = 'لمدة شهر';
+      else if (durNum <= 10) duration = `لمدة ${durNum} أيام`;
+      else duration = `لمدة ${durNum} يوماً`;
+    } else {
+      duration = formatDuration(rawDur);
+    }
+  }
+
+  const summary = [dose, frequency, duration].filter(Boolean).join(' • ');
+
+  return {
+    dose,
+    frequency,
+    duration,
+    summary,
+  };
+}
+

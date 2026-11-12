@@ -13,11 +13,13 @@ import {
   Stethoscope,
   Clock,
   ListOrdered,
+  Search,
 } from 'lucide-react';
 import { DashboardNavItem, UserRole } from './types';
 
 export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'dashboard', title: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard, isActive: true },
+  { id: 'clinicalSearch', title: 'البحث الطبي الشامل', href: '/dashboard/clinical-search', icon: Search },
   { id: 'appointments', title: 'المواعيد', href: '/dashboard/all-appointments', icon: Calendar },
   { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/admin-booking', icon: CalendarPlus },
   { id: 'patients', title: 'المرضى', href: '/dashboard/all-patients', icon: Users },
@@ -32,6 +34,7 @@ export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
 
 export const DOCTOR_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'todayCheckup', title: 'شاشة كشف اليوم', href: '/dashboard', icon: Stethoscope, isActive: true },
+  { id: 'clinicalSearch', title: 'البحث الطبي الشامل', href: '/dashboard/clinical-search', icon: Search },
   { id: 'calendar', title: 'التقويم والمواعيد', href: '/dashboard/calendar', icon: Calendar },
   { id: 'weeklyHours', title: 'أوقات العمل الأسبوعية', href: '/dashboard/schedule', icon: Clock },
   { id: 'patients', title: 'المرضى', href: '/dashboard/view-patients', icon: Users },
@@ -39,6 +42,7 @@ export const DOCTOR_NAV_ITEMS: DashboardNavItem[] = [
 
 export const RECEPTIONIST_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'queue', title: 'قائمة الانتظار', href: '/dashboard', icon: ListOrdered, isActive: true },
+  { id: 'clinicalSearch', title: 'البحث الطبي الشامل', href: '/dashboard/clinical-search', icon: Search },
   { id: 'calendar', title: 'التقويم والمواعيد', href: '/dashboard/appointments', icon: Calendar },
   { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/appointments/new', icon: CalendarPlus },
   { id: 'patients', title: 'المرضى', href: '/dashboard/patients', icon: Users },
