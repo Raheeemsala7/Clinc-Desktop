@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  LogIn,
 } from 'lucide-react';
 import { DaySlotItem, DaySlotAppointment, WeekAppointmentItem } from '../types/calendar';
 import { TodayQueueItem } from '../apis/appointment.api';
@@ -175,12 +176,14 @@ export function CalendarDayGridView({
     // 1. من slots
     slots.forEach((s) => {
       const appts = s.appointments && s.appointments.length > 0 ? s.appointments : s.appointment ? [s.appointment] : [];
-      appts.forEach((a) => {
+      appts.forEach((a: any) => {
         if (a && a.id) {
           map.set(a.id, {
+            ...a,
             id: a.id,
-            patientName: a.patientName,
-            patientPhone: a.patientPhone,
+            patientId: a.patientId || a.patient?.id || a.patient?._id || '',
+            patientName: a.patientName || a.patient?.fullName || 'مريض مسجل',
+            patientPhone: a.patientPhone || a.patient?.phone || '',
             startTime: a.startTime || s.time,
             type: a.type,
             status: a.status,
@@ -188,40 +191,65 @@ export function CalendarDayGridView({
             queueOrder: a.queueOrder,
             doctorName: a.doctorName,
             doctorId: a.doctorId,
+            totalAmount: Number(a.totalAmount || a.examinationFee || 0),
+            paidAmount: Number(a.paidAmount || 0),
+            remainingAmount: Number(a.remainingAmount || 0),
+            discount: Number(a.discount || 0),
+            isExempt: Boolean(a.isExempt || a.totalAmount === 0),
+            isFullyPaid: Boolean(a.isFullyPaid || (a.totalAmount > 0 && a.paidAmount >= a.totalAmount)),
+            hasRemaining: Boolean(a.hasRemaining || (a.remainingAmount > 0)),
           });
         }
       });
     });
 
     // 2. من appointments (WeekAppointmentItem)
-    appointments.forEach((a) => {
+    appointments.forEach((a: any) => {
       if (a.clinicDate === date && !map.has(a.id)) {
         map.set(a.id, {
+          ...a,
           id: a.id,
-          patientName: a.patientName,
+          patientId: a.patientId || a.patient?.id || a.patient?._id || '',
+          patientName: a.patientName || a.patient?.fullName || 'مريض مسجل',
           startTime: a.startTime,
           type: a.type,
           status: a.status,
           queueNumber: a.queueNumber,
           doctorName: a.doctorName,
           doctorId: a.doctorId,
+          totalAmount: Number(a.totalAmount || a.examinationFee || 0),
+          paidAmount: Number(a.paidAmount || 0),
+          remainingAmount: Number(a.remainingAmount || 0),
+          discount: Number(a.discount || 0),
+          isExempt: Boolean(a.isExempt || a.totalAmount === 0),
+          isFullyPaid: Boolean(a.isFullyPaid || (a.totalAmount > 0 && a.paidAmount >= a.totalAmount)),
+          hasRemaining: Boolean(a.hasRemaining || (a.remainingAmount > 0)),
         });
       }
     });
 
     // 3. من queueItems (TodayQueueItem)
-    queueItems.forEach((q) => {
+    queueItems.forEach((q: any) => {
       if (!map.has(q.id)) {
         map.set(q.id, {
+          ...q,
           id: q.id,
-          patientName: q.patientName,
-          patientPhone: q.patientPhone,
+          patientId: q.patientId || q.patient?.id || q.patient?._id || '',
+          patientName: q.patientName || q.patient?.fullName || 'مريض مسجل',
+          patientPhone: q.patientPhone || q.patient?.phone || '',
           startTime: q.startTime || '09:00',
           type: q.type,
           status: q.status,
           queueNumber: q.queueNumber,
           queueOrder: q.queueOrder,
           doctorName: '',
+          totalAmount: Number(q.totalAmount || q.examinationFee || 0),
+          paidAmount: Number(q.paidAmount || 0),
+          remainingAmount: Number(q.remainingAmount || 0),
+          discount: Number(q.discount || 0),
+          isExempt: Boolean(q.isExempt || q.totalAmount === 0),
+          isFullyPaid: Boolean(q.isFullyPaid || (q.totalAmount > 0 && q.paidAmount >= q.totalAmount)),
+          hasRemaining: Boolean(q.hasRemaining || (q.remainingAmount > 0)),
         });
       }
     });
@@ -358,6 +386,81 @@ export function CalendarDayGridView({
         }`
       );
     }
+  };
+
+  // إدخال المريض فورياً ونقله لشيت الكشف الطبي
+  const handleAdmitAndOpenExam = (e: React.MouseEvent, apptId: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (onAdmit) {
+      onAdmit(apptId);
+    }
+    router.push(`/dashboard/examination/${apptId}`);
+  };
+
+  // رابط الملف الطبي للمريض (للشاشات المختلفة)
+  const getPatientProfileUrl = (patientId?: string) => {
+    if (!patientId) return null;
+    return isDoctorView
+      ? `/dashboard/view-patients/${patientId}`
+      : `/dashboard/patients/${patientId}`;
+  };
+
+  // دالة تحديد وسم الحالة المالية للمريض (طلب الطبيب لمعرفة المعفى / الخصم / المسدد)
+  const renderFinancialBadge = (appt: any) => {
+    if (!appt) return null;
+    const isExempt = Boolean(appt.isExempt || (appt.totalAmount === 0 && appt.paidAmount === 0));
+    const discount = Number(appt.discount || 0);
+    const paidAmount = Number(appt.paidAmount || 0);
+    const totalAmount = Number(appt.totalAmount || 0);
+    const remainingAmount = Number(appt.remainingAmount || 0);
+    const isFullyPaid = Boolean(appt.isFullyPaid || (totalAmount > 0 && paidAmount >= totalAmount));
+
+    if (isExempt) {
+      return (
+        <span
+          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-900 border border-purple-200 text-[9px] font-black shrink-0"
+          title="المريض معفى من الرسوم (حالة خاصة / مجاني)"
+        >
+          <span>🟣 مجاني</span>
+        </span>
+      );
+    }
+
+    if (discount > 0 || (paidAmount > 0 && remainingAmount > 0)) {
+      return (
+        <span
+          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-950 border border-amber-300 text-[9px] font-black shrink-0"
+          title={`معمول له خصم: ${discount} ج.م | مدفوع: ${paidAmount} ج.م | متبقي: ${remainingAmount} ج.م`}
+        >
+          <span>🟡 {discount > 0 ? `خصم (${discount})` : 'دفع جزئي'}</span>
+        </span>
+      );
+    }
+
+    if (isFullyPaid) {
+      return (
+        <span
+          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300 text-[9px] font-black shrink-0"
+          title={`مسدد بالكامل (${paidAmount} ج.م)`}
+        >
+          <span>🟢 دافع كامل</span>
+        </span>
+      );
+    }
+
+    if (remainingAmount > 0 || totalAmount > 0) {
+      return (
+        <span
+          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-900 border border-rose-300 text-[9px] font-black shrink-0"
+          title={`متبقي عليه: ${remainingAmount || totalAmount} ج.م`}
+        >
+          <span>🔴 متبقي ({remainingAmount || totalAmount})</span>
+        </span>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -597,6 +700,22 @@ export function CalendarDayGridView({
                       </div>
                     </div>
 
+                    {/* الوسم المالي للطبيب + أيقونة فتح ملف المريض */}
+                    <div className="flex items-center justify-between gap-1 mt-1">
+                      {renderFinancialBadge(appointment)}
+                      {appointment?.patientId && (
+                        <Link
+                          href={getPatientProfileUrl(appointment.patientId) || '#'}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-white/90 hover:bg-white text-slate-700 hover:text-[#074C3A] text-[9px] font-bold border border-slate-200 transition-all shadow-2xs shrink-0"
+                          title="عرض ملف المريض والزيارات السابقة 👤"
+                        >
+                          <User className="w-2.5 h-2.5 text-slate-500" />
+                          <span>الملف</span>
+                        </Link>
+                      )}
+                    </div>
+
                     {/* السطر الثاني: اسم المريض بخط عريض وواضح */}
                     <div className="my-1.5">
                       <div className="font-black text-xs truncate" title={appointment?.patientName}>
@@ -609,8 +728,8 @@ export function CalendarDayGridView({
                       )}
                     </div>
 
-                    {/* السطر الثالث: الحالة والإجراء المباشر */}
-                    <div className="pt-1 border-t border-black/5 flex items-center justify-between text-[10px]">
+                    {/* السطر الثالث: الحالة والإجراءات المباشرة */}
+                    <div className="pt-1 border-t border-black/5 flex items-center justify-between text-[10px] gap-1">
                       <div className="flex items-center gap-1 font-bold">
                         <span
                           className={`w-2 h-2 rounded-full ${
@@ -632,27 +751,44 @@ export function CalendarDayGridView({
                         </span>
                       </div>
 
-                      {isDoctorView ? (
-                        <Link
-                          href={`/dashboard/examination/${appointment?.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-2.5 py-1 rounded-lg bg-[#074C3A] hover:bg-[#0B7B5E] text-white font-black text-[10px] transition-all shadow-2xs cursor-pointer flex items-center gap-1 shrink-0"
-                          title="فتح استمارة الكشف والروشتة 🩺"
-                        >
-                          <Stethoscope className="w-3 h-3" />
-                          <span>{isInProgress ? 'متابعة' : isCompleted ? 'الروشتة' : 'كشف'}</span>
-                        </Link>
-                      ) : (
-                        <Link
-                          href={`/dashboard/appointments?date=${date}${
-                            selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
-                          }`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-1.5 py-0.5 rounded-md bg-white/80 hover:bg-white text-slate-700 font-bold text-[10px] transition-all cursor-pointer"
-                        >
-                          تفاصيل
-                        </Link>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {isDoctorView ? (
+                          <>
+                            {/* زر إدخال فوري والانتقال للكشف فوراً إذا كان بالانتظار أو محجوز */}
+                            {(isWaiting || !isCompleted) && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleAdmitAndOpenExam(e, appointment?.id)}
+                                className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-[10px] transition-all shadow-2xs cursor-pointer flex items-center gap-0.5 shrink-0"
+                                title="إدخال المريض وفتح استمارة الكشف فوراً 🚪🩺"
+                              >
+                                <LogIn className="w-2.5 h-2.5" />
+                                <span>دخول</span>
+                              </button>
+                            )}
+
+                            <Link
+                              href={`/dashboard/examination/${appointment?.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-2 py-0.5 rounded-lg bg-[#074C3A] hover:bg-[#0B7B5E] text-white font-black text-[10px] transition-all shadow-2xs cursor-pointer flex items-center gap-0.5 shrink-0"
+                              title="فتح استمارة الكشف والروشتة 🩺"
+                            >
+                              <Stethoscope className="w-2.5 h-2.5" />
+                              <span>{isInProgress ? 'كشف' : isCompleted ? 'روشتة' : 'فحص'}</span>
+                            </Link>
+                          </>
+                        ) : (
+                          <Link
+                            href={`/dashboard/appointments?date=${date}${
+                              selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
+                            }`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-1.5 py-0.5 rounded-md bg-white/80 hover:bg-white text-slate-700 font-bold text-[10px] transition-all cursor-pointer"
+                          >
+                            تفاصيل
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -778,12 +914,27 @@ export function CalendarDayGridView({
                                   {getTypeLabel(primaryAppt.type)}
                                 </span>
                               </div>
-                              <div className="font-black truncate text-xs mt-0.5">
-                                {primaryAppt.patientName}
+                              <div className="flex items-center justify-between gap-1 mt-0.5">
+                                <div className="font-black truncate text-xs">
+                                  {primaryAppt.patientName}
+                                </div>
+                                {renderFinancialBadge(primaryAppt)}
                               </div>
-                              <div className="text-[10px] text-slate-600 font-bold truncate mt-0.5">
-                                {primaryAppt.queueNumber ? `#${primaryAppt.queueNumber} • ` : ''}
-                                {isWaiting ? 'انتظار' : isCompleted ? 'مكتمل' : 'محجوز'}
+                              <div className="text-[10px] text-slate-600 font-bold truncate mt-0.5 flex items-center justify-between">
+                                <span>{primaryAppt.queueNumber ? `#${primaryAppt.queueNumber} • ` : ''}{isWaiting ? 'انتظار' : isCompleted ? 'مكتمل' : 'محجوز'}</span>
+                                {primaryAppt.patientId && (
+                                  <span
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const url = getPatientProfileUrl(primaryAppt.patientId);
+                                      if (url) router.push(url);
+                                    }}
+                                    className="hover:underline text-[9px] text-[#074C3A] cursor-pointer"
+                                  >
+                                    👤 الملف
+                                  </span>
+                                )}
                               </div>
                             </Link>
                           </div>

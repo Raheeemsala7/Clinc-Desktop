@@ -76,4 +76,30 @@ export const bookingSchema = (t?: any) =>
         message: t?.('chronicDiseaseRequired') || 'يرجى تحديد المرض المزمن أو إدخال تفاصيل الحالة',
         path: ['chronicDiseases'],
       }
+    )
+    .refine(
+      (data) => {
+        if (data.isExempt) return true;
+        const examFee = Number(data.examinationFee) || 0;
+        const discount = Number(data.discount) || 0;
+        return discount <= examFee;
+      },
+      {
+        message: 'قيمة الخصم لا يمكن أن تتجاوز سعر الكشف',
+        path: ['discount'],
+      }
+    )
+    .refine(
+      (data) => {
+        if (data.isExempt) return true;
+        const examFee = Number(data.examinationFee) || 0;
+        const discount = Number(data.discount) || 0;
+        const paid = Number(data.paidAmount) || 0;
+        const netFee = Math.max(0, examFee - discount);
+        return paid <= netFee;
+      },
+      {
+        message: 'المبلغ المدفوع لا يمكن أن يتجاوز صافي سعر الكشف',
+        path: ['paidAmount'],
+      }
     );

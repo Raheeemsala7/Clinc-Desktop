@@ -438,6 +438,23 @@ export function EntPaperSheet({
               Visits History : (V)
             </span>
           </button>
+
+          {/* Rx -> الانتقال الفوري للروشتة */}
+          <button
+            type="button"
+            onClick={() => {
+              const rxBtn = document.querySelector('[aria-label="الانتقال السريع للروشتة"] button') as HTMLButtonElement;
+              if (rxBtn) rxBtn.click();
+            }}
+            title="الروشتة الطبية (اضغط Alt+R)"
+            className="group relative w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-400 flex flex-col items-center justify-center font-black font-sans transition-all cursor-pointer shadow-md active:scale-95 mt-1"
+          >
+            <span className="text-xs leading-none font-black">Rx</span>
+            <span className="text-[7px] font-bold leading-none opacity-90">روشتة</span>
+            <span className="absolute left-full ml-2.5 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50 font-sans">
+              الروشتة الطبية (Rx)
+            </span>
+          </button>
         </aside>
       )}
 
@@ -546,7 +563,7 @@ export function EntPaperSheet({
 
         {/* Complaint (الشكوى الرئيسية) */}
         <div id="section-complaint" className="space-y-1 pt-1 scroll-mt-24 transition-all duration-300">
-          <span className="font-bold text-[13px] underline block">Complaint:</span>
+          <span className="font-black text-[13px] inline-block px-2.5 py-0.5 rounded-md bg-teal-100 text-teal-900 border border-teal-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">Complaint:</span>
           <textarea
             rows={2}
             value={examData.complaint || ''}
@@ -558,7 +575,7 @@ export function EntPaperSheet({
 
         {/* History of present illness (تاريخ المرض الحالي) */}
         <div id="section-history" className="space-y-1 scroll-mt-24 transition-all duration-300">
-          <span className="font-bold text-[13px] underline block">History of present illness:</span>
+          <span className="font-black text-[13px] inline-block px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-900 border border-blue-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">History of present illness:</span>
           <textarea
             rows={5}
             value={examData.historyOfPresentIllness || ''}
@@ -570,10 +587,10 @@ export function EntPaperSheet({
 
         {/* Past history (التاريخ المرضي السابق) */}
         <div id="section-past-history" className="space-y-1.5 text-[12px] scroll-mt-24 transition-all duration-300">
-          <span className="font-bold text-[13px] underline block">Past history:</span>
+          <span className="font-black text-[13px] inline-block px-2.5 py-0.5 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">Past history:</span>
 
           <div className="flex items-baseline gap-1">
-            <span className="font-bold shrink-0">- Medical problems:</span>
+            <span className="font-bold shrink-0 text-indigo-950">- Medical problems:</span>
             <PaperTextarea
               rows={1}
               value={examData.medicalProblems || ''}
@@ -624,7 +641,7 @@ export function EntPaperSheet({
         {/* Examination : & فحص الأذن (Ear) المكبّر والمطابق للصورة المرفقة */}
         <div id="section-examination" className="space-y-1 scroll-mt-24 transition-all duration-300">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-[13px] underline block">Examination :</span>
+            <span className="font-black text-[13px] inline-block px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">Examination :</span>
           </div>
 
           <div className="grid grid-cols-12 gap-1.5 items-start">
@@ -782,8 +799,10 @@ export function EntPaperSheet({
       {/* ============================================================== */}
       <div className="sheet-page-2 bg-white border-2 border-black p-4 sm:p-5 rounded-none shadow-sm space-y-3 print:border-2 print:border-black print:p-4 print:shadow-none print:w-full">
         {/* عنوان فحص الأنف (Nose) في المنتصف */}
-        <div className="text-center font-bold text-[16px] underline">
-          Nose
+        <div className="text-center font-black text-[16px]">
+          <span className="inline-block px-4 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">
+            Nose
+          </span>
         </div>
 
         {/* فحص الأنف المفصل مع رسم الهرم الأنفي */}
@@ -874,7 +893,9 @@ export function EntPaperSheet({
         {/* Oropharynx & Mallampati classification */}
         <div className="grid grid-cols-12 gap-3 items-start">
           <div className="col-span-7 space-y-2">
-            <span className="font-bold text-[14px] underline block">Oropharynx</span>
+            <span className="font-black text-[14px] inline-block px-3 py-0.5 rounded-md bg-teal-100 text-teal-900 border border-teal-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">
+              Oropharynx
+            </span>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
               <div className="flex items-baseline gap-1">
                 <span className="font-bold shrink-0">Tonsils:</span>
@@ -969,8 +990,10 @@ export function EntPaperSheet({
 
         {/* Larynx & Head & Neck */}
         <div className="space-y-1">
-          <div className="text-center font-bold text-[15px] underline">
-            Larynx & Head & Neck
+          <div className="text-center font-black text-[15px]">
+            <span className="inline-block px-4 py-0.5 rounded-full bg-teal-100 text-teal-900 border border-teal-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">
+              Larynx & Head & Neck
+            </span>
           </div>
 
           <div className="grid grid-cols-12 gap-3 items-start">
@@ -1018,7 +1041,7 @@ export function EntPaperSheet({
 
         {/* Investigations (فحوصات الحاضر والمطلوب مع إمكانية إضافة وحذف أكثر من فحص) */}
         <div className="space-y-2 text-[12px]">
-          <span className="font-bold text-[13px] underline block">Investigations:</span>
+          <span className="font-black text-[13px] inline-block px-3 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">Investigations:</span>
 
           {/* قسم Present (الفحوصات الحاضرة مع المريض) */}
           <div className="space-y-1 pl-1">
@@ -1130,8 +1153,8 @@ export function EntPaperSheet({
 
         {/* Diagnosis (التشخيص الطبي) - تم وضعه قبل Treatment مباشرة بناءً على طلب الدكتور */}
         <div id="section-diagnosis" className="space-y-1 scroll-mt-24 transition-all duration-300">
-          <div className="flex items-baseline gap-1">
-            <span className="font-bold text-[13px] underline shrink-0">Diagnosis:</span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-black text-[13px] inline-block px-3 py-0.5 rounded-md bg-rose-100 text-rose-900 border border-rose-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline shrink-0">Diagnosis:</span>
             <PaperTextarea
               rows={1}
               value={examData.diagnosis || ''}
@@ -1147,7 +1170,7 @@ export function EntPaperSheet({
 
         {/* Treatment (ملاحظات العلاج الأساسية بالورقة) */}
         <div className="space-y-1">
-          <span className="font-bold text-[13px] underline block">Treatment:</span>
+          <span className="font-black text-[13px] inline-block px-3 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">Treatment:</span>
           <PaperTextarea
             rows={2}
             value={examData.treatmentNotes || ''}
@@ -1162,8 +1185,8 @@ export function EntPaperSheet({
 
         {/* Follow up & Operations */}
         <div className="space-y-1.5 text-[12px]">
-          <div className="flex items-baseline gap-1">
-            <span className="font-bold text-[13px] underline shrink-0">Follow up:</span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-bold text-[13px] inline-block px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline shrink-0">Follow up:</span>
             <PaperTextarea
               rows={1}
               value={examData.followUpDate || ''}
@@ -1173,8 +1196,8 @@ export function EntPaperSheet({
             />
           </div>
 
-          <div className="flex items-baseline gap-1">
-            <span className="font-bold text-[13px] underline shrink-0">Operation Needed:</span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-bold text-[13px] inline-block px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline shrink-0">Operation Needed:</span>
             <PaperTextarea
               rows={1}
               value={examData.operationNeeded || ''}
@@ -1185,7 +1208,7 @@ export function EntPaperSheet({
           </div>
 
           <div className="space-y-1">
-            <span className="font-bold text-[13px] underline block">Operative data:</span>
+            <span className="font-bold text-[13px] inline-block px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">Operative data:</span>
             <PaperTextarea
               rows={2}
               value={examData.operativeData || ''}
@@ -1201,7 +1224,7 @@ export function EntPaperSheet({
           {/* قسم الزيارات الإضافية المتعددة (2nd, 3rd, 4th, 5th... Visits) */}
           <div id="section-visits" className="space-y-2 pt-1 scroll-mt-24 transition-all duration-300">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-[13px] underline block">Visits History:</span>
+              <span className="font-black text-[13px] inline-block px-3 py-0.5 rounded-md bg-purple-100 text-purple-900 border border-purple-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">Visits History:</span>
               {!isPrintOnly && (
                 <button
                   type="button"

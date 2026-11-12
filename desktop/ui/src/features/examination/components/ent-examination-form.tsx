@@ -131,6 +131,19 @@ export function EntExaminationForm({
   const [currentStatus, setCurrentStatus] = useState<string>(appointment?.status || 'IN_PROGRESS');
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
 
+  // اختصار لوحة المفاتيح Alt+R للتبديل السريع بين شيت الكشف والروشتة
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && (e.key === 'r' || e.key === 'R' || e.key === 'ق')) {
+        e.preventDefault();
+        setActiveTab((prev) => (prev === 'exam' ? 'prescription' : 'exam'));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // إدخال المريض وبدء الكشف
   const handleAdmit = async () => {
     const targetApptId = appointment?.id || appointment?._id || '';
@@ -249,147 +262,171 @@ export function EntExaminationForm({
   return (
     <div className="space-y-6 pb-28 max-w-5xl mx-auto print:p-0 print:m-0 print:max-w-none">
       {/* ============================================================== */}
-      {/* 1. الشريط العلوي العام (يُخفى تماماً عند الطباعة)               */}
+      {/* 1. الشريط العلوي الموحّد والمبسّط (يُخفى تماماً عند الطباعة)       */}
       {/* ============================================================== */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs print:hidden">
-        <div className="flex items-center gap-3">
+      <div className="bg-white px-4 py-3 sm:px-5 sm:py-3 rounded-2xl border border-slate-200/90 shadow-xs print:hidden flex flex-col md:flex-row md:items-center justify-between gap-3 sticky top-2 z-30 backdrop-blur-md bg-white/95">
+        {/* الجانب الأيمن: زر العودة + بيانات المريض + حالة الحفظ */}
+        <div className="flex items-center gap-2.5 flex-wrap">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold transition-all shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs"
+            title="العودة لشاشة الطبيب"
           >
-            <ArrowRight className="w-4 h-4 text-slate-500" />
-            <span>العودة لشاشة الطبيب</span>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
+            <span className="hidden sm:inline">شاشة الطبيب</span>
           </Link>
 
-          <div className="h-5 w-px bg-slate-200 hidden sm:block" />
+          <div className="h-4 w-px bg-slate-200 hidden sm:block" />
 
-          <div className="flex items-center gap-2.5">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-base sm:text-lg font-black text-[#074C3A] tracking-wide">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-sm sm:text-base font-black text-[#074C3A]">
               {patient?.fullName}
             </span>
-            <span className="text-xs sm:text-sm text-slate-600 font-bold">
+            <span className="text-xs text-slate-500 font-bold">
               ({patient?.age ? `${patient.age} سنة` : 'عمر غير محدد'})
             </span>
             {lastSavedTime && (
-              <span className="text-xs text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold hidden md:inline-block">
+              <span className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold hidden lg:inline-block">
                 تم الحفظ {lastSavedTime}
               </span>
             )}
           </div>
         </div>
 
-        {/* أزرار الإجراءات العلوية السريعة */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* زر إدخال المريض إذا كان لا يزال في الانتظار */}
+        {/* المنتصف: تبديل سلس ومرتب بين استمارة الكشف والروشتة */}
+        <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 self-center md:self-auto shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab('exam')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+              activeTab === 'exam'
+                ? 'bg-white text-[#074C3A] shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Stethoscope className={`w-3.5 h-3.5 ${activeTab === 'exam' ? 'text-[#0B7B5E]' : 'text-slate-400'}`} />
+            <span>1. استمارة الكشف الطبي</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('prescription')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+              activeTab === 'prescription'
+                ? 'bg-white text-[#074C3A] shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Pill className={`w-3.5 h-3.5 ${activeTab === 'prescription' ? 'text-[#0B7B5E]' : 'text-slate-400'}`} />
+            <span>2. الروشتة (Rx)</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold ${
+              (examData.prescriptionItems?.length || 0) > 0
+                ? 'bg-[#E3F5EE] text-[#0B7B5E]'
+                : 'bg-slate-200 text-slate-600'
+            }`}>
+              {examData.prescriptionItems?.length || 0}
+            </span>
+          </button>
+        </div>
+
+        {/* الجانب الأيسر: أزرار العمليات السريعة */}
+        <div className="flex items-center gap-1.5 flex-wrap self-end md:self-auto">
           {(currentStatus === 'WAITING' || currentStatus === 'BOOKED') && (
             <button
               type="button"
               onClick={handleAdmit}
               disabled={isAdmitting}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs sm:text-sm font-black transition-all shadow-xs cursor-pointer disabled:opacity-60"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black transition-all shadow-2xs cursor-pointer disabled:opacity-60"
             >
-              <LogIn className={`w-4 h-4 ${isAdmitting ? 'animate-spin' : ''}`} />
-              <span>{isAdmitting ? 'جاري الإدخال...' : 'إدخال للكشف 🚪'}</span>
+              <LogIn className={`w-3.5 h-3.5 ${isAdmitting ? 'animate-spin' : ''}`} />
+              <span>{isAdmitting ? 'إدخال...' : 'إدخال للكشف 🚪'}</span>
             </button>
           )}
-
-          {/* زر إنهاء الكشف وتسليم للاستقبال متاح دائماً للطبيب */}
-          <button
-            type="button"
-            onClick={handleFinish}
-            disabled={isFinishing || isSaving}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black transition-all shadow-xs cursor-pointer disabled:opacity-60"
-          >
-            <CheckCircle2 className={`w-4 h-4 ${isFinishing ? 'animate-spin' : ''}`} />
-            <span>{isFinishing ? 'جاري الإنهاء...' : 'إنهاء الكشف ✓'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={activeTab === 'exam' ? handlePrintExam : () => handlePrintRx('full')}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold transition-all shadow-2xs cursor-pointer"
-          >
-            <Printer className="w-4 h-4 text-slate-500" />
-            <span>{activeTab === 'exam' ? 'طباعة الكشف' : 'طباعة الروشتة'}</span>
-          </button>
 
           <button
             type="button"
             onClick={() => handleSave(true)}
             disabled={isSaving}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition-all cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
+            title="حفظ التعديلات (Alt+S)"
           >
-            <Save className="w-4 h-4 text-slate-600" />
-            <span>{isSaving ? 'جاري الحفظ...' : 'حفظ التعديلات'}</span>
+            <Save className="w-3.5 h-3.5 text-slate-600" />
+            <span className="hidden sm:inline">{isSaving ? 'حفظ...' : 'حفظ'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={activeTab === 'exam' ? handlePrintExam : () => handlePrintRx('full')}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            title="طباعة (Alt+P)"
+          >
+            <Printer className="w-3.5 h-3.5 text-slate-500" />
+            <span className="hidden sm:inline">طباعة</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleFinish}
+            disabled={isFinishing || isSaving}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer disabled:opacity-60"
+          >
+            <CheckCircle2 className={`w-3.5 h-3.5 ${isFinishing ? 'animate-spin' : ''}`} />
+            <span>إنهاء الكشف ✓</span>
           </button>
         </div>
       </div>
 
-      {/* ============================================================== */}
-      {/* 2. تبويبات الفصل: الكشف لوحده والروشتة لوحدها                  */}
-      {/* ============================================================== */}
-      <div className="bg-slate-100/80 p-2 rounded-2xl flex items-center gap-2 border border-slate-200 print:hidden">
-        {/* التبويب 1: استمارة الكشف الطبي */}
+      {/* 🚀 أيقونة ثابتة على يمين الشاشة للانتقال للروشتة في أي وقت أثناء التمرير */}
+      <aside
+        aria-label="الانتقال السريع للروشتة"
+        className="fixed right-3 sm:right-4 md:right-[calc(var(--sidebar-width,16rem)+1rem)] top-1/2 -translate-y-1/2 z-40 print:hidden flex flex-col items-center"
+      >
         <button
           type="button"
-          onClick={() => setActiveTab('exam')}
-          className={`flex-1 flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl text-sm sm:text-base font-black transition-all cursor-pointer ${
+          onClick={() => {
+            if (activeTab === 'exam') {
+              handleProceedToPrescription();
+            } else {
+              setActiveTab('exam');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+          title={
             activeTab === 'exam'
-              ? 'bg-white text-[#074C3A] shadow-sm border border-slate-200'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-          }`}
+              ? 'انتقال فوري لكتابة الروشتة (Alt+R)'
+              : 'عودة لشيت الكشف الطبي (Alt+R)'
+          }
+          className="group relative flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl bg-[#074C3A] hover:bg-[#0B7B5E] active:scale-95 text-white shadow-xl hover:shadow-2xl transition-all cursor-pointer border-2 border-white/90 ring-2 ring-emerald-500/20"
         >
-          <Stethoscope className={`w-5 h-5 ${activeTab === 'exam' ? 'text-[#0B7B5E]' : 'text-slate-400'}`} />
-          <span>1. استمارة الكشف الطبي (ENT Examination Sheet)</span>
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold hidden sm:inline-block">
-            متاح التعديل ✍️
+          {activeTab === 'exam' ? (
+            <>
+              <Pill className="w-6 h-6 stroke-[2.2] text-[#45DBA5] animate-pulse" />
+              <span className="text-[11px] font-black whitespace-nowrap">الروشتة 💊</span>
+              {(examData.prescriptionItems?.length || 0) > 0 && (
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-white font-mono font-black">
+                  {examData.prescriptionItems?.length}
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <Stethoscope className="w-6 h-6 stroke-[2.2] text-[#45DBA5] animate-pulse" />
+              <span className="text-[11px] font-black whitespace-nowrap">الكشف 📋</span>
+            </>
+          )}
+          <span className="text-[8px] px-1 py-0.2 rounded bg-black/20 text-emerald-200 font-mono">
+            Alt+R
           </span>
         </button>
-
-        {/* التبويب 2: الروشتة الطبية */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('prescription')}
-          className={`flex-1 flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl text-sm sm:text-base font-black transition-all cursor-pointer ${
-            activeTab === 'prescription'
-              ? 'bg-white text-[#074C3A] shadow-sm border border-slate-200'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-          }`}
-        >
-          <Pill className={`w-5 h-5 ${activeTab === 'prescription' ? 'text-[#0B7B5E]' : 'text-slate-400'}`} />
-          <span>2. الروشتة الطبية (Prescription Rx)</span>
-          <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
-            (examData.prescriptionItems?.length || 0) > 0
-              ? 'bg-[#E3F5EE] text-[#0B7B5E]'
-              : 'bg-slate-200 text-slate-600'
-          }`}>
-            {examData.prescriptionItems?.length || 0} أدوية
-          </span>
-        </button>
-      </div>
+      </aside>
 
       {/* ============================================================== */}
-      {/* 3. محتوى التبويب النشط (على الشاشة)                           */}
+      {/* 2. محتوى التبويب النشط (على الشاشة)                           */}
       {/* ============================================================== */}
 
       {/* الحالة A: استمارة الكشف الطبي (مطابقة للأصل الورقي) */}
       <div className={activeTab === 'exam' ? 'space-y-6 print:hidden' : 'hidden'}>
-        <div className="bg-amber-50/70 border border-amber-200 p-3 rounded-2xl flex items-center justify-between text-xs text-amber-900 font-bold">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>
-              شيت الكشف مفتوح ومتاح لتعديل أي خانة في أي وقت. يتم الحفظ تلقائياً عند الانتقال للروشتة.
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={handleProceedToPrescription}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B7B5E] text-white text-[11px] font-black hover:bg-[#09634C] transition-all cursor-pointer shadow-xs shrink-0"
-          >
-            <span>الانتقال للروشتة ➔</span>
-          </button>
-        </div>
 
         {/* شيت الكشف الورقي التفاعلي المطابق للصورة */}
         <EntPaperSheet

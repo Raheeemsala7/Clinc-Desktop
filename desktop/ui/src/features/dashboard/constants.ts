@@ -14,6 +14,7 @@ import {
   Clock,
   ListOrdered,
   Search,
+  Coins,
 } from 'lucide-react';
 import { DashboardNavItem, UserRole } from './types';
 
@@ -24,6 +25,7 @@ export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/admin-booking', icon: CalendarPlus },
   { id: 'patients', title: 'المرضى', href: '/dashboard/all-patients', icon: Users },
   { id: 'payments', title: 'المدفوعات', href: '/dashboard/payments-all', icon: CreditCard },
+  { id: 'pricing', title: 'تسعير الخدمات', href: '/dashboard/pricing', icon: Coins },
   { id: 'expenses', title: 'المصروفات', href: '/dashboard/admin-expenses', icon: Receipt },
   { id: 'closing', title: 'الإغلاق اليومي', href: '/dashboard/admin-closing', icon: Lock },
   { id: 'reports', title: 'التقارير', href: '/dashboard/reports', icon: BarChart3 },
@@ -47,6 +49,7 @@ export const RECEPTIONIST_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/appointments/new', icon: CalendarPlus },
   { id: 'patients', title: 'المرضى', href: '/dashboard/patients', icon: Users },
   { id: 'payments', title: 'المدفوعات', href: '/dashboard/payments', icon: CreditCard },
+  { id: 'pricing', title: 'تسعير الخدمات', href: '/dashboard/pricing', icon: Coins },
   { id: 'expenses', title: 'المصروفات', href: '/dashboard/expenses', icon: Receipt },
   { id: 'closing', title: 'الإغلاق اليومي', href: '/dashboard/closing', icon: Lock },
 ];

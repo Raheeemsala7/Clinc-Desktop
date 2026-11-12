@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType } from '../types/booking';
 import { APPOINTMENT_TYPES } from '../constants/booking.constant';
+import { getStoredPricing } from '@/features/pricing/pricing-storage';
 import { Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,23 @@ export function AppointmentTypeStepCard() {
 
   const selectedType = useWatch({ control, name: 'appointmentType' });
   const isExempt = useWatch({ control, name: 'isExempt' });
+
+  const [typesList, setTypesList] = useState(APPOINTMENT_TYPES);
+
+  useEffect(() => {
+    const syncPrices = () => {
+      const stored = getStoredPricing();
+      setTypesList((prev) =>
+        prev.map((opt) => {
+          const match = stored.find((s) => s.id === opt.id);
+          return match ? { ...opt, defaultFee: match.price } : opt;
+        })
+      );
+    };
+    syncPrices();
+    window.addEventListener('pricing-updated', syncPrices);
+    return () => window.removeEventListener('pricing-updated', syncPrices);
+  }, []);
 
   const handleSelectType = (typeId: BookingFormType['appointmentType'], defaultFee: number) => {
     setValue('appointmentType', typeId, {
@@ -63,7 +81,7 @@ export function AppointmentTypeStepCard() {
         render={({ field }) => (
           <div className="space-y-2">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-              {APPOINTMENT_TYPES.map((type) => {
+              {typesList.map((type) => {
                 const isSelected = field.value === type.id;
                 return (
                   <button
@@ -71,20 +89,25 @@ export function AppointmentTypeStepCard() {
                     type="button"
                     onClick={() => handleSelectType(type.id, type.defaultFee)}
                     className={cn(
-                      'h-12 sm:h-14 px-3 py-2 rounded-2xl border transition-all cursor-pointer flex items-center justify-center gap-2 select-none',
+                      'h-12 sm:h-14 px-3 py-2 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 select-none relative',
                       isSelected
-                        ? 'border-[#0B7B5E] bg-[#E3F5EE]/70 text-[#074C3A] font-black shadow-xs ring-2 ring-blue-600/10'
+                        ? 'border-[#0B7B5E] bg-[#E3F5EE]/70 text-[#074C3A] font-black shadow-xs ring-2 ring-emerald-600/10'
                         : 'border-slate-200 bg-white text-slate-700 font-bold hover:border-slate-300 hover:bg-slate-50/60'
                     )}
                   >
-                    {isSelected && (
-                      <Check className="w-3.5 h-3.5 text-[#0B7B5E] stroke-[3] shrink-0" />
-                    )}
-                    <span className="text-xs sm:text-sm">{type.label}</span>
-                    <span
-                      className={cn('w-2 h-2 rounded-full shrink-0', type.dotColor)}
-                      aria-hidden="true"
-                    />
+                    <div className="flex items-center gap-1.5">
+                      {isSelected && (
+                        <Check className="w-3 h-3 text-[#0B7B5E] stroke-[3] shrink-0" />
+                      )}
+                      <span className="text-xs sm:text-sm">{type.label}</span>
+                      <span
+                        className={cn('w-2 h-2 rounded-full shrink-0', type.dotColor)}
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono font-bold">
+                      {type.defaultFee > 0 ? `${type.defaultFee} ج.م` : 'مجاني'}
+                    </span>
                   </button>
                 );
               })}

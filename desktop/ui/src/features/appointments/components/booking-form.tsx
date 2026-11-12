@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { useCreateAppointmentMutation } from '../hooks/appointments.hook';
 import { to24HourTime, getCurrentTime24 } from '../services/doctors.service';
 import { fileToBase64, uploadAttachmentsApi } from '../services/attachments.service';
+import { getPriceForType } from '@/features/pricing/pricing-storage';
 
 
 export function BookingForm() {
@@ -53,6 +54,11 @@ export function BookingForm() {
     },
     mode: 'onChange',
   });
+
+  useEffect(() => {
+    const fee = getPriceForType('CONSULTATION', 150);
+    methods.setValue('examinationFee', fee);
+  }, [methods]);
 
   console.log(methods.formState.errors);
 
@@ -131,6 +137,12 @@ export function BookingForm() {
         : '';
       const chronicDetails = data.chronicNotes ? `تفاصيل: ${data.chronicNotes}` : '';
       const combinedNotes = [childTag, chronicList, chronicDetails, data.notes].filter(Boolean).join(' | ');
+
+      // التحقق الصارم من أن المبلغ المدفوع لا يتجاوز صافي الكشف
+      if (!data.isExempt && (Number(data.paidAmount) || 0) > netTotal) {
+        toast.error(`المبلغ المدفوع (${data.paidAmount} ج.م) لا يمكن أن يتجاوز صافي سعر الكشف (${netTotal} ج.م)`);
+        return;
+      }
 
       const payload: AppointmentPayload = {
         patientId: data.patientId,

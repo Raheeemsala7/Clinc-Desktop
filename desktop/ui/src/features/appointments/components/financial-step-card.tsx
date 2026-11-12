@@ -27,6 +27,7 @@ export function FinancialStepCard() {
 
   const netFee = isExempt ? 0 : Math.max(0, examinationFee - discount);
   const remaining = isExempt ? 0 : Math.max(0, netFee - paidAmount);
+  const isOverpaid = !isExempt && paidAmount > netFee;
 
   const handleToggleExemption = () => {
     const nextState = !isExempt;
@@ -183,6 +184,8 @@ export function FinancialStepCard() {
                     'w-full h-11 px-3.5 pe-12 rounded-2xl border text-xs sm:text-sm font-bold transition-all focus:outline-none',
                     isExempt
                       ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
+                      : isOverpaid
+                      ? 'bg-rose-50/60 border-rose-400 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
                       : 'bg-white border-slate-200 text-[#074C3A] focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15'
                   )}
                 />
@@ -192,7 +195,13 @@ export function FinancialStepCard() {
               </div>
             )}
           />
-          {errors.paidAmount && (
+          {isOverpaid && (
+            <p className="text-xs text-rose-600 font-bold flex items-center gap-1.5 mt-1.5 bg-rose-50 border border-rose-200 p-2 rounded-xl">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+              <span>المبلغ المدفوع ({paidAmount} ج.م) أكبر من صافي الكشف ({netFee} ج.م)</span>
+            </p>
+          )}
+          {errors.paidAmount && !isOverpaid && (
             <p className="text-xs text-rose-500 font-bold flex items-center gap-1 mt-1">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{errors.paidAmount.message}</span>
