@@ -10,18 +10,10 @@ interface PatientPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: PatientPageProps) {
-  const { id } = await params;
-  try {
-    const details = await getPatientDetailsApi(id);
-    return {
-      title: `ملف المريض ${details.patient.fullName} | العيادة`,
-    };
-  } catch {
-    return {
-      title: 'ملف المريض | العيادة',
-    };
-  }
+export async function generateMetadata() {
+  return {
+    title: 'ملف المريض | العيادة',
+  };
 }
 
 async function PatientProfileContent({ params }: { params: Promise<{ id: string }> }) {

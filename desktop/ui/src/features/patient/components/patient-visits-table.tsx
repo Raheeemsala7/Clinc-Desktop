@@ -7,6 +7,7 @@ import { PatientVisitItem } from '../types/patient';
 
 interface PatientVisitsTableProps {
   visits: PatientVisitItem[];
+  onViewPrescription?: (visitId?: string | null, appointmentId?: string) => void;
 }
 
 function formatDate(dateStr?: string | null): string {
@@ -23,7 +24,7 @@ function formatDate(dateStr?: string | null): string {
   }
 }
 
-export function PatientVisitsTable({ visits }: PatientVisitsTableProps) {
+export function PatientVisitsTable({ visits, onViewPrescription }: PatientVisitsTableProps) {
   if (!visits || visits.length === 0) {
     return (
       <div className="p-8 text-center text-slate-400 text-xs bg-slate-50/50 rounded-2xl">
@@ -173,14 +174,26 @@ export function PatientVisitsTable({ visits }: PatientVisitsTableProps) {
                     <FileText className="w-3.5 h-3.5" />
                     <span>استمارة الكشف</span>
                   </Link>
-                  <Link
-                    href={`/dashboard/examination/${v.id}?tab=prescription`}
-                    title="عرض وطباعة الروشتة الطبية"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200/60 transition-all cursor-pointer whitespace-nowrap"
-                  >
-                    <Pill className="w-3.5 h-3.5" />
-                    <span>الروشتة (Rx)</span>
-                  </Link>
+                  {onViewPrescription ? (
+                    <button
+                      type="button"
+                      onClick={() => onViewPrescription(v.visitId, v.id)}
+                      title="عرض وطباعة الروشتة الطبية مباشرة"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200/60 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      <Pill className="w-3.5 h-3.5" />
+                      <span>الروشتة (Rx)</span>
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/dashboard/examination/${v.id}?tab=prescription`}
+                      title="عرض وطباعة الروشتة الطبية"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200/60 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      <Pill className="w-3.5 h-3.5" />
+                      <span>الروشتة (Rx)</span>
+                    </Link>
+                  )}
                 </div>
               </td>
             </tr>

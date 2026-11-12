@@ -121,7 +121,9 @@ export async function getPatientDetailsApi(patientId: string): Promise<PatientDe
   } catch (error) {
     if (
       error instanceof Error &&
-      (error.message.includes('NEXT_REDIRECT') || (error as any).digest?.startsWith('NEXT_REDIRECT'))
+      (error.message.includes('NEXT_REDIRECT') ||
+        (error as any).digest?.startsWith('NEXT_') ||
+        (error as any).digest === 'HANGING_PROMISE_REJECTION')
     ) {
       throw error;
     }

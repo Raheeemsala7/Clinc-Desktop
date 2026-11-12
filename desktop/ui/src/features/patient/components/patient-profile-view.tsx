@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ArrowRight, Plus, Edit2, Trash2, Pill, Printer, FileText } from 'lucide-react';
+import { ArrowRight, Plus, Edit2, Trash2, Pill, Printer, FileText, FileCheck, ExternalLink, X } from 'lucide-react';
+import { PrintablePrescriptionSlip } from '@/features/examination/components/prescription-view';
 import { PatientDetails, Patient } from '../types/patient';
 import { PatientHeroBanner } from './patient-hero-banner';
 import { PatientMetricCards } from './patient-metric-cards';
@@ -27,6 +28,34 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
   const [activeTab, setActiveTab] = useState<TabType>('visits');
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+
+  // حالة مودال معاينة وطباعة الروشتة المباشرة
+  const [previewRx, setPreviewRx] = useState<{
+    rx: any;
+    mode: 'full' | 'plain';
+  } | null>(null);
+
+  const handlePrintSelectedRx = (mode: 'full' | 'plain') => {
+    if (!previewRx) return;
+    setPreviewRx({ ...previewRx, mode });
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  const handleOpenRxFromVisit = (visitId?: string | null, appointmentId?: string) => {
+    const found = details.prescriptions?.find(
+      (rx: any) =>
+        (appointmentId && rx.appointmentId === appointmentId) ||
+        (visitId && rx.visitId === visitId) ||
+        (appointmentId && rx.id === appointmentId)
+    );
+    if (found) {
+      setPreviewRx({ rx: found, mode: 'full' });
+    } else if (appointmentId) {
+      router.push(`/dashboard/examination/${appointmentId}?tab=prescription`);
+    }
+  };
 
   const backUrl = pathname?.includes('view-patients') ? '/dashboard/view-patients' : '/dashboard/patients';
 
@@ -52,8 +81,27 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
     { id: 'notes', label: 'ملاحظات' },
   ];
 
+  const previewExamData = previewRx ? {
+    fileNo: (patient as any)?.fileNumber || details.patient.id?.slice(0, 8),
+    date: (previewRx.rx as any).visitDate || (previewRx.rx.createdAt ? new Date(previewRx.rx.createdAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)),
+    diagnosis: (previewRx.rx as any).diagnosis || '',
+    treatmentNotes: previewRx.rx.notes || '',
+    prescriptionItems: (previewRx.rx.items || []).map((it: any) => ({
+      id: it.id || Math.random().toString(),
+      drugName: it.drugName,
+      form: it.form || 'Tablet',
+      concentration: it.concentration || '',
+      dose: it.dose || '',
+      frequency: it.frequency || '',
+      duration: it.duration || '',
+      instructions: it.instructions || '',
+    })),
+    followUpDate: (previewRx.rx as any).followUpDate || '',
+  } as any : null;
+
   return (
-    <div className="space-y-6 select-none" dir="rtl">
+    <>
+      <div className={`space-y-6 select-none ${previewRx ? 'print:hidden' : ''}`} dir="rtl">
       {/* 1. الشريط العلوي: العودة للمرضى + أزرار الإجراءات */}
       <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
         {/* أزرار الإجراءات على اليسار */}
@@ -152,7 +200,10 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
             {/* محتوى التبويب */}
             <div className="p-4 sm:p-5">
               {activeTab === 'visits' && (
-                <PatientVisitsTable visits={details.previousAppointments || []} />
+                <PatientVisitsTable
+                  visits={details.previousAppointments || []}
+                  onViewPrescription={handleOpenRxFromVisit}
+                />
               )}
 
               {activeTab === 'prescriptions' && (
@@ -196,13 +247,24 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Link
-                              href={`/dashboard/examination/${(rx as any).appointmentId || rx.visitId}?tab=prescription`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                            <button
+                              type="button"
+                              onClick={() => setPreviewRx({ rx, mode: 'full' })}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                             >
                               <Printer className="w-3.5 h-3.5" />
                               <span>طباعة ومعاينة الروشتة</span>
-                            </Link>
+                            </button>
+                            {((rx as any).appointmentId || rx.visitId) && (
+                              <Link
+                                href={`/dashboard/examination/${(rx as any).appointmentId || rx.visitId}?tab=prescription`}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                                title="فتح ملف الكشف بالكامل"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                                <span>الكشف</span>
+                              </Link>
+                            )}
                           </div>
                         </div>
 
@@ -298,6 +360,94 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
         patient={patientAsItem}
       />
     </div>
+
+      {/* مودال معاينة وطباعة الروشتة الطبية مباشرة دون مغادرة الصفحة */}
+      {previewRx && previewExamData && (
+        <div
+          dir="rtl"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs print:static print:p-0 print:m-0 print:bg-white print:block"
+        >
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden print:max-h-none print:border-none print:shadow-none print:rounded-none">
+            {/* Header - مخفي أثناء الطباعة */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 print:hidden">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center font-black text-lg">
+                  ℞
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-800 text-base">معاينة وطباعة الروشتة العلاجية</h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    المريض: <strong className="text-slate-700">{patient.fullName}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewRx(null)}
+                className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Print Controls Bar - مخفي أثناء الطباعة */}
+            <div className="px-6 py-3 bg-[#F0FDF8] border-b border-[#D0E5DC] flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-600">نمط الطباعة:</span>
+                <button
+                  type="button"
+                  onClick={() => setPreviewRx({ ...previewRx, mode: 'full' })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    previewRx.mode === 'full'
+                      ? 'bg-[#0B7B5E] text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  كاملة (مع ترويسة العيادة)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewRx({ ...previewRx, mode: 'plain' })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    previewRx.mode === 'plain'
+                      ? 'bg-[#0B7B5E] text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  أدوية فقط (للورق الجاهز)
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePrintSelectedRx(previewRx.mode)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  <Printer className="w-4 h-4 stroke-[2.5]" />
+                  <span>طباعة الروشتة الآن</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Prescription Preview Sheet */}
+            <div className="p-6 overflow-y-auto flex-1 bg-slate-100/60 print:overflow-visible print:p-0 print:bg-white print:block">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto print:border-none print:shadow-none print:p-0 print:max-w-none">
+                <PrintablePrescriptionSlip
+                  examData={previewExamData}
+                  patient={patient}
+                  doctor={{
+                    name: previewRx.rx.doctorName || 'د. إسلام عبدالله كريمة',
+                    phone: '01018566478',
+                  }}
+                  printMode={previewRx.mode}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
