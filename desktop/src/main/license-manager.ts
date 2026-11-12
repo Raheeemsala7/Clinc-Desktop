@@ -126,6 +126,25 @@ export class LicenseManager {
   }
 
   /**
+   * استرجاع النص الخام لكود الترخيص المثبت
+   */
+  static getRawLicenseKey(): string | null {
+    try {
+      const p1 = this.getLicenseFilePath();
+      if (fs.existsSync(p1)) {
+        const val = fs.readFileSync(p1, 'utf8').trim();
+        if (val) return val;
+      }
+      const p2 = path.resolve(__dirname, '../../resources/clinic-license.lic');
+      if (fs.existsSync(p2)) {
+        const val = fs.readFileSync(p2, 'utf8').trim();
+        if (val) return val;
+      }
+    } catch {}
+    return null;
+  }
+
+  /**
    * التحقق من الترخيص المحفوظ في النظام
    */
   static checkInstalledLicense(): LicenseValidationResult {

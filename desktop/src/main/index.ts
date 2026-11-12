@@ -127,8 +127,50 @@ async function bootServicesAndLoadUrl() {
     await ProcessSupervisor.ensureMongoRunning();
     await ProcessSupervisor.startServerBackend(projectRoot);
     appLog('⏳ [DESKTOP] Waiting for API Server on port 4000...');
-    const serverReady = await ProcessSupervisor.waitForPort(4000, '127.0.0.1', 45000);
+    const serverReady = await ProcessSupervisor.waitForPort(4000, '127.0.0.1', 25000);
     appLog(`📡 [DESKTOP] API Server on port 4000 ready: ${serverReady}`);
+
+    if (!serverReady) {
+      const isMongoUp = await ProcessSupervisor.waitForPort(27017, '127.0.0.1', 1500);
+      appLog(`🔍 [DIAGNOSTIC] MongoDB on port 27017 active: ${isMongoUp}`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        const errorTitle = !isMongoUp ? 'قاعدة البيانات (MongoDB) متوقفة' : 'تعذر تشغيل خادم العيادة (API 4000)';
+        const errorDesc = !isMongoUp
+          ? 'يتطلب تشغيل المنظومة كجهاز رئيسي أن تكون خدمة MongoDB قيد التشغيل على هذا الجهاز.<br><br><b>طريقة الحل:</b><br>1. افتح نافذة Services في ويندوز (أو اضغط Win+R واكتب services.msc).<br>2. ابحث عن خدمة <b>MongoDB Server</b> واضغط عليها Start.<br>3. أو قم بتثبيت MongoDB Community كـ Windows Service.'
+          : 'تعذر بدء خدمة الخادم على المنفذ 4000. قد يكون المنفذ مستخدماً أو حدث خطأ في الصلاحيات.';
+        mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
+          <!DOCTYPE html>
+          <html dir="rtl" lang="ar">
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #071E18; color: #FFFFFF; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+              .card { background: #0B2A22; border: 1px solid rgba(69, 219, 165, 0.25); border-radius: 16px; padding: 32px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+              .icon { width: 56px; height: 56px; border-radius: 14px; background: rgba(239, 68, 68, 0.15); color: #EF4444; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
+              h2 { font-size: 20px; font-weight: 700; color: #FFFFFF; margin: 0 0 12px 0; }
+              p { font-size: 14px; line-height: 1.7; color: #D0E5DC; margin: 0 0 24px 0; text-align: right; }
+              .actions { display: flex; gap: 12px; justify-content: center; }
+              .btn-primary { background: #0B7B5E; color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
+              .btn-primary:hover { background: #074C3A; }
+              .btn-secondary { background: rgba(255,255,255,0.08); color: #D0E5DC; border: 1px solid rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <div class="icon">⚠️</div>
+              <h2>${errorTitle}</h2>
+              <p>${errorDesc}</p>
+              <div class="actions">
+                <button class="btn-primary" onclick="location.reload()">إعادة الفحص والمحاولة</button>
+              </div>
+            </div>
+          </body>
+          </html>
+        `));
+        return;
+      }
+    }
+
     await ProcessSupervisor.startNextFrontend(projectRoot, 'http://127.0.0.1:4000/api/v1');
   }
 
@@ -144,12 +186,31 @@ async function bootServicesAndLoadUrl() {
     } else {
       appLog('❌ [DESKTOP] Next.js UI timed out. Showing fallback error page.');
       mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
-        <html dir="rtl" style="font-family:sans-serif;background:#0A164E;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;">
-          <div style="text-align:center;">
-            <h2>تعذر بدء واجهة النظام</h2>
-            <p style="color:#cbd5e1;">يرجى إعادة تشغيل البرنامج أو التحقق من المنافذ.</p>
-            <button onclick="location.reload()" style="padding:10px 24px;border-radius:8px;border:none;background:#38bdf8;color:#0f172a;font-weight:bold;cursor:pointer;">إعادة المحاولة</button>
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #071E18; color: #FFFFFF; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+            .card { background: #0B2A22; border: 1px solid rgba(69, 219, 165, 0.25); border-radius: 16px; padding: 32px; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+            .icon { width: 56px; height: 56px; border-radius: 14px; background: rgba(239, 68, 68, 0.15); color: #EF4444; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
+            h2 { font-size: 20px; font-weight: 700; color: #FFFFFF; margin: 0 0 10px 0; }
+            p { font-size: 14px; line-height: 1.6; color: #D0E5DC; margin: 0 0 24px 0; }
+            .actions { display: flex; gap: 12px; justify-content: center; }
+            .btn-primary { background: #0B7B5E; color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
+            .btn-primary:hover { background: #074C3A; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="icon">⏱️</div>
+            <h2>استغرق بدء الواجهة وقتاً أطول من المتوقع</h2>
+            <p>قد تكون الخدمة بصدد التهيئة لأول مرة أو هناك تعارض في منفذ التشغيل (Port 3000).</p>
+            <div class="actions">
+              <button class="btn-primary" onclick="location.reload()">إعادة المحاولة</button>
+            </div>
           </div>
+        </body>
         </html>
       `));
     }

@@ -4,6 +4,7 @@ import fs from 'fs';
 import net from 'net';
 import http from 'http';
 import { app } from 'electron';
+import { LicenseManager } from './license-manager';
 
 function supervisorLog(msg: string) {
   try {
@@ -231,12 +232,15 @@ export class ProcessSupervisor {
 
     supervisorLog(`[SUPERVISOR] Backend spawn: command=${command}, args=${args.join(' ')}, cwd=${cwd}`);
 
+    const rawLicKey = LicenseManager.getRawLicenseKey() || '';
+
     const child = spawn(command, args, {
       cwd,
       env: {
         ...process.env,
         PORT: '4000',
         NODE_ENV: 'production',
+        CLINIC_LICENSE_KEY: rawLicKey,
         MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/clinic-management',
         JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || 'your-super-secret-jwt-key-change-in-production',
         JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key-change-in-production',

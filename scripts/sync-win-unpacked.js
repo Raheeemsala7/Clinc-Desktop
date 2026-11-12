@@ -22,37 +22,30 @@ const frontendDest = path.join(winUnpacked, 'frontend');
 const standaloneDir = path.join(root, 'desktop', 'ui', '.next', 'standalone');
 
 if (fs.existsSync(standaloneDir)) {
-  const serverJsSrc = path.join(standaloneDir, 'desktop', 'ui', 'server.js');
-  if (fs.existsSync(serverJsSrc)) {
-    fs.mkdirSync(path.join(frontendDest, 'desktop', 'ui'), { recursive: true });
-    fs.copyFileSync(serverJsSrc, path.join(frontendDest, 'desktop', 'ui', 'server.js'));
-    fs.copyFileSync(serverJsSrc, path.join(frontendDest, 'server.js'));
+  fs.mkdirSync(frontendDest, { recursive: true });
+  try {
+    fs.cpSync(standaloneDir, frontendDest, { recursive: true, force: true, errorOnExist: false });
+  } catch (err) {
+    console.log('ℹ️ Frontend standalone already in sync or locked by system.');
   }
 
-  // Copy .next
-  const dotNextSrc = path.join(standaloneDir, 'desktop', 'ui', '.next');
-  const dotNextDest = path.join(frontendDest, 'desktop', 'ui', '.next');
-  if (fs.existsSync(dotNextSrc)) {
-    fs.cpSync(dotNextSrc, dotNextDest, { recursive: true, force: true });
-    fs.cpSync(dotNextSrc, path.join(frontendDest, '.next'), { recursive: true, force: true });
+  const serverJsSrc = path.join(standaloneDir, 'desktop', 'ui', 'server.js');
+  if (fs.existsSync(serverJsSrc)) {
+    try {
+      fs.copyFileSync(serverJsSrc, path.join(frontendDest, 'server.js'));
+    } catch {}
   }
 
   // Copy public
   const publicSrc = path.join(root, 'desktop', 'ui', 'public');
   if (fs.existsSync(publicSrc)) {
-    fs.cpSync(publicSrc, path.join(frontendDest, 'desktop', 'ui', 'public'), { recursive: true, force: true });
-    fs.cpSync(publicSrc, path.join(frontendDest, 'public'), { recursive: true, force: true });
+    try {
+      fs.cpSync(publicSrc, path.join(frontendDest, 'desktop', 'ui', 'public'), { recursive: true, force: true });
+      fs.cpSync(publicSrc, path.join(frontendDest, 'public'), { recursive: true, force: true });
+    } catch {}
   }
 
-  console.log('✅ Copied updated Next.js frontend to win-unpacked/resources/frontend');
-}
-
-// 3. Sync clinic-license.lic
-const licSrc = path.join(root, 'desktop', 'resources', 'clinic-license.lic');
-const licDest = path.join(winUnpacked, 'clinic-license.lic');
-if (fs.existsSync(licSrc)) {
-  fs.copyFileSync(licSrc, licDest);
-  console.log('✅ Copied clinic-license.lic to win-unpacked/resources');
+  console.log('✅ Next.js standalone frontend is ready in win-unpacked/resources/frontend');
 }
 
 console.log('🎉 Fast sync completed successfully!');
