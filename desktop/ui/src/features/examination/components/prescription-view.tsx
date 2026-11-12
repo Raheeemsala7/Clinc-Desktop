@@ -26,6 +26,7 @@ import {
   formatFrequency,
   formatDuration,
   getDoseSuggestionsForForm,
+  getDefaultDoseForForm,
 } from '../utils/prescription-formatter';
 
 export interface SavedDrugItem {
@@ -241,7 +242,132 @@ export function PrescriptionView({
     }
   }, []);
 
-  // إغلاق أي قائمة منسدلة تلقائياً عند الضغط في أي مكان خارجي
+  // حالة نافذة إضافة الاقتراحات أو أشكال الأدوية البديلة لـ window.prompt (تعمل بكفاءة 100% في Electron)
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    type: 'suggestion' | 'form';
+    field?: 'dose' | 'concentration' | 'frequency' | 'duration';
+    title: string;
+    label: string;
+    placeholder: string;
+    formEnglish: string;
+    formArabic: string;
+    inputValue: string;
+  }>({
+    isOpen: false,
+    type: 'suggestion',
+    title: '',
+    label: '',
+    placeholder: '',
+    formEnglish: '',
+    formArabic: '',
+    inputValue: '',
+  });
+
+  const openAddFormModal = () => {
+    setModalState({
+      isOpen: true,
+      type: 'form',
+      title: 'إضافة شكل / نوع دواء جديد (Drug Form)',
+      label: 'اسم شكل الدواء بالإنجليزي',
+      placeholder: 'مثال: Nasal Gel, Eye Ointment, Suppository...',
+      formEnglish: '',
+      formArabic: '',
+      inputValue: '',
+    });
+  };
+
+  const openAddSuggestionModal = (
+    field: 'dose' | 'concentration' | 'frequency' | 'duration',
+    titleAr: string,
+    placeholder = ''
+  ) => {
+    setModalState({
+      isOpen: true,
+      type: 'suggestion',
+      field,
+      title: `إضافة اقتراح جديد - ${titleAr}`,
+      label: `نص الاقتراح المراد إضافته لـ (${titleAr})`,
+      placeholder: placeholder || `اكتب الاقتراح الجديد هنا...`,
+      formEnglish: '',
+      formArabic: '',
+      inputValue: '',
+    });
+  };
+
+  const handleSaveModal = () => {
+    if (modalState.type === 'form') {
+      const en = (modalState.formEnglish || '').trim();
+      const ar = (modalState.formArabic || '').trim() || en;
+      if (!en) {
+        toast.error('يرجى إدخال اسم شكل الدواء بالإنجليزي');
+        return;
+      }
+      const id = en.toLowerCase().replace(/\s+/g, '-');
+      if (allDrugForms.some((f) => f.id === id || f.labelEn.toLowerCase() === en.toLowerCase())) {
+        toast.info(`"${en}" موجود بالفعل في القائمة`);
+        setModalState((prev) => ({ ...prev, isOpen: false }));
+        return;
+      }
+      const newForm: DrugFormOption = {
+        id,
+        labelEn: en,
+        labelAr: ar,
+        isCustom: true,
+      };
+
+      setCustomForms((prev) => {
+        const next = [...prev, newForm];
+        try {
+          localStorage.setItem('clinic_rx_custom_forms', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+
+      setDeletedFormIds((prev) => {
+        const next = prev.filter((x) => x !== id);
+        try {
+          localStorage.setItem('clinic_rx_deleted_forms', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+
+      toast.success(`تمت إضافة "${en}" بنجاح إلى أشكال الأدوية`);
+      setModalState((prev) => ({ ...prev, isOpen: false }));
+    } else if (modalState.field) {
+      const field = modalState.field;
+      const clean = (modalState.inputValue || '').trim();
+      if (!clean) {
+        toast.error('يرجى كتابة نص الاقتراح');
+        return;
+      }
+
+      setDeletedSuggestions((prev) => {
+        const next = { ...prev, [field]: prev[field].filter((x) => x !== clean) };
+        try {
+          localStorage.setItem('clinic_rx_deleted_suggestions', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+
+      setCustomSuggestions((prev) => {
+        if (prev[field].includes(clean)) {
+          toast.info(`"${clean}" موجود بالفعل في الاقتراحات`);
+          return prev;
+        }
+        const next = { ...prev, [field]: [...prev[field], clean] };
+        try {
+          localStorage.setItem('clinic_rx_custom_suggestions', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+
+      toast.success(`تمت إضافة "${clean}" إلى الاقتراحات بنجاح`);
+      setModalState((prev) => ({ ...prev, isOpen: false }));
+    }
+  };
+
+  // إغلاق أي قائمة منسدلة تلقائياً عند الضغط في أي مكان خارجها أو Escape
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
@@ -251,49 +377,19 @@ export function PrescriptionView({
         setActiveDropdownRowId(null);
       }
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveFormRowId(null);
+        setActiveDropdownRowId(null);
+      }
+    };
     document.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-  // إدارة أشكال الأدوية (إضافة وحذف)
-  const handleAddCustomForm = () => {
-    const input = window.prompt('اكتب اسم شكل الدواء الجديد (مثال: Nasal Gel أو جل أنف):');
-    if (!input || !input.trim()) return;
-    const clean = input.trim();
-    const id = clean.toLowerCase().replace(/\s+/g, '-');
-
-    if (allDrugForms.some((f) => f.id === id || f.labelEn.toLowerCase() === clean.toLowerCase())) {
-      toast.info(`"${clean}" موجود بالفعل في القائمة`);
-      return;
-    }
-
-    const newForm: DrugFormOption = {
-      id,
-      labelEn: clean,
-      labelAr: clean,
-      isCustom: true,
-    };
-
-    setCustomForms((prev) => {
-      const next = [...prev, newForm];
-      try {
-        localStorage.setItem('clinic_rx_custom_forms', JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-
-    setDeletedFormIds((prev) => {
-      const next = prev.filter((x) => x !== id);
-      try {
-        localStorage.setItem('clinic_rx_deleted_forms', JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-
-    toast.success(`تمت إضافة "${clean}" إلى أشكال الأدوية`);
-  };
 
   const handleDeleteForm = (id: string, label: string) => {
     if (!confirm(`هل تريد حذف "${label}" من قائمة أشكال الأدوية؟`)) return;
@@ -318,38 +414,6 @@ export function PrescriptionView({
     const combined = [...DRUG_FORMS, ...customForms];
     return combined.filter((f) => !deletedFormIds.includes(f.id));
   }, [customForms, deletedFormIds]);
-
-  // إدارة الاقتراحات (إضافة وحذف لأي حقل)
-  const handleAddSuggestion = (
-    field: 'dose' | 'concentration' | 'frequency' | 'duration',
-    titleAr: string
-  ) => {
-    const input = window.prompt(`اكتب الاقتراح الجديد لإضافته لقائمة (${titleAr}):`);
-    if (!input || !input.trim()) return;
-    const clean = input.trim();
-
-    // إزالته من قائمة المحذوفات إن كان محذوفاً سابقاً
-    setDeletedSuggestions((prev) => {
-      const next = { ...prev, [field]: prev[field].filter((x) => x !== clean) };
-      try {
-        localStorage.setItem('clinic_rx_deleted_suggestions', JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-
-    setCustomSuggestions((prev) => {
-      if (prev[field].includes(clean)) {
-        toast.info(`"${clean}" موجود بالفعل في الاقتراحات`);
-        return prev;
-      }
-      const next = { ...prev, [field]: [...prev[field], clean] };
-      try {
-        localStorage.setItem('clinic_rx_custom_suggestions', JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-    toast.success(`تمت إضافة "${clean}" إلى اقتراحات ${titleAr} بنجاح`);
-  };
 
   const handleRemoveSuggestion = (
     field: 'dose' | 'concentration' | 'frequency' | 'duration',
@@ -504,15 +568,17 @@ export function PrescriptionView({
     setActiveDropdownRowId(null);
   };
 
-  // 6. اختيار شكل دواء جديد مع تحديث وحدة الجرعة تلقائياً
+  // 6. اختيار شكل دواء جديد مع تحديث وحدة الجرعة تلقائياً وفوراً
   const handleSelectFormForRow = (itemId: string, newForm: string) => {
     const currentItem = items.find((it) => it.id === itemId);
     const prevDose = currentItem?.dose;
-    let nextDose = prevDose;
+    let nextDose = '';
 
-    if (prevDose) {
+    if (prevDose && prevDose.trim()) {
       // إعادة ترجمة الجرعة لتلائم وحدة الشكل الجديد (مثال: "3 قرص" تتحول إلى "3 حقن" إذا تم اختيار Injection)
       nextDose = formatDose(prevDose, newForm);
+    } else {
+      nextDose = getDefaultDoseForForm(newForm);
     }
 
     onChange((prev) => ({
@@ -522,7 +588,7 @@ export function PrescriptionView({
           ? {
               ...it,
               form: newForm,
-              dose: nextDose || it.dose,
+              dose: nextDose || getDefaultDoseForForm(newForm) || it.dose,
             }
           : it
       ),
@@ -904,7 +970,7 @@ export function PrescriptionView({
                       <label className="font-bold text-xs sm:text-sm text-slate-700">نوع / شكل الدواء (Form)</label>
                       <button
                         type="button"
-                        onClick={handleAddCustomForm}
+                        onClick={openAddFormModal}
                         className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
                         title="إضافة شكل دواء مخصص للقائمة"
                       >
@@ -920,15 +986,32 @@ export function PrescriptionView({
                         value={item.form || ''}
                         onFocus={() => setActiveFormRowId(item.id)}
                         onChange={(e) => {
-                          updateItem(item.id, 'form', e.target.value);
+                          const newForm = e.target.value;
+                          updateItem(item.id, 'form', newForm);
+                          if (newForm.trim()) {
+                            if (item.dose) {
+                              const reFormatted = formatDose(item.dose, newForm);
+                              if (reFormatted && reFormatted !== item.dose) {
+                                updateItem(item.id, 'dose', reFormatted);
+                              }
+                            } else {
+                              const def = getDefaultDoseForForm(newForm);
+                              if (def) updateItem(item.id, 'dose', def);
+                            }
+                          }
                           setActiveFormRowId(item.id);
                         }}
                         onBlur={(e) => {
                           const typedForm = e.target.value.trim();
-                          if (typedForm && item.dose) {
-                            const reFormatted = formatDose(item.dose, typedForm);
-                            if (reFormatted !== item.dose) {
-                              updateItem(item.id, 'dose', reFormatted);
+                          if (typedForm) {
+                            if (item.dose) {
+                              const reFormatted = formatDose(item.dose, typedForm);
+                              if (reFormatted && reFormatted !== item.dose) {
+                                updateItem(item.id, 'dose', reFormatted);
+                              }
+                            } else {
+                              const def = getDefaultDoseForForm(typedForm);
+                              if (def) updateItem(item.id, 'dose', def);
                             }
                           }
                         }}
@@ -952,7 +1035,7 @@ export function PrescriptionView({
                             className="px-3 py-2 bg-emerald-50/70 hover:bg-emerald-100/70 text-xs font-black text-[#0B7B5E] cursor-pointer flex items-center justify-between transition-colors"
                             onMouseDown={(e) => {
                               e.preventDefault();
-                              handleAddCustomForm();
+                              openAddFormModal();
                             }}
                           >
                             <span className="flex items-center gap-1.5">
@@ -1041,7 +1124,7 @@ export function PrescriptionView({
                       <label className="font-bold text-xs sm:text-sm text-slate-700">التركيز (Concentration)</label>
                       <button
                         type="button"
-                        onClick={() => handleAddSuggestion('concentration', 'التركيز')}
+                        onClick={() => openAddSuggestionModal('concentration', 'التركيز', '500mg, 1gm, 0.1%...')}
                         className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
                         title="إضافة تركيز جديد للاقتراحات"
                       >
@@ -1100,7 +1183,7 @@ export function PrescriptionView({
                       <label className="font-bold text-xs sm:text-sm text-slate-700">الجرعة (Dose)</label>
                       <button
                         type="button"
-                        onClick={() => handleAddSuggestion('dose', 'الجرعة')}
+                        onClick={() => openAddSuggestionModal('dose', 'الجرعة', '1 قرص، حقنة واحدة، 3 نقط...')}
                         className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
                         title="إضافة جرعة جديدة للاقتراحات"
                       >
@@ -1165,7 +1248,7 @@ export function PrescriptionView({
                       <label className="font-bold text-xs sm:text-sm text-slate-700">التكرار (Frequency)</label>
                       <button
                         type="button"
-                        onClick={() => handleAddSuggestion('frequency', 'التكرار')}
+                        onClick={() => openAddSuggestionModal('frequency', 'التكرار', 'كل 12 ساعة، 3 مرات يومياً...')}
                         className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
                         title="إضافة تكرار جديد للاقتراحات"
                       >
@@ -1230,7 +1313,7 @@ export function PrescriptionView({
                       <label className="font-bold text-xs sm:text-sm text-slate-700">المدة (Duration)</label>
                       <button
                         type="button"
-                        onClick={() => handleAddSuggestion('duration', 'المدة')}
+                        onClick={() => openAddSuggestionModal('duration', 'المدة', '5 أيام، أسبوع، شهر...')}
                         className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
                         title="إضافة مدة جديدة للاقتراحات"
                       >
@@ -1377,6 +1460,118 @@ export function PrescriptionView({
           </button>
         </div>
       </div>
+
+      {/* نافذة إضافة شكل دواء أو اقتراح جديد داخل التطبيق (بديل موثوق لـ window.prompt في بيئة Electron) */}
+      {modalState.isOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setModalState((prev) => ({ ...prev, isOpen: false }))}
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+            dir="rtl"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-black text-base text-[#074C3A]">
+                {modalState.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setModalState((prev) => ({ ...prev, isOpen: false }))}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {modalState.type === 'form' ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    اسم شكل الدواء بالإنجليزي (English Name):
+                  </label>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={modalState.formEnglish || ''}
+                    onChange={(e) =>
+                      setModalState((prev) => ({ ...prev, formEnglish: e.target.value }))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSaveModal();
+                      }
+                    }}
+                    placeholder="مثال: Nasal Gel, Eye Ointment, Suppository..."
+                    className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0B7B5E]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    الاسم بالعربي (اختياري):
+                  </label>
+                  <input
+                    type="text"
+                    value={modalState.formArabic || ''}
+                    onChange={(e) =>
+                      setModalState((prev) => ({ ...prev, formArabic: e.target.value }))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSaveModal();
+                      }
+                    }}
+                    placeholder="مثال: جل أنف، مرهم للعين، تحاميل..."
+                    className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0B7B5E]"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {modalState.label}:
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={modalState.inputValue || ''}
+                  onChange={(e) =>
+                    setModalState((prev) => ({ ...prev, inputValue: e.target.value }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSaveModal();
+                    }
+                  }}
+                  placeholder={modalState.placeholder}
+                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0B7B5E]"
+                />
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setModalState((prev) => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveModal}
+                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-[#0B7B5E] hover:bg-[#09634C] transition-colors cursor-pointer shadow-xs"
+              >
+                حفظ وإضافة للقائمة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

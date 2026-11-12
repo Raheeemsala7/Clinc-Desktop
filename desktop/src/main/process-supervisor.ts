@@ -233,6 +233,8 @@ export class ProcessSupervisor {
     supervisorLog(`[SUPERVISOR] Backend spawn: command=${command}, args=${args.join(' ')}, cwd=${cwd}`);
 
     const rawLicKey = LicenseManager.getRawLicenseKey() || '';
+    const machineId = LicenseManager.getMachineId();
+    const defaultStorage = fs.existsSync('D:\\') ? 'D:/ClinicData/uploads' : 'C:/ClinicData/uploads';
 
     const child = spawn(command, args, {
       cwd,
@@ -240,13 +242,15 @@ export class ProcessSupervisor {
         ...process.env,
         PORT: '4000',
         NODE_ENV: 'production',
+        CLINIC_SERVER_AUTHORIZED: 'true',
+        CLINIC_MACHINE_HWID: machineId,
         CLINIC_LICENSE_KEY: rawLicKey,
         MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/clinic-management',
         JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || 'your-super-secret-jwt-key-change-in-production',
         JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key-change-in-production',
         JWT_ACCESS_TTL: '2592000',
         JWT_REFRESH_TTL: '5184000',
-        LOCAL_STORAGE_PATH: process.env.LOCAL_STORAGE_PATH || 'D:/ClinicData/uploads',
+        LOCAL_STORAGE_PATH: process.env.LOCAL_STORAGE_PATH || defaultStorage,
         STORAGE_DRIVER: 'local',
       },
       stdio: 'pipe',

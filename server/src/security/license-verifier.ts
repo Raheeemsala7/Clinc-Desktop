@@ -7,6 +7,9 @@ const MASTER_SECRET = 'NAFS_SECURE_HMAC_KEY_DRESLAM_SYSTEM_2026_PROD_SECRET';
 const HWID_SALT = 'NAFS_CLINIC_SALT_2026_HARDWARE_FINGERPRINT';
 
 export function getMachineHardwareId(): string {
+  if (process.env.CLINIC_MACHINE_HWID) {
+    return process.env.CLINIC_MACHINE_HWID;
+  }
   let uuid = '';
   let cpu = '';
   let board = '';
@@ -67,6 +70,12 @@ function isValidKey(key: string, currentMachineId: string): boolean {
 
 export function verifyServerLicense(): boolean {
   if (process.env.NODE_ENV !== 'production' || process.env.NAFS_DEV_UNLOCKED === 'true') {
+    return true;
+  }
+
+  // إذا تم إطلاق السيرفر من داخل بيئة تطبيق سطح المكتب بعد التحقق الأمني الكامل
+  if (process.env.CLINIC_SERVER_AUTHORIZED === 'true') {
+    console.log('🛡️ [SECURITY] Server authorized directly by Electron Desktop Supervisor.');
     return true;
   }
 
