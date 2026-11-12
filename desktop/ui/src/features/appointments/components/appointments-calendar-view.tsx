@@ -19,7 +19,7 @@ interface AppointmentsCalendarViewProps {
 
 export function AppointmentsCalendarView({
   data,
-  initialView = 'list',
+  initialView = 'week',
   initialDate,
   initialDoctorId,
 }: AppointmentsCalendarViewProps) {
@@ -29,7 +29,7 @@ export function AppointmentsCalendarView({
   const [isPending, startTransition] = useTransition();
 
   const currentView: CalendarViewMode =
-    (searchParams?.get('view') as CalendarViewMode) || initialView || 'list';
+    (searchParams?.get('view') as CalendarViewMode) || initialView || 'week';
   const currentDate =
     searchParams?.get('date') || initialDate || data.date || new Date().toISOString().split('T')[0];
   const currentDoctorId =

@@ -306,7 +306,7 @@ export function CalendarHeaderControls({
 
           <button
             type="button"
-            onClick={() => onViewModeChange('day')}
+            onClick={() => onViewModeChange('week')}
             className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               isCalendarMode
                 ? 'bg-[#074C3A] text-white shadow-xs font-black'

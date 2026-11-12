@@ -37,7 +37,6 @@ export function formatDose(rawDose?: string, form?: string): string {
     num = 2;
   } else {
     // محاولة استخراج رقم مجرد أو رقم متبوع بوحدة سابقة
-    // مثال: "3", "3 قرص", "3 أقراص", "3 حقن", "4 كبسولات", "5 سم", "10 سم"
     const match = cleanStr.match(
       /^([0-9.]+)\s*(قرص|أقراص|حقن|حقنة|نقط|نقطة|كبسول|كبسولة|كبسولات|بخة|بخات|كيس|أكياس|لبوس|لبوسة|أمبول|أمبولات|سم|ملعقة|ملاعق)?$/
     );
@@ -163,8 +162,8 @@ export function formatDose(rawDose?: string, form?: string): string {
   // ط. الأقراص الافتراضية (Tablet / ODT / أقراص / الافتراضي)
   if (isHalf) return 'نصف قرص';
   if (isOneAndHalf) return 'قرص ونصف';
-  if (num === 1) return '1 قرص';
-  if (num === 2) return '2 قرص';
+  if (num === 1) return 'قرص واحد';
+  if (num === 2) return 'قرصين';
   if (num !== null && num >= 3 && num <= 10) return `${num} أقراص`;
   if (num !== null && num > 10) return `${num} قرص`;
   if (num !== null) return `${num} أقراص`;
@@ -215,7 +214,7 @@ export function getDoseSuggestionsForForm(form?: string): string[] {
   if (norm.includes('lozenge') || norm.includes('استحلاب')) {
     return ['قرص استحلاب واحد', '2 قرص استحلاب', '3 أقراص استحلاب'];
   }
-  return ['نصف قرص', '1 قرص', '2 قرص', '3 أقراص', 'قرص ونصف', '4 أقراص'];
+  return ['نصف قرص', 'قرص واحد', 'قرصين', '3 أقراص', 'قرص ونصف', '4 أقراص'];
 }
 
 /**
@@ -249,7 +248,7 @@ export function getDefaultDoseForForm(form?: string): string {
   if (norm.includes('sachet') || norm.includes('أكياس') || norm.includes('فوار')) return 'كيس واحد في نصف كوب ماء';
   if (norm.includes('suppository') || norm.includes('لبوس')) return 'لبوسة واحدة';
   if (norm.includes('lozenge') || norm.includes('استحلاب')) return 'قرص استحلاب واحد';
-  return '1 قرص';
+  return 'قرص واحد';
 }
 
 /**
@@ -270,16 +269,16 @@ export function formatFrequency(rawFreq?: string): string {
 
   // التكرار بالأرقام
   if (englishNum === '1' || trimmed === 'once' || trimmed === 'od' || trimmed === 'qd') {
-    return 'مرة واحدة يومياً (كل 24 ساعة)';
+    return 'مرة واحدة في اليوم';
   }
   if (englishNum === '2' || trimmed === 'bid' || trimmed === 'q12h' || trimmed === '12') {
-    return 'كل 12 ساعة (مرتين يومياً)';
+    return 'مرتين في اليوم';
   }
   if (englishNum === '3' || trimmed === 'tid' || trimmed === 'q8h' || trimmed === '8') {
-    return 'كل 8 ساعات (3 مرات يومياً)';
+    return '3 مرات في اليوم';
   }
   if (englishNum === '4' || trimmed === 'qid' || trimmed === 'q6h' || trimmed === '6') {
-    return 'كل 6 ساعات (4 مرات يومياً)';
+    return '4 مرات في اليوم';
   }
   if (englishNum === '6' || trimmed === 'q4h' || trimmed === '4') {
     return 'كل 4 ساعات';
@@ -311,30 +310,83 @@ export function formatDuration(rawDuration?: string): string {
   if (isNaN(num)) return trimmed;
 
   if (num === 1) return 'يوم واحد';
-  if (num === 2) return 'يومان';
-  if (num === 3) return '3 أيام';
-  if (num === 4) return '4 أيام';
-  if (num === 5) return '5 أيام';
-  if (num === 6) return '6 أيام';
-  if (num === 7) return 'أسبوع (7 أيام)';
-  if (num === 10) return '10 أيام';
-  if (num === 14) return 'أسبوعين (14 يوماً)';
-  if (num === 21) return '3 أسابيع';
-  if (num === 30) return 'شهر (30 يوماً)';
-  if (num <= 10) return `${num} أيام`;
-  return `${num} يوماً`;
+  if (num === 2) return 'يومين';
+  if (num === 3) return 'لمدة 3 أيام';
+  if (num === 4) return 'لمدة 4 أيام';
+  if (num === 5) return 'لمدة 5 أيام';
+  if (num === 6) return 'لمدة 6 أيام';
+  if (num === 7) return 'لمدة أسبوع';
+  if (num === 10) return 'لمدة 10 أيام';
+  if (num === 14) return 'لمدة أسبوعين';
+  if (num === 21) return 'لمدة 3 أسابيع';
+  if (num === 30) return 'لمدة شهر';
+  if (num <= 10) return `لمدة ${num} أيام`;
+  return `لمدة ${num} يوماً`;
+}
+
+/**
+ * ترجمة علاقة الجرعة بالطعام (Meal Timing)
+ * - علامة (-) تعني قبل الأكل
+ * - علامة (+) تعني بعد الأكل
+ * - (-30) تعني قبل الأكل بنصف ساعة
+ * - (+30) تعني بعد الأكل بنصف ساعة
+ * - (-15) تعني قبل الأكل بربع ساعة
+ * - (+15) تعني بعد الأكل بربع ساعة
+ * - (-60) تعني قبل الأكل بساعة
+ * - (0) تعني مع الأكل / وسط الطعام
+ */
+export function parseMealTiming(rawTiming?: string): string {
+  if (!rawTiming) return '';
+  const trimmed = rawTiming.trim().toLowerCase();
+
+  if (trimmed === '-' || trimmed === 'قبل' || trimmed === 'before') {
+    return 'قبل الأكل';
+  }
+  if (trimmed === '+' || trimmed === 'بعد' || trimmed === 'after') {
+    return 'بعد الأكل';
+  }
+  if (trimmed === '-30' || trimmed === 'قبل 30' || trimmed === '-نصف' || trimmed === '-0.5') {
+    return 'قبل الأكل بنصف ساعة';
+  }
+  if (trimmed === '+30' || trimmed === 'بعد 30' || trimmed === '+نصف' || trimmed === '+0.5') {
+    return 'بعد الأكل بنصف ساعة';
+  }
+  if (trimmed === '-15' || trimmed === 'قبل 15' || trimmed === '-ربع') {
+    return 'قبل الأكل بربع ساعة';
+  }
+  if (trimmed === '+15' || trimmed === 'بعد 15' || trimmed === '+ربع') {
+    return 'بعد الأكل بربع ساعة';
+  }
+  if (trimmed === '-60' || trimmed === '-1h' || trimmed === 'قبل ساعة') {
+    return 'قبل الأكل بساعة';
+  }
+  if (trimmed === '+60' || trimmed === '+1h' || trimmed === 'بعد ساعة') {
+    return 'بعد الأكل بساعة';
+  }
+  if (trimmed === '0' || trimmed === 'مع' || trimmed === 'وسط' || trimmed === 'with') {
+    return 'مع الأكل';
+  }
+
+  // إذا كانت باللغة العربية بالفعل
+  if (/[\u0600-\u06FF]/.test(trimmed)) {
+    return rawTiming.trim();
+  }
+
+  return rawTiming.trim();
 }
 
 export interface ParsedDoseShortcut {
   dose: string;
   frequency: string;
   duration: string;
+  instructions?: string;
   summary: string;
 }
 
 /**
- * تحليل وترجمة اختصارات الجرعات السريعة مثل 1/2/5 أو 1-3-7 أو 2/2/5
- * مثال: 1/2/5 => قرص واحد مرتين كل خمس أيام
+ * تحليل وترجمة اختصارات الجرعات السريعة مثل 1/2/5 أو 1/3/5/-30 أو 1/3/5/+
+ * يدعم: الجرعة / التكرار / المدة / [توقيت الأكل]
+ * مثال: 1/3/5/-30 => قرص واحد قبل الأكل بنصف ساعة • 3 مرات في اليوم • لمدة 5 أيام
  */
 export function parseDoseShortcut(rawShortcut?: string, form?: string): ParsedDoseShortcut | null {
   if (!rawShortcut) return null;
@@ -344,11 +396,44 @@ export function parseDoseShortcut(rawShortcut?: string, form?: string): ParsedDo
     .trim()
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
 
-  // تجزئة المدخل بواسطة / أو - أو مسافات أو علامة + أو فاصلة
-  const parts = clean.split(/[/\\,\-–—\s+]+/).filter(Boolean);
-  if (parts.length < 2) return null;
+  // تجزئة المدخل
+  let rawD = '';
+  let rawF = '';
+  let rawDur = '';
+  let rawTiming = '';
 
-  const [rawD, rawF, rawDur] = parts;
+  if (clean.includes('/')) {
+    const slashParts = clean.split('/').map((s) => s.trim()).filter(Boolean);
+    if (slashParts.length >= 2) {
+      rawD = slashParts[0];
+      rawF = slashParts[1];
+      if (slashParts.length >= 3) {
+        const p2 = slashParts[2];
+        // هل الجزء الثالث يحتوي على مدة وتوقيت ملتصقين مثل 5-30 أو 5+30؟
+        const timingMatch = p2.match(/^(\d+)\s*([-+][0-9a-zA-Z\u0600-\u06FF]+)$/);
+        if (timingMatch) {
+          rawDur = timingMatch[1];
+          rawTiming = timingMatch[2];
+        } else {
+          rawDur = p2;
+        }
+      }
+      if (slashParts.length >= 4) {
+        rawTiming = slashParts[3];
+      }
+    }
+  } else {
+    // إذا لم تكن هناك شرطات مائلة / نبحث بالمسافات أو الفواصل
+    const parts = clean.split(/[,–—\s]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      rawD = parts[0];
+      rawF = parts[1];
+      if (parts.length >= 3) rawDur = parts[2];
+      if (parts.length >= 4) rawTiming = parts[3];
+    }
+  }
+
+  if (!rawD || !rawF) return null;
 
   // 1. ترجمة الجرعة
   let dose = formatDose(rawD, form);
@@ -381,13 +466,13 @@ export function parseDoseShortcut(rawShortcut?: string, form?: string): ParsedDo
 
   // 3. ترجمة المدة
   let duration = '';
-  if (rawDur !== undefined && rawDur !== null) {
+  if (rawDur !== undefined && rawDur !== null && rawDur !== '') {
     const durNum = parseInt(rawDur, 10);
     if (!isNaN(durNum)) {
       if (durNum === 1) duration = 'يوم واحد';
       else if (durNum === 2) duration = 'يومين';
       else if (durNum === 3) duration = 'لمدة 3 أيام';
-      else if (durNum === 5) duration = 'كل خمس أيام'; // صياغة د. إسلام
+      else if (durNum === 5) duration = 'لمدة 5 أيام';
       else if (durNum === 7) duration = 'لمدة أسبوع';
       else if (durNum === 10) duration = 'لمدة 10 أيام';
       else if (durNum === 14) duration = 'لمدة أسبوعين';
@@ -399,13 +484,22 @@ export function parseDoseShortcut(rawShortcut?: string, form?: string): ParsedDo
     }
   }
 
-  const summary = [dose, frequency, duration].filter(Boolean).join(' • ');
+  // 4. ترجمة توقيت الأكل والتعليمات
+  const instructions = parseMealTiming(rawTiming);
+
+  // صياغة الملخص المتماسك
+  let summary = '';
+  if (instructions) {
+    summary = `${dose} ${instructions} • ${frequency} • ${duration}`.replace(/\s*•\s*$/, '');
+  } else {
+    summary = [dose, frequency, duration].filter(Boolean).join(' • ');
+  }
 
   return {
     dose,
     frequency,
     duration,
+    instructions: instructions || undefined,
     summary,
   };
 }
-

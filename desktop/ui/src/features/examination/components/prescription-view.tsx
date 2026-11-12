@@ -15,6 +15,7 @@ import {
   FileCheck,
   Search,
   ChevronDown,
+  Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -168,6 +169,7 @@ export function PrescriptionView({
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
   const [activeDropdownRowId, setActiveDropdownRowId] = useState<string | null>(null);
   const [activeFormRowId, setActiveFormRowId] = useState<string | null>(null);
+  const [expandedManualEditRows, setExpandedManualEditRows] = useState<Record<string, boolean>>({});
 
   // 1. أشكال الأدوية المخصصة والمحذوفة
   const [customForms, setCustomForms] = useState<DrugFormOption[]>([]);
@@ -598,8 +600,9 @@ export function PrescriptionView({
   };
 
   const addItem = () => {
+    const newId = Math.random().toString(36).substring(2, 9);
     const newItem: PrescriptionMedicine = {
-      id: Math.random().toString(36).substring(2, 9),
+      id: newId,
       drugName: '',
       form: 'Tablet',
       concentration: '',
@@ -612,6 +615,65 @@ export function PrescriptionView({
       ...prev,
       prescriptionItems: [...(prev.prescriptionItems || []), newItem],
     }));
+
+    // التمرير السلس والتركيز المباشر على حقل اسم الدواء المضاف حديثاً
+    setTimeout(() => {
+      const el = document.getElementById(`drug-row-${newId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const input = el.querySelector<HTMLInputElement>('input[data-drug-input="name"]');
+        if (input) input.focus();
+      }
+    }, 100);
+  };
+
+  const handleAutoSaveUntrackedDrugs = async () => {
+    for (const item of items) {
+      const name = item.drugName?.trim();
+      if (!name) continue;
+      const alreadySaved = savedDrugs.some(
+        (d) => d.drugName.trim().toLowerCase() === name.toLowerCase()
+      );
+      if (!alreadySaved) {
+        try {
+          const res = await fetch('/api/drugs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name,
+              form: item.form || 'Tablet',
+              concentration: item.concentration || '',
+              dose: item.dose || '',
+              frequency: item.frequency || '',
+              duration: item.duration || '',
+              instructions: item.instructions || '',
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const saved = data?.payload || data;
+            if (saved) {
+              setSavedDrugs((prev) => [
+                ...prev,
+                {
+                  id: saved.id || saved._id,
+                  drugName: saved.name || name,
+                  form: saved.form || item.form || 'Tablet',
+                  concentration: saved.concentration || item.concentration || '',
+                  dose: saved.dose || item.dose || '',
+                  frequency: saved.frequency || item.frequency || '',
+                  duration: saved.duration || item.duration || '',
+                  instructions: saved.instructions || item.instructions || '',
+                  usageCount: 1,
+                },
+              ]);
+            }
+          }
+        } catch (e) {
+          console.warn('Auto-save drug failed:', e);
+        }
+      }
+    }
   };
 
   const updateItem = (id: string, field: keyof PrescriptionMedicine, value: string) => {
@@ -698,89 +760,6 @@ export function PrescriptionView({
           placeholder="اكتب التشخيص الطبي للحالة هنا (مثال: Acute Tonsillitis / Allergic Rhinitis / Sinusitis...)"
           className="w-full bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200 text-sm sm:text-base font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all resize-y leading-relaxed"
         />
-      </div>
-
-      {/* 3. قاموس الأدوية الشائعة والمسجلة للدكتور مع البحث السريع والحذف */}
-      <div className="p-4 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>قاموس أدوية العيادة والاقتراحات السابقة (إضافة سريعة بضغطة واحدة):</span>
-          </div>
-
-          {/* حقل البحث السريع في الأدوية السابقة */}
-          <div className="relative w-full sm:w-72">
-            <input
-              type="text"
-              value={drugSearchQuery}
-              onChange={(e) => setDrugSearchQuery(e.target.value)}
-              placeholder="ابحث في أدوية العيادة السابقة..."
-              className="w-full h-8 pr-8 pl-6 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
-            />
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            {drugSearchQuery && (
-              <button
-                type="button"
-                onClick={() => setDrugSearchQuery('')}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* شرائح الأدوية السريعة */}
-        <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pt-1">
-          {filteredChips.length === 0 ? (
-            <p className="text-xs text-slate-400 py-1">
-              لا توجد أدوية مطابقة للبحث. يمكنك كتابة الدواء وإضافته بالأسفل.
-            </p>
-          ) : (
-            filteredChips.map((drug, idx) => (
-              <div
-                key={drug.id || `${drug.drugName}-${idx}`}
-                className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-[#0B7B5E] bg-slate-50/70 hover:bg-[#E3F5EE] transition-all text-xs cursor-pointer shadow-2xs"
-              >
-                <button
-                  type="button"
-                  onClick={() => addQuickDrug(drug)}
-                  className="flex items-center gap-1.5 text-right cursor-pointer"
-                  title="إضافة هذا الدواء للروشتة مباشرة"
-                >
-                  <Plus className="w-3.5 h-3.5 text-[#0B7B5E]" />
-                  <span className="font-bold text-[#074C3A]">{drug.drugName}</span>
-                  {drug.concentration && (
-                    <span className="text-[10px] text-slate-500 font-mono">
-                      ({drug.concentration})
-                    </span>
-                  )}
-                  {drug.dose && (
-                    <span className="text-[10px] text-slate-400">
-                      · {drug.dose}
-                    </span>
-                  )}
-                </button>
-
-                {drug.id && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm(`هل تريد حذف "${drug.drugName}" من القاموس نهائياً؟`)) {
-                        handleDeleteDrug(drug.id, drug.drugName);
-                      }
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-600 transition-opacity rounded cursor-pointer"
-                    title="حذف من الاقتراحات"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            ))
-          )}
-        </div>
       </div>
 
       {/* 4. جدول إدخال الأدوية والجرعات والتكرار والمدة */}

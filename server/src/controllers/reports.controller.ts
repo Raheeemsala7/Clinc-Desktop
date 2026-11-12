@@ -35,6 +35,19 @@ export class ReportsController {
     );
     sendSuccess(res, result);
   });
+
+  getDoctorRevenue = asyncHandler(async (req: Request, res: Response) => {
+    let doctorId = (req.query.doctorId as string) || undefined;
+    if (req.user?.role === 'DOCTOR') {
+      doctorId = req.user.id;
+    }
+
+    const from = req.query.from as string;
+    const to = req.query.to as string;
+
+    const result = await reportsService.getDoctorRevenue(from, to, doctorId);
+    sendSuccess(res, result);
+  });
 }
 
 export const reportsController = new ReportsController();

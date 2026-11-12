@@ -5,6 +5,7 @@ import { authMiddleware, requireRoles } from '../middleware/auth';
 const router = Router();
 router.use(authMiddleware);
 
+router.get('/doctor-revenue', requireRoles('ADMIN', 'DOCTOR'), reportsController.getDoctorRevenue);
 router.get('/summary', requireRoles('ADMIN'), reportsController.getSummary);
 router.get('/income-by-day', requireRoles('ADMIN'), reportsController.getIncomeByDay);
 router.get('/expenses-by-category', requireRoles('ADMIN'), reportsController.getExpensesByCategory);

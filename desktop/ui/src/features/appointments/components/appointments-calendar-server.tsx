@@ -15,16 +15,17 @@ export async function AppointmentsCalendarServer({
   searchParams,
 }: AppointmentsCalendarServerProps) {
   const resolvedParams = await searchParams;
+  const viewMode: CalendarViewMode = resolvedParams.view || 'week';
   const data = await getCalendarAppointmentsApi({
     date: resolvedParams.date,
     doctorId: resolvedParams.doctorId,
-    view: resolvedParams.view,
+    view: viewMode,
   });
 
   return (
     <AppointmentsCalendarView
       data={data}
-      initialView={resolvedParams.view}
+      initialView={viewMode}
       initialDate={resolvedParams.date}
       initialDoctorId={resolvedParams.doctorId}
     />
