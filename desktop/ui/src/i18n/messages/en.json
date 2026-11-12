@@ -262,7 +262,8 @@
       "clinicalSearch": "Clinical Search",
       "calendar": "Calendar & Schedule",
       "weeklyHours": "Weekly Hours",
-      "queue": "Waiting Queue"
+      "queue": "Waiting Queue",
+      "pricing": "Service Pricing"
     },
     "admin": {
       "title": "Dashboard",

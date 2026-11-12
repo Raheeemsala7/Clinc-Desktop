@@ -1,11 +1,10 @@
-import React from 'react';
-import { ClinicalSearchView } from '@/features/clinical-search/components/clinical-search-view';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'البحث الطبي السريري الشامل | العيادة',
 };
 
 export default function AdminClinicalSearchPage() {
-  return <ClinicalSearchView />;
+  // صفحة البحث الطبي السريري مخصصة للطبيب فقط
+  redirect('/dashboard');
 }
-

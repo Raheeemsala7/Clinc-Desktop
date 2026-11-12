@@ -99,7 +99,10 @@ export function DashboardSidebar({
                     : pathname?.startsWith(item.href);
 
                 const Icon = item.icon;
-                const itemTitle = (t as any).has?.(`nav.${item.id}`) ? t(`nav.${item.id}`) : (item.title || item.id);
+                const rawTitle = (t as any).has?.(`nav.${item.id}`) ? t(`nav.${item.id}`) : (item.title || item.id);
+                const itemTitle = (typeof rawTitle === 'string' && (rawTitle.includes('nav.') || rawTitle.includes('Dashboard.')))
+                  ? (item.title || rawTitle)
+                  : rawTitle;
 
                 return (
                   <SidebarMenuItem key={item.id}>
