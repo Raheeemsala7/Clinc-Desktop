@@ -78,12 +78,12 @@ export class LicenseManager {
    */
   static verifyLicenseKey(keyString: string): LicenseValidationResult {
     try {
-      const trimmed = keyString.trim();
-      if (!trimmed.includes('.')) {
+      const sanitized = (keyString || '').replace(/\s+/g, '');
+      if (!sanitized.includes('.')) {
         return { valid: false, error: 'صيغة كود الترخيص غير صحيحة' };
       }
 
-      const [encodedPayload, signature] = trimmed.split('.');
+      const [encodedPayload, signature] = sanitized.split('.');
       if (!encodedPayload || !signature) {
         return { valid: false, error: 'بيانات الترخيص ناقصة أو تالفة' };
       }
@@ -196,7 +196,7 @@ export class LicenseManager {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      fs.writeFileSync(filePath, keyString.trim(), 'utf8');
+      fs.writeFileSync(filePath, keyString.replace(/\s+/g, ''), 'utf8');
       return { valid: true, info: validation.info };
     } catch (err: any) {
       return { valid: false, error: 'فشل حفظ ملف الترخيص: ' + err.message };

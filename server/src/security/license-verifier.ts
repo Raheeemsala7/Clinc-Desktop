@@ -43,7 +43,8 @@ export function getMachineHardwareId(): string {
 function isValidKey(key: string, currentMachineId: string): boolean {
   if (!key || !key.includes('.')) return false;
   try {
-    const [encodedPayload, signature] = key.trim().split('.');
+    const cleanKey = key.replace(/\s+/g, '');
+    const [encodedPayload, signature] = cleanKey.split('.');
     const expectedSig = crypto
       .createHmac('sha256', MASTER_SECRET)
       .update(encodedPayload)

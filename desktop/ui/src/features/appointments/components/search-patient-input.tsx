@@ -42,6 +42,11 @@ export function SearchPatientInput({}) {
         }
         if (patient.age !== undefined && patient.age !== null) {
             setValue('patientAge', patient.age, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+            if (Number(patient.age) < 18) {
+                setValue('isChild', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+            } else {
+                setValue('isChild', false, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+            }
         }
         if (patient.chronicConditions && patient.chronicConditions.length > 0) {
             setValue('hasChronicDisease', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true });

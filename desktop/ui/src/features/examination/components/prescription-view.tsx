@@ -1,6 +1,6 @@
 'use client';
 
-import  { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Pill,
   Printer,
@@ -14,13 +14,19 @@ import {
   Calendar,
   FileCheck,
   Search,
-  X,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   PrescriptionMedicine,
   EntExaminationData,
 } from '../types/ent-examination.types';
+import {
+  formatDose,
+  formatFrequency,
+  formatDuration,
+  getDoseSuggestionsForForm,
+} from '../utils/prescription-formatter';
 
 export interface SavedDrugItem {
   id?: string;
@@ -34,7 +40,14 @@ export interface SavedDrugItem {
   usageCount?: number;
 }
 
-export const DRUG_FORMS = [
+export interface DrugFormOption {
+  id: string;
+  labelEn: string;
+  labelAr: string;
+  isCustom?: boolean;
+}
+
+export const DRUG_FORMS: DrugFormOption[] = [
   { id: 'Tablet', labelEn: 'Tablet', labelAr: 'أقراص' },
   { id: 'ODT', labelEn: 'ODT (Orally Disintegrating Tablet)', labelAr: 'أقراص تذوب في الفم' },
   { id: 'ODF', labelEn: 'ODF (Oral Dissolving Film)', labelAr: 'شرائط تذوب في الفم' },
@@ -70,19 +83,10 @@ export const DRUG_FORMS = [
   { id: 'Patch', labelEn: 'Patch', labelAr: 'لصقات جلدية' },
   { id: 'Mouthwash', labelEn: 'Mouthwash', labelAr: 'غسول فم' },
   { id: 'Oral Spray', labelEn: 'Oral Spray', labelAr: 'بخاخ فم' },
-];
-
-export const DOSE_SUGGESTIONS = [
-  '1 قرص',
-  '2 قرص',
-  '1 كبسولة',
-  '1 ملعقة كبيرة',
-  '1 ملعقة صغيرة',
-  '5 سم',
-  'بخة واحدة',
-  'بختين',
-  '3 نقط',
-  'حقنة واحدة',
+  { id: 'Lozenges', labelEn: 'Lozenges', labelAr: 'استحلاب' },
+  { id: 'Nasal Wash', labelEn: 'Nasal Wash', labelAr: 'غسول أنف' },
+  { id: 'Gargle', labelEn: 'Gargle', labelAr: 'غرغرة' },
+  { id: 'Inhalation Solution', labelEn: 'Inhalation Solution', labelAr: 'محلول استنشاق' },
 ];
 
 export const CONCENTRATION_SUGGESTIONS = [
@@ -161,8 +165,13 @@ export function PrescriptionView({
   const [savedDrugs, setSavedDrugs] = useState<SavedDrugItem[]>([]);
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
   const [activeDropdownRowId, setActiveDropdownRowId] = useState<string | null>(null);
+  const [activeFormRowId, setActiveFormRowId] = useState<string | null>(null);
 
-  // 1. الاقتراحات المخصصة المحفوظة للدكتور (الجرعة، التركيز، التكرار، المدة)
+  // 1. أشكال الأدوية المخصصة والمحذوفة
+  const [customForms, setCustomForms] = useState<DrugFormOption[]>([]);
+  const [deletedFormIds, setDeletedFormIds] = useState<string[]>([]);
+
+  // 2. الاقتراحات المخصصة والمحذوفة (الجرعة، التركيز، التكرار، المدة)
   const [customSuggestions, setCustomSuggestions] = useState<{
     dose: string[];
     concentration: string[];
@@ -175,13 +184,51 @@ export function PrescriptionView({
     duration: [],
   });
 
+  const [deletedSuggestions, setDeletedSuggestions] = useState<{
+    dose: string[];
+    concentration: string[];
+    frequency: string[];
+    duration: string[];
+  }>({
+    dose: [],
+    concentration: [],
+    frequency: [],
+    duration: [],
+  });
+
+  // قراءة الاقتراحات والمحذوفات من LocalStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('clinic_rx_custom_suggestions');
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const savedCustomForms = localStorage.getItem('clinic_rx_custom_forms');
+      if (savedCustomForms) {
+        const parsed = JSON.parse(savedCustomForms);
+        if (Array.isArray(parsed)) setCustomForms(parsed);
+      }
+
+      const savedDeletedForms = localStorage.getItem('clinic_rx_deleted_forms');
+      if (savedDeletedForms) {
+        const parsed = JSON.parse(savedDeletedForms);
+        if (Array.isArray(parsed)) setDeletedFormIds(parsed);
+      }
+
+      const savedCustom = localStorage.getItem('clinic_rx_custom_suggestions');
+      if (savedCustom) {
+        const parsed = JSON.parse(savedCustom);
         if (parsed && typeof parsed === 'object') {
           setCustomSuggestions({
+            dose: Array.isArray(parsed.dose) ? parsed.dose : [],
+            concentration: Array.isArray(parsed.concentration) ? parsed.concentration : [],
+            frequency: Array.isArray(parsed.frequency) ? parsed.frequency : [],
+            duration: Array.isArray(parsed.duration) ? parsed.duration : [],
+          });
+        }
+      }
+
+      const savedDeleted = localStorage.getItem('clinic_rx_deleted_suggestions');
+      if (savedDeleted) {
+        const parsed = JSON.parse(savedDeleted);
+        if (parsed && typeof parsed === 'object') {
+          setDeletedSuggestions({
             dose: Array.isArray(parsed.dose) ? parsed.dose : [],
             concentration: Array.isArray(parsed.concentration) ? parsed.concentration : [],
             frequency: Array.isArray(parsed.frequency) ? parsed.frequency : [],
@@ -194,13 +241,101 @@ export function PrescriptionView({
     }
   }, []);
 
-  const handleAddCustomSuggestion = (
+  // إغلاق أي قائمة منسدلة تلقائياً عند الضغط في أي مكان خارجي
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (!target.closest('[data-combobox-root]')) {
+        setActiveFormRowId(null);
+        setActiveDropdownRowId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, []);
+
+  // إدارة أشكال الأدوية (إضافة وحذف)
+  const handleAddCustomForm = () => {
+    const input = window.prompt('اكتب اسم شكل الدواء الجديد (مثال: Nasal Gel أو جل أنف):');
+    if (!input || !input.trim()) return;
+    const clean = input.trim();
+    const id = clean.toLowerCase().replace(/\s+/g, '-');
+
+    if (allDrugForms.some((f) => f.id === id || f.labelEn.toLowerCase() === clean.toLowerCase())) {
+      toast.info(`"${clean}" موجود بالفعل في القائمة`);
+      return;
+    }
+
+    const newForm: DrugFormOption = {
+      id,
+      labelEn: clean,
+      labelAr: clean,
+      isCustom: true,
+    };
+
+    setCustomForms((prev) => {
+      const next = [...prev, newForm];
+      try {
+        localStorage.setItem('clinic_rx_custom_forms', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
+    setDeletedFormIds((prev) => {
+      const next = prev.filter((x) => x !== id);
+      try {
+        localStorage.setItem('clinic_rx_deleted_forms', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
+    toast.success(`تمت إضافة "${clean}" إلى أشكال الأدوية`);
+  };
+
+  const handleDeleteForm = (id: string, label: string) => {
+    if (!confirm(`هل تريد حذف "${label}" من قائمة أشكال الأدوية؟`)) return;
+    setDeletedFormIds((prev) => {
+      const next = Array.from(new Set([...prev, id]));
+      try {
+        localStorage.setItem('clinic_rx_deleted_forms', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    setCustomForms((prev) => {
+      const next = prev.filter((f) => f.id !== id);
+      try {
+        localStorage.setItem('clinic_rx_custom_forms', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    toast.success(`تم حذف "${label}" من القائمة`);
+  };
+
+  const allDrugForms = useMemo(() => {
+    const combined = [...DRUG_FORMS, ...customForms];
+    return combined.filter((f) => !deletedFormIds.includes(f.id));
+  }, [customForms, deletedFormIds]);
+
+  // إدارة الاقتراحات (إضافة وحذف لأي حقل)
+  const handleAddSuggestion = (
     field: 'dose' | 'concentration' | 'frequency' | 'duration',
     titleAr: string
   ) => {
     const input = window.prompt(`اكتب الاقتراح الجديد لإضافته لقائمة (${titleAr}):`);
     if (!input || !input.trim()) return;
     const clean = input.trim();
+
+    // إزالته من قائمة المحذوفات إن كان محذوفاً سابقاً
+    setDeletedSuggestions((prev) => {
+      const next = { ...prev, [field]: prev[field].filter((x) => x !== clean) };
+      try {
+        localStorage.setItem('clinic_rx_deleted_suggestions', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
 
     setCustomSuggestions((prev) => {
       if (prev[field].includes(clean)) {
@@ -210,45 +345,65 @@ export function PrescriptionView({
       const next = { ...prev, [field]: [...prev[field], clean] };
       try {
         localStorage.setItem('clinic_rx_custom_suggestions', JSON.stringify(next));
-      } catch {
-        // ignore
-      }
+      } catch {}
       return next;
     });
     toast.success(`تمت إضافة "${clean}" إلى اقتراحات ${titleAr} بنجاح`);
   };
 
-  const handleRemoveCustomSuggestion = (
+  const handleRemoveSuggestion = (
     field: 'dose' | 'concentration' | 'frequency' | 'duration',
     val: string
   ) => {
+    // 1. الحذف من الاقتراحات المخصصة إن وجدت
     setCustomSuggestions((prev) => {
       const next = { ...prev, [field]: prev[field].filter((x) => x !== val) };
       try {
         localStorage.setItem('clinic_rx_custom_suggestions', JSON.stringify(next));
-      } catch {
-        // ignore
-      }
+      } catch {}
       return next;
     });
+    // 2. الإضافة إلى قائمة المحذوفات لتختفي حتى لو كانت افتراضية
+    setDeletedSuggestions((prev) => {
+      const next = { ...prev, [field]: Array.from(new Set([...prev[field], val])) };
+      try {
+        localStorage.setItem('clinic_rx_deleted_suggestions', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    toast.success(`تم حذف "${val}" من الاقتراحات`);
   };
 
-  const allDoseList = useMemo(
-    () => Array.from(new Set([...DOSE_SUGGESTIONS, ...customSuggestions.dose])),
-    [customSuggestions.dose]
-  );
   const allConcentrationList = useMemo(
-    () => Array.from(new Set([...CONCENTRATION_SUGGESTIONS, ...customSuggestions.concentration])),
-    [customSuggestions.concentration]
+    () =>
+      Array.from(new Set([...CONCENTRATION_SUGGESTIONS, ...customSuggestions.concentration])).filter(
+        (x) => !deletedSuggestions.concentration.includes(x)
+      ),
+    [customSuggestions.concentration, deletedSuggestions.concentration]
   );
+
   const allFrequencyList = useMemo(
-    () => Array.from(new Set([...FREQUENCY_SUGGESTIONS, ...customSuggestions.frequency])),
-    [customSuggestions.frequency]
+    () =>
+      Array.from(new Set([...FREQUENCY_SUGGESTIONS, ...customSuggestions.frequency])).filter(
+        (x) => !deletedSuggestions.frequency.includes(x)
+      ),
+    [customSuggestions.frequency, deletedSuggestions.frequency]
   );
+
   const allDurationList = useMemo(
-    () => Array.from(new Set([...DURATION_SUGGESTIONS, ...customSuggestions.duration])),
-    [customSuggestions.duration]
+    () =>
+      Array.from(new Set([...DURATION_SUGGESTIONS, ...customSuggestions.duration])).filter(
+        (x) => !deletedSuggestions.duration.includes(x)
+      ),
+    [customSuggestions.duration, deletedSuggestions.duration]
   );
+
+  // حساب اقتراحات الجرعات المخصصة لكل سطر حسب شكل الدواء المختار (حقنة، قرص، بخة، نقط...)
+  const getDoseListForRow = (form?: string) => {
+    const contextual = getDoseSuggestionsForForm(form);
+    const combined = Array.from(new Set([...contextual, ...customSuggestions.dose]));
+    return combined.filter((x) => !deletedSuggestions.dose.includes(x));
+  };
 
   // 1. جلب الأدوية المسجلة مسبقاً من الخادم
   useEffect(() => {
@@ -349,6 +504,32 @@ export function PrescriptionView({
     setActiveDropdownRowId(null);
   };
 
+  // 6. اختيار شكل دواء جديد مع تحديث وحدة الجرعة تلقائياً
+  const handleSelectFormForRow = (itemId: string, newForm: string) => {
+    const currentItem = items.find((it) => it.id === itemId);
+    const prevDose = currentItem?.dose;
+    let nextDose = prevDose;
+
+    if (prevDose) {
+      // إعادة ترجمة الجرعة لتلائم وحدة الشكل الجديد (مثال: "3 قرص" تتحول إلى "3 حقن" إذا تم اختيار Injection)
+      nextDose = formatDose(prevDose, newForm);
+    }
+
+    onChange((prev) => ({
+      ...prev,
+      prescriptionItems: (prev.prescriptionItems || []).map((it) =>
+        it.id === itemId
+          ? {
+              ...it,
+              form: newForm,
+              dose: nextDose || it.dose,
+            }
+          : it
+      ),
+    }));
+    setActiveFormRowId(null);
+  };
+
   const addItem = () => {
     const newItem: PrescriptionMedicine = {
       id: Math.random().toString(36).substring(2, 9),
@@ -409,47 +590,50 @@ export function PrescriptionView({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-black text-[#074C3A]">
+              <h3 className="text-xl sm:text-2xl font-black text-[#074C3A]">
                 الروشتة الطبية (Medical Prescription)
               </h3>
-              <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-0.5 rounded-full">
                 إصدار معتمد
               </span>
             </div>
-            <div className="flex items-center gap-4 text-xs font-bold text-slate-500 mt-1 flex-wrap">
-              <span className="flex items-center gap-1">
-                <User className="w-3.5 h-3.5 text-slate-400" />
-                المريض: <strong className="text-slate-800">{patient?.fullName}</strong>
+            <div className="flex items-center gap-4 text-sm font-bold text-slate-500 mt-1.5 flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <User className="w-4 h-4 text-[#0B7B5E]" />
+                المريض: <strong className="text-slate-900 text-base sm:text-lg font-black">{patient?.fullName}</strong>
               </span>
               <span>·</span>
-              <span>رقم الملف: <strong className="text-slate-800 font-mono">{examData.fileNo || (patient as any)?.fileNumber || '---'}</strong></span>
+              <span>رقم الملف: <strong className="text-slate-900 text-sm font-mono">{examData.fileNo || (patient as any)?.fileNumber || '---'}</strong></span>
               <span>·</span>
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                التاريخ: <strong className="text-slate-800 font-mono">{examData.date || new Date().toISOString().slice(0, 10)}</strong>
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-slate-400" />
+                التاريخ: <strong className="text-slate-900 text-sm font-mono">{examData.date || new Date().toISOString().slice(0, 10)}</strong>
               </span>
             </div>
           </div>
         </div>
-
-        {/* التشخيص المعتمد */}
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 min-w-[260px] space-y-1">
-          <span className="text-[11px] font-bold text-slate-500 block">
-            التشخيص النهائي (Diagnosis):
-          </span>
-          <input
-            type="text"
-            value={examData.diagnosis || ''}
-            onChange={(e) =>
-              onChange((prev) => ({ ...prev, diagnosis: e.target.value }))
-            }
-            placeholder="اكتب تشخيص الحالة ليظهر في الروشتة..."
-            className="w-full bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
-          />
-        </div>
       </div>
 
-      {/* 2. قاموس الأدوية الشائعة والمسجلة للدكتور مع البحث السريع والحذف */}
+      {/* 2. التشخيص الطبي للحالة (Diagnosis) - في سطر كامل ومستقل مع Textarea */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-4 sm:p-5 shadow-xs space-y-2">
+        <label className="text-sm sm:text-base font-black text-[#074C3A] flex items-center gap-2">
+          <span>التشخيص الطبي للحالة (Diagnosis):</span>
+          <span className="text-xs font-normal text-slate-500">
+            (يظهر في الروشتة الطبية المطبوعة للمريض)
+          </span>
+        </label>
+        <textarea
+          rows={2}
+          value={examData.diagnosis || ''}
+          onChange={(e) =>
+            onChange((prev) => ({ ...prev, diagnosis: e.target.value }))
+          }
+          placeholder="اكتب التشخيص الطبي للحالة هنا (مثال: Acute Tonsillitis / Allergic Rhinitis / Sinusitis...)"
+          className="w-full bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200 text-sm sm:text-base font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all resize-y leading-relaxed"
+        />
+      </div>
+
+      {/* 3. قاموس الأدوية الشائعة والمسجلة للدكتور مع البحث السريع والحذف */}
       <div className="p-4 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
@@ -471,53 +655,57 @@ export function PrescriptionView({
               <button
                 type="button"
                 onClick={() => setDrugSearchQuery('')}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
               >
-                <X className="w-3 h-3" />
+                ✕
               </button>
             )}
           </div>
         </div>
 
-        {/* أشرطة الأدوية المقترحة */}
-        <div className="flex items-center gap-1.5 flex-wrap max-h-36 overflow-y-auto pr-1">
+        {/* شرائح الأدوية السريعة */}
+        <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pt-1">
           {filteredChips.length === 0 ? (
-            <span className="text-xs text-slate-400 italic py-1">
-              لا توجد أدوية مطابقة لبحثك. يمكنك كتابة الدواء مباشرة بالأسفل وسيتم حفظه تلقائياً!
-            </span>
+            <p className="text-xs text-slate-400 py-1">
+              لا توجد أدوية مطابقة للبحث. يمكنك كتابة الدواء وإضافته بالأسفل.
+            </p>
           ) : (
-            filteredChips.map((d, i) => (
+            filteredChips.map((drug, idx) => (
               <div
-                key={d.id || `${d.drugName}-${i}`}
-                className="group inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-[#E3F5EE] hover:border-[#D0E5DC] text-slate-700 hover:text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs overflow-hidden select-none"
+                key={drug.id || `${drug.drugName}-${idx}`}
+                className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-[#0B7B5E] bg-slate-50/70 hover:bg-[#E3F5EE] transition-all text-xs cursor-pointer shadow-2xs"
               >
                 <button
                   type="button"
-                  onClick={() => addQuickDrug(d)}
-                  className="px-2.5 py-1.5 flex items-center gap-1 cursor-pointer active:scale-95"
-                  title="إضافة للروشتة مباشرة بجميع الجرعات"
+                  onClick={() => addQuickDrug(drug)}
+                  className="flex items-center gap-1.5 text-right cursor-pointer"
+                  title="إضافة هذا الدواء للروشتة مباشرة"
                 >
-                  <Plus className="w-3 h-3 text-[#0B7B5E]" />
-                  <span>{d.drugName}</span>
-                  {d.concentration && (
-                    <span className="text-[10px] text-[#0B7B5E] font-mono font-normal">
-                      ({d.concentration})
+                  <Plus className="w-3.5 h-3.5 text-[#0B7B5E]" />
+                  <span className="font-bold text-[#074C3A]">{drug.drugName}</span>
+                  {drug.concentration && (
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      ({drug.concentration})
+                    </span>
+                  )}
+                  {drug.dose && (
+                    <span className="text-[10px] text-slate-400">
+                      · {drug.dose}
                     </span>
                   )}
                 </button>
 
-                {/* زر الحذف من الاقتراحات */}
-                {d.id && (
+                {drug.id && (
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm(`هل تريد حذف "${d.drugName}" من الاقتراحات نهائياً؟`)) {
-                        handleDeleteDrug(d.id, d.drugName);
+                      if (confirm(`هل تريد حذف "${drug.drugName}" من القاموس نهائياً؟`)) {
+                        handleDeleteDrug(drug.id, drug.drugName);
                       }
                     }}
-                    className="h-full px-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border-r border-slate-200/60"
-                    title="حذف هذا الدواء من الاقتراحات"
+                    className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-600 transition-opacity rounded cursor-pointer"
+                    title="حذف من الاقتراحات"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -528,13 +716,11 @@ export function PrescriptionView({
         </div>
       </div>
 
-      {/* 3. جدول الروشتة الطبية المخصصة */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+      {/* 4. جدول إدخال الأدوية والجرعات والتكرار والمدة */}
+      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#E3F5EE] flex items-center justify-center text-[#0B7B5E] font-black text-sm">
-              ℞
-            </div>
+            <Pill className="w-5 h-5 text-[#0B7B5E]" />
             <div>
               <h4 className="font-black text-sm text-[#074C3A]">
                 قائمة الأدوية الموصوفة
@@ -591,7 +777,7 @@ export function PrescriptionView({
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {items.map((item, index) => (
               <div
                 key={item.id}
@@ -619,123 +805,247 @@ export function PrescriptionView({
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 text-xs">
                   {/* 1. اسم الدواء مع البحث والإكمال التلقائي الذكي */}
-                  <div className="sm:col-span-5 space-y-1 relative">
+                  <div className="sm:col-span-5 space-y-1">
                     <label className="font-bold text-[11px] text-slate-700">اسم الدواء (Drug Name) *</label>
-                    <input
-                      type="text"
-                      value={item.drugName}
-                      onFocus={() => setActiveDropdownRowId(item.id)}
-                      onChange={(e) => {
-                        updateItem(item.id, 'drugName', e.target.value);
-                        setActiveDropdownRowId(item.id);
-                      }}
-                      placeholder="Augmentin, Otrivin, Cataflam..."
-                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
-                    />
+                    <div className="relative" data-combobox-root="drug">
+                      <input
+                        type="text"
+                        value={item.drugName}
+                        onFocus={() => setActiveDropdownRowId(item.id)}
+                        onChange={(e) => {
+                          updateItem(item.id, 'drugName', e.target.value);
+                          setActiveDropdownRowId(item.id);
+                        }}
+                        placeholder="Augmentin, Otrivin, Cataflam..."
+                        className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
+                      />
 
-                    {/* قائمة الاقتراحات التلقائية المنسدلة للسطر */}
-                    {activeDropdownRowId === item.id && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50">
-                        {combinedSuggestions
-                          .filter((sug) =>
-                            !item.drugName.trim() ||
-                            sug.drugName.toLowerCase().includes(item.drugName.trim().toLowerCase()) ||
-                            (sug.dose && sug.dose.toLowerCase().includes(item.drugName.trim().toLowerCase()))
-                          )
-                          .slice(0, 8)
-                          .map((sug, sIdx) => (
-                            <div
-                              key={sug.id || `${sug.drugName}-${sIdx}`}
-                              className="px-3 py-2 hover:bg-[#E3F5EE] flex items-center justify-between gap-2 cursor-pointer transition-colors"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                selectSuggestionForRow(item.id, sug);
-                              }}
-                            >
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-black text-xs text-[#074C3A]">
-                                  {sug.drugName}
-                                </span>
-                                {sug.concentration && (
-                                  <span className="text-[10px] text-slate-500 font-mono font-bold">
-                                    ({sug.concentration})
+                      {/* قائمة الاقتراحات التلقائية المنسدلة للسطر */}
+                      {activeDropdownRowId === item.id && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50">
+                          {combinedSuggestions
+                            .filter((sug) =>
+                              !item.drugName.trim() ||
+                              sug.drugName.toLowerCase().includes(item.drugName.trim().toLowerCase()) ||
+                              (sug.dose && sug.dose.toLowerCase().includes(item.drugName.trim().toLowerCase()))
+                            )
+                            .slice(0, 8)
+                            .map((sug, sIdx) => (
+                              <div
+                                key={sug.id || `${sug.drugName}-${sIdx}`}
+                                className="px-3 py-2 hover:bg-[#E3F5EE] flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  selectSuggestionForRow(item.id, sug);
+                                }}
+                              >
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-black text-xs text-[#074C3A]">
+                                    {sug.drugName}
                                   </span>
-                                )}
-                                {sug.form && (
-                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                                    {sug.form}
-                                  </span>
-                                )}
-                                {sug.dose && (
-                                  <span className="text-[11px] text-slate-500">
-                                    · {sug.dose}
-                                  </span>
-                                )}
-                                {sug.frequency && (
-                                  <span className="text-[11px] text-slate-500">
-                                    · {sug.frequency}
-                                  </span>
+                                  {sug.concentration && (
+                                    <span className="text-[10px] text-slate-500 font-mono font-bold">
+                                      ({sug.concentration})
+                                    </span>
+                                  )}
+                                  {sug.form && (
+                                    <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                      {sug.form}
+                                    </span>
+                                  )}
+                                  {sug.dose && (
+                                    <span className="text-[11px] text-slate-500">
+                                      · {sug.dose}
+                                    </span>
+                                  )}
+                                  {sug.frequency && (
+                                    <span className="text-[11px] text-slate-500">
+                                      · {sug.frequency}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {sug.id && (
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (confirm(`هل تريد حذف "${sug.drugName}" من الاقتراحات؟`)) {
+                                        handleDeleteDrug(sug.id, sug.drugName);
+                                      }
+                                    }}
+                                    className="text-slate-300 hover:text-rose-600 p-1 rounded-lg transition-colors cursor-pointer"
+                                    title="حذف من الاقتراحات"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 )}
                               </div>
+                            ))}
 
-                              {sug.id && (
+                          <div
+                            className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 font-medium text-center cursor-pointer hover:bg-slate-100"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setActiveDropdownRowId(null);
+                            }}
+                          >
+                            إغلاق الاقتراحات ✕
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2. نوع / شكل الدواء (Form) - Combobox ذكي ملاصق للـ input تماماً مع إضافة وحذف خيارات */}
+                  <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-xs sm:text-sm text-slate-700">نوع / شكل الدواء (Form)</label>
+                      <button
+                        type="button"
+                        onClick={handleAddCustomForm}
+                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        title="إضافة شكل دواء مخصص للقائمة"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>إضافة شكل</span>
+                      </button>
+                    </div>
+
+                    {/* الحاوية محصورة فقط حول الـ Input حتى تلتصق القائمة المنسدلة به مباشرة */}
+                    <div className="relative" data-combobox-root="form">
+                      <input
+                        type="text"
+                        value={item.form || ''}
+                        onFocus={() => setActiveFormRowId(item.id)}
+                        onChange={(e) => {
+                          updateItem(item.id, 'form', e.target.value);
+                          setActiveFormRowId(item.id);
+                        }}
+                        onBlur={(e) => {
+                          const typedForm = e.target.value.trim();
+                          if (typedForm && item.dose) {
+                            const reFormatted = formatDose(item.dose, typedForm);
+                            if (reFormatted !== item.dose) {
+                              updateItem(item.id, 'dose', reFormatted);
+                            }
+                          }
+                        }}
+                        placeholder="Tablet, Injection, Oral Spray, بخاخ..."
+                        className="w-full h-10 px-3 pr-8 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setActiveFormRowId(activeFormRowId === item.id ? null : item.id)}
+                        className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                        title="عرض خيارات أشكال الدواء"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+
+                      {/* القائمة المقترحة لأشكال الدواء - ملاصقة تماماً لأسفل الـ Input */}
+                      {activeFormRowId === item.id && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50">
+                          {/* زر سريع لإضافة شكل جديد */}
+                          <div
+                            className="px-3 py-2 bg-emerald-50/70 hover:bg-emerald-100/70 text-xs font-black text-[#0B7B5E] cursor-pointer flex items-center justify-between transition-colors"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleAddCustomForm();
+                            }}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>+ إضافة شكل دواء جديد للقائمة...</span>
+                            </span>
+                          </div>
+
+                          {allDrugForms
+                            .filter((f) => {
+                              const q = (item.form || '').toLowerCase().trim();
+                              if (!q) return true;
+                              return (
+                                f.labelEn.toLowerCase().includes(q) ||
+                                f.labelAr.toLowerCase().includes(q) ||
+                                f.id.toLowerCase().includes(q)
+                              );
+                            })
+                            .map((f) => (
+                              <div
+                                key={f.id}
+                                className="px-3 py-2 hover:bg-[#E3F5EE] flex items-center justify-between gap-2 cursor-pointer transition-colors group"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleSelectFormForRow(item.id, f.labelEn);
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-xs text-[#074C3A]">
+                                    {f.labelEn}
+                                  </span>
+                                  <span className="text-[11px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">
+                                    {f.labelAr}
+                                  </span>
+                                </div>
+
                                 <button
                                   type="button"
                                   onMouseDown={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    if (confirm(`هل تريد حذف "${sug.drugName}" من الاقتراحات؟`)) {
-                                      handleDeleteDrug(sug.id, sug.drugName);
-                                    }
+                                    handleDeleteForm(f.id, f.labelEn);
                                   }}
-                                  className="text-slate-300 hover:text-rose-600 p-1 rounded-lg transition-colors"
-                                  title="حذف من الاقتراحات"
+                                  className="opacity-40 group-hover:opacity-100 text-slate-400 hover:text-rose-600 p-1 rounded-md transition-all cursor-pointer"
+                                  title={`حذف "${f.labelEn}" من القائمة`}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
-                              )}
-                            </div>
-                          ))}
+                              </div>
+                            ))}
 
-                        <div
-                          className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 font-medium text-center cursor-pointer hover:bg-slate-100"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            setActiveDropdownRowId(null);
-                          }}
-                        >
-                          إغلاق الاقتراحات ✕
+                          {item.form &&
+                            !allDrugForms.some(
+                              (f) =>
+                                f.labelEn.toLowerCase() === item.form?.trim().toLowerCase() ||
+                                f.labelAr.toLowerCase() === item.form?.trim().toLowerCase()
+                            ) && (
+                              <div
+                                className="px-3 py-2 bg-emerald-50 text-xs font-bold text-[#0B7B5E] cursor-pointer hover:bg-emerald-100"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleSelectFormForRow(item.id, item.form!);
+                                }}
+                              >
+                                + اعتماد الشكل المكتوب: &quot;{item.form}&quot;
+                              </div>
+                            )}
+
+                          <div
+                            className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 font-medium text-center cursor-pointer hover:bg-slate-100"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setActiveFormRowId(null);
+                            }}
+                          >
+                            إغلاق القائمة ✕
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
-                  {/* 2. نوع / شكل الدواء (Form) */}
-                  <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 space-y-1">
-                    <label className="font-bold text-[11px] text-slate-700">نوع / شكل الدواء (Form)</label>
-                    <select
-                      value={item.form || 'Tablet'}
-                      onChange={(e) => updateItem(item.id, 'form', e.target.value)}
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
-                    >
-                      {DRUG_FORMS.map((f) => (
-                        <option key={f.id} value={f.id}>
-                          {f.labelAr} ({f.labelEn})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* 3. التركيز (Concentration / Strength) مع اقتراحات وزر إضافة مخصص */}
+                  {/* 3. التركيز (Concentration / Strength) مع اقتراحات وإمكانية الحذف والإضافة */}
                   <div className="col-span-12 sm:col-span-6 md:col-span-12 lg:col-span-3 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-[11px] text-slate-700">التركيز (Concentration)</label>
+                      <label className="font-bold text-xs sm:text-sm text-slate-700">التركيز (Concentration)</label>
                       <button
                         type="button"
-                        onClick={() => handleAddCustomSuggestion('concentration', 'التركيز')}
-                        className="text-[10px] font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        onClick={() => handleAddSuggestion('concentration', 'التركيز')}
+                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        title="إضافة تركيز جديد للاقتراحات"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                         <span>إضافة</span>
                       </button>
                     </div>
@@ -744,16 +1054,15 @@ export function PrescriptionView({
                       value={item.concentration || ''}
                       onChange={(e) => updateItem(item.id, 'concentration', e.target.value)}
                       placeholder="500mg, 1gm, 0.1%..."
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs focus:outline-none focus:border-[#0B7B5E]"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white font-mono text-sm focus:outline-none focus:border-[#0B7B5E]"
                     />
                     <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
                       {allConcentrationList.map((conc) => {
-                        const isCustom = customSuggestions.concentration.includes(conc);
                         const isSelected = item.concentration === conc;
                         return (
                           <div
                             key={conc}
-                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg border transition-all ${
+                            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-all ${
                               isSelected
                                 ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
                                 : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
@@ -762,39 +1071,40 @@ export function PrescriptionView({
                             <button
                               type="button"
                               onClick={() => updateItem(item.id, 'concentration', conc)}
-                              className="cursor-pointer font-mono"
+                              className="cursor-pointer"
                             >
                               {conc}
                             </button>
-                            {isCustom && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveCustomSuggestion('concentration', conc);
-                                }}
-                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-[11px] leading-none"
-                                title="حذف من الاقتراحات المخصصة"
-                              >
-                                ×
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSuggestion('concentration', conc);
+                              }}
+                              className={`cursor-pointer text-xs leading-none p-0.5 rounded hover:bg-rose-100 hover:text-rose-700 transition-colors ${
+                                isSelected ? 'text-white/80 hover:text-white hover:bg-emerald-700' : 'text-slate-400'
+                              }`}
+                              title="حذف من الاقتراحات"
+                            >
+                              ×
+                            </button>
                           </div>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* 4. الجرعة (Dose) مع اقتراحات وزر إضافة مخصص */}
+                  {/* 4. الجرعة (Dose) - تتكيف تلقائياً مع نوع الدواء (حقنة، قرص، بخة، نقطة...) */}
                   <div className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-[11px] text-slate-700">الجرعة (Dose)</label>
+                      <label className="font-bold text-xs sm:text-sm text-slate-700">الجرعة (Dose)</label>
                       <button
                         type="button"
-                        onClick={() => handleAddCustomSuggestion('dose', 'الجرعة')}
-                        className="text-[10px] font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        onClick={() => handleAddSuggestion('dose', 'الجرعة')}
+                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        title="إضافة جرعة جديدة للاقتراحات"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                         <span>إضافة</span>
                       </button>
                     </div>
@@ -802,17 +1112,22 @@ export function PrescriptionView({
                       type="text"
                       value={item.dose}
                       onChange={(e) => updateItem(item.id, 'dose', e.target.value)}
-                      placeholder="1 قرص، بخة، ملعقة..."
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
+                      onBlur={(e) => {
+                        const formatted = formatDose(e.target.value, item.form);
+                        if (formatted !== e.target.value) {
+                          updateItem(item.id, 'dose', formatted);
+                        }
+                      }}
+                      placeholder="1 أو 3 (تترجم لـ 3 أقراص أو 3 حقن حسب النوع)..."
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
                     />
                     <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
-                      {allDoseList.map((dose) => {
-                        const isCustom = customSuggestions.dose.includes(dose);
+                      {getDoseListForRow(item.form).map((dose) => {
                         const isSelected = item.dose === dose;
                         return (
                           <div
                             key={dose}
-                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg border transition-all ${
+                            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-all ${
                               isSelected
                                 ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
                                 : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
@@ -825,35 +1140,36 @@ export function PrescriptionView({
                             >
                               {dose}
                             </button>
-                            {isCustom && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveCustomSuggestion('dose', dose);
-                                }}
-                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-[11px] leading-none"
-                                title="حذف من الاقتراحات المخصصة"
-                              >
-                                ×
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSuggestion('dose', dose);
+                              }}
+                              className={`cursor-pointer text-xs leading-none p-0.5 rounded hover:bg-rose-100 hover:text-rose-700 transition-colors ${
+                                isSelected ? 'text-white/80 hover:text-white hover:bg-emerald-700' : 'text-slate-400'
+                              }`}
+                              title="حذف من الاقتراحات"
+                            >
+                              ×
+                            </button>
                           </div>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* 5. التكرار (Frequency) مع الاقتراحات وإمكانية إضافة مخصص */}
+                  {/* 5. التكرار (Frequency) مع الترجمة التلقائية الفورية للأرقام */}
                   <div className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-[11px] text-slate-700">التكرار (Frequency)</label>
+                      <label className="font-bold text-xs sm:text-sm text-slate-700">التكرار (Frequency)</label>
                       <button
                         type="button"
-                        onClick={() => handleAddCustomSuggestion('frequency', 'التكرار')}
-                        className="text-[10px] font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        onClick={() => handleAddSuggestion('frequency', 'التكرار')}
+                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        title="إضافة تكرار جديد للاقتراحات"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                         <span>إضافة</span>
                       </button>
                     </div>
@@ -861,17 +1177,22 @@ export function PrescriptionView({
                       type="text"
                       value={item.frequency}
                       onChange={(e) => updateItem(item.id, 'frequency', e.target.value)}
-                      placeholder="اكتب أو اختر (مثال: كل 24 ساعة)..."
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
+                      onBlur={(e) => {
+                        const formatted = formatFrequency(e.target.value);
+                        if (formatted !== e.target.value) {
+                          updateItem(item.id, 'frequency', formatted);
+                        }
+                      }}
+                      placeholder="2 (تترجم لـ كل 12 ساعة تلقائياً)..."
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
                     />
                     <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
                       {allFrequencyList.map((freq) => {
-                        const isCustom = customSuggestions.frequency.includes(freq);
                         const isSelected = item.frequency === freq;
                         return (
                           <div
                             key={freq}
-                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg border transition-all ${
+                            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-all ${
                               isSelected
                                 ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
                                 : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
@@ -884,35 +1205,36 @@ export function PrescriptionView({
                             >
                               {freq}
                             </button>
-                            {isCustom && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveCustomSuggestion('frequency', freq);
-                                }}
-                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-[11px] leading-none"
-                                title="حذف من الاقتراحات المخصصة"
-                              >
-                                ×
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSuggestion('frequency', freq);
+                              }}
+                              className={`cursor-pointer text-xs leading-none p-0.5 rounded hover:bg-rose-100 hover:text-rose-700 transition-colors ${
+                                isSelected ? 'text-white/80 hover:text-white hover:bg-emerald-700' : 'text-slate-400'
+                              }`}
+                              title="حذف من الاقتراحات"
+                            >
+                              ×
+                            </button>
                           </div>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* 6. المدة (Duration) مع الاقتراحات وإمكانية إضافة مخصص */}
+                  {/* 6. المدة (Duration) مع الترجمة التلقائية الفورية للأيام */}
                   <div className="col-span-12 sm:col-span-12 md:col-span-4 lg:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-[11px] text-slate-700">المدة (Duration)</label>
+                      <label className="font-bold text-xs sm:text-sm text-slate-700">المدة (Duration)</label>
                       <button
                         type="button"
-                        onClick={() => handleAddCustomSuggestion('duration', 'المدة')}
-                        className="text-[10px] font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        onClick={() => handleAddSuggestion('duration', 'المدة')}
+                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
+                        title="إضافة مدة جديدة للاقتراحات"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                         <span>إضافة</span>
                       </button>
                     </div>
@@ -920,17 +1242,22 @@ export function PrescriptionView({
                       type="text"
                       value={item.duration}
                       onChange={(e) => updateItem(item.id, 'duration', e.target.value)}
-                      placeholder="اكتب أو اختر (مثال: أسبوع، شهر، 5 أيام)..."
-                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
+                      onBlur={(e) => {
+                        const formatted = formatDuration(e.target.value);
+                        if (formatted !== e.target.value) {
+                          updateItem(item.id, 'duration', formatted);
+                        }
+                      }}
+                      placeholder="5 (تترجم لـ 5 أيام تلقائياً)..."
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
                     />
                     <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
                       {allDurationList.map((dur) => {
-                        const isCustom = customSuggestions.duration.includes(dur);
                         const isSelected = item.duration === dur;
                         return (
                           <div
                             key={dur}
-                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg border transition-all ${
+                            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-all ${
                               isSelected
                                 ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
                                 : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
@@ -943,19 +1270,19 @@ export function PrescriptionView({
                             >
                               {dur}
                             </button>
-                            {isCustom && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveCustomSuggestion('duration', dur);
-                                }}
-                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-[11px] leading-none"
-                                title="حذف من الاقتراحات المخصصة"
-                              >
-                                ×
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSuggestion('duration', dur);
+                              }}
+                              className={`cursor-pointer text-xs leading-none p-0.5 rounded hover:bg-rose-100 hover:text-rose-700 transition-colors ${
+                                isSelected ? 'text-white/80 hover:text-white hover:bg-emerald-700' : 'text-slate-400'
+                              }`}
+                              title="حذف من الاقتراحات"
+                            >
+                              ×
+                            </button>
                           </div>
                         );
                       })}
@@ -996,7 +1323,7 @@ export function PrescriptionView({
         </div>
       </div>
 
-      {/* 4. شريط الإجراءات السفلي */}
+      {/* 5. شريط الإجراءات السفلي */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white rounded-3xl border border-slate-200 shadow-xs">
         <button
           type="button"
@@ -1105,7 +1432,7 @@ export function PrintablePrescriptionSlip({
         </div>
       )}
 
-      {/* بيانات المريض والزيارة - اسم المريض يظهر بالكامل في سطر واحد */}
+      {/* بيانات المريض والزيارة - اسم المريض يظهر بالكامل في سطر واحد وواضح جداً */}
       <div
         className={`pb-3 ${
           isPlain ? 'border-b border-slate-400' : 'border-b-2 border-black'
@@ -1113,58 +1440,68 @@ export function PrintablePrescriptionSlip({
       >
         <div className="flex items-baseline justify-between gap-4 flex-nowrap overflow-x-hidden">
           <div className="flex items-baseline gap-2 min-w-0">
-            <span className="text-slate-600 text-xs font-bold whitespace-nowrap">اسم المريض:</span>
-            <span className="font-black text-base text-black whitespace-nowrap tracking-wide">
+            <span className="text-slate-700 text-sm font-bold whitespace-nowrap">اسم المريض:</span>
+            <span className="font-black text-lg sm:text-xl text-black whitespace-nowrap tracking-wide">
               {patient?.fullName}
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-bold text-slate-700 whitespace-nowrap shrink-0">
+          <div className="flex items-center gap-4 text-sm font-bold text-slate-800 whitespace-nowrap shrink-0">
             {patient?.age && (
               <span>السن: <strong>{patient.age} سنة</strong></span>
             )}
-            <span>رقم الملف: <strong className="font-mono">{examData.fileNo || (patient as any)?.fileNumber || '---'}</strong></span>
+            <span>رقم الملف: <strong className="font-mono text-black">{examData.fileNo || (patient as any)?.fileNumber || '---'}</strong></span>
             <span dir="ltr">Date: <strong>{examData.date || new Date().toISOString().slice(0, 10)}</strong></span>
           </div>
         </div>
 
         {examData.diagnosis && (
-          <div className="text-xs font-bold mt-2 pt-1 border-t border-slate-100 flex items-center gap-2">
-            <span className="text-slate-600">التشخيص (Diagnosis): </span>
-            <span className="font-black text-black underline">{examData.diagnosis}</span>
+          <div className="text-sm font-bold mt-2 pt-1 border-t border-slate-100 flex items-start gap-2">
+            <span className="text-slate-600 shrink-0">التشخيص (Diagnosis): </span>
+            <span className="font-black text-black underline text-sm whitespace-pre-line leading-relaxed">
+              {examData.diagnosis}
+            </span>
           </div>
         )}
       </div>
 
       {/* رمز الروشتة ℞ والأدوية - تبدأ من الشمال بالكامل LTR */}
       <div className="space-y-4 min-h-[350px]" dir="ltr">
-        <div className="text-3xl font-black text-black select-none">
+        <div className="text-4xl font-black text-black select-none">
           ℞
         </div>
 
         {items.length === 0 ? (
-          <p className="text-xs text-slate-400 italic">No medications prescribed.</p>
+          <p className="text-sm text-slate-400 italic">No medications prescribed.</p>
         ) : (
           <div className="space-y-4 pl-2 text-left">
             {items.map((item, idx) => {
               const formObj = DRUG_FORMS.find((f) => f.id === item.form);
               const formEnglish = formObj ? formObj.labelEn : (item.form || 'Tablet');
 
+              // ترجمة الجرعة والتكرار والمدة للصياغة الطبية الدقيقة المطلوبة
+              const displayDose = formatDose(item.dose, item.form);
+              const displayFrequency = formatFrequency(item.frequency);
+              const rawDuration = formatDuration(item.duration);
+              const displayDuration = rawDuration
+                ? (rawDuration.startsWith('لمدة') ? rawDuration : `لمدة ${rawDuration}`)
+                : '';
+
               return (
                 <div key={item.id || idx} className="space-y-1">
                   {/* السطر الأول: اسم الدواء (DrugName) التركيز الفورم (نوع الدواء) بالإنجليزي */}
-                  <div className="flex items-baseline gap-2 flex-wrap text-sm font-black text-black">
-                    <span className="text-base font-black min-w-[20px]">{idx + 1}.</span>
-                    <span className="text-base tracking-wide font-black">
+                  <div className="flex items-baseline gap-2 flex-wrap font-black text-black">
+                    <span className="text-lg font-black min-w-[22px]">{idx + 1}.</span>
+                    <span className="text-lg tracking-wide font-black">
                       {item.drugName}
                     </span>
                     {item.concentration && (
-                      <span className="font-mono font-bold text-slate-900 text-xs px-1.5 py-0.5 rounded bg-slate-100 print:bg-transparent print:border print:border-black">
+                      <span className="font-mono font-bold text-slate-900 text-sm px-1.5 py-0.5 rounded bg-slate-100 print:bg-transparent print:border print:border-black">
                         {item.concentration}
                       </span>
                     )}
                     {formEnglish && (
-                      <span className="font-bold text-slate-700 text-xs">
+                      <span className="font-bold text-slate-800 text-sm">
                         {formEnglish}
                       </span>
                     )}
@@ -1172,28 +1509,26 @@ export function PrintablePrescriptionSlip({
 
                   {/* السطر الثاني: الجرعة والتكرار والمدة - مباشرة تحت اسم الدواء من اليسار */}
                   <div className="pl-6 space-y-0.5 text-left" dir="ltr">
-                    <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
-                      {item.dose && (
-                        <span className="text-black font-bold">{item.dose}</span>
+                    <div className="text-sm font-bold text-slate-900 flex items-center gap-2 flex-wrap">
+                      {displayDose && (
+                        <span className="text-black font-black">{displayDose}</span>
                       )}
-                      {item.frequency && (
+                      {displayFrequency && (
                         <span>
-                          {item.dose ? '▪ ' : ''}{item.frequency}
+                          {displayDose ? '▪ ' : ''}{displayFrequency}
                         </span>
                       )}
-                      {item.duration && (
+                      {displayDuration && (
                         <span className="font-black text-black">
-                          {(item.dose || item.frequency) ? '▪ ' : ''}
-                          {item.duration.trim().startsWith('لمدة')
-                            ? item.duration.trim()
-                            : `لمدة ${item.duration.trim()}`}
+                          {(displayDose || displayFrequency) ? '▪ ' : ''}
+                          {displayDuration}
                         </span>
                       )}
                     </div>
 
                     {/* سطر الإرشادات والتعليمات إن وجد - مباشرة تحت اسم الدواء */}
                     {item.instructions && (
-                      <div className="text-[11px] font-semibold text-slate-700">
+                      <div className="text-xs sm:text-sm font-semibold text-slate-800">
                         <span>◄ {item.instructions}</span>
                       </div>
                     )}
@@ -1220,14 +1555,17 @@ export function PrintablePrescriptionSlip({
         <div className="border-t-2 border-black pt-3 flex items-center justify-between text-xs font-bold">
           <div>
             {examData.followUpDate ? (
-              <span>موعد الاستشارة: <strong className="underline">{examData.followUpDate}</strong></span>
+              <span className="text-slate-900">
+                إعادة الكشف (Follow-up): <strong>{examData.followUpDate}</strong>
+              </span>
             ) : (
-              <span>الاستشارة خلال أسبوع من تاريخ الكشف</span>
+              <span className="text-slate-500">الإعادة حسب إرشادات الطبيب</span>
             )}
           </div>
+
           <div className="text-left" dir="ltr">
-            <p>Doctor Signature:</p>
-            <p className="font-black text-sm underline">{doctor?.name || 'Dr. Eslam Abdallah'}</p>
+            <span className="text-slate-700 block">Doctor&apos;s Signature</span>
+            <span className="font-mono text-slate-400">......................</span>
           </div>
         </div>
       )}

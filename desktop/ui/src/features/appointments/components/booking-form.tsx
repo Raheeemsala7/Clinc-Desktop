@@ -34,6 +34,7 @@ export function BookingForm() {
       patientPhone: '',
       patientGender: '',
       patientAge: undefined,
+      isChild: false,
       hasChronicDisease: false,
       chronicDiseases: [],
       chronicNotes: '',
@@ -124,6 +125,13 @@ export function BookingForm() {
       const discountVal = Number(data.discount) || 0;
       const netTotal = Math.max(0, examFee - discountVal);
 
+      const childTag = data.isChild ? '👶 طفل' : '';
+      const chronicList = data.hasChronicDisease && data.chronicDiseases?.length
+        ? `أمراض مزمنة: ${data.chronicDiseases.join('، ')}`
+        : '';
+      const chronicDetails = data.chronicNotes ? `تفاصيل: ${data.chronicNotes}` : '';
+      const combinedNotes = [childTag, chronicList, chronicDetails, data.notes].filter(Boolean).join(' | ');
+
       const payload: AppointmentPayload = {
         patientId: data.patientId,
         doctorId: data.doctorId,
@@ -140,7 +148,7 @@ export function BookingForm() {
         isExempt: data.isExempt,
         exemptionReason: data.isExempt ? data.exemptionReason : undefined,
         attachments: finalAttachments,
-        notes: data.notes || '',
+        notes: combinedNotes,
       };
 
       console.log('🚀 إرسال الـ Payload للخادم:', payload);
@@ -202,15 +210,11 @@ export function BookingForm() {
             {/* 3. القسم الثالث: الطبيب والتوقيت */}
             <DoctorTimingStepCard />
 
-            {/* 4 و 5. الأقسام المالية والمرفقات */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-              <div className="lg:col-span-7">
-                <FinancialStepCard />
-              </div>
-              <div className="lg:col-span-5">
-                <AttachmentsNotesStepCard />
-              </div>
-            </div>
+            {/* 4. القسم الرابع: الرسوم والبيانات المالية */}
+            <FinancialStepCard />
+
+            {/* 5. القسم الخامس: المرفقات والملاحظات */}
+            <AttachmentsNotesStepCard />
           </div>
 
           {/* عمود الملخص الجانبي الثابت */}

@@ -14,6 +14,7 @@ export const bookingSchema = (t?: any) =>
       patientPhone: z.string(),
       patientGender: z.string().optional(),
       patientAge: z.union([z.number(), z.string()]).optional(),
+      isChild: z.boolean().optional(),
       hasChronicDisease: z.boolean(),
       chronicDiseases: z.array(z.string()),
       chronicNotes: z.string(),

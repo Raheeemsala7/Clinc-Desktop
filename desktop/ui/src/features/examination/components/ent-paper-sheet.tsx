@@ -330,9 +330,9 @@ export function EntPaperSheet({
               className="w-full bg-transparent border-none p-0 text-[13px] font-mono font-bold focus:outline-none"
             />
           </div>
-          <div className="col-span-6 border-r border-black p-1.5 flex items-baseline gap-1">
-            <span className="font-bold uppercase tracking-tight shrink-0">Name:</span>
-            <span className="font-black text-[14px] text-black">
+          <div className="col-span-6 border-r border-black p-1.5 flex items-baseline gap-1.5">
+            <span className="font-bold text-[14px] uppercase tracking-tight shrink-0">Name:</span>
+            <span className="font-black text-[16px] text-black tracking-wide">
               {patient?.fullName || '................................................'}
             </span>
           </div>

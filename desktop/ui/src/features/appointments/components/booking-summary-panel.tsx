@@ -22,6 +22,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
 
   // استخدام useWatch لضمان الاشتراك اللحظي وإعادة التصيير الفوري عند تغيير أي حقل
   const patientName = useWatch({ control, name: 'patientName' });
+  const isChild = useWatch({ control, name: 'isChild' });
   const doctorId = useWatch({ control, name: 'doctorId' });
   const appointmentType = useWatch({ control, name: 'appointmentType' });
   const appointmentDate = useWatch({ control, name: 'appointmentDate' });
@@ -43,9 +44,9 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
   // إيجاد مسمى نوع الموعد
   const currentType = APPOINTMENT_TYPES.find((t) => t.id === appointmentType) || APPOINTMENT_TYPES[0];
 
-  // إيجاد أسماء الأمراض المزمنة المحددة
+  // إيجاد أسماء الأمراض المزمنة المحددة (سواء قياسية أو مخصصة)
   const selectedDiseasesLabels = chronicDiseases
-    .map((id) => CHRONIC_DISEASES.find((d) => d.id === id)?.label)
+    .map((id) => CHRONIC_DISEASES.find((d) => d.id === id)?.label || id)
     .filter(Boolean)
     .join('، ');
 
@@ -75,9 +76,16 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             {/* المريض */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">المريض</span>
-              <span className="font-bold text-[#074C3A] truncate max-w-[150px]">
-                {patientName ? patientName : '[اسم المريض]'}
-              </span>
+              <div className="flex items-center gap-1.5 truncate max-w-[170px]">
+                {isChild && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-black border border-amber-300 shrink-0">
+                    👶 طفل
+                  </span>
+                )}
+                <span className="font-bold text-[#074C3A] truncate">
+                  {patientName ? patientName : '[اسم المريض]'}
+                </span>
+              </div>
             </div>
 
             {/* نوع الموعد */}

@@ -330,7 +330,7 @@
     // تفعيل الترخيص
     async function activateLicense() {
       const keyInput = document.getElementById('licenseKeyInput');
-      const key = keyInput.value.trim();
+      const key = keyInput.value.replace(/\s+/g, '');
       const alertBox = document.getElementById('alertBox');
       const btn = document.getElementById('activateBtn');
 

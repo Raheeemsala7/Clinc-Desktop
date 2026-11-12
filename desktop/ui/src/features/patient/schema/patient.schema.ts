@@ -18,6 +18,7 @@ export const quickPatientSchema = (t?: any) =>
             .number({ error: 'السن مطلوب ويجب أن يكون رقماً' })
             .min(1, 'السن يجب أن يكون سنة واحدة على الأقل')
             .max(120, 'السن يجب ألا يتجاوز 120 سنة'),
+          isChild: z.boolean().optional(),
           gender: z.enum(['MALE', 'FEMALE'], {
             message: 'يرجى تحديد النوع',
           }),

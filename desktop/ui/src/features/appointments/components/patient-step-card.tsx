@@ -3,12 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType, PatientBasic } from '../types/booking';
-import { CHRONIC_DISEASES, SAMPLE_PATIENTS } from '../constants/booking.constant';
-import { Search, UserPlus, Check, Loader2, AlertCircle } from 'lucide-react';
+import { CHRONIC_DISEASES } from '../constants/booking.constant';
+import { UserPlus, Check, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useSearchPatients } from '../hooks/appointments.hook';
-import { useDebounce } from "use-debounce";
 import { SearchPatientInput } from './search-patient-input';
 import { CreatePatientForm } from '@/features/patient/components/create-patient-form';
 
@@ -16,7 +14,8 @@ import { CreatePatientForm } from '@/features/patient/components/create-patient-
  * القسم 1: المريض والتاريخ المرضي
  * - بحث فوري مع Debounce وربط حقيقي بـ API السيرفر
  * - إضافة مريض جديد سريع
- * - تحديد الأمراض المزمنة وتحديث ملخص الحجز لحظياً
+ * - تحديد ما إذا كان المريض طفلاً (Pediatric)
+ * - تحديد وكتابة الأمراض المزمنة المخصصة وتحديث ملخص الحجز لحظياً
  */
 export function PatientStepCard() {
   const {
@@ -32,29 +31,29 @@ export function PatientStepCard() {
   const selectedPatientPhone = useWatch({ control, name: 'patientPhone' });
   const selectedPatientGender = useWatch({ control, name: 'patientGender' });
   const selectedPatientAge = useWatch({ control, name: 'patientAge' });
+  const isChild = useWatch({ control, name: 'isChild' });
   const hasChronicDisease = useWatch({ control, name: 'hasChronicDisease' });
   const selectedDiseases = useWatch({ control, name: 'chronicDiseases' }) || [];
 
-  // const [searchQuery, setSearchQuery] = useState('');
-  // const [searchResults, setSearchResults] = useState<PatientBasic[]>([]);
-  // const [isSearching, setIsSearching] = useState(false);
-
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-  const [isCreatingPatient, setIsCreatingPatient] = useState(false);
-  const [quickName, setQuickName] = useState('');
-  const [quickPhone, setQuickPhone] = useState('');
-  const [quickGender, setQuickGender] = useState<'MALE' | 'FEMALE'>('MALE');
-  const [quickAge, setQuickAge] = useState<string>('');
-  const [quickChronicConditions, setQuickChronicConditions] = useState<string[]>([]);
   const [quickError, setQuickError] = useState<string | null>(null);
 
+  // قائمة الأمراض المزمنة المخصصة التي كتبها موظف الاستقبال
+  const [customChronicDiseases, setCustomChronicDiseases] = useState<string[]>([]);
+  const [newCustomDiseaseText, setNewCustomDiseaseText] = useState('');
 
+  // استرجاع الأمراض المزمنة المخصصة من LocalStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('clinic_custom_chronic_diseases');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setCustomChronicDiseases(parsed);
+      }
+    } catch {}
+  }, []);
 
-
-
-
-
-  // 2. اختيار مريض من نتائج البحث وتحديث النموذج وملخص الحجز فوراً
+  // 1. اختيار مريض من نتائج البحث وتحديث النموذج وملخص الحجز فوراً
   const handleSelectPatient = (patient: PatientBasic) => {
     setValue('patientId', patient.id, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientName', patient.fullName || patient.name || '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
@@ -64,6 +63,11 @@ export function PatientStepCard() {
     }
     if (patient.age !== undefined && patient.age !== null) {
       setValue('patientAge', patient.age, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+      if (Number(patient.age) < 18) {
+        setValue('isChild', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+      } else {
+        setValue('isChild', false, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+      }
     }
     if (patient.chronicConditions && patient.chronicConditions.length > 0) {
       setValue('hasChronicDisease', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
@@ -71,28 +75,58 @@ export function PatientStepCard() {
     }
   };
 
-  // 3. تسجيل مريض جديد عبر السيرفر واختياره مباشرة
-  const handleQuickAdd = async () => {
-    setQuickError(null);
-    const trimmedName = quickName.trim();
-    const trimmedPhone = quickPhone.trim();
-    const parsedAge = quickAge.trim() ? Number(quickAge.trim()) : undefined;
-  }
-  // 4. مسح المريض المختار لإعادة البحث
+  // 2. مسح المريض المختار لإعادة البحث
   const handleClearPatient = () => {
     setValue('patientId', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientName', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientPhone', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientGender', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientAge', undefined, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    setValue('isChild', false, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
   };
 
-  // 5. تبديل اختيار مرض مزمن
+  // 3. تبديل اختيار مرض مزمن قياسي أو مخصص
   const handleToggleDisease = (diseaseId: string) => {
     const updated = selectedDiseases.includes(diseaseId)
       ? selectedDiseases.filter((id) => id !== diseaseId)
       : [...selectedDiseases, diseaseId];
     setValue('chronicDiseases', updated, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+  };
+
+  // 4. كتابة وإضافة مرض مزمن غير موجود في القائمة
+  const handleAddCustomDisease = () => {
+    const trimmed = newCustomDiseaseText.trim();
+    if (!trimmed) {
+      toast.info('يرجى كتابة اسم المرض المزمن أولاً');
+      return;
+    }
+    // إضافته للأمراض المختارة
+    if (!selectedDiseases.includes(trimmed)) {
+      setValue('chronicDiseases', [...selectedDiseases, trimmed], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    }
+    // إضافته للقائمة المخصصة الدائمة
+    if (!customChronicDiseases.includes(trimmed)) {
+      const next = [...customChronicDiseases, trimmed];
+      setCustomChronicDiseases(next);
+      try {
+        localStorage.setItem('clinic_custom_chronic_diseases', JSON.stringify(next));
+      } catch {}
+    }
+    setNewCustomDiseaseText('');
+    toast.success(`تمت إضافة "${trimmed}" إلى الأمراض المزمنة للمريض`);
+  };
+
+  // 5. حذف مرض مخصص من القائمة
+  const handleDeleteCustomDisease = (name: string) => {
+    if (selectedDiseases.includes(name)) {
+      setValue('chronicDiseases', selectedDiseases.filter((d) => d !== name), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    }
+    const next = customChronicDiseases.filter((d) => d !== name);
+    setCustomChronicDiseases(next);
+    try {
+      localStorage.setItem('clinic_custom_chronic_diseases', JSON.stringify(next));
+    } catch {}
+    toast.success(`تم حذف "${name}"`);
   };
 
   return (
@@ -103,6 +137,7 @@ export function PatientStepCard() {
       <input type="hidden" {...register('patientPhone')} />
       <input type="hidden" {...register('patientGender')} />
       <input type="hidden" {...register('patientAge')} />
+      <input type="hidden" {...register('isChild')} />
 
       {/* رأس القسم: الرقم 1 والعنوان */}
       <div className="flex items-start gap-3.5">
@@ -139,7 +174,7 @@ export function PatientStepCard() {
             </button>
           </div>
 
-          {/* نموذج الإضافة السريعة لمريض جديد شامل: الاسم، النوع، السن، ورقم الهاتف */}
+          {/* نموذج الإضافة السريعة لمريض جديد */}
           {isQuickAddOpen && (
             <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 animate-in fade-in-50">
               <div className="flex items-center justify-between">
@@ -167,9 +202,7 @@ export function PatientStepCard() {
                 </div>
               )}
 
-              <CreatePatientForm setIsQuickAddOpen={setIsQuickAddOpen}/>
-
-              
+              <CreatePatientForm setIsQuickAddOpen={setIsQuickAddOpen} />
             </div>
           )}
 
@@ -182,13 +215,21 @@ export function PatientStepCard() {
         </div>
       ) : (
         <>
+          {/* بطاقة المريض المختار */}
           <div className="p-4 rounded-2xl bg-[#E3F5EE]/60 border border-[#D0E5DC]/70 flex items-center justify-between animate-in fade-in-50">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#074C3A] text-white flex items-center justify-center font-black text-sm shrink-0">
                 {selectedPatientName ? selectedPatientName.charAt(0) : 'م'}
               </div>
               <div>
-                <p className="font-black text-sm text-[#074C3A]">{selectedPatientName}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-black text-sm text-[#074C3A]">{selectedPatientName}</p>
+                  {isChild && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-black">
+                      👶 طفل
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {selectedPatientPhone ? `${selectedPatientPhone} · ` : ''}
                   {selectedPatientAge ? `السن: ${selectedPatientAge} سنة · ` : ''}
@@ -210,7 +251,51 @@ export function PatientStepCard() {
               تغيير
             </button>
           </div>
-          {/* قسم التاريخ المرضي والأمراض المزمنة (مربع بلون أصفر فاتح مطابق للصورة) */}
+
+          {/* خيار: هل المريض طفل أم لا؟ (مباشر وسهل للاستقبال) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">👶</span>
+              <div>
+                <span className="text-xs sm:text-sm font-bold text-slate-800 block">
+                  تصنيف المريض: هل المريض طفل؟ (Pediatric)
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  لتنبيه الطبيب في شاشة الكشف لمراعاة جرعات الأطفال ورعايتهم الخاصة
+                </span>
+              </div>
+            </div>
+
+            <div className="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200 shrink-0">
+              <button
+                type="button"
+                onClick={() => setValue('isChild', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
+                className={cn(
+                  'px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
+                  isChild
+                    ? 'bg-[#074C3A] text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                )}
+              >
+                <span>نعم (طفل) 👶</span>
+                {isChild && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setValue('isChild', false, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
+                className={cn(
+                  'px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                  !isChild
+                    ? 'bg-[#074C3A] text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                )}
+              >
+                <span>بالغ</span>
+              </button>
+            </div>
+          </div>
+
+          {/* قسم التاريخ المرضي والأمراض المزمنة */}
           <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF0] border border-amber-300 space-y-4">
             {/* السؤال وزر التبديل (نعم / لا) */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -254,6 +339,7 @@ export function PatientStepCard() {
             {hasChronicDisease && (
               <div className="space-y-3 pt-2 border-t border-amber-200/60 animate-in fade-in-50">
                 <div className="flex flex-wrap gap-2">
+                  {/* الأمراض المزمنة القياسية */}
                   {CHRONIC_DISEASES.map((disease) => {
                     const isSelected = selectedDiseases.includes(disease.id);
                     return (
@@ -273,26 +359,78 @@ export function PatientStepCard() {
                       </button>
                     );
                   })}
+
+                  {/* الأمراض المزمنة المخصصة المكتوبة */}
+                  {customChronicDiseases.map((cust) => {
+                    const isSelected = selectedDiseases.includes(cust);
+                    return (
+                      <div
+                        key={cust}
+                        className={cn(
+                          'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-2xs border',
+                          isSelected
+                            ? 'bg-brand-yellow text-slate-950 font-black border-amber-400'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-amber-300'
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleToggleDisease(cust)}
+                          className="flex items-center gap-1 cursor-pointer"
+                        >
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                          <span>{cust}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCustomDisease(cust);
+                          }}
+                          className="text-slate-400 hover:text-rose-600 text-xs px-0.5 cursor-pointer"
+                          title="حذف من القائمة"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* تفاصيل أو أدوية يتناولها المريض أو تحديد المرض الآخر */}
+                {/* حقل كتابة وإضافة مرض مزمن غير موجود في الاختيارات */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={newCustomDiseaseText}
+                    onChange={(e) => setNewCustomDiseaseText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomDisease();
+                      }
+                    }}
+                    placeholder="اكتب مرضاً مزمناً غير موجود بالاختيارات (مثال: حساسية بنسلين، روماتيزم، سيولة)..."
+                    className="flex-1 h-9 px-3.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomDisease}
+                    className="h-9 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1 cursor-pointer transition-all shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>إضافة</span>
+                  </button>
+                </div>
+
+                {/* تفاصيل أو أدوية يتناولها المريض */}
                 <div className="space-y-1">
-                  {selectedDiseases.includes('other') && (
-                    <label className="block text-[11px] font-bold text-amber-900">
-                      حدد اسم المرض المزمن الآخر:
-                    </label>
-                  )}
                   <Controller
                     name="chronicNotes"
                     control={control}
                     render={({ field }) => (
                       <input
                         type="text"
-                        placeholder={
-                          selectedDiseases.includes('other')
-                            ? 'اكتب اسم المرض المزمن الآخر هنا (مثال: حساسية بنسلين، روماتيزم)...'
-                            : 'تفاصيل أو أدوية يتناولها المريض (اختياري)...'
-                        }
+                        placeholder="تفاصيل إضافية أو أدوية منتظمة يتناولها المريض (اختياري)..."
                         className="w-full h-10 px-3.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-amber-500 focus:ring-3 focus:ring-amber-200/30 transition-all shadow-2xs"
                         {...field}
                       />
@@ -308,10 +446,6 @@ export function PatientStepCard() {
           </div>
         </>
       )}
-
-
-
-
     </div>
   );
-}    
+}

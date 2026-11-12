@@ -1,9 +1,10 @@
 "use client"
-import { Controller, Form, useForm, useFormContext } from "react-hook-form";
+import React, { useState, useEffect } from "react";
+import { Controller, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { quickPatientSchema } from "../schema/patient.schema";
 import { useTranslations } from "next-intl";
-import { AlertCircle, Check, Loader2 } from "lucide-react";
+import { AlertCircle, Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { cn } from "cn";
 import { toast } from "sonner";
 import { useCreatePatientMutation } from "../hooks/patient.hooks";
@@ -30,6 +31,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
             fullName: '',
             phone: '',
             age: 30,
+            isChild: false,
             gender: 'MALE',
             maritalStatus: 'MARRIED',
             occupation: '',
@@ -42,6 +44,21 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
 
     const hasChronicDisease = watch('hasChronicDisease');
     const selectedDiseases = watch('chronicDiseases') || [];
+    const isChild = watch('isChild');
+
+    // الأمراض المزمنة المخصصة
+    const [customChronicDiseases, setCustomChronicDiseases] = useState<string[]>([]);
+    const [newCustomDiseaseText, setNewCustomDiseaseText] = useState('');
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('clinic_custom_chronic_diseases');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) setCustomChronicDiseases(parsed);
+            }
+        } catch {}
+    }, []);
 
     const handleToggleDisease = (diseaseId: string) => {
         const next = selectedDiseases.includes(diseaseId)
@@ -50,39 +67,65 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
         setValue('chronicDiseases', next, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     };
 
+    const handleAddCustomDisease = () => {
+        const trimmed = newCustomDiseaseText.trim();
+        if (!trimmed) {
+            toast.info('يرجى كتابة اسم المرض المزمن أولاً');
+            return;
+        }
+        if (!selectedDiseases.includes(trimmed)) {
+            setValue('chronicDiseases', [...selectedDiseases, trimmed], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        }
+        if (!customChronicDiseases.includes(trimmed)) {
+            const next = [...customChronicDiseases, trimmed];
+            setCustomChronicDiseases(next);
+            try {
+                localStorage.setItem('clinic_custom_chronic_diseases', JSON.stringify(next));
+            } catch {}
+        }
+        setNewCustomDiseaseText('');
+        toast.success(`تمت إضافة "${trimmed}" إلى الأمراض المزمنة`);
+    };
+
+    const handleDeleteCustomDisease = (name: string) => {
+        if (selectedDiseases.includes(name)) {
+            setValue('chronicDiseases', selectedDiseases.filter((d) => d !== name), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        }
+        const next = customChronicDiseases.filter((d) => d !== name);
+        setCustomChronicDiseases(next);
+        try {
+            localStorage.setItem('clinic_custom_chronic_diseases', JSON.stringify(next));
+        } catch {}
+        toast.success(`تم حذف "${name}"`);
+    };
+
     const { mutateAsync: createPatientMutation, isPending: isCreateMutation } = useCreatePatientMutation()
 
-
-
-
     const onQuickAddSubmit = async (values: QuickPatientFormValues) => {
-
-
-
         try {
-            // await createPatientMutation({fullName: values.fullName, phone: values.phone, age: values.age, gender: values.gender, chronicConditions: values.hasChronicDisease ? values.chronicDiseases : [], generalNotes: values.generalNotes})
             const data = await createPatientMutation({
                 fullName: values.fullName,
                 phone: values.phone,
                 age: values.age,
                 gender: values.gender,
-                maritalStatus: values.maritalStatus || 'MARRIED',
+                maritalStatus: values.isChild ? 'SINGLE' : (values.maritalStatus || 'MARRIED'),
                 occupation: values.occupation?.trim() || undefined,
                 address: values.address?.trim() || undefined,
                 chronicConditions: values.hasChronicDisease ? values.chronicDiseases : [],
             });
+
             setValueBoking("patientId", data.id)
             setValueBoking("patientName", data.fullName)
             setValueBoking("patientAge", data.age)
             setValueBoking("patientGender", data.gender)
             setValueBoking("patientPhone", data.phone)
+            setValueBoking("isChild", values.isChild)
             setValueBoking("hasChronicDisease", hasChronicDisease )
             setValueBoking("chronicDiseases", selectedDiseases )
 
             resetQuick();
             setIsQuickAddOpen(false);
-
-
+            toast.success('تم تسجيل واختيار المريض بنجاح!');
         } catch {
             toast.error('تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.');
         }
@@ -178,7 +221,18 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                             : 'border-slate-200 focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15'
                                     )}
                                     value={field.value ?? ''}
-                                    onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
+                                    onChange={(e) => {
+                                        const val = e.target.value === '' ? '' : Number(e.target.value);
+                                        field.onChange(val);
+                                        if (typeof val === 'number') {
+                                            if (val < 18) {
+                                                setValue('isChild', true);
+                                                setValue('maritalStatus', 'SINGLE');
+                                            } else {
+                                                setValue('isChild', false);
+                                            }
+                                        }
+                                    }}
                                     onBlur={field.onBlur}
                                     name={field.name}
                                     ref={field.ref}
@@ -192,6 +246,43 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                             </div>
                         )}
                     />
+                </div>
+
+                {/* خيار: هل المريض طفل أم لا؟ */}
+                <div className="p-3 rounded-2xl bg-slate-100/70 border border-slate-200 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl">👶</span>
+                        <div>
+                            <span className="text-xs font-bold text-slate-800 block">هل المريض طفل؟ (Pediatric)</span>
+                            <span className="text-[10px] text-slate-500">لتنبيه الطبيب في الكشف لتحديد جرعات الأطفال</span>
+                        </div>
+                    </div>
+                    <div className="inline-flex items-center p-0.5 bg-white rounded-xl border border-slate-200 shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setValue('isChild', true);
+                                setValue('maritalStatus', 'SINGLE');
+                            }}
+                            className={cn(
+                                'px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1',
+                                isChild ? 'bg-[#074C3A] text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                            )}
+                        >
+                            <span>نعم (طفل) 👶</span>
+                            {isChild && <Check className="w-3 h-3 stroke-[3]" />}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setValue('isChild', false)}
+                            className={cn(
+                                'px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                                !isChild ? 'bg-[#074C3A] text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                            )}
+                        >
+                            <span>بالغ</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* 4. النوع (ذكر / أنثى) عبر Controller */}
@@ -244,44 +335,46 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                     )}
                 />
 
-                {/* 5. الحالة الاجتماعية عبر Controller */}
-                <Controller
-                    name="maritalStatus"
-                    control={quickControl}
-                    render={({ field }) => (
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                الحالة الاجتماعية <span className="text-rose-500">*</span>
-                            </label>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                {[
-                                    { id: 'MARRIED', label: 'متزوج' },
-                                    { id: 'SINGLE', label: 'أعزب' },
-                                    { id: 'WIDOWED', label: 'أرمل / أرملة' },
-                                    { id: 'DIVORCED', label: 'مطلق / مطلقة' },
-                                ].map((item) => {
-                                    const isSelected = (field.value || 'MARRIED') === item.id;
-                                    return (
-                                        <button
-                                            key={item.id}
-                                            type="button"
-                                            onClick={() => field.onChange(item.id)}
-                                            className={cn(
-                                                'h-9 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer select-none',
-                                                isSelected
-                                                    ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
-                                                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                                            )}
-                                        >
-                                            {isSelected && <Check className="w-3 h-3" />}
-                                            <span>{item.label}</span>
-                                        </button>
-                                    );
-                                })}
+                {/* 5. الحالة الاجتماعية عبر Controller (يتم إخفاؤها أو تعطيلها إذا كان المريض طفلاً) */}
+                {!isChild && (
+                    <Controller
+                        name="maritalStatus"
+                        control={quickControl}
+                        render={({ field }) => (
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                                    الحالة الاجتماعية <span className="text-rose-500">*</span>
+                                </label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {[
+                                        { id: 'MARRIED', label: 'متزوج' },
+                                        { id: 'SINGLE', label: 'أعزب' },
+                                        { id: 'WIDOWED', label: 'أرمل / أرملة' },
+                                        { id: 'DIVORCED', label: 'مطلق / مطلقة' },
+                                    ].map((item) => {
+                                        const isSelected = (field.value || 'MARRIED') === item.id;
+                                        return (
+                                            <button
+                                                key={item.id}
+                                                type="button"
+                                                onClick={() => field.onChange(item.id)}
+                                                className={cn(
+                                                    'h-9 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer select-none',
+                                                    isSelected
+                                                        ? 'bg-[#074C3A] text-white border-[#074C3A] shadow-xs'
+                                                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                                )}
+                                            >
+                                                {isSelected && <Check className="w-3 h-3" />}
+                                                <span>{item.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                    )}
-                />
+                        )}
+                    />
+                )}
 
                 {/* 6. الوظيفة والعنوان (اختياري) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -295,7 +388,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="مثال: مهندس، معلم..."
+                                    placeholder={isChild ? "طالب، حضانة..." : "مثال: مهندس، معلم..."}
                                     className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15 transition-all"
                                     {...field}
                                     value={field.value || ''}
@@ -326,7 +419,8 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
 
             </div>
 
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF0] border border-amber-300 space-y-4">
+            {/* قسم الأمراض المزمنة */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF0] border border-amber-300 space-y-4 mt-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <span className="font-bold text-xs sm:text-sm text-slate-800">
                         هل يعاني المريض من مرض مزمن؟ <span className="text-amber-600">*</span>
@@ -385,6 +479,67 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     </button>
                                 );
                             })}
+
+                            {/* الأمراض المزمنة المخصصة */}
+                            {customChronicDiseases.map((cust) => {
+                                const isSelected = selectedDiseases.includes(cust);
+                                return (
+                                    <div
+                                        key={cust}
+                                        className={cn(
+                                            'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-2xs border',
+                                            isSelected
+                                                ? 'bg-brand-yellow text-slate-950 font-black border-amber-400'
+                                                : 'bg-white text-slate-700 border-slate-200 hover:border-amber-300'
+                                        )}
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => handleToggleDisease(cust)}
+                                            className="flex items-center gap-1 cursor-pointer"
+                                        >
+                                            {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                                            <span>{cust}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteCustomDisease(cust);
+                                            }}
+                                            className="text-slate-400 hover:text-rose-600 text-xs px-0.5 cursor-pointer"
+                                            title="حذف من القائمة"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* حقل كتابة وإضافة مرض مزمن غير موجود في الاختيارات */}
+                        <div className="flex items-center gap-2 pt-1">
+                            <input
+                                type="text"
+                                value={newCustomDiseaseText}
+                                onChange={(e) => setNewCustomDiseaseText(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleAddCustomDisease();
+                                    }
+                                }}
+                                placeholder="اكتب مرضاً مزمناً غير موجود بالاختيارات (مثال: حساسية بنسلين، روماتيزم، سيولة)..."
+                                className="flex-1 h-9 px-3.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleAddCustomDisease}
+                                className="h-9 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1 cursor-pointer transition-all shrink-0"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>إضافة</span>
+                            </button>
                         </div>
 
                         {quickErrors.chronicDiseases && (
