@@ -15,6 +15,8 @@ import {
   ListOrdered,
   Search,
   Coins,
+  Pill,
+  DollarSign,
 } from 'lucide-react';
 import { DashboardNavItem, UserRole } from './types';
 
@@ -36,6 +38,8 @@ export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
 export const DOCTOR_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'todayCheckup', title: 'شاشة كشف اليوم', href: '/dashboard', icon: Stethoscope, isActive: true },
   { id: 'clinicalSearch', title: 'البحث الطبي الشامل', href: '/dashboard/clinical-search', icon: Search },
+  { id: 'drugs', title: 'دليل الأدوية والوصفات', href: '/dashboard/drugs', icon: Pill },
+  { id: 'doctorRevenue', title: 'الكشوفات والإيرادات', href: '/dashboard/doctor-revenue', icon: DollarSign },
   { id: 'calendar', title: 'التقويم والمواعيد', href: '/dashboard/calendar', icon: Calendar },
   { id: 'weeklyHours', title: 'أوقات العمل الأسبوعية', href: '/dashboard/schedule', icon: Clock },
   { id: 'patients', title: 'المرضى', href: '/dashboard/view-patients', icon: Users },

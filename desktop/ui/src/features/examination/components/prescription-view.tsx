@@ -823,616 +823,320 @@ export function PrescriptionView({
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {items.map((item, index) => (
               <div
                 key={item.id}
-                className="p-4 bg-slate-50/80 hover:bg-[#E3F5EE]/40 rounded-2xl border border-slate-200 transition-all space-y-3"
+                id={`drug-row-${item.id}`}
+                className="p-3.5 bg-white hover:bg-[#E3F5EE]/20 rounded-2xl border border-slate-200 hover:border-[#0B7B5E]/50 transition-all shadow-2xs space-y-2.5"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/60">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="w-6 h-6 rounded-full bg-[#0B7B5E] text-white font-black text-xs flex items-center justify-center">
-                      {index + 1}
-                    </span>
-                    <span className="text-xs font-black text-slate-800">
-                      الصنف #{index + 1}
-                    </span>
+                {/* السطر الأول: رقم الصنف، اسم الدواء، الشكل، التركيز، اختصار الجرعة، وحذف */}
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
+                  {/* شارة الترقيم */}
+                  <span className="w-7 h-7 rounded-lg bg-[#074C3A] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                    #{index + 1}
+                  </span>
 
-                    {/* اختصار الجرعة السريع (1/2/5 ثم Enter) */}
-                    <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-xl shadow-2xs">
-                      <span className="text-[11px] font-black text-[#074C3A] whitespace-nowrap">⚡ اختصار الجرعة:</span>
-                      <input
-                        type="text"
-                        placeholder="1/2/5 ثم Enter"
-                        title="اكتب اختصار الجرعة مثل 1/2/5 واضغط Enter للترجمة الفورية"
-                        className="h-6 w-32 sm:w-40 px-2 rounded-lg border border-emerald-300 bg-white font-mono text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-[#0B7B5E]"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
+                  {/* 1. اسم الدواء مع الإكمال التلقائي الذكي */}
+                  <div className="relative flex-1 min-w-[190px]" data-combobox-root="drug">
+                    <input
+                      type="text"
+                      data-drug-input="name"
+                      value={item.drugName}
+                      onFocus={() => setActiveDropdownRowId(item.id)}
+                      onChange={(e) => {
+                        updateItem(item.id, 'drugName', e.target.value);
+                        setActiveDropdownRowId(item.id);
+                      }}
+                      placeholder="اسم الدواء (Augmentin, Otrivin...)*"
+                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:ring-1 focus:ring-[#0B7B5E]"
+                    />
+
+                    {/* قائمة الاقتراحات المنسدلة لاسم الدواء */}
+                    {activeDropdownRowId === item.id && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50">
+                        {combinedSuggestions
+                          .filter((sug) =>
+                            !item.drugName.trim() ||
+                            sug.drugName.toLowerCase().includes(item.drugName.trim().toLowerCase()) ||
+                            (sug.dose && sug.dose.toLowerCase().includes(item.drugName.trim().toLowerCase()))
+                          )
+                          .slice(0, 8)
+                          .map((sug, sIdx) => (
+                            <div
+                              key={sug.id || `${sug.drugName}-${sIdx}`}
+                              className="px-3 py-2 hover:bg-[#E3F5EE] flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                selectSuggestionForRow(item.id, sug);
+                              }}
+                            >
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-black text-xs text-[#074C3A]">
+                                  {sug.drugName}
+                                </span>
+                                {sug.concentration && (
+                                  <span className="text-[10px] text-slate-500 font-mono font-bold">
+                                    ({sug.concentration})
+                                  </span>
+                                )}
+                                {sug.form && (
+                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                    {sug.form}
+                                  </span>
+                                )}
+                                {sug.dose && (
+                                  <span className="text-[11px] text-slate-500">
+                                    · {sug.dose}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+
+                        <div
+                          className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 font-medium text-center cursor-pointer hover:bg-slate-100"
+                          onMouseDown={(e) => {
                             e.preventDefault();
-                            const parsed = parseDoseShortcut(e.currentTarget.value, item.form);
-                            if (parsed) {
-                              updateItem(item.id, 'dose', parsed.dose);
-                              updateItem(item.id, 'frequency', parsed.frequency);
-                              if (parsed.duration) {
-                                updateItem(item.id, 'duration', parsed.duration);
-                              }
-                              toast.success(`✓ تمت ترجمة الاختصار: ${parsed.summary}`);
-                            } else {
-                              toast.info('اكتب الاختصار بالشكل: 1/2/5 (الجرعة / التكرار / المدة)');
-                            }
-                          }
-                        }}
-                      />
-                    </div>
+                            setActiveDropdownRowId(null);
+                          }}
+                        >
+                          إغلاق الاقتراحات ✕
+                        </div>
+                      </div>
+                    )}
                   </div>
 
+                  {/* 2. نوع / شكل الدواء (Form) */}
+                  <div className="relative w-full sm:w-40 shrink-0" data-combobox-root="form">
+                    <input
+                      type="text"
+                      value={item.form || ''}
+                      onFocus={() => setActiveFormRowId(item.id)}
+                      onChange={(e) => {
+                        const newForm = e.target.value;
+                        updateItem(item.id, 'form', newForm);
+                        if (newForm.trim()) {
+                          if (item.dose) {
+                            const reFormatted = formatDose(item.dose, newForm);
+                            if (reFormatted && reFormatted !== item.dose) {
+                              updateItem(item.id, 'dose', reFormatted);
+                            }
+                          } else {
+                            const def = getDefaultDoseForForm(newForm);
+                            if (def) updateItem(item.id, 'dose', def);
+                          }
+                        }
+                        setActiveFormRowId(item.id);
+                      }}
+                      placeholder="الشكل (Tablet...)"
+                      className="w-full h-9 px-3 pr-7 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setActiveFormRowId(activeFormRowId === item.id ? null : item.id)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* قائمة خيارات شكل الدواء */}
+                    {activeFormRowId === item.id && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50">
+                        {allDrugForms
+                          .filter((f) => {
+                            const q = (item.form || '').toLowerCase().trim();
+                            if (!q) return true;
+                            return (
+                              f.labelEn.toLowerCase().includes(q) ||
+                              f.labelAr.toLowerCase().includes(q) ||
+                              f.id.toLowerCase().includes(q)
+                            );
+                          })
+                          .map((f) => (
+                            <div
+                              key={f.id}
+                              className="px-3 py-1.5 hover:bg-[#E3F5EE] flex items-center justify-between gap-2 cursor-pointer transition-colors text-xs"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelectFormForRow(item.id, f.labelEn);
+                              }}
+                            >
+                              <span className="font-bold text-[#074C3A]">{f.labelEn}</span>
+                              <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                {f.labelAr}
+                              </span>
+                            </div>
+                          ))}
+                        <div
+                          className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 font-medium text-center cursor-pointer hover:bg-slate-100"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setActiveFormRowId(null);
+                          }}
+                        >
+                          إغلاق ✕
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. التركيز (Concentration) */}
+                  <div className="w-full sm:w-28 shrink-0">
+                    <input
+                      type="text"
+                      value={item.concentration || ''}
+                      onChange={(e) => updateItem(item.id, 'concentration', e.target.value)}
+                      placeholder="التركيز (500mg)"
+                      className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-sans focus:outline-none focus:border-[#0B7B5E]"
+                    />
+                  </div>
+
+                  {/* 4. حقل اختصار الجرعة السريع (⚡ 1/3/5/-30 ثم Enter) */}
+                  <div className="relative flex-1 min-w-[200px]">
+                    <input
+                      type="text"
+                      placeholder="⚡ اختصار: 1/3/5/-30 ثم Enter"
+                      title="اكتب اختصار الجرعة مثل 1/3/5/-30 واضغط Enter للترجمة الفورية"
+                      className="w-full h-9 pr-3 pl-2 rounded-xl border border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 focus:bg-white font-mono text-xs font-bold text-[#074C3A] placeholder:text-emerald-700/60 placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-[#0B7B5E] transition-all"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const parsed = parseDoseShortcut(e.currentTarget.value, item.form);
+                          if (parsed) {
+                            updateItem(item.id, 'dose', parsed.dose);
+                            updateItem(item.id, 'frequency', parsed.frequency);
+                            if (parsed.duration) updateItem(item.id, 'duration', parsed.duration);
+                            if (parsed.instructions) updateItem(item.id, 'instructions', parsed.instructions);
+                            toast.success(`✓ تمت ترجمة الاختصار: ${parsed.summary}`);
+                          } else {
+                            toast.info('اكتب الاختصار بالشكل: 1/3/5/-30 (جرعة / تكرار / مدة / توقيت الأكل)');
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {/* زر حذف الصنف */}
                   <button
                     type="button"
                     onClick={() => removeItem(item.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer self-end sm:self-center"
+                    className="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                     title="حذف هذا الدواء"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 text-xs">
-                  {/* 1. اسم الدواء مع البحث والإكمال التلقائي الذكي */}
-                  <div className="sm:col-span-5 space-y-1">
-                    <label className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-slate-700" />
-                      <span>اسم الدواء (Drug Name) *</span>
-                    </label>
-                    <div className="relative" data-combobox-root="drug">
-                      <input
-                        type="text"
-                        value={item.drugName}
-                        onFocus={() => setActiveDropdownRowId(item.id)}
-                        onChange={(e) => {
-                          updateItem(item.id, 'drugName', e.target.value);
-                          setActiveDropdownRowId(item.id);
-                        }}
-                        placeholder="Augmentin, Otrivin, Cataflam..."
-                        className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
-                      />
-
-                      {/* قائمة الاقتراحات التلقائية المنسدلة للسطر */}
-                      {activeDropdownRowId === item.id && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50">
-                          {combinedSuggestions
-                            .filter((sug) =>
-                              !item.drugName.trim() ||
-                              sug.drugName.toLowerCase().includes(item.drugName.trim().toLowerCase()) ||
-                              (sug.dose && sug.dose.toLowerCase().includes(item.drugName.trim().toLowerCase()))
-                            )
-                            .slice(0, 8)
-                            .map((sug, sIdx) => (
-                              <div
-                                key={sug.id || `${sug.drugName}-${sIdx}`}
-                                className="px-3 py-2 hover:bg-[#E3F5EE] flex items-center justify-between gap-2 cursor-pointer transition-colors"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  selectSuggestionForRow(item.id, sug);
-                                }}
-                              >
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-black text-xs text-[#074C3A]">
-                                    {sug.drugName}
-                                  </span>
-                                  {sug.concentration && (
-                                    <span className="text-[10px] text-slate-500 font-mono font-bold">
-                                      ({sug.concentration})
-                                    </span>
-                                  )}
-                                  {sug.form && (
-                                    <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                                      {sug.form}
-                                    </span>
-                                  )}
-                                  {sug.dose && (
-                                    <span className="text-[11px] text-slate-500">
-                                      · {sug.dose}
-                                    </span>
-                                  )}
-                                  {sug.frequency && (
-                                    <span className="text-[11px] text-slate-500">
-                                      · {sug.frequency}
-                                    </span>
-                                  )}
-                                </div>
-
-                                {sug.id && (
-                                  <button
-                                    type="button"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      if (confirm(`هل تريد حذف "${sug.drugName}" من الاقتراحات؟`)) {
-                                        handleDeleteDrug(sug.id, sug.drugName);
-                                      }
-                                    }}
-                                    className="text-slate-300 hover:text-rose-600 p-1 rounded-lg transition-colors cursor-pointer"
-                                    title="حذف من الاقتراحات"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-
-                          <div
-                            className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 font-medium text-center cursor-pointer hover:bg-slate-100"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              setActiveDropdownRowId(null);
-                            }}
-                          >
-                            إغلاق الاقتراحات ✕
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                {/* السطر الثاني: الفقرة التلخيصية للجرعة وزر التعديل اليدوي */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 bg-slate-50/80 rounded-xl border border-slate-200/70 text-xs">
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
+                    <span className="font-black text-[#074C3A] flex items-center gap-1 shrink-0">
+                      💊 الجرعة المحددة:
+                    </span>
+                    {item.dose || item.frequency || item.duration || item.instructions ? (
+                      <span className="font-bold text-slate-800">
+                        {[
+                          item.dose,
+                          item.instructions,
+                          item.frequency,
+                          item.duration,
+                        ]
+                          .filter(Boolean)
+                          .join(' • ')}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 font-medium italic">
+                        لم يتم تحديد الجرعة بعد — اكتب اختصاراً في خانة (⚡ اختصار) واضغط Enter، أو اضغط &quot;تعديل التفاصيل&quot;.
+                      </span>
+                    )}
                   </div>
 
-                  {/* 2. نوع / شكل الدواء (Form) - Combobox ذكي ملاصق للـ input تماماً مع إضافة وحذف خيارات */}
-                  <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-emerald-800 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                        <span>نوع / شكل الدواء (Form)</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={openAddFormModal}
-                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
-                        title="إضافة شكل دواء مخصص للقائمة"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>إضافة شكل</span>
-                      </button>
-                    </div>
-
-                    {/* الحاوية محصورة فقط حول الـ Input حتى تلتصق القائمة المنسدلة به مباشرة */}
-                    <div className="relative" data-combobox-root="form">
-                      <input
-                        type="text"
-                        value={item.form || ''}
-                        onFocus={() => setActiveFormRowId(item.id)}
-                        onChange={(e) => {
-                          const newForm = e.target.value;
-                          updateItem(item.id, 'form', newForm);
-                          if (newForm.trim()) {
-                            if (item.dose) {
-                              const reFormatted = formatDose(item.dose, newForm);
-                              if (reFormatted && reFormatted !== item.dose) {
-                                updateItem(item.id, 'dose', reFormatted);
-                              }
-                            } else {
-                              const def = getDefaultDoseForForm(newForm);
-                              if (def) updateItem(item.id, 'dose', def);
-                            }
-                          }
-                          setActiveFormRowId(item.id);
-                        }}
-                        onBlur={(e) => {
-                          const typedForm = e.target.value.trim();
-                          if (typedForm) {
-                            if (item.dose) {
-                              const reFormatted = formatDose(item.dose, typedForm);
-                              if (reFormatted && reFormatted !== item.dose) {
-                                updateItem(item.id, 'dose', reFormatted);
-                              }
-                            } else {
-                              const def = getDefaultDoseForForm(typedForm);
-                              if (def) updateItem(item.id, 'dose', def);
-                            }
-                          }
-                        }}
-                        placeholder="Tablet, Injection, Oral Spray, بخاخ..."
-                        className="w-full h-10 px-3 pr-8 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setActiveFormRowId(activeFormRowId === item.id ? null : item.id)}
-                        className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                        title="عرض خيارات أشكال الدواء"
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-
-                      {/* القائمة المقترحة لأشكال الدواء - ملاصقة تماماً لأسفل الـ Input */}
-                      {activeFormRowId === item.id && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-50">
-                          {/* زر سريع لإضافة شكل جديد */}
-                          <div
-                            className="px-3 py-2 bg-emerald-50/70 hover:bg-emerald-100/70 text-xs font-black text-[#0B7B5E] cursor-pointer flex items-center justify-between transition-colors"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              openAddFormModal();
-                            }}
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <Plus className="w-3.5 h-3.5" />
-                              <span>+ إضافة شكل دواء جديد للقائمة...</span>
-                            </span>
-                          </div>
-
-                          {allDrugForms
-                            .filter((f) => {
-                              const q = (item.form || '').toLowerCase().trim();
-                              if (!q) return true;
-                              return (
-                                f.labelEn.toLowerCase().includes(q) ||
-                                f.labelAr.toLowerCase().includes(q) ||
-                                f.id.toLowerCase().includes(q)
-                              );
-                            })
-                            .map((f) => (
-                              <div
-                                key={f.id}
-                                className="px-3 py-2 hover:bg-[#E3F5EE] flex items-center justify-between gap-2 cursor-pointer transition-colors group"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  handleSelectFormForRow(item.id, f.labelEn);
-                                }}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-xs text-[#074C3A]">
-                                    {f.labelEn}
-                                  </span>
-                                  <span className="text-[11px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">
-                                    {f.labelAr}
-                                  </span>
-                                </div>
-
-                                <button
-                                  type="button"
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleDeleteForm(f.id, f.labelEn);
-                                  }}
-                                  className="opacity-40 group-hover:opacity-100 text-slate-400 hover:text-rose-600 p-1 rounded-md transition-all cursor-pointer"
-                                  title={`حذف "${f.labelEn}" من القائمة`}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            ))}
-
-                          {item.form &&
-                            !allDrugForms.some(
-                              (f) =>
-                                f.labelEn.toLowerCase() === item.form?.trim().toLowerCase() ||
-                                f.labelAr.toLowerCase() === item.form?.trim().toLowerCase()
-                            ) && (
-                              <div
-                                className="px-3 py-2 bg-emerald-50 text-xs font-bold text-[#0B7B5E] cursor-pointer hover:bg-emerald-100"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  handleSelectFormForRow(item.id, item.form!);
-                                }}
-                              >
-                                + اعتماد الشكل المكتوب: &quot;{item.form}&quot;
-                              </div>
-                            )}
-
-                          <div
-                            className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 font-medium text-center cursor-pointer hover:bg-slate-100"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              setActiveFormRowId(null);
-                            }}
-                          >
-                            إغلاق القائمة ✕
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 3. التركيز (Concentration / Strength) مع اقتراحات وإمكانية الحذف والإضافة */}
-                  <div className="col-span-12 sm:col-span-6 md:col-span-12 lg:col-span-3 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-sky-800 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-sky-600" />
-                        <span>التركيز (Concentration)</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => openAddSuggestionModal('concentration', 'التركيز', '500mg, 1gm, 0.1%...')}
-                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
-                        title="إضافة تركيز جديد للاقتراحات"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>إضافة</span>
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={item.concentration || ''}
-                      onChange={(e) => updateItem(item.id, 'concentration', e.target.value)}
-                      placeholder="500mg, 1gm, 0.1%..."
-                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white font-mono text-sm focus:outline-none focus:border-[#0B7B5E]"
-                    />
-                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
-                      {allConcentrationList.map((conc) => {
-                        const isSelected = item.concentration === conc;
-                        return (
-                          <div
-                            key={conc}
-                            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-all ${
-                              isSelected
-                                ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
-                                : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => updateItem(item.id, 'concentration', conc)}
-                              className="cursor-pointer"
-                            >
-                              {conc}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveSuggestion('concentration', conc);
-                              }}
-                              className={`cursor-pointer text-xs leading-none p-0.5 rounded hover:bg-rose-100 hover:text-rose-700 transition-colors ${
-                                isSelected ? 'text-white/80 hover:text-white hover:bg-emerald-700' : 'text-slate-400'
-                              }`}
-                              title="حذف من الاقتراحات"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 4. الجرعة (Dose) - تدعم اختصارات 1/2/5 أو أرقام مجردة وتتكيف تلقائياً مع نوع الدواء */}
-                  <div className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-4 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-amber-800 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-amber-600" />
-                        <span>الجرعة (Dose)</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => openAddSuggestionModal('dose', 'الجرعة', '1 قرص، حقنة واحدة، 3 نقط...')}
-                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
-                        title="إضافة جرعة جديدة للاقتراحات"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>إضافة</span>
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={item.dose}
-                      onChange={(e) => updateItem(item.id, 'dose', e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const val = e.currentTarget.value.trim();
-                          const parsed = parseDoseShortcut(val, item.form);
-                          if (parsed) {
-                            e.preventDefault();
-                            updateItem(item.id, 'dose', parsed.dose);
-                            updateItem(item.id, 'frequency', parsed.frequency);
-                            if (parsed.duration) updateItem(item.id, 'duration', parsed.duration);
-                            toast.success(`✓ تمت ترجمة الاختصار: ${parsed.summary}`);
-                          }
-                        }
-                      }}
-                      onBlur={(e) => {
-                        const val = e.target.value.trim();
-                        const parsed = parseDoseShortcut(val, item.form);
-                        if (parsed) {
-                          updateItem(item.id, 'dose', parsed.dose);
-                          updateItem(item.id, 'frequency', parsed.frequency);
-                          if (parsed.duration) updateItem(item.id, 'duration', parsed.duration);
-                        } else {
-                          const formatted = formatDose(val, item.form);
-                          if (formatted !== val) {
-                            updateItem(item.id, 'dose', formatted);
-                          }
-                        }
-                      }}
-                      placeholder="1 أو 1/2/5 (تترجم لـ قرص واحد أو جرعة متكاملة)..."
-                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
-                    />
-                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
-                      {getDoseListForRow(item.form).map((dose) => {
-                        const isSelected = item.dose === dose;
-                        return (
-                          <div
-                            key={dose}
-                            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-all ${
-                              isSelected
-                                ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
-                                : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => updateItem(item.id, 'dose', dose)}
-                              className="cursor-pointer"
-                            >
-                              {dose}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveSuggestion('dose', dose);
-                              }}
-                              className={`cursor-pointer text-xs leading-none p-0.5 rounded hover:bg-rose-100 hover:text-rose-700 transition-colors ${
-                                isSelected ? 'text-white/80 hover:text-white hover:bg-emerald-700' : 'text-slate-400'
-                              }`}
-                              title="حذف من الاقتراحات"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 5. التكرار (Frequency) مع الترجمة التلقائية الفورية للأرقام */}
-                  <div className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-4 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-indigo-800 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-indigo-600" />
-                        <span>التكرار (Frequency)</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => openAddSuggestionModal('frequency', 'التكرار', 'كل 12 ساعة، 3 مرات يومياً...')}
-                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
-                        title="إضافة تكرار جديد للاقتراحات"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>إضافة</span>
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={item.frequency}
-                      onChange={(e) => updateItem(item.id, 'frequency', e.target.value)}
-                      onBlur={(e) => {
-                        const formatted = formatFrequency(e.target.value);
-                        if (formatted !== e.target.value) {
-                          updateItem(item.id, 'frequency', formatted);
-                        }
-                      }}
-                      placeholder="2 (تترجم لـ كل 12 ساعة تلقائياً)..."
-                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
-                    />
-                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
-                      {allFrequencyList.map((freq) => {
-                        const isSelected = item.frequency === freq;
-                        return (
-                          <div
-                            key={freq}
-                            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-all ${
-                              isSelected
-                                ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
-                                : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => updateItem(item.id, 'frequency', freq)}
-                              className="cursor-pointer"
-                            >
-                              {freq}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveSuggestion('frequency', freq);
-                              }}
-                              className={`cursor-pointer text-xs leading-none p-0.5 rounded hover:bg-rose-100 hover:text-rose-700 transition-colors ${
-                                isSelected ? 'text-white/80 hover:text-white hover:bg-emerald-700' : 'text-slate-400'
-                              }`}
-                              title="حذف من الاقتراحات"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 6. المدة (Duration) مع الترجمة التلقائية الفورية للأيام */}
-                  <div className="col-span-12 sm:col-span-12 md:col-span-4 lg:col-span-4 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="font-bold text-xs sm:text-sm text-purple-800 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-purple-600" />
-                        <span>المدة (Duration)</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => openAddSuggestionModal('duration', 'المدة', '5 أيام، أسبوع، شهر...')}
-                        className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer flex items-center gap-0.5"
-                        title="إضافة مدة جديدة للاقتراحات"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>إضافة</span>
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={item.duration}
-                      onChange={(e) => updateItem(item.id, 'duration', e.target.value)}
-                      onBlur={(e) => {
-                        const formatted = formatDuration(e.target.value);
-                        if (formatted !== e.target.value) {
-                          updateItem(item.id, 'duration', formatted);
-                        }
-                      }}
-                      placeholder="5 (تترجم لـ 5 أيام تلقائياً)..."
-                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
-                    />
-                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto pt-0.5">
-                      {allDurationList.map((dur) => {
-                        const isSelected = item.duration === dur;
-                        return (
-                          <div
-                            key={dur}
-                            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-all ${
-                              isSelected
-                                ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] font-bold shadow-2xs'
-                                : 'bg-white hover:bg-[#E3F5EE] hover:text-[#0B7B5E] text-slate-600 border-slate-200'
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => updateItem(item.id, 'duration', dur)}
-                              className="cursor-pointer"
-                            >
-                              {dur}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveSuggestion('duration', dur);
-                              }}
-                              className={`cursor-pointer text-xs leading-none p-0.5 rounded hover:bg-rose-100 hover:text-rose-700 transition-colors ${
-                                isSelected ? 'text-white/80 hover:text-white hover:bg-emerald-700' : 'text-slate-400'
-                              }`}
-                              title="حذف من الاقتراحات"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 7. تعليمات وإرشادات الاستخدام */}
-                  <div className="col-span-12 space-y-1">
-                    <label className="font-bold text-xs sm:text-sm text-rose-800 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-rose-600" />
-                      <span>تعليمات وإرشادات الاستخدام (Instructions)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={item.instructions || ''}
-                      onChange={(e) => updateItem(item.id, 'instructions', e.target.value)}
-                      placeholder="بعد الأكل مباشرة، قبل النوم، رج الزجاجة قبل الاستخدام..."
-                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:border-[#0B7B5E]"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedManualEditRows((prev) => ({
+                        ...prev,
+                        [item.id]: !prev[item.id],
+                      }))
+                    }
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-[#074C3A] font-bold text-[11px] border border-slate-200 hover:border-emerald-300 shadow-2xs transition-all cursor-pointer self-start sm:self-auto shrink-0"
+                  >
+                    <Pencil className="w-3 h-3 text-[#0B7B5E]" />
+                    <span>
+                      {expandedManualEditRows[item.id] ? 'إخفاء التعديل ✕' : 'تعديل التفاصيل ✏️'}
+                    </span>
+                  </button>
                 </div>
+
+                {/* الدرج المنسدل للتعديل اليدوي إن رغب الطبيب في إدخال القيم يدوياً */}
+                {expandedManualEditRows[item.id] && (
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-2 pb-1 border-t border-slate-100 animate-in fade-in-50 text-xs">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        الجرعة (Dose):
+                      </label>
+                      <input
+                        type="text"
+                        value={item.dose}
+                        onChange={(e) => updateItem(item.id, 'dose', e.target.value)}
+                        placeholder="قرص واحد، 5 سم..."
+                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        التكرار (Frequency):
+                      </label>
+                      <input
+                        type="text"
+                        value={item.frequency}
+                        onChange={(e) => updateItem(item.id, 'frequency', e.target.value)}
+                        onBlur={(e) => {
+                          const formatted = formatFrequency(e.target.value);
+                          if (formatted !== e.target.value) {
+                            updateItem(item.id, 'frequency', formatted);
+                          }
+                        }}
+                        placeholder="3 مرات في اليوم..."
+                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        المدة (Duration):
+                      </label>
+                      <input
+                        type="text"
+                        value={item.duration}
+                        onChange={(e) => updateItem(item.id, 'duration', e.target.value)}
+                        onBlur={(e) => {
+                          const formatted = formatDuration(e.target.value);
+                          if (formatted !== e.target.value) {
+                            updateItem(item.id, 'duration', formatted);
+                          }
+                        }}
+                        placeholder="لمدة 5 أيام..."
+                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        التعليمات (Instructions):
+                      </label>
+                      <input
+                        type="text"
+                        value={item.instructions || ''}
+                        onChange={(e) => updateItem(item.id, 'instructions', e.target.value)}
+                        placeholder="قبل الأكل بنصف ساعة..."
+                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -1469,7 +1173,10 @@ export function PrescriptionView({
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             type="button"
-            onClick={onSave}
+            onClick={async () => {
+              await handleAutoSaveUntrackedDrugs();
+              onSave();
+            }}
             disabled={isSaving}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
           >
@@ -1500,7 +1207,10 @@ export function PrescriptionView({
 
           <button
             type="button"
-            onClick={onFinish}
+            onClick={async () => {
+              await handleAutoSaveUntrackedDrugs();
+              onFinish();
+            }}
             disabled={isFinishing}
             className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-60"
           >

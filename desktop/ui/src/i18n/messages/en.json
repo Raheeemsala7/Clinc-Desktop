@@ -260,6 +260,8 @@
       "settings": "Settings",
       "todayCheckup": "Today's Clinic",
       "clinicalSearch": "Clinical Search",
+      "drugs": "Medications & Catalog",
+      "doctorRevenue": "Consultations & Revenue",
       "calendar": "Calendar & Schedule",
       "weeklyHours": "Weekly Hours",
       "queue": "Waiting Queue",
