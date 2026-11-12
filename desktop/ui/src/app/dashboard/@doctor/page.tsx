@@ -49,7 +49,7 @@ async function DoctorDashboardData({ searchParams }: DoctorPageProps) {
       <DoctorDashboardView
         initialQueue={initialQueue}
         initialCalendarData={calendarData}
-        initialView={resolvedParams?.view}
+        initialView={resolvedParams?.view || 'calendar'}
         selectedDate={selectedDate}
       />
     );

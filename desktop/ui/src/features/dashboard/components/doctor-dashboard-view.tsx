@@ -93,7 +93,7 @@ export const DoctorDashboardView = ({
   const t = useTranslations('Dashboard.doctor');
   const tDoctorStatus = useTranslations('Dashboard.doctorStatus');
 
-  const [dashboardView, setDashboardView] = useState<'queue' | 'calendar'>(initialView || 'queue');
+  const [dashboardView, setDashboardView] = useState<'queue' | 'calendar'>(initialView || 'calendar');
   const [currentDate, setCurrentDate] = useState<string>(
     selectedDate || initialCalendarData?.date || new Date().toISOString().slice(0, 10)
   );
@@ -207,41 +207,33 @@ export const DoctorDashboardView = ({
   }, [queue, activeTab, waitingPatients, inProgressPatients, pastPatients, completedPatients, searchQuery]);
 
   return (
-    <div className="space-y-6 select-none" dir="rtl">
-      {/* رأس الصفحة + أزرار التبديل ومؤشر التحديث */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-xs">
-        <div className="text-start">
-          <h2 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight flex items-center gap-3">
-            <span>{t('title')}</span>
-            <span className="text-xs px-3 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold border border-[#D0E5DC]">
-              {currentDate}
-            </span>
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 font-bold">
-            متابعة قائمة المرضى اليوم، فحص الحالات، والاطلاع على جدول مواعيد اليوم بالساعات
-          </p>
+    <div className="space-y-4 select-none" dir="rtl">
+      {/* 1. رأس الصفحة الموحد والمريح للعين (Clean & Zen Header) */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+        {/* عنوان الشاشة والتاريخ */}
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-[#074C3A] text-white flex items-center justify-center font-black shadow-xs shrink-0">
+            <Stethoscope className="w-5 h-5 stroke-[2.2]" />
+          </div>
+          <div className="text-start">
+            <h2 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight flex items-center gap-2">
+              <span>{dashboardView === 'calendar' && calendarDisplayMode === 'day-grid' ? 'جدول كشوفات اليوم' : t('title')}</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold border border-[#D0E5DC]">
+                {currentDate}
+              </span>
+            </h2>
+            <p className="text-xs text-slate-400 font-bold mt-0.5">
+              {dashboardView === 'calendar' && calendarDisplayMode === 'day-grid'
+                ? 'مواعيد وكشوفات اليوم مقسمة بالساعة — تبدأ تلقائياً من الساعة الحالية'
+                : 'متابعة قائمة المرضى اليوم، فحص الحالات، والاطلاع على جدول مواعيد اليوم'}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* أزرار التبديل البارزة بين قائمة المرضى وجدول المواعيد بالساعات */}
-          <div className="flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/60 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => setDashboardView('queue')}
-              className={cn(
-                'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer',
-                dashboardView === 'queue'
-                  ? 'bg-white text-[#074C3A] shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              )}
-            >
-              <ListOrdered className="w-4 h-4 text-[#0B7B5E]" />
-              <span>قائمة المرضى اليوم</span>
-              <span className="bg-[#0B7B5E] text-white px-2 py-0.5 rounded-full text-xs font-mono font-bold">
-                {totalCount}
-              </span>
-            </button>
-
+        {/* أزرار التبديل الثلاثية + حالة الطبيب وزر التحديث */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* تبديل العرض بين: مربعات اليوم | قائمة المرضى | تقويم الأسبوع */}
+          <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/60 shadow-2xs">
             <button
               type="button"
               onClick={() => {
@@ -249,19 +241,33 @@ export const DoctorDashboardView = ({
                 setCalendarDisplayMode('day-grid');
               }}
               className={cn(
-                'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer',
+                'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer',
                 dashboardView === 'calendar' && calendarDisplayMode === 'day-grid'
                   ? 'bg-white text-[#074C3A] shadow-xs'
                   : 'text-slate-500 hover:text-slate-900'
               )}
             >
               <LayoutGrid className="w-4 h-4 text-[#0B7B5E]" />
-              <span>مربعات جدول اليوم ▦</span>
-              {calendarBookedCount > 0 && (
-                <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-xs font-mono font-bold">
-                  {calendarBookedCount}
+              <span>مربعات اليوم ▦</span>
+              {waitingCount > 0 && (
+                <span className="bg-amber-500 text-white px-2 py-0.2 rounded-full text-[10px] font-mono font-black">
+                  {waitingCount}
                 </span>
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDashboardView('queue')}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer',
+                dashboardView === 'queue'
+                  ? 'bg-white text-[#074C3A] shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              )}
+            >
+              <ListOrdered className="w-4 h-4 text-[#0B7B5E]" />
+              <span>قائمة المرضى ({totalCount})</span>
             </button>
 
             <button
@@ -271,31 +277,48 @@ export const DoctorDashboardView = ({
                 setCalendarDisplayMode('grid');
               }}
               className={cn(
-                'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer',
-                dashboardView === 'calendar' && calendarDisplayMode !== 'day-grid'
+                'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer',
+                dashboardView === 'calendar' && calendarDisplayMode === 'grid'
                   ? 'bg-white text-[#074C3A] shadow-xs'
                   : 'text-slate-500 hover:text-slate-900'
               )}
             >
               <CalendarDays className="w-4 h-4 text-[#0B7B5E]" />
-              <span>تقويم الأسبوع بالساعات 📅</span>
+              <span>الأسبوع 🗓️</span>
             </button>
           </div>
 
-          {/* زر التحديث الشامل */}
+          {/* تبديل حالة الطبيب (متاح / استراحة) */}
+          <button
+            type="button"
+            disabled={updateStatusMutation.isPending}
+            onClick={() => updateStatusMutation.mutate(isAvailable ? 'BREAK' : 'AVAILABLE')}
+            className={cn(
+              'px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs border',
+              isAvailable
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+            )}
+            title="الضغط للتبديل بين متاح وأخذ استراحة"
+          >
+            <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-emerald-600' : 'bg-amber-500')} />
+            <span>{isAvailable ? 'طبيب متاح' : 'في استراحة'}</span>
+          </button>
+
+          {/* زر التحديث السريع */}
           <button
             type="button"
             onClick={handleRefresh}
             disabled={isManualRefreshing}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-w-[85px] rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 active:scale-95 transition-all shadow-2xs cursor-pointer disabled:opacity-60"
+            className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-95 transition-all shadow-2xs flex items-center justify-center cursor-pointer text-slate-600 disabled:opacity-60"
+            title="تحديث البيانات"
           >
             <RefreshCw
               className={cn(
-                'w-3.5 h-3.5 text-slate-500',
+                'w-4 h-4 text-slate-500',
                 isManualRefreshing && 'animate-spin'
               )}
             />
-            <span>تحديث</span>
           </button>
         </div>
       </div>
@@ -334,188 +357,102 @@ export const DoctorDashboardView = ({
         </div>
       )}
 
-      {/* صف بطاقات الإحصائيات الأربعة السريعة */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* بطاقة حالة الطبيب */}
-        <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-400">
-              {tDoctorStatus('title')}
+      {/* 2. في وضع قائمة المرضى فقط: نعرض بطاقات الإحصائيات الأربعة لتفاصيل الاستقبال */}
+      {dashboardView === 'queue' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* بطاقة حالة الطبيب */}
+          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-400">
+                {tDoctorStatus('title')}
+              </span>
+              {isStatusFetching && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E3F5EE]0" />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={updateStatusMutation.isPending}
+                onClick={() => updateStatusMutation.mutate('AVAILABLE')}
+                className={cn(
+                  'flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60',
+                  isAvailable
+                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                )}
+              >
+                <span className="w-2 h-2 rounded-full bg-white" />
+                <span>{tDoctorStatus('available')}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={updateStatusMutation.isPending}
+                onClick={() => updateStatusMutation.mutate('BREAK')}
+                className={cn(
+                  'flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center border cursor-pointer disabled:opacity-60',
+                  !isAvailable
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                )}
+              >
+                {tDoctorStatus('takeBreak')}
+              </button>
+            </div>
+          </div>
+
+          {/* بطاقة في الانتظار */}
+          <div className="bg-[#FFFDF0] rounded-2xl p-5 shadow-xs border-2 border-brand-yellow flex flex-col justify-between text-center">
+            <span className="text-xs font-semibold text-slate-500">
+              {t('waitingStatus')}
             </span>
-            {isStatusFetching && (
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E3F5EE]0" />
-            )}
+            <div className="flex items-baseline justify-center gap-2 my-1">
+              <span className="text-3xl font-black text-[#074C3A]">{waitingCount}</span>
+              <span className="text-xs font-bold text-slate-500">{t('remainingCases')}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={updateStatusMutation.isPending}
-              onClick={() => updateStatusMutation.mutate('AVAILABLE')}
-              className={cn(
-                'flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60',
-                isAvailable
-                  ? 'bg-[#16A34A] text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              )}
-            >
-              <span className="w-2 h-2 rounded-full bg-white" />
-              <span>{tDoctorStatus('available')}</span>
-            </button>
 
-            <button
-              type="button"
-              disabled={updateStatusMutation.isPending}
-              onClick={() => updateStatusMutation.mutate('BREAK')}
-              className={cn(
-                'flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center border cursor-pointer disabled:opacity-60',
-                !isAvailable
-                  ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              )}
-            >
-              {tDoctorStatus('takeBreak')}
-            </button>
+          {/* بطاقة تم الكشف */}
+          <div className="bg-[#F0F5FF] rounded-2xl p-5 shadow-xs border border-[#D0E5DC] flex flex-col justify-between text-center">
+            <span className="text-xs font-semibold text-slate-500">
+              {t('completedCheckup')}
+            </span>
+            <div className="flex items-baseline justify-center gap-2 my-1">
+              <span className="text-3xl font-black text-[#074C3A]">{completedCount}</span>
+              <span className="text-xs font-bold text-slate-500">{t('doneCheckup')}</span>
+            </div>
+          </div>
+
+          {/* بطاقة إجمالي الحالات اليوم */}
+          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 flex flex-col justify-between text-center">
+            <span className="text-xs font-semibold text-slate-400">
+              {t('totalCases')}
+            </span>
+            <div className="flex items-baseline justify-center gap-2 my-1">
+              <span className="text-3xl font-black text-[#074C3A]">{totalCount}</span>
+              <span className="text-xs font-bold text-slate-500">{t('registeredAppointments')}</span>
+            </div>
           </div>
         </div>
-
-        {/* بطاقة في الانتظار */}
-        <div className="bg-[#FFFDF0] rounded-2xl p-5 shadow-xs border-2 border-brand-yellow flex flex-col justify-between text-center">
-          <span className="text-xs font-semibold text-slate-500">
-            {t('waitingStatus')}
-          </span>
-          <div className="flex items-baseline justify-center gap-2 my-1">
-            <span className="text-3xl font-black text-[#074C3A]">{waitingCount}</span>
-            <span className="text-xs font-bold text-slate-500">{t('remainingCases')}</span>
-          </div>
-        </div>
-
-        {/* بطاقة تم الكشف */}
-        <div className="bg-[#F0F5FF] rounded-2xl p-5 shadow-xs border border-[#D0E5DC] flex flex-col justify-between text-center">
-          <span className="text-xs font-semibold text-slate-500">
-            {t('completedCheckup')}
-          </span>
-          <div className="flex items-baseline justify-center gap-2 my-1">
-            <span className="text-3xl font-black text-[#074C3A]">{completedCount}</span>
-            <span className="text-xs font-bold text-slate-500">{t('doneCheckup')}</span>
-          </div>
-        </div>
-
-        {/* بطاقة إجمالي الحالات اليوم */}
-        <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 flex flex-col justify-between text-center">
-          <span className="text-xs font-semibold text-slate-400">
-            {t('totalCases')}
-          </span>
-          <div className="flex items-baseline justify-center gap-2 my-1">
-            <span className="text-3xl font-black text-[#074C3A]">{totalCount}</span>
-            <span className="text-xs font-bold text-slate-500">{t('registeredAppointments')}</span>
-          </div>
-        </div>
-      </div>
+      )}
 
       {dashboardView === 'calendar' ? (
-        /* ================== وضع عرض التقويم بالساعات (Hourly Calendar View) ================== */
-        <div className="space-y-4">
-          {/* شريط التحكم بالتقويم اليومي للطبيب */}
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center font-bold">
-                <Calendar className="w-6 h-6 stroke-[2.2]" />
-              </div>
-              <div className="text-start">
-                <h3 className="font-black text-base text-[#074C3A] flex items-center gap-2">
-                  <span>جدول المواعيد والساعات للطبيب</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold">
-                    {currentDate}
-                  </span>
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5 font-bold">
-                  استعراض الفترات الزمنية بالساعات مع ألوان مميزة لكل حالة وإمكانية بدء أو إنهاء الكشف مباشرة
-                </p>
-              </div>
-            </div>
-
-            {/* أزرار نمط عرض التقويم والتنقل بين الأيام */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* تبديل بين مربعات اليوم وشبكة الأسبوع وقائمة الفترات */}
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/60 text-xs font-bold">
-                <button
-                  type="button"
-                  onClick={() => setCalendarDisplayMode('day-grid')}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5',
-                    calendarDisplayMode === 'day-grid'
-                      ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                      : 'text-slate-600 hover:text-slate-900'
-                  )}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>مربعات اليوم ▦</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCalendarDisplayMode('grid')}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5',
-                    calendarDisplayMode === 'grid'
-                      ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                      : 'text-slate-600 hover:text-slate-900'
-                  )}
-                >
-                  <CalendarDays className="w-3.5 h-3.5" />
-                  <span>شبكة الأسبوع 🗓️</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCalendarDisplayMode('timeline')}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5',
-                    calendarDisplayMode === 'timeline'
-                      ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                      : 'text-slate-600 hover:text-slate-900'
-                  )}
-                >
-                  <ListOrdered className="w-3.5 h-3.5" />
-                  <span>قائمة الفترات 📋</span>
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleShiftDate(calendarDisplayMode === 'day-grid' ? -1 : -7)}
-                className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-              >
-                {calendarDisplayMode === 'day-grid' ? 'اليوم السابق →' : 'الأسبوع السابق →'}
-              </button>
-              <button
-                type="button"
-                onClick={handleResetToToday}
-                className="px-4 py-2 rounded-xl bg-[#E3F5EE] hover:bg-[#E3F5EE] text-[#0B7B5E] text-xs font-black transition-all shadow-2xs cursor-pointer border border-[#D0E5DC]/60"
-              >
-                اليوم
-              </button>
-              <button
-                type="button"
-                onClick={() => handleShiftDate(calendarDisplayMode === 'day-grid' ? 1 : 7)}
-                className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-              >
-                {calendarDisplayMode === 'day-grid' ? '← اليوم التالي' : '← الأسبوع التالي'}
-              </button>
-            </div>
-          </div>
-
-          {/* محتوى جدول الساعات الزمني مع ربط الإجراءات */}
-          {isCalendarLoading ? (
+        calendarDisplayMode === 'day-grid' ? (
+          /* ================== وضع مربعات اليوم (Zen Day Grid - يبدأ مباشرة في أعلى الشاشة) ================== */
+          isCalendarLoading ? (
             <div className="bg-white rounded-3xl p-16 border border-slate-100 text-center shadow-xs">
               <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
-              <p className="text-xs font-bold text-slate-400">جاري تحميل جدول المواعيد بالساعات...</p>
+              <p className="text-xs font-bold text-slate-400">جاري تحميل جدول مواعيد اليوم...</p>
             </div>
-          ) : calendarDisplayMode === 'day-grid' ? (
+          ) : (
             <CalendarDayGridView
               date={currentDate}
               slots={calendarData?.daySlots || []}
               appointments={calendarData?.weekAppointments || []}
               queueItems={queue || []}
               isDoctorView={true}
+              compactHeader={true}
               onAdmit={(id) => admitMutation.mutate(id)}
               isAdmitting={admitMutation.isPending}
               admittingId={admitMutation.variables as string}
@@ -523,26 +460,81 @@ export const DoctorDashboardView = ({
               isFinishingExam={finishExamMutation.isPending}
               finishingExamId={finishExamMutation.variables as string}
             />
-          ) : calendarDisplayMode === 'grid' ? (
-            <CalendarWeekGridView
-              days={calendarData?.weekRange?.days || []}
-              appointments={calendarData?.weekAppointments || []}
-              isDoctorView={true}
-            />
-          ) : (
-            <CalendarDayTimelineView
-              slots={calendarData?.daySlots || []}
-              selectedDate={currentDate}
-              isDoctorView={true}
-              onAdmit={(id) => admitMutation.mutate(id)}
-              isAdmitting={admitMutation.isPending}
-              admittingId={admitMutation.variables as string}
-              onFinishExam={(id) => finishExamMutation.mutate(id)}
-              isFinishingExam={finishExamMutation.isPending}
-              finishingExamId={finishExamMutation.variables as string}
-            />
-          )}
-        </div>
+          )
+        ) : (
+          /* ================== وضع التقويم الأسبوعي أو قائمة الفترات ================== */
+          <div className="space-y-4">
+            {/* شريط التحكم والتنقل الأسبوعي */}
+            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#E3F5EE] text-[#0B7B5E] flex items-center justify-center font-bold">
+                  <Calendar className="w-6 h-6 stroke-[2.2]" />
+                </div>
+                <div className="text-start">
+                  <h3 className="font-black text-base text-[#074C3A] flex items-center gap-2">
+                    <span>تقويم المواعيد بالساعات</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold">
+                      {currentDate}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5 font-bold">
+                    استعراض المواعيد الأسبوعية بالساعات مع ألوان مميزة لكل حالة
+                  </p>
+                </div>
+              </div>
+
+              {/* أزرار التنقل الأسبوعي */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleShiftDate(-7)}
+                  className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                >
+                  الأسبوع السابق →
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetToToday}
+                  className="px-4 py-2 rounded-xl bg-[#E3F5EE] hover:bg-[#E3F5EE] text-[#0B7B5E] text-xs font-black transition-all shadow-2xs cursor-pointer border border-[#D0E5DC]/60"
+                >
+                  اليوم
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShiftDate(7)}
+                  className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                >
+                  ← الأسبوع التالي
+                </button>
+              </div>
+            </div>
+
+            {isCalendarLoading ? (
+              <div className="bg-white rounded-3xl p-16 border border-slate-100 text-center shadow-xs">
+                <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
+                <p className="text-xs font-bold text-slate-400">جاري تحميل جدول المواعيد بالساعات...</p>
+              </div>
+            ) : calendarDisplayMode === 'grid' ? (
+              <CalendarWeekGridView
+                days={calendarData?.weekRange?.days || []}
+                appointments={calendarData?.weekAppointments || []}
+                isDoctorView={true}
+              />
+            ) : (
+              <CalendarDayTimelineView
+                slots={calendarData?.daySlots || []}
+                selectedDate={currentDate}
+                isDoctorView={true}
+                onAdmit={(id) => admitMutation.mutate(id)}
+                isAdmitting={admitMutation.isPending}
+                admittingId={admitMutation.variables as string}
+                onFinishExam={(id) => finishExamMutation.mutate(id)}
+                isFinishingExam={finishExamMutation.isPending}
+                finishingExamId={finishExamMutation.variables as string}
+              />
+            )}
+          </div>
+        )
       ) : (
         /* ================== وضع قائمة المرضى الموجودين (Full-Width Patient List) ================== */
         <div className="space-y-4">

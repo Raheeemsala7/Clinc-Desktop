@@ -16,7 +16,8 @@ import {
   Table as TableIcon,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { DaySlotItem, DaySlotAppointment, WeekAppointmentItem } from '../types/calendar';
 import { TodayQueueItem } from '../apis/appointment.api';
@@ -31,6 +32,7 @@ export interface CalendarDayGridViewProps {
   queueItems?: TodayQueueItem[];
   selectedDoctorId?: string;
   isDoctorView?: boolean;
+  compactHeader?: boolean;
   onAdmit?: (id: string) => void;
   isAdmitting?: boolean;
   admittingId?: string | null;
@@ -112,6 +114,7 @@ export function CalendarDayGridView({
   queueItems = [],
   selectedDoctorId,
   isDoctorView,
+  compactHeader = false,
   onAdmit,
   isAdmitting,
   admittingId,
@@ -121,10 +124,12 @@ export function CalendarDayGridView({
 }: CalendarDayGridViewProps) {
   const router = useRouter();
 
-  // نمط العرض الداخلي: شبكة مربعات مرنة vs جدول تفصيلي بالساعات
+  // نمط العرض: شبكة مربعات مرنة vs جدول تفصيلي بالساعات
   const [layoutMode, setLayoutMode] = useState<'grid' | 'table'>('grid');
   // فلترة الحالات
   const [statusFilter, setStatusFilter] = useState<'all' | 'booked_only' | 'waiting_only' | 'available_only'>('all');
+  // إظهار/إخفاء الساعات السابقة (الافتراضي: مخفية لتبدأ الشاشة من الساعة الحالية)
+  const [showPastHours, setShowPastHours] = useState(false);
 
   // حساب معلومات اليوم
   const dayInfo = useMemo(() => {
@@ -252,16 +257,18 @@ export function CalendarDayGridView({
     };
   }, [dayAppointments, slots]);
 
-  // التحقق من الوقت الحالي لمعرفة موقع الخط الأحمر
-  const currentHourStr = useMemo(() => {
+  // حساب الساعة الحالية بالـ local time
+  const currentHourNum = useMemo(() => {
     const now = new Date();
-    const h = now.getHours().toString().padStart(2, '0');
-    return `${h}:00`;
+    return now.getHours();
   }, []);
 
-  // المواعيد المصفاة لشبكة المربعات (Grid)
-  const unifiedSlotBoxes = useMemo(() => {
-    // نضمن وجود جميع الفترات القياسية بنصف ساعة
+  const currentHourStr = useMemo(() => {
+    return `${currentHourNum.toString().padStart(2, '0')}:00`;
+  }, [currentHourNum]);
+
+  // المربعات الزمنية الكاملة
+  const allSlotBoxes = useMemo(() => {
     const standardTimes = [
       '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
       '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
@@ -278,37 +285,71 @@ export function CalendarDayGridView({
 
     const sortedTimes = Array.from(allTimesSet).sort();
 
-    const boxes = sortedTimes.map((timeStr) => {
+    return sortedTimes.map((timeStr) => {
       const appts = apptsByExactTime.get(timeStr) || [];
       const isBooked = appts.length > 0;
       const primaryAppt = appts[0] || null;
+      const slotHour = parseInt(timeStr.split(':')[0], 10);
+      const isPast = dayInfo.isToday && slotHour < currentHourNum;
+      const hasWaitingPatient = appts.some((a) => a.status === 'WAITING' || a.status === 'IN_PROGRESS');
 
       return {
         time: timeStr,
         isBooked,
         appointment: primaryAppt,
         appointments: appts,
+        isPast,
+        hasWaitingPatient,
       };
     });
+  }, [dayAppointments, apptsByExactTime, dayInfo.isToday, currentHourNum]);
 
-    // تطبيق الفلتر المختار
-    if (statusFilter === 'booked_only') {
-      return boxes.filter((b) => b.isBooked);
+  // حساب عدد الفترات السابقة التي تم إخفاؤها
+  const hiddenPastSlotsCount = useMemo(() => {
+    if (!dayInfo.isToday) return 0;
+    return allSlotBoxes.filter((b) => b.isPast && !b.hasWaitingPatient).length;
+  }, [allSlotBoxes, dayInfo.isToday]);
+
+  // الفترات بعد تصفية الساعات السابقة وتطبيق فلاتر الحالات
+  const visibleSlotBoxes = useMemo(() => {
+    let list = allSlotBoxes;
+
+    // 1. استبعاد الساعات السابقة إلا إذا طلب المستخدم إظهارها أو إذا كان هناك مريض في الانتظار
+    if (dayInfo.isToday && !showPastHours) {
+      list = list.filter((b) => !b.isPast || b.hasWaitingPatient);
     }
-    if (statusFilter === 'waiting_only') {
-      return boxes.filter(
+
+    // 2. تطبيق فلتر الحالة
+    if (statusFilter === 'booked_only') {
+      list = list.filter((b) => b.isBooked);
+    } else if (statusFilter === 'waiting_only') {
+      list = list.filter(
         (b) =>
           b.isBooked &&
           b.appointments.some((a) => a.status === 'WAITING' || a.status === 'IN_PROGRESS')
       );
+    } else if (statusFilter === 'available_only') {
+      list = list.filter((b) => !b.isBooked);
     }
-    if (statusFilter === 'available_only') {
-      return boxes.filter((b) => !b.isBooked);
-    }
-    return boxes;
-  }, [dayAppointments, apptsByExactTime, statusFilter]);
 
-  // التعامل مع فتح شاشة الحجز لموعد جديد
+    return list;
+  }, [allSlotBoxes, dayInfo.isToday, showPastHours, statusFilter]);
+
+  // الساعات المعروضة لجدول الساعات التفصيلي
+  const visibleHours = useMemo(() => {
+    if (!dayInfo.isToday || showPastHours) return HOURS;
+    return HOURS.filter((hour) => {
+      const h = parseInt(hour.split(':')[0], 10);
+      if (h >= currentHourNum) return true;
+      const hasWaiting = INTERVAL_MINUTES.some((min) => {
+        const appts = apptsByExactTime.get(`${hour.split(':')[0]}:${min}`) || [];
+        return appts.some((a) => a.status === 'WAITING' || a.status === 'IN_PROGRESS');
+      });
+      return hasWaiting;
+    });
+  }, [dayInfo.isToday, showPastHours, currentHourNum, apptsByExactTime]);
+
+  // فتح شاشة الحجز لموعد جديد
   const handleEmptySlotClick = (timeStr: string) => {
     if (!isDoctorView) {
       router.push(
@@ -320,318 +361,311 @@ export function CalendarDayGridView({
   };
 
   return (
-    <div className="space-y-4 select-none" dir="rtl">
-      {/* 1. ترويسة اليوم وشريط الإحصائيات وأزرار التبديل */}
-      <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5">
-          {/* عنوان اليوم والتاريخ */}
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#074C3A] text-white flex flex-col items-center justify-center font-black shadow-xs shrink-0">
-              <span className="text-base leading-none">{dayInfo.dayNumber}</span>
-              <span className="text-[10px] text-yellow-300 font-bold mt-0.5">
-                {dayInfo.dayName.slice(0, 4)}
+    <div className="space-y-3.5 select-none" dir="rtl">
+      {/* ================== الشريط العلوي الهادئ والمريح للعين ================== */}
+      <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/80 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* معلومات اليوم وتنبيه بداية الساعات من الوقت الحالي */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black text-[#074C3A]">
+              {dayInfo.dayName} {dayInfo.dayNumber} {dayInfo.monthName}
+            </span>
+            {dayInfo.isToday && (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#074C3A] text-[11px] font-black border border-emerald-300">
+                اليوم
               </span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-[#074C3A]">
-                  جدول يوم {dayInfo.dayName}
-                </h2>
-                {dayInfo.isToday && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#074C3A] text-xs font-black border border-emerald-300">
-                    اليوم
-                  </span>
-                )}
-                <span className="text-xs font-bold text-slate-400 font-sans">
-                  ({dayInfo.fullFormattedDate})
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 font-bold mt-0.5 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                <span>
-                  {isDoctorView
-                    ? 'جدول كشوفاتك اليومية مقسم في مربعات صغيرة بالساعة — اضغط على أي كشف لفتح الاستمارة'
-                    : 'جدول المواعيد لليوم في مربعات صغيرة — انقر على أي فترة فارغة لحجز موعد جديد'}
-                </span>
-              </p>
-            </div>
+            )}
           </div>
 
-          {/* تبديل طريقة العرض (شبكة مربعات vs جدول بالساعات) + فلتر الحالات */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* أزرار نمط العرض */}
-            <div className="h-9 p-1 rounded-xl bg-slate-100 border border-slate-200/60 flex items-center gap-1 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setLayoutMode('grid')}
-                className={`h-7 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                  layoutMode === 'grid'
-                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="عرض في شبكة مربعات مدمجة"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>شبكة المربعات</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setLayoutMode('table')}
-                className={`h-7 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                  layoutMode === 'table'
-                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="عرض في جدول ساعات تفصيلي"
-              >
-                <TableIcon className="w-3.5 h-3.5" />
-                <span>جدول الساعات</span>
-              </button>
-            </div>
+          {/* زر تبديل إظهار / إخفاء الساعات السابقة */}
+          {dayInfo.isToday && hiddenPastSlotsCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowPastHours(!showPastHours)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all border bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 cursor-pointer shadow-2xs"
+              title="الضغط لعرض أو إخفاء الساعات الصباحية السابقة"
+            >
+              {showPastHours ? (
+                <>
+                  <EyeOff className="w-3.5 h-3.5 text-slate-500" />
+                  <span>إخفاء الساعات السابقة</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5 text-[#0B7B5E]" />
+                  <span>الساعات السابقة مخفية ({hiddenPastSlotsCount} فترة)</span>
+                </>
+              )}
+            </button>
+          )}
 
-            {/* فلتر الحالات */}
-            <div className="h-9 p-1 rounded-xl bg-slate-100 border border-slate-200/60 flex items-center gap-1 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setStatusFilter('all')}
-                className={`h-7 px-2.5 rounded-lg cursor-pointer transition-all ${
-                  statusFilter === 'all'
-                    ? 'bg-white text-[#074C3A] shadow-xs font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                الكل ({stats.totalBooked})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter('waiting_only')}
-                className={`h-7 px-2.5 rounded-lg cursor-pointer transition-all ${
-                  statusFilter === 'waiting_only'
-                    ? 'bg-amber-500 text-white shadow-xs font-black'
-                    : 'text-amber-800 hover:text-amber-950'
-                }`}
-              >
-                انتظار ({stats.waiting})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter('booked_only')}
-                className={`h-7 px-2.5 rounded-lg cursor-pointer transition-all ${
-                  statusFilter === 'booked_only'
-                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                محجوزة ({stats.totalBooked})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter('available_only')}
-                className={`h-7 px-2.5 rounded-lg cursor-pointer transition-all ${
-                  statusFilter === 'available_only'
-                    ? 'bg-emerald-700 text-white shadow-xs font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                متاحة للحجز
-              </button>
-            </div>
-          </div>
+          {dayInfo.isToday && !showPastHours && (
+            <span className="text-xs font-bold text-[#0B7B5E] flex items-center gap-1 bg-[#E3F5EE]/70 px-2.5 py-1 rounded-xl border border-[#D0E5DC]">
+              <Clock className="w-3.5 h-3.5" />
+              <span>يبدأ من الساعة الحالية ({formatTime12h(currentHourStr)})</span>
+            </span>
+          )}
         </div>
 
-        {/* دليل الألوان والإحصائيات السريعة */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs font-bold">
-          {/* عدادات سريعة */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
-              مكتمل: <strong className="font-mono">{stats.completed}</strong>
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200">
-              في الانتظار: <strong className="font-mono">{stats.waiting}</strong>
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-sky-50 text-sky-900 border border-sky-200">
-              محجوز: <strong className="font-mono">{stats.bookedOnly}</strong>
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200">
-              الفترات المتاحة: <strong className="font-mono">{stats.availableSlotsCount}</strong>
-            </span>
+        {/* فلاتر الحالات ونمط العرض */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* فلاتر الحالات */}
+          <div className="h-8 p-0.5 rounded-xl bg-slate-100 border border-slate-200/60 flex items-center gap-1 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              className={`h-7 px-2.5 rounded-lg cursor-pointer transition-all ${
+                statusFilter === 'all'
+                  ? 'bg-white text-[#074C3A] shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              الكل ({stats.totalBooked})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('waiting_only')}
+              className={`h-7 px-2.5 rounded-lg cursor-pointer transition-all ${
+                statusFilter === 'waiting_only'
+                  ? 'bg-amber-500 text-white shadow-xs font-black'
+                  : 'text-amber-800 hover:text-amber-950'
+              }`}
+            >
+              انتظار ({stats.waiting})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('booked_only')}
+              className={`h-7 px-2.5 rounded-lg cursor-pointer transition-all ${
+                statusFilter === 'booked_only'
+                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              محجوزة ({stats.totalBooked})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('available_only')}
+              className={`h-7 px-2.5 rounded-lg cursor-pointer transition-all ${
+                statusFilter === 'available_only'
+                  ? 'bg-emerald-700 text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              متاحة
+            </button>
           </div>
 
-          {/* دليل الألوان (Legend) */}
-          <div className="flex items-center gap-4 text-xs font-bold flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" />
-              <span>مكتمل</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#EAB308]" />
-              <span>في الانتظار</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E]" />
-              <span>محجوز</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-rose-500">
-              <span className="w-3 h-0.5 bg-rose-500 inline-block" />
-              <span>الخط الأحمر = الوقت الحالي</span>
-            </div>
+          {/* أزرار نمط العرض (شبكة vs جدول) */}
+          <div className="h-8 p-0.5 rounded-xl bg-slate-100 border border-slate-200/60 flex items-center gap-0.5 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setLayoutMode('grid')}
+              className={`h-7 px-2 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                layoutMode === 'grid'
+                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="شبكة المربعات"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>مربعات</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLayoutMode('table')}
+              className={`h-7 px-2 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                layoutMode === 'table'
+                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="جدول الساعات التفصيلي"
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              <span>جدول</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* 2. عرض المربعات بالنمط المختار */}
+      {/* ================== محتوى المربعات ================== */}
       {layoutMode === 'grid' ? (
-        /* ================== النمط 1: شبكة المربعات المدمجة (Compact Boxes Grid) ================== */
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {unifiedSlotBoxes.map((slotBox) => {
-              const { time, isBooked, appointment, appointments } = slotBox;
-              const isCurrentHour = dayInfo.isToday && time.startsWith(currentHourStr.slice(0, 2));
+        /* النمط 1: شبكة المربعات الصغيرة (Compact Box Grid) */
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs">
+          {visibleSlotBoxes.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 font-bold text-xs">
+              لا توجد فترات مطابقة للفلتر المحدد
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {visibleSlotBoxes.map((slotBox) => {
+                const { time, isBooked, appointment, appointments, isPast, hasWaitingPatient } = slotBox;
+                const isCurrentHour = dayInfo.isToday && time.startsWith(currentHourStr.slice(0, 2));
 
-              if (!isBooked) {
-                /* مربع فترة شاغرة / متاح */
+                if (!isBooked) {
+                  /* مربع فترة شاغرة / متاح */
+                  return (
+                    <div
+                      key={time}
+                      onClick={() => handleEmptySlotClick(time)}
+                      className={`p-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-emerald-50/40 hover:border-[#0B7B5E] transition-all flex flex-col justify-between min-h-[92px] group relative ${
+                        isDoctorView ? 'cursor-default' : 'cursor-pointer hover:shadow-xs'
+                      } ${isCurrentHour ? 'ring-2 ring-emerald-500/30 border-[#0B7B5E]' : ''}`}
+                    >
+                      {isCurrentHour && (
+                        <div className="absolute top-0 right-0 left-0 h-1 bg-[#0B7B5E] rounded-t-xl" />
+                      )}
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono font-bold text-slate-600 group-hover:text-[#074C3A]">
+                          {formatTime12h(time)}
+                        </span>
+                        {isCurrentHour ? (
+                          <span className="text-[10px] font-black text-[#0B7B5E] bg-emerald-100 px-1.5 py-0.2 rounded-md">
+                            الآن 🔴
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-400">متاح</span>
+                        )}
+                      </div>
+
+                      <div className="text-center py-1">
+                        {!isDoctorView ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0B7B5E] opacity-70 group-hover:opacity-100 transition-opacity">
+                            <Plus className="w-3 h-3 stroke-[3]" />
+                            <span>حجز</span>
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-slate-300 font-bold">— فارغ —</span>
+                        )}
+                      </div>
+
+                      <div className="text-[10px] text-slate-400 font-mono text-center">
+                        {time}
+                      </div>
+                    </div>
+                  );
+                }
+
+                /* مربع موعد محجوز */
+                const isCompleted =
+                  appointment?.status === 'COMPLETED' || appointment?.status === 'DONE';
+                const isWaiting =
+                  appointment?.status === 'WAITING' || appointment?.status === 'IN_PROGRESS';
+                const isInProgress = appointment?.status === 'IN_PROGRESS';
+
+                const boxStyle = isCompleted
+                  ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950 hover:border-emerald-400 hover:shadow-xs'
+                  : isWaiting
+                  ? 'bg-amber-50/90 border-amber-300 text-amber-950 hover:border-amber-400 hover:shadow-xs ring-1 ring-amber-400/40'
+                  : 'bg-sky-50/90 border-sky-300 text-[#074C3A] hover:border-sky-400 hover:shadow-xs';
+
                 return (
                   <div
                     key={time}
-                    onClick={() => handleEmptySlotClick(time)}
-                    className={`p-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/40 hover:bg-emerald-50/50 hover:border-[#0B7B5E] transition-all flex flex-col justify-between min-h-[92px] group relative ${
-                      isDoctorView ? 'cursor-default' : 'cursor-pointer hover:shadow-xs'
+                    className={`p-3 rounded-2xl border-2 transition-all flex flex-col justify-between min-h-[96px] relative ${boxStyle} ${
+                      isCurrentHour ? 'ring-2 ring-rose-400' : ''
                     }`}
                   >
+                    {/* وسم الوقت الحالي */}
                     {isCurrentHour && (
-                      <div className="absolute top-0 right-0 left-0 h-1 bg-rose-500 rounded-t-xl" />
+                      <div className="absolute -top-1.5 right-3 bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-2xs">
+                        الآن 🔴
+                      </div>
                     )}
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono font-bold text-slate-600 group-hover:text-[#074C3A]">
-                        {formatTime12h(time)}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">متاح</span>
+
+                    {/* تنبيه إذا كانت الحالة السابقة لا تزال في الانتظار */}
+                    {isPast && hasWaitingPatient && (
+                      <div className="absolute -top-1.5 left-2 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-2xs">
+                        ⚠️ فترة سابقة
+                      </div>
+                    )}
+
+                    {/* السطر الأول: الوقت ورقم الانتظار ونوع الكشف */}
+                    <div className="flex items-center justify-between gap-1 text-[11px] mt-0.5">
+                      <span className="font-mono font-black">{formatTime12h(time)}</span>
+                      <div className="flex items-center gap-1">
+                        {appointment?.queueNumber && (
+                          <span className="px-1.5 py-0.2 rounded-md bg-white font-mono font-black text-[10px] shadow-2xs">
+                            #{appointment.queueNumber}
+                          </span>
+                        )}
+                        <span className="px-1.5 py-0.2 rounded-md bg-white/90 font-black text-[10px] shadow-2xs">
+                          {getTypeLabel(appointment?.type)}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="text-center py-1">
-                      {!isDoctorView ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0B7B5E] opacity-70 group-hover:opacity-100 transition-opacity">
-                          <Plus className="w-3 h-3 stroke-[3]" />
-                          <span>حجز موعد</span>
+                    {/* السطر الثاني: اسم المريض بخط عريض وواضح */}
+                    <div className="my-1.5">
+                      <div className="font-black text-xs truncate" title={appointment?.patientName}>
+                        {appointment?.patientName || 'مريض مسجل'}
+                      </div>
+                      {appointments.length > 1 && (
+                        <span className="text-[10px] font-bold text-slate-500">
+                          +{appointments.length - 1} موعد إضافي
                         </span>
-                      ) : (
-                        <span className="text-[11px] text-slate-300 font-bold">— فارغ —</span>
                       )}
                     </div>
 
-                    <div className="text-[10px] text-slate-400 font-mono text-center">
-                      {time}
+                    {/* السطر الثالث: الحالة والإجراء المباشر */}
+                    <div className="pt-1 border-t border-black/5 flex items-center justify-between text-[10px]">
+                      <div className="flex items-center gap-1 font-bold">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            isCompleted
+                              ? 'bg-emerald-600'
+                              : isWaiting
+                              ? 'bg-amber-500 animate-pulse'
+                              : 'bg-sky-600'
+                          }`}
+                        />
+                        <span className="truncate">
+                          {isInProgress
+                            ? 'جاري الكشف'
+                            : isWaiting
+                            ? 'في الانتظار'
+                            : isCompleted
+                            ? 'مكتمل'
+                            : 'محجوز'}
+                        </span>
+                      </div>
+
+                      {isDoctorView ? (
+                        <Link
+                          href={`/dashboard/examination/${appointment?.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-2.5 py-1 rounded-lg bg-[#074C3A] hover:bg-[#0B7B5E] text-white font-black text-[10px] transition-all shadow-2xs cursor-pointer flex items-center gap-1 shrink-0"
+                          title="فتح استمارة الكشف والروشتة 🩺"
+                        >
+                          <Stethoscope className="w-3 h-3" />
+                          <span>{isInProgress ? 'متابعة' : isCompleted ? 'الروشتة' : 'كشف'}</span>
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/dashboard/appointments?date=${date}${
+                            selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
+                          }`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-1.5 py-0.5 rounded-md bg-white/80 hover:bg-white text-slate-700 font-bold text-[10px] transition-all cursor-pointer"
+                        >
+                          تفاصيل
+                        </Link>
+                      )}
                     </div>
                   </div>
                 );
-              }
-
-              /* مربع موعد محجوز (مكتمل / انتظار / محجوز) */
-              const isCompleted =
-                appointment?.status === 'COMPLETED' || appointment?.status === 'DONE';
-              const isWaiting =
-                appointment?.status === 'WAITING' || appointment?.status === 'IN_PROGRESS';
-              const isInProgress = appointment?.status === 'IN_PROGRESS';
-
-              const boxStyle = isCompleted
-                ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950 hover:border-emerald-400 hover:shadow-xs'
-                : isWaiting
-                ? 'bg-amber-50/90 border-amber-300 text-amber-950 hover:border-amber-400 hover:shadow-xs ring-1 ring-amber-400/40'
-                : 'bg-sky-50/90 border-sky-300 text-[#074C3A] hover:border-sky-400 hover:shadow-xs';
-
-              return (
-                <div
-                  key={time}
-                  className={`p-3 rounded-2xl border-2 transition-all flex flex-col justify-between min-h-[96px] relative ${boxStyle}`}
-                >
-                  {/* خط المؤشر الأحمر للوقت الحالي */}
-                  {isCurrentHour && (
-                    <div className="absolute -top-1 right-2 left-2 h-1 bg-rose-500 rounded-full shadow-xs" />
-                  )}
-
-                  {/* السطر الأول: الوقت ورقم الانتظار ونوع الكشف */}
-                  <div className="flex items-center justify-between gap-1 text-[11px]">
-                    <span className="font-mono font-black">{formatTime12h(time)}</span>
-                    <div className="flex items-center gap-1">
-                      {appointment?.queueNumber && (
-                        <span className="px-1.5 py-0.2 rounded-md bg-white font-mono font-black text-[10px] shadow-2xs">
-                          #{appointment.queueNumber}
-                        </span>
-                      )}
-                      <span className="px-1.5 py-0.2 rounded-md bg-white/90 font-black text-[10px] shadow-2xs">
-                        {getTypeLabel(appointment?.type)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* السطر الثاني: اسم المريض بخط بارز وواضح */}
-                  <div className="my-1.5">
-                    <div className="font-black text-xs truncate" title={appointment?.patientName}>
-                      {appointment?.patientName || 'مريض مسجل'}
-                    </div>
-                    {appointments.length > 1 && (
-                      <span className="text-[10px] font-bold text-slate-500">
-                        +{appointments.length - 1} موعد إضافي
-                      </span>
-                    )}
-                  </div>
-
-                  {/* السطر الثالث: الإجراء المباشر */}
-                  <div className="pt-1 border-t border-black/5 flex items-center justify-between text-[10px]">
-                    <div className="flex items-center gap-1 font-bold">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          isCompleted
-                            ? 'bg-emerald-600'
-                            : isWaiting
-                            ? 'bg-amber-500 animate-pulse'
-                            : 'bg-sky-600'
-                        }`}
-                      />
-                      <span className="truncate">
-                        {isInProgress
-                          ? 'جاري الكشف'
-                          : isWaiting
-                          ? 'في الانتظار'
-                          : isCompleted
-                          ? 'مكتمل'
-                          : 'محجوز'}
-                      </span>
-                    </div>
-
-                    {isDoctorView ? (
-                      <Link
-                        href={`/dashboard/examination/${appointment?.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="px-2 py-1 rounded-lg bg-[#074C3A] hover:bg-[#0B7B5E] text-white font-black text-[10px] transition-all shadow-2xs cursor-pointer flex items-center gap-1"
-                        title="فتح استمارة الكشف والروشتة 🩺"
-                      >
-                        <Stethoscope className="w-3 h-3" />
-                        <span>{isInProgress ? 'متابعة' : isCompleted ? 'الروشتة' : 'كشف'}</span>
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/dashboard/appointments?date=${date}${
-                          selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
-                        }`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="px-1.5 py-0.5 rounded-md bg-white/80 hover:bg-white text-slate-700 font-bold text-[10px] transition-all cursor-pointer"
-                      >
-                        تفاصيل
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+              })}
+            </div>
+          )}
         </div>
       ) : (
-        /* ================== النمط 2: جدول الساعات التفصيلي (Hourly Grid Matrix) ================== */
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+        /* النمط 2: جدول الساعات التفصيلي (Hourly Grid Matrix) */
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <div className="min-w-[760px]">
-              {/* ترويسة الأعمدة: الوقت + الأرباع (:00, :15, :30, :45) */}
+              {/* ترويسة الأعمدة */}
               <div className="grid grid-cols-5 border-b border-slate-200 text-center text-xs font-black bg-slate-50/80">
                 <div className="py-3 px-2 border-l border-slate-200 text-slate-700">
                   الساعة / الفترة
@@ -646,22 +680,27 @@ export function CalendarDayGridView({
                 ))}
               </div>
 
-              {/* صفوف الساعات من 08:00 إلى 23:00 */}
+              {/* صفوف الساعات (تبدأ من الساعة الحالية) */}
               <div className="divide-y divide-slate-100">
-                {HOURS.map((hour) => {
+                {visibleHours.map((hour) => {
                   const hourNumber = parseInt(hour.split(':')[0], 10);
                   const isCurrentHourRow = dayInfo.isToday && hour === currentHourStr;
 
                   return (
                     <div
                       key={hour}
-                      className={`grid grid-cols-5 min-h-[78px] group transition-colors ${
+                      className={`grid grid-cols-5 min-h-[76px] group transition-colors ${
                         isCurrentHourRow ? 'bg-rose-50/30' : 'hover:bg-slate-50/40'
                       }`}
                     >
                       {/* عمود تسمية الساعة */}
                       <div className="p-2 border-l border-slate-100 flex flex-col items-center justify-center font-mono text-xs font-black text-slate-700 bg-slate-50/30">
-                        <span>{formatTime12h(hour)}</span>
+                        <div className="flex items-center gap-1">
+                          <span>{formatTime12h(hour)}</span>
+                          {isCurrentHourRow && (
+                            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                          )}
+                        </div>
                         <span className="text-[10px] text-slate-400 font-sans mt-0.5">
                           {hourNumber < 12
                             ? 'صباحاً'
@@ -671,7 +710,7 @@ export function CalendarDayGridView({
                         </span>
                       </div>
 
-                      {/* خلايا الأرباع الأربعة لهذا اليوم والساعة */}
+                      {/* خلايا الأرباع لهذا اليوم والساعة */}
                       {INTERVAL_MINUTES.map((min) => {
                         const cellTime = `${hour.split(':')[0]}:${min}`;
                         const cellAppts = apptsByExactTime.get(cellTime) || [];
