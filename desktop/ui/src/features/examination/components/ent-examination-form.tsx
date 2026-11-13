@@ -264,7 +264,7 @@ export function EntExaminationForm({
       {/* ============================================================== */}
       {/* 1. الشريط العلوي الموحّد والمبسّط (يُخفى تماماً عند الطباعة)       */}
       {/* ============================================================== */}
-      <div className="bg-white px-4 py-3 sm:px-5 sm:py-3 rounded-2xl border border-slate-200/90 shadow-xs print:hidden flex flex-col md:flex-row md:items-center justify-between gap-3 sticky top-2 z-30 backdrop-blur-md bg-white/95">
+      <div className="bg-white px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-2xl border border-slate-200/90 shadow-2xs print:hidden flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* الجانب الأيمن: زر العودة + بيانات المريض + حالة الحفظ */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <Link
@@ -377,49 +377,31 @@ export function EntExaminationForm({
         </div>
       </div>
 
-      {/* 🚀 أيقونة ثابتة على يمين الشاشة للانتقال للروشتة في أي وقت أثناء التمرير */}
-      <aside
-        aria-label="الانتقال السريع للروشتة"
-        className="fixed right-3 sm:right-4 md:right-[calc(var(--sidebar-width,16rem)+1rem)] top-1/2 -translate-y-1/2 z-40 print:hidden flex flex-col items-center"
-      >
-        <button
-          type="button"
-          onClick={() => {
-            if (activeTab === 'exam') {
-              handleProceedToPrescription();
-            } else {
-              setActiveTab('exam');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-          }}
-          title={
-            activeTab === 'exam'
-              ? 'انتقال فوري لكتابة الروشتة (Alt+R)'
-              : 'عودة لشيت الكشف الطبي (Alt+R)'
-          }
-          className="group relative flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl bg-[#074C3A] hover:bg-[#0B7B5E] active:scale-95 text-white shadow-xl hover:shadow-2xl transition-all cursor-pointer border-2 border-white/90 ring-2 ring-emerald-500/20"
+      {/* 🚀 أيقونة ثابتة على يمين الشاشة للانتقال للروشتة تظهر فقط أثناء تفحص شيت الكشف */}
+      {activeTab === 'exam' && (
+        <aside
+          aria-label="الانتقال السريع للروشتة"
+          className="fixed right-3 sm:right-4 md:right-[calc(var(--sidebar-width,16rem)+1rem)] top-1/2 -translate-y-1/2 z-40 print:hidden flex flex-col items-center"
         >
-          {activeTab === 'exam' ? (
-            <>
-              <Pill className="w-6 h-6 stroke-[2.2] text-[#45DBA5] animate-pulse" />
-              <span className="text-[11px] font-black whitespace-nowrap">الروشتة 💊</span>
-              {(examData.prescriptionItems?.length || 0) > 0 && (
-                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-white font-mono font-black">
-                  {examData.prescriptionItems?.length}
-                </span>
-              )}
-            </>
-          ) : (
-            <>
-              <Stethoscope className="w-6 h-6 stroke-[2.2] text-[#45DBA5] animate-pulse" />
-              <span className="text-[11px] font-black whitespace-nowrap">الكشف 📋</span>
-            </>
-          )}
-          <span className="text-[8px] px-1 py-0.2 rounded bg-black/20 text-emerald-200 font-mono">
-            Alt+R
-          </span>
-        </button>
-      </aside>
+          <button
+            type="button"
+            onClick={handleProceedToPrescription}
+            title="انتقال فوري لكتابة الروشتة (Alt+R)"
+            className="group relative flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl bg-[#074C3A] hover:bg-[#0B7B5E] active:scale-95 text-white shadow-xl hover:shadow-2xl transition-all cursor-pointer border-2 border-white/90 ring-2 ring-emerald-500/20"
+          >
+            <Pill className="w-6 h-6 stroke-[2.2] text-[#45DBA5] animate-pulse" />
+            <span className="text-[11px] font-black whitespace-nowrap">الروشتة 💊</span>
+            {(examData.prescriptionItems?.length || 0) > 0 && (
+              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-white font-mono font-black">
+                {examData.prescriptionItems?.length}
+              </span>
+            )}
+            <span className="text-[8px] px-1 py-0.2 rounded bg-black/20 text-emerald-200 font-mono">
+              Alt+R
+            </span>
+          </button>
+        </aside>
+      )}
 
       {/* ============================================================== */}
       {/* 2. محتوى التبويب النشط (على الشاشة)                           */}

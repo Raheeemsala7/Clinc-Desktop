@@ -10,12 +10,11 @@ import {
   ArrowLeft,
   CheckCircle2,
   Save,
-  User,
-  Calendar,
   FileCheck,
   Search,
   ChevronDown,
   Pencil,
+  Stethoscope,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -711,55 +710,21 @@ export function PrescriptionView({
   };
 
   return (
-    <div className="space-y-6 select-none" dir="rtl">
-      {/* 1. الترويسة وبطاقة المريض */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl shadow-xs">
-            ℞
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl sm:text-2xl font-black text-[#074C3A]">
-                الروشتة الطبية (Medical Prescription)
-              </h3>
-              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-0.5 rounded-full">
-                إصدار معتمد
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-sm font-bold text-slate-500 mt-1.5 flex-wrap">
-              <span className="flex items-center gap-1.5">
-                <User className="w-4 h-4 text-[#0B7B5E]" />
-                المريض: <strong className="text-slate-900 text-base sm:text-lg font-black">{patient?.fullName}</strong>
-              </span>
-              <span>·</span>
-              <span>رقم الملف: <strong className="text-slate-900 text-sm font-mono">{examData.fileNo || (patient as any)?.fileNumber || '---'}</strong></span>
-              <span>·</span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-slate-400" />
-                التاريخ: <strong className="text-slate-900 text-sm font-mono">{examData.date || new Date().toISOString().slice(0, 10)}</strong>
-              </span>
-            </div>
-          </div>
+    <div className="space-y-3.5 select-none" dir="rtl">
+      {/* التشخيص الطبي للحالة (Diagnosis) - شريط سريع وأنيق في سطر واحد ومريح للعين */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 px-4 py-2.5 shadow-2xs flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-2 text-xs sm:text-sm font-black text-[#074C3A] shrink-0">
+          <Stethoscope className="w-4 h-4 text-[#0B7B5E]" />
+          <span>التشخيص (Diagnosis):</span>
         </div>
-      </div>
-
-      {/* 2. التشخيص الطبي للحالة (Diagnosis) - في سطر كامل ومستقل مع Textarea */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-4 sm:p-5 shadow-xs space-y-2">
-        <label className="text-sm sm:text-base font-black text-[#074C3A] flex items-center gap-2">
-          <span>التشخيص الطبي للحالة (Diagnosis):</span>
-          <span className="text-xs font-normal text-slate-500">
-            (يظهر في الروشتة الطبية المطبوعة للمريض)
-          </span>
-        </label>
-        <textarea
-          rows={2}
+        <input
+          type="text"
           value={examData.diagnosis || ''}
           onChange={(e) =>
             onChange((prev) => ({ ...prev, diagnosis: e.target.value }))
           }
-          placeholder="اكتب التشخيص الطبي للحالة هنا (مثال: Acute Tonsillitis / Allergic Rhinitis / Sinusitis...)"
-          className="w-full bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200 text-sm sm:text-base font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all resize-y leading-relaxed"
+          placeholder="اكتب التشخيص الطبي للحالة هنا (مثال: Acute Tonsillitis / Allergic Rhinitis / Sinusitis)..."
+          className="flex-1 bg-slate-50/80 hover:bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white focus:ring-1 focus:ring-[#0B7B5E] transition-all"
         />
       </div>
 

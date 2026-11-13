@@ -123,6 +123,12 @@ export function EntPaperSheet({
       } else if (match('E')) {
         e.preventDefault();
         jumpToSection('section-examination', 'input, textarea');
+      } else if (match('N')) {
+        e.preventDefault();
+        jumpToSection('section-nose', 'input, textarea');
+      } else if (match('L')) {
+        e.preventDefault();
+        jumpToSection('section-larynx', 'input, textarea');
       } else if (match('D')) {
         e.preventDefault();
         jumpToSection('section-diagnosis', 'textarea, input');
@@ -408,6 +414,34 @@ export function EntPaperSheet({
             <span className="text-[8px] font-bold leading-none opacity-80 group-hover:opacity-100">Exam</span>
             <span className="absolute left-full ml-2.5 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50 font-sans">
               Examination : (E)
+            </span>
+          </button>
+
+          {/* N -> Nose */}
+          <button
+            type="button"
+            onClick={() => jumpToSection('section-nose', 'input, textarea')}
+            title="Nose Examination (اضغط N أو Alt+N)"
+            className="group relative w-11 h-11 rounded-xl bg-orange-50 hover:bg-orange-600 hover:text-white text-orange-800 border border-orange-300 flex flex-col items-center justify-center font-black font-sans transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <span className="text-sm leading-none font-black">N</span>
+            <span className="text-[8px] font-bold leading-none opacity-80 group-hover:opacity-100">Nose</span>
+            <span className="absolute left-full ml-2.5 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50 font-sans">
+              Nose : (N)
+            </span>
+          </button>
+
+          {/* L -> Larynx */}
+          <button
+            type="button"
+            onClick={() => jumpToSection('section-larynx', 'input, textarea')}
+            title="Larynx & Head & Neck (اضغط L أو Alt+L)"
+            className="group relative w-11 h-11 rounded-xl bg-teal-50 hover:bg-teal-600 hover:text-white text-teal-800 border border-teal-300 flex flex-col items-center justify-center font-black font-sans transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <span className="text-sm leading-none font-black">L</span>
+            <span className="text-[8px] font-bold leading-none opacity-80 group-hover:opacity-100">Larynx</span>
+            <span className="absolute left-full ml-2.5 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg z-50 font-sans">
+              Larynx & Head & Neck : (L)
             </span>
           </button>
 
@@ -799,11 +833,12 @@ export function EntPaperSheet({
       {/* ============================================================== */}
       <div className="sheet-page-2 bg-white border-2 border-black p-4 sm:p-5 rounded-none shadow-sm space-y-3 print:border-2 print:border-black print:p-4 print:shadow-none print:w-full">
         {/* عنوان فحص الأنف (Nose) في المنتصف */}
-        <div className="text-center font-black text-[16px]">
-          <span className="inline-block px-4 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">
-            Nose
-          </span>
-        </div>
+        <div id="section-nose" className="space-y-3 scroll-mt-24 transition-all duration-300">
+          <div className="text-center font-black text-[16px]">
+            <span className="inline-block px-4 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">
+              Nose
+            </span>
+          </div>
 
         {/* فحص الأنف المفصل مع رسم الهرم الأنفي */}
         <div className="grid grid-cols-12 gap-3 items-start">
@@ -885,6 +920,7 @@ export function EntPaperSheet({
               </div>
             ))}
           </div>
+        </div>
         </div>
 
         {/* خط فاصل منقط */}
@@ -989,7 +1025,7 @@ export function EntPaperSheet({
         <div className="border-b border-dotted border-black my-2" />
 
         {/* Larynx & Head & Neck */}
-        <div className="space-y-1">
+        <div id="section-larynx" className="space-y-1 scroll-mt-24 transition-all duration-300">
           <div className="text-center font-black text-[15px]">
             <span className="inline-block px-4 py-0.5 rounded-full bg-teal-100 text-teal-900 border border-teal-300 print:bg-transparent print:border-none print:text-black print:p-0 print:underline">
               Larynx & Head & Neck

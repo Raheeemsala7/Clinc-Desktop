@@ -40,7 +40,7 @@ function getFirstLetter(name: string): string {
 export async function TablePatientsReception({ searchParams }: TablePatientsReceptionProps = {}) {
   const resolvedParams = searchParams ? await Promise.resolve(searchParams) : {};
   const page = Number(resolvedParams.page || 1);
-  const pageSize = 6;
+  const pageSize = 10;
 
   const response = await getPatientsListApi({
     q: resolvedParams.q,
@@ -52,7 +52,7 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
   const patients = response.payload || [];
   const meta = response.meta || {
     page: 1,
-    pageSize: 6,
+    pageSize: 10,
     total: patients.length,
     totalPages: Math.ceil(patients.length / pageSize) || 1,
     hasNext: false,
