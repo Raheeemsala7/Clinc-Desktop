@@ -17,8 +17,12 @@ import {
   BadgePercent,
   Sparkles,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Stethoscope,
   AlertCircle,
+  User,
+  Phone,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,6 +33,8 @@ interface ConsultationItem {
   patientName: string;
   patientPhone: string;
   fileNumber: string;
+  patientAge?: number;
+  patientGender?: string;
   doctorId?: string;
   doctorName?: string;
   clinicDate: string;
@@ -74,7 +80,8 @@ export function DoctorRevenueView() {
     }
   };
 
-  const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'custom'>('month');
+  const [period, setPeriod] = useState<'today' | 'yesterday' | 'day-select' | 'week' | 'month' | 'custom'>('month');
+  const [selectedDay, setSelectedDay] = useState<string>(() => getClinicToday());
   const [fromDate, setFromDate] = useState<string>(() => {
     const today = getClinicToday();
     return today.slice(0, 7) + '-01';
@@ -87,13 +94,24 @@ export function DoctorRevenueView() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PAID' | 'PARTIAL' | 'UNPAID' | 'EXEMPT'>('ALL');
 
   // Compute dates when period button changes
-  const handlePeriodChange = (newPeriod: 'today' | 'week' | 'month' | 'custom') => {
+  const handlePeriodChange = (newPeriod: 'today' | 'yesterday' | 'day-select' | 'week' | 'month' | 'custom') => {
     setPeriod(newPeriod);
     const todayStr = getClinicToday();
 
     if (newPeriod === 'today') {
+      setSelectedDay(todayStr);
       setFromDate(todayStr);
       setToDate(todayStr);
+    } else if (newPeriod === 'yesterday') {
+      const d = new Date(todayStr + 'T12:00:00Z');
+      d.setUTCDate(d.getUTCDate() - 1);
+      const yStr = d.toISOString().split('T')[0];
+      setSelectedDay(yStr);
+      setFromDate(yStr);
+      setToDate(yStr);
+    } else if (newPeriod === 'day-select') {
+      setFromDate(selectedDay);
+      setToDate(selectedDay);
     } else if (newPeriod === 'week') {
       const d = new Date(todayStr + 'T12:00:00Z');
       const day = d.getUTCDay(); // 0 is Sunday, 6 is Saturday
@@ -107,6 +125,23 @@ export function DoctorRevenueView() {
       setFromDate(startOfMonth);
       setToDate(todayStr);
     }
+  };
+
+  const handleStepDay = (delta: number) => {
+    const d = new Date(selectedDay + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + delta);
+    const nextDay = d.toISOString().split('T')[0];
+    setSelectedDay(nextDay);
+    setPeriod('day-select');
+    setFromDate(nextDay);
+    setToDate(nextDay);
+  };
+
+  const handleSelectSpecificDay = (day: string) => {
+    setSelectedDay(day);
+    setPeriod('day-select');
+    setFromDate(day);
+    setToDate(day);
   };
 
   const fetchRevenue = async () => {
@@ -198,66 +233,90 @@ export function DoctorRevenueView() {
       </div>
 
       {/* 2. شريط اختيار الفترة الزمنية واختيار الطبيب */}
-      <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
-            <Calendar className="w-4 h-4 text-[#0B7B5E]" />
-            <span>الفترة:</span>
-          </span>
+      <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs space-y-3">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-black text-slate-700 flex items-center gap-1.5 shrink-0">
+              <Calendar className="w-4 h-4 text-[#0B7B5E]" />
+              <span>الفترة الزمنية:</span>
+            </span>
 
-          <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/70 flex items-center gap-1 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => handlePeriodChange('today')}
-              className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
-                period === 'today'
-                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              اليوم
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePeriodChange('week')}
-              className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
-                period === 'week'
-                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              هذا الأسبوع
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePeriodChange('month')}
-              className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
-                period === 'month'
-                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              هذا الشهر
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeriod('custom')}
-              className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
-                period === 'custom'
-                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              فترة مخصصة 📅
-            </button>
+            <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/70 flex items-center gap-1 text-xs font-bold flex-wrap">
+              <button
+                type="button"
+                onClick={() => handlePeriodChange('today')}
+                className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
+                  period === 'today'
+                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                اليوم
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePeriodChange('yesterday')}
+                className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
+                  period === 'yesterday'
+                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                أمس
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePeriodChange('day-select')}
+                className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
+                  period === 'day-select'
+                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                يوم محدد 🗓️
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePeriodChange('week')}
+                className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
+                  period === 'week'
+                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                هذا الأسبوع
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePeriodChange('month')}
+                className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
+                  period === 'month'
+                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                هذا الشهر
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriod('custom')}
+                className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
+                  period === 'custom'
+                    ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                فترة مخصصة (من - إلى) 📊
+              </button>
+            </div>
           </div>
 
           {/* محدد الطبيب */}
-          <div className="relative">
+          <div className="relative shrink-0 self-start xl:self-auto">
             <select
               value={selectedDoctorId}
               onChange={(e) => setSelectedDoctorId(e.target.value)}
-              className="h-8 pr-3 pl-7 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] cursor-pointer appearance-none shadow-2xs"
+              className="h-9 pr-3 pl-8 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] cursor-pointer appearance-none shadow-2xs"
             >
               <option value="ALL">كافة أطباء وكشوفات العيادة</option>
               {data?.allDoctors?.map((doc) => (
@@ -266,33 +325,90 @@ export function DoctorRevenueView() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
-        {/* محدد التواريخ للفترة المخصصة */}
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-700 flex-wrap">
-          <span className="text-slate-400">من:</span>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => {
-              setPeriod('custom');
-              setFromDate(e.target.value);
-            }}
-            className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 font-mono text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
-          />
-          <span className="text-slate-400">إلى:</span>
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => {
-              setPeriod('custom');
-              setToDate(e.target.value);
-            }}
-            className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 font-mono text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
-          />
-        </div>
+        {/* شريط محدد اليوم الفردي (عند اختيار "يوم محدد") */}
+        {period === 'day-select' && (
+          <div className="flex items-center gap-2 p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200/80 animate-in fade-in-50 flex-wrap text-xs font-bold">
+            <span className="text-[#074C3A] font-black flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-[#0B7B5E]" />
+              <span>اختر اليوم المطلوب:</span>
+            </span>
+
+            <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-emerald-300 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => handleStepDay(-1)}
+                title="اليوم السابق"
+                className="w-7 h-7 rounded-lg text-slate-500 hover:text-[#074C3A] hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <input
+                type="date"
+                value={selectedDay}
+                onChange={(e) => handleSelectSpecificDay(e.target.value)}
+                className="h-7 px-2 font-mono text-xs font-black text-[#074C3A] bg-transparent focus:outline-none cursor-pointer"
+              />
+
+              <button
+                type="button"
+                onClick={() => handleStepDay(1)}
+                title="اليوم التالي"
+                className="w-7 h-7 rounded-lg text-slate-500 hover:text-[#074C3A] hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleSelectSpecificDay(getClinicToday())}
+              className="h-8 px-3 rounded-xl bg-white hover:bg-emerald-100 text-[#074C3A] border border-emerald-300 font-bold text-xs transition-colors cursor-pointer"
+            >
+              الرجوع لليوم الحالي
+            </button>
+
+            <span className="text-slate-500 text-[11px] font-medium mr-auto">
+              تاريخ الكشوفات المعروضة: <strong className="font-mono text-[#074C3A]">{selectedDay}</strong>
+            </span>
+          </div>
+        )}
+
+        {/* محدد التواريخ للفترة المخصصة (من - إلى) */}
+        {period === 'custom' && (
+          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200 animate-in fade-in-50 flex-wrap text-xs font-bold text-slate-700">
+            <span className="text-[#074C3A] font-black">حدد المدى الزمني:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400">من:</span>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="h-8 px-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400">إلى:</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="h-8 px-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={fetchRevenue}
+              className="h-8 px-3 rounded-xl bg-[#0B7B5E] text-white font-bold text-xs hover:bg-[#09634C] transition-all cursor-pointer shadow-2xs"
+            >
+              تطبيق الفترة
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 3. بطاقات المؤشرات المالية والتشغيلية (KPIs) */}
@@ -448,7 +564,105 @@ export function DoctorRevenueView() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            {/* عرض شاشات الموبايل والأجهزة الصغيرة (بطاقات سريعة ومتجاوبة) */}
+            <div className="block md:hidden space-y-3">
+              {filteredConsultations.map((c, idx) => (
+                <div
+                  key={`mobile-${c.id}`}
+                  className="p-4 bg-slate-50/70 hover:bg-[#E3F5EE]/40 rounded-2xl border border-slate-200 text-xs space-y-3 transition-colors shadow-2xs"
+                >
+                  <div className="flex items-start justify-between gap-2 border-b border-slate-200/60 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-[#074C3A] text-white font-bold font-mono text-[11px] flex items-center justify-center shrink-0">
+                        #{idx + 1}
+                      </span>
+                      <div>
+                        <div className="font-black text-sm text-[#074C3A]">
+                          {c.patientName}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
+                          {c.fileNumber && <span>ملف: #{c.fileNumber}</span>}
+                          {c.patientPhone && <span>· {c.patientPhone}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      {c.isExempt ? (
+                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-black">
+                          معفى
+                        </span>
+                      ) : c.remainingAmount === 0 && c.fee > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black">
+                          مدفوع كامل ✓
+                        </span>
+                      ) : c.paidAmount > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black">
+                          دفع جزئي
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-black">
+                          غير مدفوع
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-white p-2.5 rounded-xl border border-slate-100">
+                    <div>
+                      <span className="text-slate-400 block">الطبيب:</span>
+                      <strong className="text-slate-700">{c.doctorName || 'طبيب العيادة'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">نوع الكشف:</span>
+                      <strong className="text-slate-700">{formatTypeName(c.type)}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">التاريخ والوقت:</span>
+                      <strong className="text-slate-700 font-mono">
+                        {c.clinicDate} {c.startTime ? `(${c.startTime})` : ''}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">حالة الكشف:</span>
+                      <strong className={c.status === 'COMPLETED' ? 'text-emerald-700' : 'text-slate-700'}>
+                        {c.status === 'COMPLETED' ? 'تم الكشف' : c.status === 'IN_PROGRESS' ? 'جاري الفحص' : 'في الانتظار'}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-3 text-xs font-mono">
+                      <div>
+                        <span className="text-slate-400 text-[10px] block font-sans">القيمة:</span>
+                        <strong className="text-slate-800">{c.fee} ج.م</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] block font-sans">المدفوع:</span>
+                        <strong className="text-[#0B7B5E]">{c.paidAmount} ج.م</strong>
+                      </div>
+                      {c.remainingAmount > 0 && (
+                        <div>
+                          <span className="text-slate-400 text-[10px] block font-sans">المتبقي:</span>
+                          <strong className="text-rose-600">{c.remainingAmount} ج.م</strong>
+                        </div>
+                      )}
+                    </div>
+
+                    <Link
+                      href={`/dashboard/examination/${c.appointmentId}`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#0B7B5E] text-white font-bold text-xs shadow-2xs hover:bg-[#09634C] transition-colors"
+                    >
+                      <span>فتح الكشف</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* عرض شاشات التابلت والكمبيوتر (جدول كامل) */}
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-right border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-black">
@@ -552,7 +766,8 @@ export function DoctorRevenueView() {
               </tbody>
             </table>
           </div>
-        )}
+        </>
+      )}
       </div>
     </div>
   );

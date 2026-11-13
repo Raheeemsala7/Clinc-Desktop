@@ -267,7 +267,7 @@ export function formatFrequency(rawFreq?: string): string {
 
   const englishNum = trimmed.replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
 
-  // التكرار بالأرقام
+  // التكرار بالأرقام والساعات والرموز
   if (englishNum === '1' || trimmed === 'once' || trimmed === 'od' || trimmed === 'qd') {
     return 'مرة واحدة في اليوم';
   }
@@ -280,14 +280,43 @@ export function formatFrequency(rawFreq?: string): string {
   if (englishNum === '4' || trimmed === 'qid' || trimmed === 'q6h' || trimmed === '6') {
     return '4 مرات في اليوم';
   }
-  if (englishNum === '6' || trimmed === 'q4h' || trimmed === '4') {
+  if (englishNum === '120' || trimmed === 'q2h' || trimmed === '2h') {
+    return 'كل ساعتين';
+  }
+  if (englishNum === '180' || trimmed === 'q3h' || trimmed === '3h') {
+    return 'كل 3 ساعات';
+  }
+  if (englishNum === '6' || trimmed === 'q4h' || trimmed === '4' || englishNum === '240') {
     return 'كل 4 ساعات';
   }
-  if (trimmed === 'prn' || trimmed === 'sos' || trimmed === 'needed') {
-    return 'عند اللزوم';
+  if (trimmed === 'q8h' || trimmed === '8h') {
+    return 'كل 8 ساعات';
   }
-  if (trimmed === 'sleep' || trimmed === 'bedtime' || trimmed === 'hs' || trimmed === 'نوم') {
+  if (trimmed === 'q12h' || trimmed === '12h') {
+    return 'كل 12 ساعة (مرتين يومياً)';
+  }
+  if (trimmed === 'prn' || trimmed === 'sos' || trimmed === 'needed' || trimmed === '!') {
+    return 'عند اللزوم (عند الألم أو الأعراض)';
+  }
+  if (
+    trimmed === 'sleep' ||
+    trimmed === 'bedtime' ||
+    trimmed === 'hs' ||
+    trimmed === 'نوم' ||
+    trimmed === '~' ||
+    trimmed === 's' ||
+    trimmed === 'b'
+  ) {
     return 'مساءً قبل النوم';
+  }
+  if (
+    trimmed === '*' ||
+    trimmed === 'r' ||
+    trimmed === 'f' ||
+    trimmed === 'fasting' ||
+    trimmed === 'ريق'
+  ) {
+    return 'صباحاً على الريق';
   }
 
   return rawFreq.trim();
@@ -327,44 +356,177 @@ export function formatDuration(rawDuration?: string): string {
 /**
  * ترجمة علاقة الجرعة بالطعام (Meal Timing)
  * - علامة (-) تعني قبل الأكل
+ * ترجمة علاقة الجرعة بالطعام ومواعيدها (Meal Timing & Instructions)
+ * - علامة (-) تعني قبل الأكل
  * - علامة (+) تعني بعد الأكل
- * - (-30) تعني قبل الأكل بنصف ساعة
- * - (+30) تعني بعد الأكل بنصف ساعة
- * - (-15) تعني قبل الأكل بربع ساعة
- * - (+15) تعني بعد الأكل بربع ساعة
- * - (-60) تعني قبل الأكل بساعة
+ * - (*) أو (r) تعني على الريق أول ما تصحي من النوم (على معدة فارغة)
+ * - (~) أو (s) تعني مساءً قبل النوم مباشرة
  * - (0) تعني مع الأكل / وسط الطعام
+ * - (!) أو (sos) تعني عند اللزوم (عند الألم أو الأعراض)
+ * - (-30) تعني قبل الأكل بنصف ساعة | (+30) تعني بعد الأكل بنصف ساعة
+ * - (-15) تعني قبل الأكل بربع ساعة | (+15) تعني بعد الأكل بربع ساعة
+ * - (-60) تعني قبل الأكل بساعة      | (+60) تعني بعد الأكل بساعة
+ * - (-120) تعني قبل الأكل بساعتين   | (+120 أو 120) تعني بعد الأكل بساعتين
+ * - (-180) تعني قبل الأكل بثلاث ساعات | (+180 أو 180) تعني بعد الأكل بثلاث ساعات
+ * - (bw) تعني بين الوجبات
+ * - (h2o) تعني مع كوب ماء كامل
  */
 export function parseMealTiming(rawTiming?: string): string {
   if (!rawTiming) return '';
   const trimmed = rawTiming.trim().toLowerCase();
 
+  // 1. على الريق أول ما تصحي من النوم
+  if (
+    trimmed === '*' ||
+    trimmed === 'r' ||
+    trimmed === 'f' ||
+    trimmed === 'w' ||
+    trimmed === 'wake' ||
+    trimmed === 'fasting' ||
+    trimmed === 'empty' ||
+    trimmed === 'ريق' ||
+    trimmed === 'على الريق' ||
+    trimmed === 'عالريق' ||
+    trimmed === 'ريقي' ||
+    trimmed === 'استيقاظ' ||
+    trimmed === 'الاستيقاظ'
+  ) {
+    return 'على الريق فور الاستيقاظ من النوم (على معدة فارغة)';
+  }
+
+  // 2. مساءً قبل النوم مباشرة
+  if (
+    trimmed === '~' ||
+    trimmed === '^' ||
+    trimmed === 's' ||
+    trimmed === 'b' ||
+    trimmed === 'bed' ||
+    trimmed === 'sleep' ||
+    trimmed === 'bedtime' ||
+    trimmed === 'hs' ||
+    trimmed === 'نوم' ||
+    trimmed === 'قبل النوم' ||
+    trimmed === 'بالليل'
+  ) {
+    return 'مساءً قبل النوم مباشرة';
+  }
+
+  // 3. عند اللزوم / عند الألم
+  if (
+    trimmed === '!' ||
+    trimmed === 'sos' ||
+    trimmed === 'prn' ||
+    trimmed === 'needed' ||
+    trimmed === 'pain' ||
+    trimmed === 'الم' ||
+    trimmed === 'ألم' ||
+    trimmed === 'لزوم' ||
+    trimmed === 'عند اللزوم'
+  ) {
+    return 'عند اللزوم (عند الشعور بالألم أو الأعراض)';
+  }
+
+  // 4. مع الأكل / وسط الطعام
+  if (
+    trimmed === '0' ||
+    trimmed === 'مع' ||
+    trimmed === 'وسط' ||
+    trimmed === 'with' ||
+    trimmed === 'during' ||
+    trimmed === 'وسط الاكل' ||
+    trimmed === 'وسط الأكل' ||
+    trimmed === 'مع الاكل' ||
+    trimmed === 'مع الأكل'
+  ) {
+    return 'وسط الأكل (مع الطعام)';
+  }
+
+  // 5. بين الوجبات
+  if (trimmed === 'bw' || trimmed === 'between' || trimmed === 'بين' || trimmed === 'بين الوجبات') {
+    return 'بين الوجبات (بعيداً عن مواعيد الطعام)';
+  }
+
+  // 6. مع كوب ماء كبير
+  if (trimmed === 'h2o' || trimmed === 'ماء' || trimmed === 'water' || trimmed === 'كوب') {
+    return 'مع كوب ماء كامل';
+  }
+
+  // 7. قبل الأكل عامة
   if (trimmed === '-' || trimmed === 'قبل' || trimmed === 'before') {
     return 'قبل الأكل';
   }
+
+  // 8. بعد الأكل عامة
   if (trimmed === '+' || trimmed === 'بعد' || trimmed === 'after') {
     return 'بعد الأكل';
+  }
+
+  // 9. قبل الأكل مباشرة / بعد الأكل مباشرة
+  if (trimmed === '-0' || trimmed === '--' || trimmed === 'قبل مباشرة') {
+    return 'قبل الأكل مباشرة';
+  }
+  if (trimmed === '+0' || trimmed === '++' || trimmed === 'بعد مباشرة') {
+    return 'بعد الأكل مباشرة';
+  }
+
+  // 10. أوقات قبل الأكل (-)
+  if (trimmed === '-15' || trimmed === 'قبل 15' || trimmed === '-ربع') {
+    return 'قبل الأكل بربع ساعة';
   }
   if (trimmed === '-30' || trimmed === 'قبل 30' || trimmed === '-نصف' || trimmed === '-0.5') {
     return 'قبل الأكل بنصف ساعة';
   }
-  if (trimmed === '+30' || trimmed === 'بعد 30' || trimmed === '+نصف' || trimmed === '+0.5') {
-    return 'بعد الأكل بنصف ساعة';
+  if (trimmed === '-45' || trimmed === 'قبل 45') {
+    return 'قبل الأكل بـ 45 دقيقة';
   }
-  if (trimmed === '-15' || trimmed === 'قبل 15' || trimmed === '-ربع') {
-    return 'قبل الأكل بربع ساعة';
+  if (trimmed === '-60' || trimmed === '-1h' || trimmed === '-1' || trimmed === 'قبل ساعة') {
+    return 'قبل الأكل بساعة';
   }
+  if (trimmed === '-120' || trimmed === '-2h' || trimmed === '-2' || trimmed === 'قبل ساعتين') {
+    return 'قبل الأكل بساعتين';
+  }
+  if (trimmed === '-180' || trimmed === '-3h' || trimmed === '-3' || trimmed === 'قبل 3 ساعات') {
+    return 'قبل الأكل بثلاث ساعات';
+  }
+
+  // 11. أوقات بعد الأكل (+)
   if (trimmed === '+15' || trimmed === 'بعد 15' || trimmed === '+ربع') {
     return 'بعد الأكل بربع ساعة';
   }
-  if (trimmed === '-60' || trimmed === '-1h' || trimmed === 'قبل ساعة') {
-    return 'قبل الأكل بساعة';
+  if (trimmed === '+30' || trimmed === 'بعد 30' || trimmed === '+نصف' || trimmed === '+0.5') {
+    return 'بعد الأكل بنصف ساعة';
   }
-  if (trimmed === '+60' || trimmed === '+1h' || trimmed === 'بعد ساعة') {
+  if (trimmed === '+45' || trimmed === 'بعد 45') {
+    return 'بعد الأكل بـ 45 دقيقة';
+  }
+  if (trimmed === '+60' || trimmed === '+1h' || trimmed === '+1' || trimmed === 'بعد ساعة') {
     return 'بعد الأكل بساعة';
   }
-  if (trimmed === '0' || trimmed === 'مع' || trimmed === 'وسط' || trimmed === 'with') {
-    return 'مع الأكل';
+  if (trimmed === '+120' || trimmed === '120' || trimmed === '+2h' || trimmed === '+2' || trimmed === 'بعد ساعتين') {
+    return 'بعد الأكل بساعتين';
+  }
+  if (trimmed === '+180' || trimmed === '180' || trimmed === '+3h' || trimmed === '+3' || trimmed === 'بعد 3 ساعات') {
+    return 'بعد الأكل بثلاث ساعات';
+  }
+
+  // 12. وجبات محددة
+  if (trimmed === '-b' || trimmed === 'قبل الفطار' || trimmed === 'قبل الافطار') {
+    return 'قبل وجبة الإفطار';
+  }
+  if (trimmed === '+b' || trimmed === 'بعد الفطار' || trimmed === 'بعد الافطار') {
+    return 'بعد وجبة الإفطار';
+  }
+  if (trimmed === '-l' || trimmed === 'قبل الغداء') {
+    return 'قبل وجبة الغداء';
+  }
+  if (trimmed === '+l' || trimmed === 'بعد الغداء') {
+    return 'بعد وجبة الغداء';
+  }
+  if (trimmed === '-d' || trimmed === 'قبل العشاء') {
+    return 'قبل وجبة العشاء';
+  }
+  if (trimmed === '+d' || trimmed === 'بعد العشاء') {
+    return 'بعد وجبة العشاء';
   }
 
   // إذا كانت باللغة العربية بالفعل
@@ -384,9 +546,12 @@ export interface ParsedDoseShortcut {
 }
 
 /**
- * تحليل وترجمة اختصارات الجرعات السريعة مثل 1/2/5 أو 1/3/5/-30 أو 1/3/5/+
- * يدعم: الجرعة / التكرار / المدة / [توقيت الأكل]
+ * تحليل وترجمة اختصارات الجرعات السريعة مثل 1/2/5 أو 1/3/5/-30 أو 1/3/5/+ أو 1/2/5/* أو 1/1/10/~
+ * يدعم: الجرعة / التكرار / المدة / [توقيت الأكل والتعليمات]
  * مثال: 1/3/5/-30 => قرص واحد قبل الأكل بنصف ساعة • 3 مرات في اليوم • لمدة 5 أيام
+ * مثال: 1/1/7/* => قرص واحد على الريق فور الاستيقاظ من النوم • مرة واحدة في اليوم • لمدة أسبوع
+ * مثال: 1/1/10/~ => قرص واحد مساءً قبل النوم مباشرة • مرة واحدة في اليوم • لمدة 10 أيام
+ * مثال: 1/2/5/120 => قرص واحد بعد الأكل بساعتين • مرتين في اليوم • لمدة 5 أيام
  */
 export function parseDoseShortcut(rawShortcut?: string, form?: string): ParsedDoseShortcut | null {
   if (!rawShortcut) return null;
@@ -407,19 +572,29 @@ export function parseDoseShortcut(rawShortcut?: string, form?: string): ParsedDo
     if (slashParts.length >= 2) {
       rawD = slashParts[0];
       rawF = slashParts[1];
-      if (slashParts.length >= 3) {
+      if (slashParts.length === 3) {
         const p2 = slashParts[2];
-        // هل الجزء الثالث يحتوي على مدة وتوقيت ملتصقين مثل 5-30 أو 5+30؟
-        const timingMatch = p2.match(/^(\d+)\s*([-+][0-9a-zA-Z\u0600-\u06FF]+)$/);
-        if (timingMatch) {
-          rawDur = timingMatch[1];
-          rawTiming = timingMatch[2];
+        // هل الجزء الثالث رمز توقيت مباشر مثل * أو ~ أو ! أو -30 أو +120 أو 120 أو كلمة ريق؟
+        const isDirectTiming =
+          /^[-+*~^!_]/.test(p2) ||
+          ['*', '~', '!', 'r', 's', 'b', '0', '120', '180', 'ريق', 'نوم'].includes(p2.toLowerCase());
+
+        if (isDirectTiming) {
+          rawDur = '';
+          rawTiming = p2;
         } else {
-          rawDur = p2;
+          // هل هو مدة وتوقيت ملتصقان مثل 5-30 أو 5* أو 5~ أو 5+120؟
+          const timingMatch = p2.match(/^(\d+)\s*([-+*~^!_a-zA-Z\u0600-\u06FF].*)$/);
+          if (timingMatch) {
+            rawDur = timingMatch[1];
+            rawTiming = timingMatch[2];
+          } else {
+            rawDur = p2;
+          }
         }
-      }
-      if (slashParts.length >= 4) {
-        rawTiming = slashParts[3];
+      } else if (slashParts.length >= 4) {
+        rawDur = slashParts[2];
+        rawTiming = slashParts.slice(3).join(' ');
       }
     }
   } else {
@@ -428,8 +603,18 @@ export function parseDoseShortcut(rawShortcut?: string, form?: string): ParsedDo
     if (parts.length >= 2) {
       rawD = parts[0];
       rawF = parts[1];
-      if (parts.length >= 3) rawDur = parts[2];
-      if (parts.length >= 4) rawTiming = parts[3];
+      if (parts.length === 3) {
+        const p2 = parts[2];
+        if (/^[-+*~^!_]/.test(p2) || ['*', '~', '!', 'r', 's', 'b', '0', '120', '180'].includes(p2.toLowerCase())) {
+          rawDur = '';
+          rawTiming = p2;
+        } else {
+          rawDur = p2;
+        }
+      } else if (parts.length >= 4) {
+        rawDur = parts[2];
+        rawTiming = parts.slice(3).join(' ');
+      }
     }
   }
 

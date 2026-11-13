@@ -51,7 +51,13 @@ export function DrugsManagementView() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Analytics State
-  const [analyticsPeriod, setAnalyticsPeriod] = useState<'month' | '6months' | '1year' | 'custom'>('month');
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<'month' | '6months' | '1year' | 'month-select' | 'range'>('month');
+  const [customStartDate, setCustomStartDate] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split('T')[0];
+  });
+  const [customEndDate, setCustomEndDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [analyticsData, setAnalyticsData] = useState<DrugAnalyticsData | null>(null);
@@ -104,13 +110,14 @@ export function DrugsManagementView() {
     setIsLoadingAnalytics(true);
     try {
       let url = `/api/drugs/analytics?period=${analyticsPeriod}`;
-      if (analyticsPeriod === 'custom') {
+      if (analyticsPeriod === 'month-select') {
         const m = selectedMonth.toString().padStart(2, '0');
         const startDate = `${selectedYear}-${m}-01`;
-        // Last day of chosen month
         const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
-        const endDate = `${selectedYear}-${m}-${lastDay}`;
+        const endDate = `${selectedYear}-${m}-${lastDay.toString().padStart(2, '0')}`;
         url = `/api/drugs/analytics?period=custom&startDate=${startDate}&endDate=${endDate}`;
+      } else if (analyticsPeriod === 'range') {
+        url = `/api/drugs/analytics?period=custom&startDate=${customStartDate}&endDate=${customEndDate}`;
       }
 
       const res = await fetch(url);
@@ -129,7 +136,7 @@ export function DrugsManagementView() {
     if (activeTab === 'analytics') {
       fetchAnalytics();
     }
-  }, [activeTab, analyticsPeriod, selectedMonth, selectedYear]);
+  }, [activeTab, analyticsPeriod, selectedMonth, selectedYear, customStartDate, customEndDate]);
 
   // Open Modal for Add
   const handleOpenAddModal = () => {
@@ -488,7 +495,7 @@ export function DrugsManagementView() {
                 <span>الفترة الزمنية للتقرير:</span>
               </span>
 
-              <div className="p-1 rounded-xl bg-slate-100 border border-slate-200 flex items-center gap-1 text-xs font-bold">
+              <div className="p-1 rounded-xl bg-slate-100 border border-slate-200 flex items-center gap-1 text-xs font-bold flex-wrap">
                 <button
                   type="button"
                   onClick={() => setAnalyticsPeriod('month')}
@@ -524,21 +531,32 @@ export function DrugsManagementView() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAnalyticsPeriod('custom')}
+                  onClick={() => setAnalyticsPeriod('month-select')}
                   className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
-                    analyticsPeriod === 'custom'
+                    analyticsPeriod === 'month-select'
                       ? 'bg-[#074C3A] text-white shadow-xs font-black'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   شهر محدد 📅
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setAnalyticsPeriod('range')}
+                  className={`h-8 px-3 rounded-lg transition-all cursor-pointer ${
+                    analyticsPeriod === 'range'
+                      ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  فترة مخصصة (من - إلى) 🗓️
+                </button>
               </div>
             </div>
 
             {/* محدد الشهر والسنة عند اختيار "شهر محدد" */}
-            {analyticsPeriod === 'custom' && (
-              <div className="flex items-center gap-2 animate-in fade-in-50">
+            {analyticsPeriod === 'month-select' && (
+              <div className="flex items-center gap-2 animate-in fade-in-50 flex-wrap">
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(Number(e.target.value))}
@@ -575,6 +593,37 @@ export function DrugsManagementView() {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* محدد الفترة المخصصة (من تاريخ - إلى تاريخ) */}
+            {analyticsPeriod === 'range' && (
+              <div className="flex items-center gap-2 animate-in fade-in-50 flex-wrap text-xs">
+                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
+                  <span className="font-bold text-slate-500">من:</span>
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="bg-transparent font-mono text-xs font-bold text-slate-800 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
+                  <span className="font-bold text-slate-500">إلى:</span>
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="bg-transparent font-mono text-xs font-bold text-slate-800 focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchAnalytics}
+                  className="h-8 px-3 rounded-xl bg-[#0B7B5E] text-white font-bold text-xs hover:bg-[#09634C] transition-all cursor-pointer shadow-2xs"
+                >
+                  تحديث التقرير
+                </button>
               </div>
             )}
           </div>
@@ -776,7 +825,7 @@ export function DrugsManagementView() {
               {/* حقل اختصار سريع للتعبئة الفورية */}
               <div className="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-1.5">
                 <span className="text-[11px] font-black text-[#074C3A] block">
-                  ⚡ تعبئة سريعة عبر الاختصار (مثال: 1/3/5/-30 ثم اضغط تطبيق):
+                  ⚡ تعبئة سريعة عبر الاختصار (مثال: 1/3/5/-30 أو 1/1/7/* أو 1/1/10/~ ثم اضغط تطبيق):
                 </span>
                 <div className="flex items-center gap-2">
                   <input
@@ -789,7 +838,7 @@ export function DrugsManagementView() {
                         handleShortcutEnter();
                       }
                     }}
-                    placeholder="1/3/5/-30"
+                    placeholder="1/3/5/-30 أو 1/1/7/*"
                     className="flex-1 h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-mono text-xs font-bold text-[#074C3A] focus:outline-none focus:ring-1 focus:ring-[#0B7B5E]"
                   />
                   <button

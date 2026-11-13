@@ -170,6 +170,7 @@ export function PrescriptionView({
   const [activeDropdownRowId, setActiveDropdownRowId] = useState<string | null>(null);
   const [activeFormRowId, setActiveFormRowId] = useState<string | null>(null);
   const [expandedManualEditRows, setExpandedManualEditRows] = useState<Record<string, boolean>>({});
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
 
   // 1. أشكال الأدوية المخصصة والمحذوفة
   const [customForms, setCustomForms] = useState<DrugFormOption[]>([]);
@@ -801,6 +802,21 @@ export function PrescriptionView({
               <span>طباعة أدوية فقط (ورق بدون ترويسة) 📄</span>
             </button>
 
+            {/* زر دليل رموز الاختصارات السريعة */}
+            <button
+              type="button"
+              onClick={() => setShowShortcutHelp(!showShortcutHelp)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all shadow-2xs cursor-pointer ${
+                showShortcutHelp
+                  ? 'bg-amber-100 border-amber-300 text-amber-900 font-black'
+                  : 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-800'
+              }`}
+              title="عرض دليل رموز وتوقيت الجرعات السريعة"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>دليل رموز الاختصارات ⚡</span>
+            </button>
+
             <button
               type="button"
               onClick={addItem}
@@ -811,6 +827,80 @@ export function PrescriptionView({
             </button>
           </div>
         </div>
+
+        {/* صندوق دليل رموز الاختصارات السريعة */}
+        {showShortcutHelp && (
+          <div className="p-4 bg-gradient-to-br from-amber-50/80 to-emerald-50/80 rounded-2xl border border-amber-200 text-xs space-y-2.5 animate-in fade-in-50">
+            <div className="flex items-center justify-between">
+              <span className="font-black text-[#074C3A] flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span>دليل الرموز السريعة لترجمة الجرعات وتوقيت الطعام:</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowShortcutHelp(false)}
+                className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+              >
+                إغلاق ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-[11px]">
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">* أو r</strong>
+                <span className="block text-slate-700">على الريق فور الاستيقاظ</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">~ أو s</strong>
+                <span className="block text-slate-700">مساءً قبل النوم مباشرة</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">0 أو with</strong>
+                <span className="block text-slate-700">مع الأكل / وسط الطعام</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">! أو sos</strong>
+                <span className="block text-slate-700">عند اللزوم / عند الألم</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">-30</strong>
+                <span className="block text-slate-700">قبل الأكل بنصف ساعة</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">+30</strong>
+                <span className="block text-slate-700">بعد الأكل بنصف ساعة</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">-60</strong>
+                <span className="block text-slate-700">قبل الأكل بساعة</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">+120 أو 120</strong>
+                <span className="block text-slate-700">بعد الأكل بساعتين</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">-120</strong>
+                <span className="block text-slate-700">قبل الأكل بساعتين</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">+180 أو 180</strong>
+                <span className="block text-slate-700">بعد الأكل بثلاث ساعات</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">bw</strong>
+                <span className="block text-slate-700">بين الوجبات</span>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
+                <strong className="text-amber-800 font-mono font-black text-xs">h2o</strong>
+                <span className="block text-slate-700">مع كوب ماء كامل</span>
+              </div>
+            </div>
+
+            <div className="p-2 bg-white/80 rounded-xl border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
+              💡 <strong>صيغة الاختصار:</strong> اكتب <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">1/3/5/-30</code> (قرص / 3 مرات / 5 أيام / قبل الأكل بنصف ساعة) أو <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">1/1/7/*</code> (على الريق) أو <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">1/1/10/~</code> (قبل النوم) واضغط <kbd className="bg-slate-200 px-1 rounded font-mono">Enter</kbd> للترجمة الفورية.
+            </div>
+          </div>
+        )}
 
         {items.length === 0 ? (
           <div className="text-center py-10 bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-2">
@@ -992,12 +1082,12 @@ export function PrescriptionView({
                     />
                   </div>
 
-                  {/* 4. حقل اختصار الجرعة السريع (⚡ 1/3/5/-30 ثم Enter) */}
+                  {/* 4. حقل اختصار الجرعة السريع (⚡ 1/3/5/-30 أو 1/1/7/* ثم Enter) */}
                   <div className="relative flex-1 min-w-[200px]">
                     <input
                       type="text"
-                      placeholder="⚡ اختصار: 1/3/5/-30 ثم Enter"
-                      title="اكتب اختصار الجرعة مثل 1/3/5/-30 واضغط Enter للترجمة الفورية"
+                      placeholder="⚡ اختصار: 1/3/5/-30 أو 1/1/7/* ثم Enter"
+                      title="اكتب اختصار الجرعة مثل 1/3/5/-30 أو 1/1/7/* (على الريق) أو 1/1/10/~ (قبل النوم) واضغط Enter"
                       className="w-full h-9 pr-3 pl-2 rounded-xl border border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 focus:bg-white font-mono text-xs font-bold text-[#074C3A] placeholder:text-emerald-700/60 placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-[#0B7B5E] transition-all"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -1010,7 +1100,7 @@ export function PrescriptionView({
                             if (parsed.instructions) updateItem(item.id, 'instructions', parsed.instructions);
                             toast.success(`✓ تمت ترجمة الاختصار: ${parsed.summary}`);
                           } else {
-                            toast.info('اكتب الاختصار بالشكل: 1/3/5/-30 (جرعة / تكرار / مدة / توقيت الأكل)');
+                            toast.info('اكتب الاختصار بالشكل: 1/3/5/-30 أو 1/1/7/* (جرعة / تكرار / مدة / رمز التوقيت)');
                           }
                         }
                       }}

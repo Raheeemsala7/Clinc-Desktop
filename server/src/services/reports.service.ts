@@ -213,7 +213,7 @@ export class ReportsService {
 
     const patientIds = Array.from(new Set(appointments.map((a: any) => a.patientId).filter(Boolean)));
     const patients = await Patient.find({ _id: { $in: patientIds } })
-      .select('name phone fileNumber')
+      .select('fullName name searchName phone fileNumber age gender')
       .lean();
     const patientMap = new Map(patients.map((p: any) => [p._id.toString(), p]));
 
@@ -259,9 +259,11 @@ export class ReportsService {
         id: String(appt._id),
         appointmentId: String(appt._id),
         patientId: String(appt.patientId),
-        patientName: p?.name || 'مريض غير محدد',
+        patientName: p?.fullName || p?.name || p?.searchName || 'مريض غير محدد',
         patientPhone: p?.phone || '',
         fileNumber: p?.fileNumber || '',
+        patientAge: p?.age,
+        patientGender: p?.gender,
         doctorId: String(appt.doctorId || ''),
         doctorName: docName,
         clinicDate: appt.clinicDate,
