@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Clock,
@@ -12,7 +12,6 @@ import {
   UserPlus,
   FileText,
   Loader2,
-  CheckCircle2,
 } from 'lucide-react';
 import { TableAppointmentsRowActions } from './table-appointments-row-actions';
 
@@ -70,28 +69,37 @@ export function ReceptionQueueSearchTable({
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearchingExternal, setIsSearchingExternal] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   // فلترة قائمة اليوم محلياً
-  const filteredLocal = initialPatients.filter((p) => {
-    if (!searchTerm.trim()) return true;
+  const filteredLocal = useMemo(() => {
+    if (!searchTerm.trim()) return initialPatients;
     const term = searchTerm.trim().toLowerCase();
-    const nameMatch = p.patientName?.toLowerCase().includes(term);
-    const phoneMatch = p.patientPhone?.includes(term);
-    const queueMatch = String(p.queueNumber).includes(term);
-    return nameMatch || phoneMatch || queueMatch;
-  });
+    return initialPatients.filter((p) => {
+      const nameMatch = p.patientName?.toLowerCase().includes(term);
+      const phoneMatch = p.patientPhone?.includes(term);
+      const queueMatch = String(p.queueNumber).includes(term);
+      return nameMatch || phoneMatch || queueMatch;
+    });
+  }, [searchTerm, initialPatients]);
 
   // التقيد الصارم بعرض 10 مرضى فقط كحد أقصى دائم
-  const visiblePatients = filteredLocal.slice(0, 10);
+  const visiblePatients = useMemo(() => filteredLocal.slice(0, 10), [filteredLocal]);
 
-  // البحث في كامل قاعدة بيانات العيادة عند كتابة نص
-  const handleSearchChange = (val: string) => {
-    setSearchTerm(val);
+  // البحث في كامل قاعدة بيانات العيادة مع إلغاء الطلبات المتكررة تلقائياً
+  useEffect(() => {
+    const term = searchTerm.trim();
+    if (term.length < 2) {
+      setSearchResults([]);
+      setIsSearchingExternal(false);
+      return;
+    }
 
-    if (val.trim().length >= 2) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
       setIsSearchingExternal(true);
-      fetch(`/api/patients/search?q=${encodeURIComponent(val.trim())}`)
+      fetch(`/api/patients/search?q=${encodeURIComponent(term)}`, {
+        signal: controller.signal,
+      })
         .then((res) => res.json())
         .then((data) => {
           const rawList = Array.isArray(data)
@@ -105,13 +113,19 @@ export function ReceptionQueueSearchTable({
           const external = rawList.filter((p: any) => !localIds.has(p.id));
           setSearchResults(external.slice(0, 5));
         })
-        .catch(() => setSearchResults([]))
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            setSearchResults([]);
+          }
+        })
         .finally(() => setIsSearchingExternal(false));
-    } else {
-      setSearchResults([]);
-      setIsSearchingExternal(false);
-    }
-  };
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [searchTerm, initialPatients]);
 
   return (
     <div className="space-y-4 select-none" dir="rtl">
@@ -123,7 +137,7 @@ export function ReceptionQueueSearchTable({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="بحث بالاسم أو الهاتف أو رقم الملف (يظهر حتى لو لم يكن في القائمة)..."
             className="w-full h-10 pr-10 pl-4 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all shadow-2xs"
           />

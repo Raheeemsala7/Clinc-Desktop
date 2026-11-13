@@ -281,7 +281,7 @@ export function EntExaminationForm({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-sm sm:text-base font-black text-[#074C3A]">
-              {patient?.fullName}
+              {patient?.fullName || 'مريض غير محدد'}
             </span>
             <span className="text-xs text-slate-500 font-bold">
               ({patient?.age ? `${patient.age} سنة` : 'عمر غير محدد'})

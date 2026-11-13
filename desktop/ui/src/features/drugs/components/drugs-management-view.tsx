@@ -133,9 +133,45 @@ export function DrugsManagementView() {
   };
 
   useEffect(() => {
+    let isCancelled = false;
     if (activeTab === 'analytics') {
-      fetchAnalytics();
+      setIsLoadingAnalytics(true);
+      let url = `/api/drugs/analytics?period=${analyticsPeriod}`;
+      if (analyticsPeriod === 'month-select') {
+        const m = selectedMonth.toString().padStart(2, '0');
+        const startDate = `${selectedYear}-${m}-01`;
+        const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+        const endDate = `${selectedYear}-${m}-${lastDay.toString().padStart(2, '0')}`;
+        url = `/api/drugs/analytics?period=custom&startDate=${startDate}&endDate=${endDate}`;
+      } else if (analyticsPeriod === 'range') {
+        url = `/api/drugs/analytics?period=custom&startDate=${customStartDate}&endDate=${customEndDate}`;
+      }
+
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed');
+          return res.json();
+        })
+        .then((data) => {
+          if (!isCancelled) {
+            setAnalyticsData(data.payload || data);
+          }
+        })
+        .catch(() => {
+          if (!isCancelled) {
+            toast.error('تعذر تحميل تقرير الأدوية الأكثر استخداماً');
+          }
+        })
+        .finally(() => {
+          if (!isCancelled) {
+            setIsLoadingAnalytics(false);
+          }
+        });
     }
+
+    return () => {
+      isCancelled = true;
+    };
   }, [activeTab, analyticsPeriod, selectedMonth, selectedYear, customStartDate, customEndDate]);
 
   // Open Modal for Add

@@ -166,7 +166,38 @@ export function DoctorRevenueView() {
   };
 
   useEffect(() => {
-    fetchRevenue();
+    let isCancelled = false;
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        let url = `/api/reports/doctor-revenue?from=${fromDate}&to=${toDate}`;
+        if (selectedDoctorId && selectedDoctorId !== 'ALL') {
+          url += `&doctorId=${encodeURIComponent(selectedDoctorId)}`;
+        }
+        const res = await fetch(url);
+        if (res.ok) {
+          const json = await res.json();
+          if (!isCancelled) {
+            setData(json.payload || json);
+          }
+        } else if (!isCancelled) {
+          toast.error('تعذر تحميل بيانات التقرير المالي');
+        }
+      } catch {
+        if (!isCancelled) {
+          toast.error('حدث خطأ أثناء تحميل التقرير');
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    load();
+    return () => {
+      isCancelled = true;
+    };
   }, [fromDate, toDate, selectedDoctorId]);
 
   // Translate appointment types
