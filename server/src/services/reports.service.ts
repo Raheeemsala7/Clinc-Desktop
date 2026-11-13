@@ -1,4 +1,4 @@
-import { Payment, Expense, Visit, Appointment, Patient } from '../models';
+import { Payment, Expense, Visit, Appointment, Patient, User } from '../models';
 import { getTodayClinicDate } from '../utils/clinic-date';
 
 export class ReportsService {
@@ -190,7 +190,7 @@ export class ReportsService {
     const filter: any = {
       clinicDate: { $gte: from, $lte: to },
     };
-    if (doctorId) {
+    if (doctorId && doctorId !== 'ALL' && doctorId !== 'undefined') {
       filter.doctorId = doctorId;
     }
 
@@ -217,6 +217,12 @@ export class ReportsService {
       .lean();
     const patientMap = new Map(patients.map((p: any) => [p._id.toString(), p]));
 
+    // Fetch doctors to display doctor name
+    const allDoctors = await User.find({ role: 'DOCTOR', isActive: true })
+      .select('name username')
+      .lean();
+    const doctorMap = new Map(allDoctors.map((d: any) => [d._id.toString(), d.name || d.username]));
+
     let totalConsultations = appointments.length;
     let completedVisits = 0;
     let totalFees = 0;
@@ -228,10 +234,10 @@ export class ReportsService {
 
     const items = appointments.map((appt: any) => {
       const p = patientMap.get(String(appt.patientId));
-      const fee = Number(appt.totalAmount) || 0;
-      const paid = paymentsByAppt[String(appt._id)] ?? (Number(appt.paidAmount) || 0);
-      const remaining = Math.max(0, fee - paid);
       const isExempt = Boolean(appt.isExempt || appt.paymentStatus === 'EXEMPT');
+      const paid = isExempt ? 0 : Math.max(paymentsByAppt[String(appt._id)] || 0, Number(appt.paidAmount) || 0);
+      const fee = isExempt ? 0 : Math.max(Number(appt.totalAmount) || 0, Number(appt.originalFee) || 0, paid);
+      const remaining = isExempt ? 0 : Math.max(0, fee - paid);
 
       totalFees += fee;
       totalPaid += paid;
@@ -247,6 +253,8 @@ export class ReportsService {
       typeBreakdown[typeKey].totalFees += fee;
       typeBreakdown[typeKey].totalPaid += paid;
 
+      const docName = doctorMap.get(String(appt.doctorId)) || 'طبيب العيادة';
+
       return {
         id: String(appt._id),
         appointmentId: String(appt._id),
@@ -254,6 +262,8 @@ export class ReportsService {
         patientName: p?.name || 'مريض غير محدد',
         patientPhone: p?.phone || '',
         fileNumber: p?.fileNumber || '',
+        doctorId: String(appt.doctorId || ''),
+        doctorName: docName,
         clinicDate: appt.clinicDate,
         scheduledAt: appt.scheduledAt,
         startTime: appt.startTime,
@@ -266,7 +276,7 @@ export class ReportsService {
         fee,
         paidAmount: paid,
         remainingAmount: remaining,
-        paymentStatus: isExempt ? 'EXEMPT' : remaining === 0 ? 'PAID' : paid > 0 ? 'PARTIAL' : 'UNPAID',
+        paymentStatus: isExempt ? 'EXEMPT' : remaining === 0 && fee > 0 ? 'PAID' : paid > 0 ? 'PARTIAL' : 'UNPAID',
         isExempt,
       };
     });
@@ -275,6 +285,10 @@ export class ReportsService {
       from,
       to,
       doctorId: doctorId || null,
+      allDoctors: allDoctors.map((d: any) => ({
+        id: d._id.toString(),
+        name: d.name || d.username,
+      })),
       summary: {
         totalConsultations,
         completedVisits,

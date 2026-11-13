@@ -38,8 +38,8 @@ export class ReportsController {
 
   getDoctorRevenue = asyncHandler(async (req: Request, res: Response) => {
     let doctorId = (req.query.doctorId as string) || undefined;
-    if (req.user?.role === 'DOCTOR') {
-      doctorId = req.user.id;
+    if (doctorId === 'ALL' || doctorId === '' || doctorId === 'undefined') {
+      doctorId = undefined;
     }
 
     const from = req.query.from as string;

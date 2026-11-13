@@ -18,6 +18,7 @@ import {
   Sparkles,
   ChevronDown,
   Stethoscope,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,6 +29,8 @@ interface ConsultationItem {
   patientName: string;
   patientPhone: string;
   fileNumber: string;
+  doctorId?: string;
+  doctorName?: string;
   clinicDate: string;
   scheduledAt?: string;
   startTime?: string;
@@ -48,6 +51,7 @@ interface RevenueData {
   from: string;
   to: string;
   doctorId: string | null;
+  allDoctors?: Array<{ id: string; name: string }>;
   summary: {
     totalConsultations: number;
     completedVisits: number;
@@ -62,9 +66,21 @@ interface RevenueData {
 }
 
 export function DoctorRevenueView() {
-  const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'custom'>('today');
-  const [fromDate, setFromDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
-  const [toDate, setToDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const getClinicToday = () => {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date());
+    } catch {
+      return new Date().toISOString().split('T')[0];
+    }
+  };
+
+  const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'custom'>('month');
+  const [fromDate, setFromDate] = useState<string>(() => {
+    const today = getClinicToday();
+    return today.slice(0, 7) + '-01';
+  });
+  const [toDate, setToDate] = useState<string>(() => getClinicToday());
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('ALL');
   const [data, setData] = useState<RevenueData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [tableSearch, setTableSearch] = useState('');
@@ -73,23 +89,21 @@ export function DoctorRevenueView() {
   // Compute dates when period button changes
   const handlePeriodChange = (newPeriod: 'today' | 'week' | 'month' | 'custom') => {
     setPeriod(newPeriod);
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = getClinicToday();
 
     if (newPeriod === 'today') {
       setFromDate(todayStr);
       setToDate(todayStr);
     } else if (newPeriod === 'week') {
-      const d = new Date(today);
-      const day = d.getDay(); // 0 is Sunday, 6 is Saturday
-      // Egyptian/Arabic clinic week starts on Saturday (6)
+      const d = new Date(todayStr + 'T12:00:00Z');
+      const day = d.getUTCDay(); // 0 is Sunday, 6 is Saturday
       const diff = (day + 1) % 7;
-      d.setDate(d.getDate() - diff);
+      d.setUTCDate(d.getUTCDate() - diff);
       const startStr = d.toISOString().split('T')[0];
       setFromDate(startStr);
       setToDate(todayStr);
     } else if (newPeriod === 'month') {
-      const startOfMonth = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-01`;
+      const startOfMonth = todayStr.slice(0, 7) + '-01';
       setFromDate(startOfMonth);
       setToDate(todayStr);
     }
@@ -98,7 +112,11 @@ export function DoctorRevenueView() {
   const fetchRevenue = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/reports/doctor-revenue?from=${fromDate}&to=${toDate}`);
+      let url = `/api/reports/doctor-revenue?from=${fromDate}&to=${toDate}`;
+      if (selectedDoctorId && selectedDoctorId !== 'ALL') {
+        url += `&doctorId=${encodeURIComponent(selectedDoctorId)}`;
+      }
+      const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
         setData(json.payload || json);
@@ -114,7 +132,7 @@ export function DoctorRevenueView() {
 
   useEffect(() => {
     fetchRevenue();
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, selectedDoctorId]);
 
   // Translate appointment types
   const formatTypeName = (type: string) => {
@@ -146,7 +164,8 @@ export function DoctorRevenueView() {
     return (
       item.patientName.toLowerCase().includes(q) ||
       (item.patientPhone && item.patientPhone.includes(q)) ||
-      (item.fileNumber && item.fileNumber.toLowerCase().includes(q))
+      (item.fileNumber && item.fileNumber.toLowerCase().includes(q)) ||
+      (item.doctorName && item.doctorName.toLowerCase().includes(q))
     );
   });
 
@@ -171,14 +190,14 @@ export function DoctorRevenueView() {
         <button
           type="button"
           onClick={fetchRevenue}
-          className="h-10 px-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer self-start md:self-auto"
+          className="h-10 px-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer self-start md:self-auto shadow-2xs"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#0B7B5E]' : ''}`} />
           <span>تحديث التقرير</span>
         </button>
       </div>
 
-      {/* 2. شريط اختيار الفترة الزمنية */}
+      {/* 2. شريط اختيار الفترة الزمنية واختيار الطبيب */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
@@ -231,6 +250,23 @@ export function DoctorRevenueView() {
             >
               فترة مخصصة 📅
             </button>
+          </div>
+
+          {/* محدد الطبيب */}
+          <div className="relative">
+            <select
+              value={selectedDoctorId}
+              onChange={(e) => setSelectedDoctorId(e.target.value)}
+              className="h-8 pr-3 pl-7 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] cursor-pointer appearance-none shadow-2xs"
+            >
+              <option value="ALL">كافة أطباء وكشوفات العيادة</option>
+              {data?.allDoctors?.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
@@ -289,7 +325,7 @@ export function DoctorRevenueView() {
             {(data?.summary?.totalFees ?? 0).toLocaleString()} <span className="text-xs font-sans font-bold">ج.م</span>
           </div>
           <p className="text-[11px] text-slate-400 font-medium">
-            إجمالي أسعار الخدمات المطلوبة
+            إجمالي أسعار الخدمات والكشوفات
           </p>
         </div>
 
@@ -361,7 +397,7 @@ export function DoctorRevenueView() {
           <div>
             <h3 className="text-base font-black text-[#074C3A] flex items-center gap-2">
               <FileText className="w-5 h-5 text-[#0B7B5E]" />
-              <span>سجل الحالات والكشوفات التفصيلي</span>
+              <span>سجل الحالات والكشوفات التفصيلي ({filteredConsultations.length})</span>
             </h3>
             <p className="text-[11px] text-slate-500 font-medium">
               قائمة بجميع المرضى والكشوفات المسجلة وحالة السداد لكل كشف
@@ -388,7 +424,7 @@ export function DoctorRevenueView() {
                 type="text"
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
-                placeholder="ابحث باسم المريض أو الهاتف..."
+                placeholder="ابحث باسم المريض أو الطبيب..."
                 className="w-full h-9 pr-8 pl-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] focus:bg-white focus:outline-none focus:border-[#0B7B5E]"
               />
               <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -402,8 +438,14 @@ export function DoctorRevenueView() {
             <p className="text-xs font-bold text-slate-500">جاري تحميل سجل الكشوفات...</p>
           </div>
         ) : filteredConsultations.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-xs font-bold">
-            لا توجد كشوفات مسجلة في هذه الفترة الزمنية.
+          <div className="py-12 text-center space-y-2">
+            <AlertCircle className="w-8 h-8 text-slate-300 mx-auto" />
+            <p className="text-xs font-bold text-slate-600">
+              لا توجد كشوفات مسجلة في هذه الفترة المحددة ({fromDate} إلى {toDate}).
+            </p>
+            <p className="text-[11px] text-slate-400">
+              جرب الضغط على &quot;هذا الشهر&quot; أو اختيار &quot;كافة أطباء وكشوفات العيادة&quot; للاطلاع على جميع الحالات.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -412,6 +454,7 @@ export function DoctorRevenueView() {
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-black">
                   <th className="py-3 px-3 w-10 text-center">#</th>
                   <th className="py-3 px-3">المريض</th>
+                  <th className="py-3 px-3">الطبيب المعالج</th>
                   <th className="py-3 px-3">التاريخ والوقت</th>
                   <th className="py-3 px-3">نوع الكشف</th>
                   <th className="py-3 px-3">حالة الكشف</th>
@@ -434,6 +477,11 @@ export function DoctorRevenueView() {
                       </span>
                       <span className="text-[11px] text-slate-400 font-mono">
                         {c.patientPhone || (c.fileNumber ? `ملف: ${c.fileNumber}` : '—')}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                        {c.doctorName || 'طبيب العيادة'}
                       </span>
                     </td>
                     <td className="py-3 px-3 font-mono text-slate-700">
@@ -509,4 +557,3 @@ export function DoctorRevenueView() {
     </div>
   );
 }
-
