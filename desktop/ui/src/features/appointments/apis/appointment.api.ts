@@ -35,13 +35,19 @@ export interface TodayQueueItem {
   isExempt: boolean;
 }
 
-export async function getTodayWaitingAppointmentsApi(doctorId?: string): Promise<ApiResponse<TodayQueueItem[]>> {
+export async function getTodayWaitingAppointmentsApi(
+  doctorId?: string,
+  includeCompleted = false,
+): Promise<ApiResponse<TodayQueueItem[]>> {
   const token = await getNextAuthToken();
   if (!token?.accessToken) {
     redirect('/auth/login?expired=true');
   }
 
-  const queryParams = doctorId ? `?doctorId=${encodeURIComponent(doctorId)}` : '';
+  const searchParams = new URLSearchParams();
+  if (doctorId) searchParams.set('doctorId', doctorId);
+  if (includeCompleted) searchParams.set('includeCompleted', 'true');
+  const queryParams = searchParams.toString() ? `?${searchParams.toString()}` : '';
 
   try {
     const res = await fetch(`${process.env.API_URL}/queue/today${queryParams}`, {

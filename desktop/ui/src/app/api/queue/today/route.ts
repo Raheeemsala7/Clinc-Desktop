@@ -15,10 +15,12 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const doctorId = searchParams.get('doctorId') || '';
+    const includeCompleted = searchParams.get('includeCompleted') || '';
 
     const apiUrl = process.env.API_URL || 'http://localhost:4000/api/v1';
     const url = new URL(`${apiUrl}/queue/today`);
     if (doctorId) url.searchParams.set('doctorId', doctorId);
+    if (includeCompleted) url.searchParams.set('includeCompleted', includeCompleted);
 
     const res = await fetch(url.toString(), {
       method: 'GET',

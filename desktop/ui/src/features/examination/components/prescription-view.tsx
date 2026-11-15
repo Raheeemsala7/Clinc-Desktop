@@ -1437,8 +1437,10 @@ export function PrescriptionView({
  * المقاسات المعتمدة لطابعة العيادة:
  * - عرض الورقة: 16.5cm
  * - طول الورقة: 25cm (على ورق A4)
- * - مساحة فارغة في الأعلى: 12cm
+ * - مساحة فارغة في الأعلى: 10cm بالضبط
  * - مساحة فارغة في الأسفل: 2cm
+ * - تقسيم الأدوية تلقائياً على صفحتين إذا زادت عن 5 أدوية (لكل صفحة نفس الهوامش العلوية 10cm)
+ * - منع ظهور أي ورقة ثانية فارغة نهائياً
  * - ترقيم الأدوية بنقاط (•) بدلاً من الأرقام
  * - إخفاء الاسم والتشخيص ورمز R بالكامل (تطبع الأدوية والجرعات فقط)
  */
@@ -1455,9 +1457,21 @@ export function PrintablePrescriptionSlip({
 }) {
   const items = examData.prescriptionItems || [];
 
+  // تقسيم الأدوية: بحد أقصى 5 أدوية لكل ورقة لضمان عدم ملامسة الهامش السفلي 2cm
+  // إذا زادت الأدوية، تُقسم على ورقتين بنفس المقاسات بالضبط
+  const ITEMS_PER_SLIP = 5;
+  const pages: PrescriptionMedicine[][] = [];
+  if (items.length === 0) {
+    pages.push([]);
+  } else {
+    for (let i = 0; i < items.length; i += ITEMS_PER_SLIP) {
+      pages.push(items.slice(i, i + ITEMS_PER_SLIP));
+    }
+  }
+
   return (
     <>
-      {/* ستايل الطباعة الخاص بمقاسات ورق روشتة د. إسلام */}
+      {/* ستايل الطباعة الدقيق لمقاسات ورق روشتة د. إسلام ومنع أي ورقة فارغة نهائياً */}
       <style dangerouslySetInnerHTML={{ __html: `
         @page {
           size: 16.5cm 25cm;
@@ -1466,119 +1480,150 @@ export function PrintablePrescriptionSlip({
         @media print {
           html, body {
             width: 16.5cm !important;
-            height: 25cm !important;
+            height: auto !important;
+            min-height: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
             background: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            overflow: visible !important;
           }
-          .rx-print-container {
+          .rx-print-wrapper {
             width: 16.5cm !important;
-            min-height: 25cm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .rx-print-page {
+            width: 16.5cm !important;
+            height: 24.8cm !important;
+            max-height: 24.8cm !important;
             box-sizing: border-box !important;
-            padding-top: 12cm !important;
+            padding-top: 10cm !important;
             padding-bottom: 2cm !important;
             padding-left: 1.2cm !important;
             padding-right: 1.2cm !important;
             margin: 0 auto !important;
             border: none !important;
+            overflow: hidden !important;
+          }
+          .rx-print-page:not(:last-child) {
+            page-break-after: always !important;
+            break-after: page !important;
+          }
+          .rx-print-page:last-child {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
         }
       `}} />
 
-      <div
-        dir="ltr"
-        className="rx-print-container bg-white text-black font-sans mx-auto box-border"
-        style={{
-          width: '16.5cm',
-          minHeight: '25cm',
-          paddingTop: '12cm',
-          paddingBottom: '2cm',
-          paddingLeft: '1.2cm',
-          paddingRight: '1.2cm',
-        }}
-      >
-        {/* قائمة الأدوية الموصوفة فقط بدون اسم المريض وبدون تشخيص وبدون حرف R */}
-        <div className="space-y-4" dir="ltr">
-          {items.length === 0 ? (
-            <p className="text-sm text-slate-400 italic">No medications prescribed.</p>
-          ) : (
-            <div className="space-y-3.5 text-left">
-              {items.map((item, idx) => {
-                const formObj = DRUG_FORMS.find((f) => f.id === item.form);
-                const formEnglish = formObj ? formObj.labelEn : (item.form || 'Tablet');
+      <div className="rx-print-wrapper" dir="ltr">
+        {pages.map((pageItems, pageIdx) => {
+          const isLastPage = pageIdx === pages.length - 1;
 
-                // ترجمة الجرعة والتكرار والمدة للصياغة الطبية الدقيقة المطلوبة
-                const displayDose = formatDose(item.dose, item.form);
-                const displayFrequency = formatFrequency(item.frequency);
-                const rawDuration = formatDuration(item.duration);
-                const displayDuration = rawDuration
-                  ? (rawDuration.startsWith('لمدة') ? rawDuration : `لمدة ${rawDuration}`)
-                  : '';
+          return (
+            <div
+              key={pageIdx}
+              dir="ltr"
+              className="rx-print-page bg-white text-black font-sans mx-auto box-border"
+              style={{
+                width: '16.5cm',
+                height: '24.8cm',
+                maxHeight: '24.8cm',
+                boxSizing: 'border-box',
+                paddingTop: '10cm',
+                paddingBottom: '2cm',
+                paddingLeft: '1.2cm',
+                paddingRight: '1.2cm',
+                pageBreakAfter: isLastPage ? 'avoid' : 'always',
+                breakAfter: isLastPage ? 'avoid' : 'page',
+                overflow: 'hidden',
+              }}
+            >
+              {/* قائمة الأدوية الموصوفة الخاصة بهذه الصفحة بنقاط (•) وبدون اسم أو تشخيص أو R */}
+              <div className="space-y-4" dir="ltr">
+                {pageItems.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic">No medications prescribed.</p>
+                ) : (
+                  <div className="space-y-3.5 text-left">
+                    {pageItems.map((item, idx) => {
+                      const formObj = DRUG_FORMS.find((f) => f.id === item.form);
+                      const formEnglish = formObj ? formObj.labelEn : (item.form || 'Tablet');
 
-                return (
-                  <div key={item.id || idx} className="space-y-0.5 text-left leading-tight">
-                    {/* السطر الأول: نقطة (•) بدلاً من الرقم + اسم الدواء + التركيز + الشكل */}
-                    <div className="flex items-baseline gap-2 flex-wrap font-black text-black">
-                      <span className="text-xl font-black min-w-[14px] text-slate-900">•</span>
-                      <span className="text-base sm:text-lg tracking-wide font-black text-slate-950">
-                        {item.drugName}
-                      </span>
-                      {item.concentration && (
-                        <span className="font-mono font-bold text-xs px-1.5 py-0.2 rounded border border-black/40 text-black">
-                          {item.concentration}
-                        </span>
-                      )}
-                      {formEnglish && (
-                        <span className="font-bold text-xs px-1.5 py-0.2 rounded border border-black/40 text-black">
-                          {formEnglish}
-                        </span>
-                      )}
-                    </div>
+                      // ترجمة الجرعة والتكرار والمدة للصياغة الطبية المطلوبة
+                      const displayDose = formatDose(item.dose, item.form);
+                      const displayFrequency = formatFrequency(item.frequency);
+                      const rawDuration = formatDuration(item.duration);
+                      const displayDuration = rawDuration
+                        ? (rawDuration.startsWith('لمدة') ? rawDuration : `لمدة ${rawDuration}`)
+                        : '';
 
-                    {/* السطر الثاني: الجرعة والتكرار والمدة بالإنجليزية/العربية أسفل اسم الدواء */}
-                    <div className="pl-5 space-y-0.5 text-left">
-                      <div className="text-xs sm:text-sm font-bold flex items-center gap-2 flex-wrap text-black">
-                        {displayDose && (
-                          <span className="font-black">{displayDose}</span>
-                        )}
-                        {displayFrequency && (
-                          <span className="font-bold">
-                            {displayDose ? '▪ ' : ''}{displayFrequency}
-                          </span>
-                        )}
-                        {displayDuration && (
-                          <span className="font-black">
-                            {(displayDose || displayFrequency) ? '▪ ' : ''}
-                            {displayDuration}
-                          </span>
-                        )}
-                      </div>
+                      return (
+                        <div key={item.id || idx} className="space-y-0.5 text-left leading-tight">
+                          {/* السطر الأول: نقطة (•) بدلاً من الرقم + اسم الدواء + التركيز + الشكل */}
+                          <div className="flex items-baseline gap-2 flex-wrap font-black text-black">
+                            <span className="text-xl font-black min-w-[14px] text-slate-900">•</span>
+                            <span className="text-base sm:text-lg tracking-wide font-black text-slate-950">
+                              {item.drugName}
+                            </span>
+                            {item.concentration && (
+                              <span className="font-mono font-bold text-xs px-1.5 py-0.2 rounded border border-black/40 text-black">
+                                {item.concentration}
+                              </span>
+                            )}
+                            {formEnglish && (
+                              <span className="font-bold text-xs px-1.5 py-0.2 rounded border border-black/40 text-black">
+                                {formEnglish}
+                              </span>
+                            )}
+                          </div>
 
-                      {/* سطر الإرشادات والتعليمات إن وجد */}
-                      {item.instructions && (
-                        <div className="text-xs font-semibold text-slate-800" dir="rtl">
-                          <span>◄ {item.instructions}</span>
+                          {/* السطر الثاني: الجرعة والتكرار والمدة أسفل اسم الدواء */}
+                          <div className="pl-5 space-y-0.5 text-left">
+                            <div className="text-xs sm:text-sm font-bold flex items-center gap-2 flex-wrap text-black">
+                              {displayDose && (
+                                <span className="font-black">{displayDose}</span>
+                              )}
+                              {displayFrequency && (
+                                <span className="font-bold">
+                                  {displayDose ? '▪ ' : ''}{displayFrequency}
+                                </span>
+                              )}
+                              {displayDuration && (
+                                <span className="font-black">
+                                  {(displayDose || displayFrequency) ? '▪ ' : ''}
+                                  {displayDuration}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* سطر الإرشادات والتعليمات إن وجد */}
+                            {item.instructions && (
+                              <div className="text-xs font-semibold text-slate-800" dir="rtl">
+                                <span>◄ {item.instructions}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                )}
+              </div>
 
-        {/* ملاحظات العلاج الإضافية إن وجدت */}
-        {examData.treatmentNotes && (
-          <div dir="rtl" className="mt-4 pt-2 border-t border-dotted border-black/50 text-xs text-right">
-            <span className="font-bold text-black block mb-0.5">تعليمات إضافية:</span>
-            <p className="text-slate-800 whitespace-pre-line leading-4">
-              {examData.treatmentNotes}
-            </p>
-          </div>
-        )}
+              {/* ملاحظات العلاج الإضافية إن وجدت (تظهر في الصفحة الأخيرة فقط) */}
+              {isLastPage && examData.treatmentNotes && (
+                <div dir="rtl" className="mt-4 pt-2 border-t border-dotted border-black/50 text-xs text-right">
+                  <span className="font-bold text-black block mb-0.5">تعليمات إضافية:</span>
+                  <p className="text-slate-800 whitespace-pre-line leading-4">
+                    {examData.treatmentNotes}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </>
   );

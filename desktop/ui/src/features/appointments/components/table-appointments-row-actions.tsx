@@ -140,9 +140,14 @@ export function TableAppointmentsRowActions({
             onClick={() => setIsRefundModalOpen(true)}
             disabled={isAnyPending}
             title="استرجاع فلوس للمريض (كامل أو جزئي بتعليمات الطبيب)"
-            className="p-1.5 rounded-lg border border-rose-200 hover:border-rose-300 hover:bg-rose-50 text-rose-600 active:scale-95 disabled:opacity-60 transition-colors cursor-pointer"
+            className={
+              status === 'COMPLETED'
+                ? 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs active:scale-95 disabled:opacity-60 transition-all cursor-pointer shadow-2xs'
+                : 'p-1.5 rounded-lg border border-rose-200 hover:border-rose-300 hover:bg-rose-50 text-rose-600 active:scale-95 disabled:opacity-60 transition-colors cursor-pointer'
+            }
           >
             <RotateCcw className="w-3.5 h-3.5" />
+            {status === 'COMPLETED' && <span>استرجاع فلوس</span>}
           </button>
         )}
 

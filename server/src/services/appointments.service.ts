@@ -787,15 +787,23 @@ export class AppointmentsService {
       throw new BadRequestError(`مبلغ الاسترجاع (${refundAmount} ج.م) أكبر من إجمالي المدفوع (${currentPaid} ج.م)`);
     }
 
-    // خصم مبلغ الاسترجاع من المدفوع
+    // خصم مبلغ الاسترجاع من المدفوع، وتعديل إجمالي الكشف/الخصم لتجنب احتساب مديونية غير حقيقية على المريض
     const newPaidAmount = Math.max(0, currentPaid - refundAmount);
     appt.paidAmount = newPaidAmount;
-    appt.remainingAmount = Math.max(0, appt.totalAmount - newPaidAmount);
+    appt.discount = (appt.discount || 0) + refundAmount;
+    appt.totalAmount = Math.max(0, appt.totalAmount - refundAmount);
+    appt.remainingAmount = 0; // تسوية الموقف المالي للمريض بالكامل بدون أي متبقي
 
     if (newPaidAmount === 0) {
-      appt.paymentStatus = 'UNPAID';
+      appt.paymentStatus = 'EXEMPT';
     } else {
-      appt.paymentStatus = 'PARTIAL';
+      appt.paymentStatus = 'PAID';
+    }
+
+    // إذا كان الموعد في حالة بانتظار تسوية الحساب (خرج من الكشف)، يتم اعتماده فوراً كمكتمل
+    if (appt.status === 'PENDING_CHECKOUT') {
+      appt.status = 'COMPLETED';
+      appt.completedAt = new Date();
     }
     await appt.save();
 
@@ -811,8 +819,8 @@ export class AppointmentsService {
         await existingPayment.save();
       } else {
         existingPayment.amount = newPaidAmount;
-        existingPayment.paymentType = 'DEPOSIT';
-        existingPayment.notes = `تم استرجاع جزئي (${refundAmount} ج.م) - المتبقي المدفوع ${newPaidAmount} ج.م - ${reason || 'بتعليمات الطبيب'}`;
+        existingPayment.paymentType = 'FULL';
+        existingPayment.notes = `تم استرجاع جزئي (${refundAmount} ج.م) للمريض بتعليمات الطبيب - صافي الإيراد المسدد ${newPaidAmount} ج.م - ${reason || 'بتعليمات الطبيب'}`;
         await existingPayment.save();
       }
     }
@@ -1043,8 +1051,9 @@ export class AppointmentsService {
     dto: {
       method?: 'CASH' | 'CARD' | 'WALLET';
       amount?: number;
+      refundAmount?: number;
       notes?: string;
-      settlementType?: 'FULL' | 'PARTIAL' | 'EXEMPT';
+      settlementType?: 'FULL' | 'PARTIAL' | 'EXEMPT' | 'REFUND';
       isExempt?: boolean;
       exemptionReason?: string;
     } = {},
@@ -1056,8 +1065,36 @@ export class AppointmentsService {
 
     const now = new Date();
 
-    // 1. معالجة الإعفاء من باقي المبلغ (Exemption)
-    if (dto.isExempt || dto.settlementType === 'EXEMPT') {
+    // 0. معالجة استرجاع جزء أو كامل الفلوس للمريض بتوجيه الطبيب عند تسوية الحساب والمغادرة
+    if (dto.settlementType === 'REFUND' || (dto.refundAmount && dto.refundAmount > 0)) {
+      const currentPaid = appt.paidAmount || 0;
+      const refundAmt = Number(dto.refundAmount || dto.amount || 0);
+      if (refundAmt > 0 && currentPaid > 0) {
+        const actualRefund = Math.min(refundAmt, currentPaid);
+        const newPaidAmount = Math.max(0, currentPaid - actualRefund);
+        appt.paidAmount = newPaidAmount;
+        appt.discount = (appt.discount || 0) + actualRefund;
+        appt.totalAmount = Math.max(0, appt.totalAmount - actualRefund);
+        appt.remainingAmount = 0;
+        appt.paymentStatus = newPaidAmount > 0 ? 'PAID' : 'EXEMPT';
+
+        const { Payment } = await import('../models');
+        const existingPayment = await Payment.findOne({ appointmentId: appt.id, status: 'RECORDED' });
+        if (existingPayment) {
+          if (newPaidAmount === 0) {
+            existingPayment.status = 'VOIDED';
+            existingPayment.voidReason = dto.notes || 'استرجاع كامل المبلغ للمريض بتعليمات الطبيب';
+            existingPayment.notes = `تم استرجاع كامل المبلغ (${actualRefund} ج.م) للمريض - ${dto.notes || 'بتعليمات الطبيب'}`;
+            await existingPayment.save();
+          } else {
+            existingPayment.amount = newPaidAmount;
+            existingPayment.paymentType = 'FULL';
+            existingPayment.notes = `تم استرجاع جزئي (${actualRefund} ج.م) للمريض بتعليمات الطبيب - صافي المسدد ${newPaidAmount} ج.م`;
+            await existingPayment.save();
+          }
+        }
+      }
+    } else if (dto.isExempt || dto.settlementType === 'EXEMPT') {
       appt.isExempt = true;
       appt.exemptionReason =
         dto.exemptionReason || dto.notes || 'إعفاء من باقي المبلغ عند مغادرة الاستقبال';

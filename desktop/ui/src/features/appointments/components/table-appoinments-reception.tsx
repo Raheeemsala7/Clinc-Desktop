@@ -15,7 +15,8 @@ interface TableAppoinmentsReceptionProps {
 export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsReceptionProps = {}) {
   const t = await getTranslations('Dashboard.receptionist.table');
 
-  const patientsResponse = await getTodayWaitingAppointmentsApi(doctorId);
+  // جلب كافة كشوفات اليوم (قيد الانتظار + المكتملين) لتمكين الاستقبال من استرجاع الفلوس أو البحث في أي مريض
+  const patientsResponse = await getTodayWaitingAppointmentsApi(doctorId, true);
 
   if (!patientsResponse || !patientsResponse.status || !Array.isArray(patientsResponse.payload)) {
     const errorMsg =

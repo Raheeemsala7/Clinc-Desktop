@@ -12,8 +12,12 @@ import {
   Split,
   CircleDollarSign,
   HeartHandshake,
+  RotateCcw,
 } from 'lucide-react';
-import { useCheckoutAppointmentMutation } from '../hooks/appointments.hook';
+import {
+  useCheckoutAppointmentMutation,
+  useRefundAppointmentMutation,
+} from '../hooks/appointments.hook';
 
 interface CheckoutPaymentModalProps {
   isOpen: boolean;
@@ -37,18 +41,42 @@ export function CheckoutPaymentModal({
   onSuccess,
 }: CheckoutPaymentModalProps) {
   const t = useTranslations('Dashboard.receptionist.table');
-  const [settlementType, setSettlementType] = useState<'FULL' | 'PARTIAL' | 'EXEMPT'>('FULL');
+  const [settlementType, setSettlementType] = useState<'FULL' | 'PARTIAL' | 'EXEMPT' | 'REFUND'>('FULL');
   const [method, setMethod] = useState<'CASH' | 'CARD' | 'WALLET'>('CASH');
   const [amount, setAmount] = useState<number>(remainingAmount);
+  const [refundAmount, setRefundAmount] = useState<number>(paidAmount > 0 ? Math.min(paidAmount, 100) : 0);
+  const [refundReason, setRefundReason] = useState<string>('بتوجيه الطبيب بعد إنهاء الكشف');
   const [exemptionReason, setExemptionReason] = useState<string>('بتعليمات الطبيب المعالج');
   const [notes, setNotes] = useState<string>('');
 
   const checkoutMutation = useCheckoutAppointmentMutation();
-  const isPending = checkoutMutation.isPending;
+  const refundMutation = useRefundAppointmentMutation();
+  const isPending = checkoutMutation.isPending || refundMutation.isPending;
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
+    if (settlementType === 'REFUND') {
+      const refundAmt = Number(refundAmount) || 0;
+      refundMutation.mutate(
+        {
+          id: appointmentId,
+          payload: {
+            amount: refundAmt,
+            reason: refundReason || 'بتوجيه الطبيب بعد إنهاء الكشف',
+            method,
+          },
+        },
+        {
+          onSuccess: () => {
+            onClose();
+            onSuccess();
+          },
+        }
+      );
+      return;
+    }
+
     const payAmount =
       settlementType === 'EXEMPT'
         ? 0
@@ -78,6 +106,7 @@ export function CheckoutPaymentModal({
   };
 
   const calculatedRemainingAfterPartial = Math.max(0, remainingAmount - (Number(amount) || 0));
+  const calculatedPaidAfterRefund = Math.max(0, paidAmount - (Number(refundAmount) || 0));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200" dir="rtl">
@@ -331,9 +360,175 @@ export function CheckoutPaymentModal({
               </div>
             </>
           ) : (
-            <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2 border border-emerald-200">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>المبلغ مدفوع بالكامل مسبقاً، يمكنك تأكيد إنهاء الزيارة ومغادرة المريض الآن.</span>
+            <div className="space-y-4">
+              {paidAmount > 0 ? (
+                <>
+                  <div className="flex rounded-2xl bg-slate-100 p-1 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setSettlementType('FULL')}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        settlementType !== 'REFUND'
+                          ? 'bg-white text-emerald-800 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      مغادرة عادية (الحساب مسدد)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSettlementType('REFUND')}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        settlementType === 'REFUND'
+                          ? 'bg-rose-600 text-white shadow-xs'
+                          : 'text-rose-700 hover:text-rose-800'
+                      }`}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>استرجاع جزء من الفلوس بتوجيه الطبيب</span>
+                    </button>
+                  </div>
+
+                  {settlementType === 'REFUND' ? (
+                    <div className="bg-rose-50/70 p-4 rounded-2xl border border-rose-200 space-y-3.5 animate-in fade-in-50">
+                      <div className="flex items-center justify-between text-xs font-bold text-rose-950">
+                        <span>المبلغ المراد رده للمريض (ج.م):</span>
+                        <span className="text-[11px] text-rose-700">
+                          المدفوع: {paidAmount} ج.م
+                        </span>
+                      </div>
+
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="1"
+                          max={paidAmount}
+                          value={refundAmount}
+                          onChange={(e) => setRefundAmount(Number(e.target.value))}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-rose-300 bg-white text-sm font-black text-rose-950 focus:outline-hidden focus:ring-2 focus:ring-rose-400"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-rose-700">
+                          ج.م
+                        </span>
+                      </div>
+
+                      {/* أزرار سريعة للمبالغ الشائعة */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[50, 100, 150, 200, paidAmount]
+                          .filter((val, idx, arr) => val <= paidAmount && arr.indexOf(val) === idx)
+                          .map((val) => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setRefundAmount(val)}
+                              className={`text-[11px] px-2.5 py-1 rounded-lg border font-bold transition-colors cursor-pointer ${
+                                refundAmount === val
+                                  ? 'bg-rose-600 text-white border-rose-600'
+                                  : 'bg-white text-rose-800 border-rose-200 hover:bg-rose-100'
+                              }`}
+                            >
+                              {val === paidAmount ? `كامل المبلغ (${val} ج.م)` : `${val} ج.م`}
+                            </button>
+                          ))}
+                      </div>
+
+                      {/* سبب الاسترجاع */}
+                      <div>
+                        <label className="block text-xs font-bold text-rose-950 mb-1.5">
+                          سبب استرجاع الفلوس:
+                        </label>
+                        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                          {[
+                            'بتعليمات الطبيب بعد إنهاء الكشف',
+                            'تخفيض قيمة الكشف',
+                            'إلغاء إجراء طبي إضافي',
+                            'طلب الطبيب إرجاع جزء من الكشف',
+                          ].map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => setRefundReason(tag)}
+                              className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors cursor-pointer ${
+                                refundReason === tag
+                                  ? 'bg-rose-700 text-white border-rose-700'
+                                  : 'bg-white text-rose-800 border-rose-200 hover:bg-rose-100'
+                              }`}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="text"
+                          value={refundReason}
+                          onChange={(e) => setRefundReason(e.target.value)}
+                          placeholder="اكتب سبب الاسترجاع..."
+                          className="w-full px-3 py-2 rounded-xl border border-rose-200 bg-white text-xs text-rose-950 focus:outline-hidden focus:ring-2 focus:ring-rose-400"
+                        />
+                      </div>
+
+                      {/* طريقة رد الفلوس */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-2">
+                          طريقة رد المبلغ للمريض:
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setMethod('CASH')}
+                            className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                              method === 'CASH'
+                                ? 'border-rose-600 bg-rose-100/50 text-rose-800 shadow-2xs'
+                                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            <Banknote className="w-4 h-4" />
+                            <span>نقدي (كاش)</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMethod('CARD')}
+                            className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                              method === 'CARD'
+                                ? 'border-rose-600 bg-rose-100/50 text-rose-800 shadow-2xs'
+                                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            <span>بطاقة</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMethod('WALLET')}
+                            className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                              method === 'WALLET'
+                                ? 'border-rose-600 bg-rose-100/50 text-rose-800 shadow-2xs'
+                                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            <Wallet className="w-4 h-4" />
+                            <span>محفظة</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-white/80 rounded-xl border border-rose-200 text-[11px] text-rose-900 font-semibold">
+                        💡 سيتم رد <strong>{refundAmount} ج.م</strong> من الخزينة، وتصبح قيمة الكشف الصافية <strong>{calculatedPaidAfterRefund} ج.م</strong>، وتسوية الزيارة ومغادرة المريض دون أي دين.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2 border border-emerald-200">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <span>المبلغ مدفوع بالكامل مسبقاً ({paidAmount} ج.م)، اضغط &quot;تأكيد المغادرة&quot; لإنهاء الزيارة.</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2 border border-emerald-200">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>المبلغ مدفوع بالكامل مسبقاً، يمكنك تأكيد إنهاء الزيارة ومغادرة المريض الآن.</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -353,17 +548,25 @@ export function CheckoutPaymentModal({
             onClick={handleConfirm}
             disabled={isPending}
             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl active:scale-95 disabled:opacity-60 text-white text-xs font-bold shadow-md transition-all cursor-pointer ${
-              settlementType === 'EXEMPT'
+              settlementType === 'REFUND'
+                ? 'bg-rose-600 hover:bg-rose-700'
+                : settlementType === 'EXEMPT'
                 ? 'bg-purple-600 hover:bg-purple-700'
                 : settlementType === 'PARTIAL'
                 ? 'bg-amber-600 hover:bg-amber-700'
                 : 'bg-[#0B7B5E] hover:bg-[#09634C]'
             }`}
           >
-            <CheckCircle2 className="w-4 h-4" />
+            {settlementType === 'REFUND' ? (
+              <RotateCcw className="w-4 h-4" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4" />
+            )}
             <span>
               {isPending
                 ? 'جاري الحفظ...'
+                : settlementType === 'REFUND'
+                ? `تأكيد استرجاع ${refundAmount || 0} ج.م وإنهاء الزيارة`
                 : settlementType === 'EXEMPT'
                 ? 'تأكيد الإعفاء وإنهاء الزيارة'
                 : settlementType === 'PARTIAL'

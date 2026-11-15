@@ -7,10 +7,11 @@ import { sendSuccess } from '../utils/response';
 export class QueueController {
   getTodayQueue = asyncHandler(async (req: Request, res: Response) => {
     const rawDoctorId = req.query.doctorId as string;
+    const includeCompleted = req.query.includeCompleted === 'true';
     const isDoctor = req.user?.role === 'DOCTOR';
     const doctorId = (rawDoctorId && rawDoctorId !== 'all') ? rawDoctorId : (isDoctor ? req.user!.id : undefined);
 
-    const queue = await QueueService.getTodayQueue(doctorId);
+    const queue = await QueueService.getTodayQueue(doctorId, includeCompleted);
     sendSuccess(res, queue);
   });
 

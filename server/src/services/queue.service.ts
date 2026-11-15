@@ -3,27 +3,36 @@ import { getTodayClinicDate } from '../utils/clinic-date';
 import { BadRequestError, ValidationError } from '../utils/errors';
 
 export class QueueService {
-  static async getTodayQueue(doctorId?: string) {
+  static async getTodayQueue(doctorId?: string, includeCompleted = false) {
     const today = getTodayClinicDate();
 
-    // نتحقق من كشوفات اليوم، وأيضاً أي كشوفات سابقة لم تكتمل بعد (حجوزات قديمة متبقية)
-    const filter: any = {
-      $or: [
-        // 1. كشوفات اليوم (نشطة أو بانتظار المحاسبة أو عليها متبقي)
-        {
-          clinicDate: today,
-          $or: [
-            { status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED', 'PENDING_CHECKOUT'] } },
-            { remainingAmount: { $gt: 0 }, isExempt: { $ne: true }, status: { $ne: 'CANCELLED' } },
-          ],
-        },
-        // 2. الحجوزات السابقة التي لم تكتمل بعد (حجوزات قديمة متبقية من أيام سابقة)
-        {
-          clinicDate: { $lt: today },
-          status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED'] },
-        },
-      ],
-    };
+    // إذا طُلبت كشوفات اليوم كاملة (بما فيها المكتملة)، نجلب كافة كشوفات اليوم غير الملغاة
+    let filter: any;
+    if (includeCompleted) {
+      filter = {
+        clinicDate: today,
+        status: { $ne: 'CANCELLED' },
+      };
+    } else {
+      // نتحقق من كشوفات اليوم النشطة، وأيضاً أي كشوفات سابقة لم تكتمل بعد (حجوزات قديمة متبقية)
+      filter = {
+        $or: [
+          // 1. كشوفات اليوم (نشطة أو بانتظار المحاسبة أو عليها متبقي)
+          {
+            clinicDate: today,
+            $or: [
+              { status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED', 'PENDING_CHECKOUT'] } },
+              { remainingAmount: { $gt: 0 }, isExempt: { $ne: true }, status: { $ne: 'CANCELLED' } },
+            ],
+          },
+          // 2. الحجوزات السابقة التي لم تكتمل بعد (حجوزات قديمة متبقية من أيام سابقة)
+          {
+            clinicDate: { $lt: today },
+            status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED'] },
+          },
+        ],
+      };
+    }
 
     // إذا تم تمرير معرف طبيب محدد وليس 'all'، يتم الفلترة عليه
     if (doctorId && doctorId !== 'all') {

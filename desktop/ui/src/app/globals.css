@@ -198,14 +198,15 @@
 
 @media print {
   @page {
-    size: A4 portrait;
-    margin: 6mm 6mm 6mm 6mm;
+    margin: 0;
   }
   html, body {
     overflow: visible !important;
     height: auto !important;
     min-height: auto !important;
     background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .sheet-page-1 {
     page-break-after: always !important;
