@@ -10,12 +10,20 @@ console.log('📦 [FRONTEND] Preparing Next.js standalone static and public file
 const staticSrc = path.join(uiDir, '.next', 'static');
 const publicSrc = path.join(uiDir, 'public');
 
+function safeCp(src, dest) {
+  try {
+    fs.cpSync(src, dest, { recursive: true, force: true, errorOnExist: false });
+  } catch (e) {
+    console.warn(`ℹ️ [SafeCp] Note: ${e.message}`);
+  }
+}
+
 // Copy .next/static to nested and root
 if (fs.existsSync(staticSrc)) {
   const target1 = path.join(nestedUiDir, '.next', 'static');
   const target2 = path.join(standaloneDir, '.next', 'static');
-  fs.cpSync(staticSrc, target1, { recursive: true, force: true });
-  fs.cpSync(staticSrc, target2, { recursive: true, force: true });
+  safeCp(staticSrc, target1);
+  safeCp(staticSrc, target2);
   console.log('✅ Copied .next/static to standalone');
 }
 
@@ -23,8 +31,8 @@ if (fs.existsSync(staticSrc)) {
 if (fs.existsSync(publicSrc)) {
   const target1 = path.join(nestedUiDir, 'public');
   const target2 = path.join(standaloneDir, 'public');
-  fs.cpSync(publicSrc, target1, { recursive: true, force: true });
-  fs.cpSync(publicSrc, target2, { recursive: true, force: true });
+  safeCp(publicSrc, target1);
+  safeCp(publicSrc, target2);
   console.log('✅ Copied public to standalone');
 }
 
