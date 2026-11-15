@@ -54,6 +54,10 @@ export function DashboardHeader({ role }: DashboardHeaderProps) {
 
       {/* الجانب الأيسر (في RTL): حالة الطبيب + زر اللغة المتجاوب + زر الإشعارات + زر الخروج */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 text-[11px] font-black rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300">
+          تحديث v1.0.1 🚀
+        </span>
+
         {/* شارة حالة الاتصال اللحظي بالشبكة / السيرفر */}
         <RealtimeStatusBadge />
 

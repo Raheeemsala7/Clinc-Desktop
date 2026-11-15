@@ -288,6 +288,42 @@ function buildMenu() {
       label: 'مساعدة',
       submenu: [
         {
+          label: '🔄 التحقق من وجود تحديثات الآن',
+          click: async () => {
+            if (!app.isPackaged) {
+              dialog.showMessageBox({
+                type: 'info',
+                title: 'التحديث التلقائي',
+                message: 'التحديث التلقائي يعمل في النسخة المثبتة الرسمية (Packaged) فقط.',
+              });
+              return;
+            }
+            try {
+              const res = await autoUpdater.checkForUpdates();
+              if (!res || !res.downloadPromise) {
+                dialog.showMessageBox({
+                  type: 'info',
+                  title: 'أحدث إصدار',
+                  message: `البرنامج مُحدّث إلى آخر إصدار بالفعل (v${app.getVersion()})!`,
+                });
+              } else {
+                dialog.showMessageBox({
+                  type: 'info',
+                  title: 'جاري تحميل التحديث',
+                  message: 'تم العثور على إصدار أحدث وجاري تحميله في الخلفية الآن تلقائياً... ستصلك رسالة عند اكتمال التحميل.',
+                });
+              }
+            } catch (err: any) {
+              dialog.showMessageBox({
+                type: 'error',
+                title: 'خطأ أثناء فحص التحديثات',
+                message: 'تعذر الاتصال بـ GitHub أو التحقق من التحديثات:\n' + (err?.message || err),
+              });
+            }
+          },
+        },
+        { type: 'separator' },
+        {
           label: 'أدوات المطورين (DevTools)',
           accelerator: 'F12',
           click: () => {
@@ -300,7 +336,7 @@ function buildMenu() {
             dialog.showMessageBox({
               type: 'info',
               title: 'نظام إدارة العيادة',
-              message: 'نظام إدارة عيادة د. إسلام التخصصية - إصدار 1.0.0 Desktop\nمبني باستخدام Next.js و Express و Electron مع دعم كامل للشبكة المحلية.',
+              message: `نظام إدارة عيادة د. إسلام التخصصية - إصدار v${app.getVersion()}\nمبني باستخدام Next.js و Express و Electron مع دعم كامل للشبكة المحلية والتحديث التلقائي.`,
             });
           },
         },
@@ -543,10 +579,21 @@ function setupAutoUpdater() {
     });
 
     autoUpdater.on('update-downloaded', (info) => {
-      appLog(`🎉 [AUTO-UPDATE] Update v${info.version} downloaded! Will install automatically on app close.`);
+      appLog(`🎉 [AUTO-UPDATE] Update v${info.version} downloaded! Showing notification.`);
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('app:update-downloaded', info);
       }
+      dialog.showMessageBox({
+        type: 'info',
+        title: '✨ تم تحميل التحديث الجديد بنجاح!',
+        message: `تم تحميل الإصدار الجديد (v${info.version}) وهو جاهز للتثبيت.\n\nهل ترغب في إعادة تشغيل البرنامج الآن لتطبيق التحديث فوراً؟`,
+        buttons: ['تحديث وإعادة التشغيل الآن', 'لاحقاً (سيتم التثبيت عند الإغلاق)'],
+        defaultId: 0,
+      }).then((ret) => {
+        if (ret.response === 0) {
+          autoUpdater.quitAndInstall();
+        }
+      });
     });
 
     // أول فحص بعد تشغيل البرنامج بـ 15 ثانية (بعد اكتمال إقلاع الواجهة)
