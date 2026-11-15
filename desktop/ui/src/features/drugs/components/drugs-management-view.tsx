@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DrugItem, DrugAnalyticsData } from '../types/drug.types';
-import { parseDoseShortcut } from '@/features/examination/utils/prescription-formatter';
+import { parseDoseShortcut, adaptDoseToNewForm } from '@/features/examination/utils/prescription-formatter';
 
 const FORM_OPTIONS = [
   'Tablet',
@@ -62,6 +62,20 @@ export function DrugsManagementView() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [analyticsData, setAnalyticsData] = useState<DrugAnalyticsData | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState('');
+
+  // فلترة الأدوية الأكثر استخداماً حسب البحث الفوري
+  const filteredAnalyticsItems = useMemo(() => {
+    if (!analyticsData?.items) return [];
+    if (!analyticsSearchQuery.trim()) return analyticsData.items;
+    const q = analyticsSearchQuery.trim().toLowerCase();
+    return analyticsData.items.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) ||
+        (item.concentration && item.concentration.toLowerCase().includes(q)) ||
+        (item.form && item.form.toLowerCase().includes(q))
+    );
+  }, [analyticsData?.items, analyticsSearchQuery]);
 
   // Modal State (Add / Edit)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -710,10 +724,39 @@ export function DrugsManagementView() {
 
           {/* قائمة ترتيب الأدوية مع أشرطة التقدم البيانية */}
           <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-            <h3 className="text-base font-black text-[#074C3A] flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-[#0B7B5E]" />
-              <span>ترتيب الأدوية الأكثر وصفاً واستخداماً</span>
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <h3 className="text-base font-black text-[#074C3A] flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-[#0B7B5E]" />
+                <span>ترتيب الأدوية الأكثر وصفاً واستخداماً</span>
+                {analyticsData?.items && (
+                  <span className="text-xs font-normal text-slate-500">
+                    ({filteredAnalyticsItems.length} من {analyticsData.items.length})
+                  </span>
+                )}
+              </h3>
+
+              {/* حقل البحث السريع في الأدوية الأكثر استخداماً */}
+              <div className="relative w-full sm:w-72">
+                <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={analyticsSearchQuery}
+                  onChange={(e) => setAnalyticsSearchQuery(e.target.value)}
+                  placeholder="ابحث في الأدوية الأكثر استخداماً..."
+                  className="w-full pl-8 pr-9 py-1.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white focus:ring-1 focus:ring-[#0B7B5E] transition-all"
+                />
+                {analyticsSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setAnalyticsSearchQuery('')}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs px-1"
+                    title="مسح البحث"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
 
             {isLoadingAnalytics ? (
               <div className="py-12 text-center space-y-3">
@@ -724,9 +767,20 @@ export function DrugsManagementView() {
               <div className="py-12 text-center text-slate-400 text-xs font-bold">
                 لا توجد أدوية موصوفة في هذه الفترة الزمنية.
               </div>
+            ) : filteredAnalyticsItems.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-xs font-bold space-y-2">
+                <p>لا توجد نتائج تطابق بحثك عن &quot;{analyticsSearchQuery}&quot;</p>
+                <button
+                  type="button"
+                  onClick={() => setAnalyticsSearchQuery('')}
+                  className="text-emerald-700 hover:underline text-xs"
+                >
+                  إلغاء البحث وإظهار الكل
+                </button>
+              </div>
             ) : (
               <div className="space-y-3">
-                {analyticsData.items.map((item, idx) => {
+                {filteredAnalyticsItems.map((item, idx) => {
                   const maxCount = analyticsData.items[0]?.count || 1;
                   const percent = Math.round((item.count / maxCount) * 100);
 
@@ -833,7 +887,14 @@ export function DrugsManagementView() {
                   </label>
                   <select
                     value={modalForm.form}
-                    onChange={(e) => setModalForm((prev) => ({ ...prev, form: e.target.value }))}
+                    onChange={(e) => {
+                      const newForm = e.target.value;
+                      setModalForm((prev) => ({
+                        ...prev,
+                        form: newForm,
+                        dose: adaptDoseToNewForm(prev.dose, newForm),
+                      }));
+                    }}
                     className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                   >
                     {FORM_OPTIONS.map((f) => (

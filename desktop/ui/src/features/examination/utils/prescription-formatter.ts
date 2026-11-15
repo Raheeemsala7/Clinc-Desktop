@@ -21,27 +21,32 @@ export function formatDose(rawDose?: string, form?: string): string {
   let isHalf = false;
   let isOneAndHalf = false;
 
-  if (/^(0\.5|1\/2|½)$/.test(cleanStr) || /^نصف\s*(قرص|كبسولة|ملعقة|كيس|أمبول|حقنة)?$/i.test(cleanStr)) {
+  if (/^(0\.5|1\/2|½)$/.test(cleanStr) || /^نصف\s*(قرص|كبسولة|ملعقة|معلقة|كيس|أمبول|حقنة)?$/i.test(cleanStr)) {
     isHalf = true;
   } else if (/^(1\.5|1\s*1\/2|1½)$/.test(cleanStr) || /^قرص\s*ونصف$/i.test(cleanStr)) {
     isOneAndHalf = true;
   } else if (
-    /^(1|حقنة واحدة|قرص واحد|كبسولة واحدة|بخة واحدة|نقطة واحدة|كيس واحد|لبوسة واحدة|أمبول واحد)$/i.test(
+    /^(1|حقنة واحدة|قرص واحد|كبسولة واحدة|بخة واحدة|نقطة واحدة|كيس واحد|لبوسة واحدة|أمبول واحد|ملعقة واحدة|معلقة واحدة|ملعقة كبيرة|معلقة كبيرة)$/i.test(
       cleanStr
     )
   ) {
     num = 1;
   } else if (
-    /^(2|حقنتين|قرصين|كبسولتين|بختين|نقطتين|كيسين|لبوستين|أمبولين)$/i.test(cleanStr)
+    /^(2|حقنتين|قرصين|كبسولتين|بختين|نقطتين|كيسين|لبوستين|أمبولين|ملعقتين|معلقتين)$/i.test(cleanStr)
   ) {
     num = 2;
   } else {
     // محاولة استخراج رقم مجرد أو رقم متبوع بوحدة سابقة
     const match = cleanStr.match(
-      /^([0-9.]+)\s*(قرص|أقراص|حقن|حقنة|نقط|نقطة|كبسول|كبسولة|كبسولات|بخة|بخات|كيس|أكياس|لبوس|لبوسة|أمبول|أمبولات|سم|ملعقة|ملاعق)?$/
+      /^([0-9.]+)\s*(قرص|أقراص|حقن|حقنة|نقط|نقطة|كبسول|كبسولة|كبسولات|بخة|بخات|كيس|أكياس|لبوس|لبوسة|أمبول|أمبولات|سم|ملعقة|معلقة|ملاعق)?(\s*(كبيرة|صغيرة))?(\s*\(.*\))?$/
     );
     if (match) {
       num = parseFloat(match[1]);
+    } else {
+      const anyNum = cleanStr.match(/([0-9.]+)/);
+      if (anyNum) {
+        num = parseFloat(anyNum[1]);
+      }
     }
   }
 
@@ -249,6 +254,62 @@ export function getDefaultDoseForForm(form?: string): string {
   if (norm.includes('suppository') || norm.includes('لبوس')) return 'لبوسة واحدة';
   if (norm.includes('lozenge') || norm.includes('استحلاب')) return 'قرص استحلاب واحد';
   return 'قرص واحد';
+}
+
+/**
+ * تحويل وملاءمة الجرعة تلقائياً وفوراً عند تغيير شكل الدواء (Form)
+ * مثال: من Tablet (1 قرص) إلى Syrup -> "1 ملعقة كبيرة (10 سم)"
+ * من Tablet إلى Nasal Spray -> "بخة بكل فتحة أنف"
+ * من Tablet إلى Drops -> "3 نقط"
+ * من Syrup إلى Tablet -> "قرص واحد"
+ */
+export function adaptDoseToNewForm(currentDose?: string, newForm?: string): string {
+  if (!newForm) return currentDose || '';
+  const normForm = newForm.toLowerCase();
+
+  if (!currentDose || !currentDose.trim()) {
+    return getDefaultDoseForForm(newForm);
+  }
+
+  const clean = currentDose.trim();
+
+  // هل الجرعة السابقة كانت شراب أو معلق وتم التحويل إلى أقراص؟
+  if (normForm.includes('tablet') || normForm.includes('قرص') || normForm.includes('أقراص') || normForm === 'odt' || normForm === 'odf') {
+    if (clean.includes('ملعقة') || clean.includes('معلقة') || clean.includes('سم') || clean.includes('نقط') || clean.includes('بخة') || clean.includes('حقن')) {
+      if (/2|ملعقتين|معلقتين/.test(clean)) return 'قرصين';
+      if (/نصف/.test(clean)) return 'نصف قرص';
+      return 'قرص واحد';
+    }
+  }
+
+  // هل تم التحويل إلى شراب أو معلق؟
+  if (normForm.includes('syrup') || normForm.includes('suspension') || normForm.includes('شراب') || normForm.includes('معلق')) {
+    if (clean.includes('قرص') || clean.includes('كبسول') || clean.includes('حقن') || clean.includes('بخة') || clean.includes('نقط')) {
+      if (/2|قرصين|كبسولتين/.test(clean)) return '2 ملعقة كبيرة';
+      return '1 ملعقة كبيرة (10 سم)';
+    }
+  }
+
+  // هل تم التحويل إلى بخاخ أنف؟
+  if (normForm.includes('spray') || normForm.includes('بخاخ')) {
+    if (normForm.includes('nasal') || normForm.includes('أنف')) {
+      return /2|بختين|قرصين/.test(clean) ? 'بختين بكل فتحة أنف' : 'بخة بكل فتحة أنف';
+    }
+    return 'بخة واحدة';
+  }
+
+  // هل تم التحويل إلى نقط؟
+  if (normForm.includes('drops') || normForm.includes('نقط')) {
+    if (/1|قرص واحد|واحد/.test(clean) && !clean.includes('نقط')) return '3 نقط';
+  }
+
+  // استخدام المفسر القياسي formatDose
+  const formatted = formatDose(clean, newForm);
+  if (formatted && formatted.trim()) {
+    return formatted;
+  }
+
+  return getDefaultDoseForForm(newForm);
 }
 
 /**

@@ -27,6 +27,7 @@ import {
   formatDuration,
   getDoseSuggestionsForForm,
   getDefaultDoseForForm,
+  adaptDoseToNewForm,
   parseDoseShortcut,
 } from '../utils/prescription-formatter';
 
@@ -574,15 +575,7 @@ export function PrescriptionView({
   // 6. اختيار شكل دواء جديد مع تحديث وحدة الجرعة تلقائياً وفوراً
   const handleSelectFormForRow = (itemId: string, newForm: string) => {
     const currentItem = items.find((it) => it.id === itemId);
-    const prevDose = currentItem?.dose;
-    let nextDose = '';
-
-    if (prevDose && prevDose.trim()) {
-      // إعادة ترجمة الجرعة لتلائم وحدة الشكل الجديد (مثال: "3 قرص" تتحول إلى "3 حقن" إذا تم اختيار Injection)
-      nextDose = formatDose(prevDose, newForm);
-    } else {
-      nextDose = getDefaultDoseForForm(newForm);
-    }
+    const nextDose = adaptDoseToNewForm(currentItem?.dose, newForm);
 
     onChange((prev) => ({
       ...prev,
@@ -591,7 +584,7 @@ export function PrescriptionView({
           ? {
               ...it,
               form: newForm,
-              dose: nextDose || getDefaultDoseForForm(newForm) || it.dose,
+              dose: nextDose,
             }
           : it
       ),
@@ -972,14 +965,9 @@ export function PrescriptionView({
                         const newForm = e.target.value;
                         updateItem(item.id, 'form', newForm);
                         if (newForm.trim()) {
-                          if (item.dose) {
-                            const reFormatted = formatDose(item.dose, newForm);
-                            if (reFormatted && reFormatted !== item.dose) {
-                              updateItem(item.id, 'dose', reFormatted);
-                            }
-                          } else {
-                            const def = getDefaultDoseForForm(newForm);
-                            if (def) updateItem(item.id, 'dose', def);
+                          const adapted = adaptDoseToNewForm(item.dose, newForm);
+                          if (adapted && adapted !== item.dose) {
+                            updateItem(item.id, 'dose', adapted);
                           }
                         }
                         setActiveFormRowId(item.id);
