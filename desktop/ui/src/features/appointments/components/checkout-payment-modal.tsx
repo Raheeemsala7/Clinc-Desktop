@@ -236,8 +236,10 @@ export function CheckoutPaymentModal({
                           type="number"
                           min="1"
                           max={remainingAmount}
-                          value={amount}
-                          onChange={(e) => setAmount(Number(e.target.value))}
+                          value={amount === 0 ? '' : amount}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => setAmount(e.target.value === '' ? 0 : Number(e.target.value))}
+                          placeholder="0"
                           className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white text-sm font-black text-amber-950 focus:outline-hidden focus:ring-2 focus:ring-amber-400"
                         />
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-700">
@@ -403,8 +405,10 @@ export function CheckoutPaymentModal({
                           type="number"
                           min="1"
                           max={paidAmount}
-                          value={refundAmount}
-                          onChange={(e) => setRefundAmount(Number(e.target.value))}
+                          value={refundAmount === 0 ? '' : refundAmount}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => setRefundAmount(e.target.value === '' ? 0 : Number(e.target.value))}
+                          placeholder="0"
                           className="w-full px-3.5 py-2.5 rounded-xl border border-rose-300 bg-white text-sm font-black text-rose-950 focus:outline-hidden focus:ring-2 focus:ring-rose-400"
                         />
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-rose-700">

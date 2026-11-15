@@ -90,12 +90,13 @@ export function FinancialStepCard() {
                   min="0"
                   step="10"
                   disabled={isExempt}
-                  value={isExempt ? 0 : field.value ?? ''}
+                  value={isExempt ? 0 : (field.value === 0 || field.value === undefined ? '' : field.value)}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => {
                     const val = e.target.value === '' ? 0 : Number(e.target.value);
                     field.onChange(val);
                   }}
-                  placeholder="[سعر الكشف]"
+                  placeholder="0"
                   className={cn(
                     'w-full h-11 px-3.5 pe-12 rounded-2xl border text-xs sm:text-sm font-bold transition-all focus:outline-none',
                     isExempt
@@ -132,7 +133,8 @@ export function FinancialStepCard() {
                   min="0"
                   step="5"
                   disabled={isExempt}
-                  value={isExempt ? 0 : field.value ?? 0}
+                  value={isExempt ? 0 : (field.value === 0 || field.value === undefined ? '' : field.value)}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => {
                     const val = e.target.value === '' ? 0 : Number(e.target.value);
                     field.onChange(val);
@@ -174,7 +176,8 @@ export function FinancialStepCard() {
                   min="0"
                   step="10"
                   disabled={isExempt}
-                  value={isExempt ? 0 : field.value ?? 0}
+                  value={isExempt ? 0 : (field.value === 0 || field.value === undefined ? '' : field.value)}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => {
                     const val = e.target.value === '' ? 0 : Number(e.target.value);
                     field.onChange(val);

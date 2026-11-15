@@ -187,8 +187,10 @@ export function EditAppointmentModal({
               <input
                 type="number"
                 min="0"
-                value={totalAmount}
-                onChange={(e) => setTotalAmount(Number(e.target.value))}
+                value={totalAmount === 0 ? '' : totalAmount}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setTotalAmount(e.target.value === '' ? 0 : Number(e.target.value))}
+                placeholder="0"
                 className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
               />
             </div>
@@ -199,8 +201,10 @@ export function EditAppointmentModal({
               <input
                 type="number"
                 min="0"
-                value={paidAmount}
-                onChange={(e) => setPaidAmount(Number(e.target.value))}
+                value={paidAmount === 0 ? '' : paidAmount}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setPaidAmount(e.target.value === '' ? 0 : Number(e.target.value))}
+                placeholder="0"
                 className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
               />
             </div>

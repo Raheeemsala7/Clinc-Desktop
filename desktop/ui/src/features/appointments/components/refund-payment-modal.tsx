@@ -172,11 +172,13 @@ export function RefundPaymentModal({
                   type="number"
                   min={1}
                   max={paidAmount}
-                  value={amount}
+                  value={amount === 0 ? '' : amount}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => {
-                    const val = Number(e.target.value);
+                    const val = e.target.value === '' ? 0 : Number(e.target.value);
                     setAmount(Math.min(paidAmount, Math.max(0, val)));
                   }}
+                  placeholder="0"
                   className="w-full h-11 px-3.5 pr-8 rounded-xl border border-amber-300 bg-white font-mono font-black text-base text-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-700">

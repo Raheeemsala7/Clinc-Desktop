@@ -180,10 +180,12 @@ export function PricingPageView() {
                     type="number"
                     min="0"
                     step="10"
-                    value={service.price}
+                    value={service.price === 0 ? '' : service.price}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) =>
-                      handlePriceChange(service.id, Number(e.target.value))
+                      handlePriceChange(service.id, e.target.value === '' ? 0 : Number(e.target.value))
                     }
+                    placeholder="0"
                     className="w-full h-11 px-3 pe-12 rounded-xl border border-slate-200 bg-white font-mono font-black text-sm text-[#074C3A] focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15 focus:outline-none transition-all"
                   />
                   <span className="absolute end-3 text-xs font-bold text-slate-400 pointer-events-none">

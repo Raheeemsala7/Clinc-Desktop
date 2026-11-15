@@ -106,8 +106,10 @@ export function PayRemainingModal({
                 type="number"
                 min="1"
                 max={remainingAmount}
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
+                value={amount === 0 ? '' : amount}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setAmount(e.target.value === '' ? 0 : Number(e.target.value))}
+                placeholder="0"
                 className="w-full h-11 px-3.5 rounded-2xl border border-slate-200 bg-white text-sm font-black text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all font-sans"
                 required
               />

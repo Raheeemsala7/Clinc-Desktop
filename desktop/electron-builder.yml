@@ -2,6 +2,12 @@ appId: com.nafs.clinic.desktop
 productName: Clinic Management System
 copyright: Copyright © 2026 Nafs Clinic System
 
+publish:
+  provider: github
+  owner: Raheeemsala7
+  repo: Clinc-Desktop
+  releaseType: release
+
 directories:
   output: dist-installer
   buildResources: resources

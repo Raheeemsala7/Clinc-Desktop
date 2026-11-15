@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import http from 'http';
 import fs from 'fs';
+import { autoUpdater } from 'electron-updater';
 import { ConfigManager } from './config-manager';
 import { ProcessSupervisor } from './process-supervisor';
 import { LicenseManager } from './license-manager';
@@ -505,9 +506,88 @@ ipcMain.handle('license:activate', async (_event, key: string) => {
   return LicenseManager.saveLicense(key);
 });
 
+// ─── Auto-Update (GitHub Releases Silent Auto-Updater) ─────────────────────────
+
+function setupAutoUpdater() {
+  if (!app.isPackaged) {
+    appLog('ℹ️ [AUTO-UPDATE] Skipping auto-updater in dev mode (app.isPackaged=false).');
+    return;
+  }
+
+  try {
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    autoUpdater.on('checking-for-update', () => {
+      appLog('🔄 [AUTO-UPDATE] Checking GitHub Releases for updates...');
+    });
+
+    autoUpdater.on('update-available', (info) => {
+      appLog(`✨ [AUTO-UPDATE] Found new release version ${info.version}! Downloading silently in background...`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app:update-available', info);
+      }
+    });
+
+    autoUpdater.on('update-not-available', () => {
+      appLog('✅ [AUTO-UPDATE] System is up to date.');
+    });
+
+    autoUpdater.on('error', (err) => {
+      appLog(`⚠️ [AUTO-UPDATE] Update error: ${err?.message || err}`);
+    });
+
+    autoUpdater.on('download-progress', (progressObj) => {
+      appLog(`📥 [AUTO-UPDATE] Downloading: ${Math.round(progressObj.percent)}%`);
+    });
+
+    autoUpdater.on('update-downloaded', (info) => {
+      appLog(`🎉 [AUTO-UPDATE] Update v${info.version} downloaded! Will install automatically on app close.`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app:update-downloaded', info);
+      }
+    });
+
+    // أول فحص بعد تشغيل البرنامج بـ 15 ثانية (بعد اكتمال إقلاع الواجهة)
+    setTimeout(() => {
+      autoUpdater.checkForUpdatesAndNotify().catch((e) => {
+        appLog(`⚠️ [AUTO-UPDATE] Initial check failed: ${e?.message}`);
+      });
+    }, 15000);
+
+    // فحص دوري كل 3 ساعات في الخلفية
+    setInterval(() => {
+      autoUpdater.checkForUpdatesAndNotify().catch((e) => {
+        appLog(`⚠️ [AUTO-UPDATE] Periodic check failed: ${e?.message}`);
+      });
+    }, 3 * 60 * 60 * 1000);
+  } catch (err: any) {
+    appLog(`⚠️ [AUTO-UPDATE] Failed to setup autoUpdater: ${err?.message}`);
+  }
+}
+
+ipcMain.handle('app:check-for-updates', async () => {
+  if (!app.isPackaged) {
+    return { status: 'dev', message: 'وضع التطوير المحلي - التحديث التلقائي يعمل في النسخة المثبتة Packaged فقط' };
+  }
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return { status: 'success', updateInfo: result?.updateInfo };
+  } catch (err: any) {
+    return { status: 'error', message: err?.message };
+  }
+});
+
+ipcMain.handle('app:install-update-now', async () => {
+  autoUpdater.quitAndInstall();
+});
+
 // App Lifecycle
 if (gotTheLock) {
-  app.whenReady().then(createWindow);
+  app.whenReady().then(async () => {
+    await createWindow();
+    setupAutoUpdater();
+  });
 
   app.on('window-all-closed', () => {
     ProcessSupervisor.stopAll();
