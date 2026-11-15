@@ -22,5 +22,6 @@ router.post('/:id/cancel', appointmentsController.transition('cancel'));
 router.post('/:id/no-show', appointmentsController.transition('no-show'));
 router.post('/:id/postpone', appointmentsController.transition('postpone'));
 router.post('/:id/pay-remaining', requireRoles('ADMIN', 'RECEPTION'), appointmentsController.payRemaining);
+router.post('/:id/refund', requireRoles('ADMIN', 'RECEPTION'), appointmentsController.refundAppointment);
 
 export default router;

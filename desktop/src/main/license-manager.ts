@@ -27,41 +27,56 @@ export class LicenseManager {
 
   /**
    * استخراج بصمة عتاد الجهاز الثابتة (UUID + CPU + Motherboard Serial)
+   * مع حفظها في ملف محلي لمنع تغيرها نهائياً تحت أي ظرف من ظروف ضغط المعالج
    */
   static getMachineId(): string {
     if (this.cachedMachineId) return this.cachedMachineId;
+
+    // 1. فحص هل تم حفظ بصمة مسبقاً على هذا الجهاز
+    try {
+      const userData = app.getPath('userData');
+      const cacheFile = path.join(userData, 'machine-id.txt');
+      if (fs.existsSync(cacheFile)) {
+        const saved = fs.readFileSync(cacheFile, 'utf8').trim();
+        if (saved && saved.startsWith('NAFS-')) {
+          this.cachedMachineId = saved;
+          return this.cachedMachineId;
+        }
+      }
+    } catch {}
 
     let uuid = '';
     let cpu = '';
     let board = '';
 
+    // 2. استخراج مكونات البصمة بأمر PowerShell موحد وسريع واحد بدلاً من تشغيل PowerShell 3 مرات
     try {
-      uuid = execSync('powershell -NoProfile -Command "(Get-CimInstance Win32_ComputerSystemProduct).UUID"', {
+      const cmd = 'powershell -NoProfile -Command "$u=(Get-CimInstance Win32_ComputerSystemProduct).UUID; $c=(Get-CimInstance Win32_Processor | Select-Object -First 1).ProcessorId; $b=(Get-CimInstance Win32_BaseBoard).SerialNumber; \\"$u;;;$c;;;$b\\""';
+      const output = execSync(cmd, {
         encoding: 'utf8',
-        timeout: 4000,
+        timeout: 10000,
         windowsHide: true,
       }).trim();
-    } catch {}
 
-    try {
-      cpu = execSync('powershell -NoProfile -Command "(Get-CimInstance Win32_Processor | Select-Object -First 1).ProcessorId"', {
-        encoding: 'utf8',
-        timeout: 4000,
-        windowsHide: true,
-      }).trim();
-    } catch {}
-
-    try {
-      board = execSync('powershell -NoProfile -Command "(Get-CimInstance Win32_BaseBoard).SerialNumber"', {
-        encoding: 'utf8',
-        timeout: 4000,
-        windowsHide: true,
-      }).trim();
+      const parts = output.split(';;;');
+      if (parts.length >= 3) {
+        uuid = (parts[0] || '').trim();
+        cpu = (parts[1] || '').trim();
+        board = (parts[2] || '').trim();
+      }
     } catch {}
 
     const combined = [uuid, cpu, board].filter(Boolean).join('|') || 'FALLBACK-DEFAULT-HWID';
     const hash = crypto.createHash('sha256').update(combined + '_' + HWID_SALT).digest('hex').toUpperCase();
     this.cachedMachineId = `NAFS-${hash.slice(0, 4)}-${hash.slice(4, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}`;
+
+    // حفظ البصمة محلياً لضمان عدم تغيرها مستقبلاً
+    try {
+      const userData = app.getPath('userData');
+      const cacheFile = path.join(userData, 'machine-id.txt');
+      fs.writeFileSync(cacheFile, this.cachedMachineId, 'utf8');
+    } catch {}
+
     return this.cachedMachineId;
   }
 
@@ -148,8 +163,8 @@ export class LicenseManager {
    * التحقق من الترخيص المحفوظ في النظام
    */
   static checkInstalledLicense(): LicenseValidationResult {
-    // تجاوز الترخيص التلقائي في بيئة التطوير إن تم تحديد متغير
-    if (process.env.NAFS_DEV_UNLOCKED === 'true') {
+    // تجاوز الترخيص التلقائي أثناء التطوير والعمل على الكود البرمجي (عدم إزعاج المطور بطلب الترخيص مع كل Run)
+    if (!app.isPackaged || process.env.NODE_ENV === 'development' || process.env.NAFS_DEV_UNLOCKED === 'true') {
       return {
         valid: true,
         info: {

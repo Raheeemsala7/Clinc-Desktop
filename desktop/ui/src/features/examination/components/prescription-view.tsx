@@ -15,8 +15,13 @@ import {
   ChevronDown,
   Pencil,
   Stethoscope,
+  History,
+  Calendar,
+  X,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getPatientPrescriptionHistoryAction } from '../apis/examination.action';
 import {
   PrescriptionMedicine,
   EntExaminationData,
@@ -171,6 +176,7 @@ export function PrescriptionView({
   const [activeFormRowId, setActiveFormRowId] = useState<string | null>(null);
   const [expandedManualEditRows, setExpandedManualEditRows] = useState<Record<string, boolean>>({});
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   // 1. أشكال الأدوية المخصصة والمحذوفة
   const [customForms, setCustomForms] = useState<DrugFormOption[]>([]);
@@ -702,6 +708,27 @@ export function PrescriptionView({
     }));
   };
 
+  const handleCopyEntireRx = (oldItems: any[]) => {
+    if (!oldItems || !Array.isArray(oldItems) || oldItems.length === 0) return;
+    const mapped: PrescriptionMedicine[] = oldItems.map((item) => ({
+      id: Math.random().toString(36).substring(2, 9),
+      drugName: item.drugName || '',
+      form: (item.form as any) || 'Tablet',
+      concentration: item.concentration || '',
+      dose: item.dose || '',
+      frequency: item.frequency || '',
+      duration: item.duration || '',
+      instructions: item.instructions || '',
+    }));
+
+    onChange((prev) => ({
+      ...prev,
+      prescriptionItems: [...(prev.prescriptionItems || []), ...mapped],
+    }));
+    toast.success(`تم نسخ ${mapped.length} أصناف من الروشتة السابقة بنجاح`);
+    setIsHistoryModalOpen(false);
+  };
+
   return (
     <div className="space-y-3.5 select-none" dir="rtl">
       {/* التشخيص الطبي للحالة (Diagnosis) - شريط سريع وأنيق في سطر واحد ومريح للعين */}
@@ -758,6 +785,17 @@ export function PrescriptionView({
             >
               <FileCheck className="w-4 h-4 text-emerald-600" />
               <span>طباعة أدوية فقط (ورق بدون ترويسة) 📄</span>
+            </button>
+
+            {/* زر سجل الروشتات السابقة للمريض */}
+            <button
+              type="button"
+              onClick={() => setIsHistoryModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-sky-300 bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-black transition-all shadow-2xs cursor-pointer"
+              title="عرض سجل الروشتات السابقة المكتوبة لهذا المريض في زياراته السابقة وإمكانية نسخها"
+            >
+              <History className="w-4 h-4 text-sky-600" />
+              <span>الروشتات السابقة 📋</span>
             </button>
 
             {/* زر دليل رموز الاختصارات السريعة */}
@@ -1374,6 +1412,16 @@ export function PrescriptionView({
           </div>
         </div>
       )}
+
+      {/* نافذة سجل الروشتات السابقة للمريض */}
+      <PatientPrescriptionHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        patientId={patient?.id || patient?._id || (patient as any)?.patientId}
+        patientName={patient?.fullName}
+        onSelectDrug={addQuickDrug}
+        onCopyEntireRx={handleCopyEntireRx}
+      />
     </div>
   );
 }
@@ -1383,6 +1431,16 @@ export function PrescriptionView({
  * يدعم نمطين:
  * 1. 'full': روشتة كاملة مع ترويسة العيادة واسم الطبيب وتوقيعه
  * 2. 'plain': طباعة فقط أسماء الأدوية والجرعات والإرشادات (للورق المطبوع مسبقاً) بخلفية بيضاء نقية وتنسيق مرتب
+ */
+/**
+ * نموذج الروشتة الطبية الجاهز للطباعة الدقيقة على ورق العيادة المطبوع مسبقاً
+ * المقاسات المعتمدة لطابعة العيادة:
+ * - عرض الورقة: 16.5cm
+ * - طول الورقة: 25cm (على ورق A4)
+ * - مساحة فارغة في الأعلى: 12cm
+ * - مساحة فارغة في الأسفل: 2cm
+ * - ترقيم الأدوية بنقاط (•) بدلاً من الأرقام
+ * - إخفاء الاسم والتشخيص ورمز R بالكامل (تطبع الأدوية والجرعات فقط)
  */
 export function PrintablePrescriptionSlip({
   examData,
@@ -1396,176 +1454,319 @@ export function PrintablePrescriptionSlip({
   printMode?: 'full' | 'plain';
 }) {
   const items = examData.prescriptionItems || [];
-  const isPlain = printMode === 'plain';
 
   return (
-    <div
-      dir="rtl"
-      className={`bg-white text-black font-sans ${
-        isPlain
-          ? 'p-6 pt-16 max-w-2xl mx-auto space-y-6 print:p-2 print:pt-20 print:max-w-none'
-          : 'p-8 max-w-2xl mx-auto space-y-6 border border-slate-300 print:border-none print:p-4 print:max-w-none'
-      }`}
-    >
-      {/* ترويسة العيادة - تظهر فقط في الوضع الكامل (full) */}
-      {!isPlain && (
-        <div className="border-b-2 border-black pb-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-black text-black">
-              عيادة الأنف والأذن والحنجرة وجراحات الرأس والرقبة
-            </h2>
-            <p className="text-sm font-bold text-slate-700">
-              {doctor?.name || 'د. إسلام عبدالله كريمة'}
-            </p>
-            <p className="text-xs text-slate-500">
-              أخصائي الأنف والأذن والحنجرة - ماجستير جراحة الأنف والأذن والحنجرة
-            </p>
-          </div>
+    <>
+      {/* ستايل الطباعة الخاص بمقاسات ورق روشتة د. إسلام */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @page {
+          size: 16.5cm 25cm;
+          margin: 0;
+        }
+        @media print {
+          html, body {
+            width: 16.5cm !important;
+            height: 25cm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .rx-print-container {
+            width: 16.5cm !important;
+            min-height: 25cm !important;
+            box-sizing: border-box !important;
+            padding-top: 12cm !important;
+            padding-bottom: 2cm !important;
+            padding-left: 1.2cm !important;
+            padding-right: 1.2cm !important;
+            margin: 0 auto !important;
+            border: none !important;
+          }
+        }
+      `}} />
 
-          <div className="text-left text-xs font-bold text-slate-700 space-y-0.5" dir="ltr">
-            <p>ENT & Head & Neck Surgery Clinic</p>
-            <p>Tel: {doctor?.phone || '01018566478'}</p>
-          </div>
-        </div>
-      )}
-
-      {/* بيانات المريض والزيارة - اسم المريض يظهر بالكامل في سطر واحد وواضح جداً */}
       <div
-        className={`pb-3 ${
-          isPlain ? 'border-b border-slate-400' : 'border-b-2 border-black'
-        }`}
+        dir="ltr"
+        className="rx-print-container bg-white text-black font-sans mx-auto box-border"
+        style={{
+          width: '16.5cm',
+          minHeight: '25cm',
+          paddingTop: '12cm',
+          paddingBottom: '2cm',
+          paddingLeft: '1.2cm',
+          paddingRight: '1.2cm',
+        }}
       >
-        <div className="flex items-baseline justify-between gap-4 flex-nowrap overflow-x-hidden">
-          <div className="flex items-baseline gap-2 min-w-0">
-            <span className="text-slate-700 text-sm font-bold whitespace-nowrap">اسم المريض:</span>
-            <span className="font-black text-lg sm:text-xl text-black whitespace-nowrap tracking-wide">
-              {patient?.fullName}
-            </span>
-          </div>
+        {/* قائمة الأدوية الموصوفة فقط بدون اسم المريض وبدون تشخيص وبدون حرف R */}
+        <div className="space-y-4" dir="ltr">
+          {items.length === 0 ? (
+            <p className="text-sm text-slate-400 italic">No medications prescribed.</p>
+          ) : (
+            <div className="space-y-3.5 text-left">
+              {items.map((item, idx) => {
+                const formObj = DRUG_FORMS.find((f) => f.id === item.form);
+                const formEnglish = formObj ? formObj.labelEn : (item.form || 'Tablet');
 
-          <div className="flex items-center gap-4 text-sm font-bold text-slate-800 whitespace-nowrap shrink-0">
-            {patient?.age && (
-              <span>السن: <strong>{patient.age} سنة</strong></span>
-            )}
-            <span>رقم الملف: <strong className="font-mono text-black">{examData.fileNo || (patient as any)?.fileNumber || '---'}</strong></span>
-            <span dir="ltr">Date: <strong>{examData.date || new Date().toISOString().slice(0, 10)}</strong></span>
-          </div>
-        </div>
+                // ترجمة الجرعة والتكرار والمدة للصياغة الطبية الدقيقة المطلوبة
+                const displayDose = formatDose(item.dose, item.form);
+                const displayFrequency = formatFrequency(item.frequency);
+                const rawDuration = formatDuration(item.duration);
+                const displayDuration = rawDuration
+                  ? (rawDuration.startsWith('لمدة') ? rawDuration : `لمدة ${rawDuration}`)
+                  : '';
 
-        {examData.diagnosis && (
-          <div className="text-sm font-bold mt-2 pt-1 border-t border-slate-200 flex items-start gap-2 bg-purple-50/70 p-2 rounded-xl border border-purple-200">
-            <span className="text-purple-800 shrink-0 font-black">التشخيص (Diagnosis): </span>
-            <span className="font-black text-purple-950 text-sm whitespace-pre-line leading-relaxed">
-              {examData.diagnosis}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* رمز الروشتة ℞ والأدوية - تبدأ من الشمال بالكامل LTR */}
-      <div className="space-y-4 min-h-[350px]" dir="ltr">
-        <div className="text-4xl font-black text-[#0B7B5E] select-none">
-          ℞
-        </div>
-
-        {items.length === 0 ? (
-          <p className="text-sm text-slate-400 italic">No medications prescribed.</p>
-        ) : (
-          <div className="space-y-4 pl-2 text-left">
-            {items.map((item, idx) => {
-              const formObj = DRUG_FORMS.find((f) => f.id === item.form);
-              const formEnglish = formObj ? formObj.labelEn : (item.form || 'Tablet');
-
-              // ترجمة الجرعة والتكرار والمدة للصياغة الطبية الدقيقة المطلوبة
-              const displayDose = formatDose(item.dose, item.form);
-              const displayFrequency = formatFrequency(item.frequency);
-              const rawDuration = formatDuration(item.duration);
-              const displayDuration = rawDuration
-                ? (rawDuration.startsWith('لمدة') ? rawDuration : `لمدة ${rawDuration}`)
-                : '';
-
-              return (
-                <div key={item.id || idx} className="space-y-1">
-                  {/* السطر الأول: اسم الدواء (DrugName) التركيز الفورم (نوع الدواء) بالإنجليزي */}
-                  <div className="flex items-baseline gap-2 flex-wrap font-black text-black">
-                    <span className="text-lg font-black min-w-[22px] text-[#0B7B5E]">{idx + 1}.</span>
-                    <span className="text-lg tracking-wide font-black text-slate-950">
-                      {item.drugName}
-                    </span>
-                    {item.concentration && (
-                      <span className="font-mono font-bold text-sky-800 bg-sky-50 border border-sky-300 text-xs px-1.5 py-0.5 rounded print:bg-transparent print:border print:border-black">
-                        {item.concentration}
+                return (
+                  <div key={item.id || idx} className="space-y-0.5 text-left leading-tight">
+                    {/* السطر الأول: نقطة (•) بدلاً من الرقم + اسم الدواء + التركيز + الشكل */}
+                    <div className="flex items-baseline gap-2 flex-wrap font-black text-black">
+                      <span className="text-xl font-black min-w-[14px] text-slate-900">•</span>
+                      <span className="text-base sm:text-lg tracking-wide font-black text-slate-950">
+                        {item.drugName}
                       </span>
-                    )}
-                    {formEnglish && (
-                      <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 text-xs px-2 py-0.5 rounded print:bg-transparent print:border print:border-black">
-                        {formEnglish}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* السطر الثاني: الجرعة والتكرار والمدة - مباشرة تحت اسم الدواء من اليسار بألوان مميزة */}
-                  <div className="pl-6 space-y-0.5 text-left" dir="ltr">
-                    <div className="text-sm font-bold flex items-center gap-2 flex-wrap">
-                      {displayDose && (
-                        <span className="text-[#9A3412] font-black">{displayDose}</span>
-                      )}
-                      {displayFrequency && (
-                        <span className="text-[#3730A3] font-bold">
-                          {displayDose ? '▪ ' : ''}{displayFrequency}
+                      {item.concentration && (
+                        <span className="font-mono font-bold text-xs px-1.5 py-0.2 rounded border border-black/40 text-black">
+                          {item.concentration}
                         </span>
                       )}
-                      {displayDuration && (
-                        <span className="text-[#581C87] font-black">
-                          {(displayDose || displayFrequency) ? '▪ ' : ''}
-                          {displayDuration}
+                      {formEnglish && (
+                        <span className="font-bold text-xs px-1.5 py-0.2 rounded border border-black/40 text-black">
+                          {formEnglish}
                         </span>
                       )}
                     </div>
 
-                    {/* سطر الإرشادات والتعليمات إن وجد - مباشرة تحت اسم الدواء */}
-                    {item.instructions && (
-                      <div className="text-xs sm:text-sm font-semibold text-[#9F1239]">
-                        <span>◄ {item.instructions}</span>
+                    {/* السطر الثاني: الجرعة والتكرار والمدة بالإنجليزية/العربية أسفل اسم الدواء */}
+                    <div className="pl-5 space-y-0.5 text-left">
+                      <div className="text-xs sm:text-sm font-bold flex items-center gap-2 flex-wrap text-black">
+                        {displayDose && (
+                          <span className="font-black">{displayDose}</span>
+                        )}
+                        {displayFrequency && (
+                          <span className="font-bold">
+                            {displayDose ? '▪ ' : ''}{displayFrequency}
+                          </span>
+                        )}
+                        {displayDuration && (
+                          <span className="font-black">
+                            {(displayDose || displayFrequency) ? '▪ ' : ''}
+                            {displayDuration}
+                          </span>
+                        )}
                       </div>
-                    )}
+
+                      {/* سطر الإرشادات والتعليمات إن وجد */}
+                      {item.instructions && (
+                        <div className="text-xs font-semibold text-slate-800" dir="rtl">
+                          <span>◄ {item.instructions}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ملاحظات العلاج الإضافية إن وجدت */}
+        {examData.treatmentNotes && (
+          <div dir="rtl" className="mt-4 pt-2 border-t border-dotted border-black/50 text-xs text-right">
+            <span className="font-bold text-black block mb-0.5">تعليمات إضافية:</span>
+            <p className="text-slate-800 whitespace-pre-line leading-4">
+              {examData.treatmentNotes}
+            </p>
           </div>
         )}
       </div>
+    </>
+  );
+}
 
-      {/* ملاحظات العلاج */}
-      {examData.treatmentNotes && (
-        <div dir="rtl" className="border-t border-dotted border-black pt-3 text-xs text-right">
-          <span className="font-bold text-black block mb-1">تعليمات إضافية:</span>
-          <p className="text-slate-800 whitespace-pre-line leading-5">
-            {examData.treatmentNotes}
-          </p>
-        </div>
-      )}
+interface PatientPrescriptionHistoryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  patientId?: string;
+  patientName?: string;
+  onSelectDrug: (drug: any) => void;
+  onCopyEntireRx: (items: any[]) => void;
+}
 
-      {/* موعد المتابعة وتوقيع الطبيب - يظهر فقط في النمط الكامل */}
-      {!isPlain && (
-        <div className="border-t-2 border-black pt-3 flex items-center justify-between text-xs font-bold">
-          <div>
-            {examData.followUpDate ? (
-              <span className="text-slate-900">
-                إعادة الكشف (Follow-up): <strong>{examData.followUpDate}</strong>
-              </span>
-            ) : (
-              <span className="text-slate-500">الإعادة حسب إرشادات الطبيب</span>
-            )}
+export function PatientPrescriptionHistoryModal({
+  isOpen,
+  onClose,
+  patientId,
+  patientName,
+  onSelectDrug,
+  onCopyEntireRx,
+}: PatientPrescriptionHistoryModalProps) {
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !patientId) return;
+    setIsLoading(true);
+    getPatientPrescriptionHistoryAction(patientId)
+      .then((res) => {
+        if (res && res.status && res.payload) {
+          const list = Array.isArray(res.payload)
+            ? res.payload
+            : Array.isArray((res.payload as any).data)
+            ? (res.payload as any).data
+            : [];
+          setPrescriptions(list);
+        } else {
+          setPrescriptions([]);
+        }
+      })
+      .catch((e) => {
+        console.warn('Failed to load patient Rx history:', e);
+        setPrescriptions([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [isOpen, patientId]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-in fade-in-50">
+      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden" dir="rtl">
+        {/* رأس النافذة */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+              <History className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-[#074C3A]">
+                سجل الروشتات السابقة للمريض
+              </h3>
+              <p className="text-xs text-slate-500 font-bold">
+                المريض: <strong className="text-slate-800">{patientName || 'المريض الحالي'}</strong>
+              </p>
+            </div>
           </div>
-
-          <div className="text-left" dir="ltr">
-            <span className="text-slate-700 block">Doctor&apos;s Signature</span>
-            <span className="font-mono text-slate-400">......................</span>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      )}
+
+        {/* محتوى النافذة */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          {isLoading ? (
+            <div className="py-16 text-center space-y-3">
+              <div className="w-8 h-8 border-3 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-bold text-slate-500">جاري استرجاع روشتات الزيارات السابقة...</p>
+            </div>
+          ) : prescriptions.length === 0 ? (
+            <div className="py-16 text-center space-y-2">
+              <History className="w-10 h-10 text-slate-300 mx-auto" />
+              <h4 className="font-bold text-sm text-slate-700">لا توجد روشتات سابقة مسجلة</h4>
+              <p className="text-xs text-slate-400">هذا المريض ليس لديه روشتات محفوظة من زيارات سابقة حتى الآن.</p>
+            </div>
+          ) : (
+            prescriptions.map((rx, idx) => {
+              const rxDate = rx.createdAt ? new Date(rx.createdAt).toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              }) : 'زيارة سابقة';
+              const itemsList = Array.isArray(rx.items) ? rx.items : [];
+
+              return (
+                <div
+                  key={rx.id || rx._id || idx}
+                  className="rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 p-4 space-y-3 transition-all"
+                >
+                  <div className="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-slate-200/70">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                      <span className="text-xs sm:text-sm font-black text-slate-800">
+                        روشتة تاريخ: {rxDate}
+                      </span>
+                      <span className="text-[11px] font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded-full">
+                        {itemsList.length} أصناف
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => onCopyEntireRx(itemsList)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95"
+                      title="نسخ جميع أصناف هذه الروشتة إلى الروشتة الحالية"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>نسخ الروشتة بالكامل</span>
+                    </button>
+                  </div>
+
+                  {/* قائمة الأدوية في هذه الروشتة */}
+                  <div className="space-y-2" dir="ltr">
+                    {itemsList.map((it: any, iIdx: number) => (
+                      <div
+                        key={it.id || iIdx}
+                        className="bg-white rounded-xl p-2.5 border border-slate-200/80 flex items-center justify-between gap-3 text-left"
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-black text-sm text-slate-900">• {it.drugName}</span>
+                            {it.concentration && (
+                              <span className="text-[11px] font-mono font-bold text-sky-700 bg-sky-50 px-1.5 py-0.2 rounded border border-sky-200">
+                                {it.concentration}
+                              </span>
+                            )}
+                            {it.form && (
+                              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                {it.form}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs font-semibold text-slate-600 flex items-center gap-2 flex-wrap">
+                            {it.dose && <span className="text-amber-800">{it.dose}</span>}
+                            {it.frequency && <span>▪ {it.frequency}</span>}
+                            {it.duration && <span>▪ {it.duration}</span>}
+                            {it.instructions && <span className="text-rose-700" dir="rtl">({it.instructions})</span>}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onSelectDrug(it);
+                            toast.success(`تمت إضافة "${it.drugName}" إلى الروشتة الحالية`);
+                          }}
+                          className="shrink-0 p-1.5 rounded-lg border border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE] text-slate-600 hover:text-[#074C3A] transition-all cursor-pointer"
+                          title="إضافة هذا الصنف منفرداً للروشتة الحالية"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* ذيل النافذة */}
+        <div className="p-3 sm:p-4 border-t border-slate-100 flex items-center justify-end bg-slate-50/50">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+          >
+            إغلاق
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

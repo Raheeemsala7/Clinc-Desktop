@@ -12,27 +12,19 @@ function getLocalMachineId() {
   let board = '';
 
   try {
-    uuid = execSync('powershell -NoProfile -Command "(Get-CimInstance Win32_ComputerSystemProduct).UUID"', {
+    const cmd = 'powershell -NoProfile -Command "$u=(Get-CimInstance Win32_ComputerSystemProduct).UUID; $c=(Get-CimInstance Win32_Processor | Select-Object -First 1).ProcessorId; $b=(Get-CimInstance Win32_BaseBoard).SerialNumber; \\"$u;;;$c;;;$b\\""';
+    const output = execSync(cmd, {
       encoding: 'utf8',
-      timeout: 4000,
+      timeout: 10000,
       windowsHide: true,
     }).trim();
-  } catch {}
 
-  try {
-    cpu = execSync('powershell -NoProfile -Command "(Get-CimInstance Win32_Processor | Select-Object -First 1).ProcessorId"', {
-      encoding: 'utf8',
-      timeout: 4000,
-      windowsHide: true,
-    }).trim();
-  } catch {}
-
-  try {
-    board = execSync('powershell -NoProfile -Command "(Get-CimInstance Win32_BaseBoard).SerialNumber"', {
-      encoding: 'utf8',
-      timeout: 4000,
-      windowsHide: true,
-    }).trim();
+    const parts = output.split(';;;');
+    if (parts.length >= 3) {
+      uuid = (parts[0] || '').trim();
+      cpu = (parts[1] || '').trim();
+      board = (parts[2] || '').trim();
+    }
   } catch {}
 
   const combined = [uuid, cpu, board].filter(Boolean).join('|') || 'FALLBACK-DEFAULT-HWID';

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Clock, XCircle, CreditCard, LogIn, Stethoscope, Edit2 } from 'lucide-react';
+import { Clock, XCircle, CreditCard, LogIn, Stethoscope, Edit2, RotateCcw } from 'lucide-react';
 import {
   useAdmitAppointmentMutation,
   useFinishExamAppointmentMutation,
@@ -11,6 +11,7 @@ import {
 } from '../hooks/appointments.hook';
 import { CheckoutPaymentModal } from './checkout-payment-modal';
 import { EditAppointmentModal } from './edit-appointment-modal';
+import { RefundPaymentModal } from './refund-payment-modal';
 
 interface TableAppointmentsRowActionsProps {
   appointmentId: string;
@@ -42,6 +43,7 @@ export function TableAppointmentsRowActions({
   const t = useTranslations('Dashboard.receptionist.table');
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
   const admitMutation = useAdmitAppointmentMutation();
   const finishExamMutation = useFinishExamAppointmentMutation();
@@ -131,6 +133,19 @@ export function TableAppointmentsRowActions({
           <Edit2 className="w-3.5 h-3.5" />
         </button>
 
+        {/* زر استرجاع فلوس للمريض (متاح دائماً طالما تم دفع مبلغ، حتى لو انتهى الكشف أو غادر المريض) */}
+        {paidAmount > 0 && (
+          <button
+            type="button"
+            onClick={() => setIsRefundModalOpen(true)}
+            disabled={isAnyPending}
+            title="استرجاع فلوس للمريض (كامل أو جزئي بتعليمات الطبيب)"
+            className="p-1.5 rounded-lg border border-rose-200 hover:border-rose-300 hover:bg-rose-50 text-rose-600 active:scale-95 disabled:opacity-60 transition-colors cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        )}
+
         {/* زر تأجيل الدور (متاح في الانتظار فقط) */}
         {(status === 'WAITING' || status === 'BOOKED') && (
           <button
@@ -185,6 +200,17 @@ export function TableAppointmentsRowActions({
           remainingAmount,
           notes,
         }}
+        onSuccess={() => {}}
+      />
+
+      {/* نافذة استرجاع المبلغ للمريض */}
+      <RefundPaymentModal
+        isOpen={isRefundModalOpen}
+        onClose={() => setIsRefundModalOpen(false)}
+        appointmentId={appointmentId}
+        patientName={patientName}
+        totalAmount={totalAmount}
+        paidAmount={paidAmount}
         onSuccess={() => {}}
       />
     </>

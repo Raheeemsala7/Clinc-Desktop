@@ -1,9 +1,17 @@
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/auth";
 import { HomePageClient } from "@/features/home";
 
 /**
  * الصفحة الرئيسية لعيادة د. إسلام عبدالله كريمة
- * تم تقسيم الصفحة لمكونات معيارية في `src/features/home/` لضمان Clean Code وسرعة التحميل
+ * إذا كان المستخدم مسجلاً دخوله مسبقاً، يتم توجيهه فوراً ومباشرة للوحة التحكم (/dashboard)
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    redirect('/dashboard');
+  }
+
   return <HomePageClient />;
 }

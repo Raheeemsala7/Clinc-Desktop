@@ -9,9 +9,9 @@ export const config = {
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || 'clinic_dev_access_secret_super_secure_key_12345678901234567890',
-    accessTtl: Number(process.env.JWT_ACCESS_TTL) || 2592000, // 30 يوماً = شهر كامل
+    accessTtl: Number(process.env.JWT_ACCESS_TTL) || 315360000, // 10 سنوات (مدى الحياة) لعدم تسجيل الخروج نهائياً
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'clinic_dev_refresh_secret_super_secure_key_12345678901234567890',
-    refreshTtl: Number(process.env.JWT_REFRESH_TTL) || 5184000, // 60 يوماً
+    refreshTtl: Number(process.env.JWT_REFRESH_TTL) || 315360000, // 10 سنوات
   },
   storage: {
     driver: process.env.STORAGE_DRIVER || 'local',

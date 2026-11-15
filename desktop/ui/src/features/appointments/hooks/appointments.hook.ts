@@ -11,6 +11,7 @@ import {
   admitAppointmentAction,
   finishExamAppointmentAction,
   checkoutAppointmentAction,
+  refundAppointmentAction,
   postponeAppointmentAction,
   cancelAppointmentAction,
   updateDoctorStatusAction,
@@ -239,6 +240,48 @@ export function useCheckoutAppointmentMutation() {
             queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
             queryClient.invalidateQueries({ queryKey: ['payments'] });
             toast.success("تم تسوية الحساب وإنهاء الزيارة بنجاح");
+            router.refresh();
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+}
+
+/**
+ * هوك React Query لاسترجاع جزء أو كامل المبلغ للمريض (Refund)
+ */
+export function useRefundAppointmentMutation() {
+    const queryClient = useQueryClient();
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: async ({
+            id,
+            payload,
+        }: {
+            id: string;
+            payload: {
+                amount?: number;
+                reason?: string;
+                method?: "CASH" | "CARD" | "WALLET";
+            };
+        }) => {
+            const res = await refundAppointmentAction(id, payload);
+            if (res.code === 401) {
+                await signOut({ callbackUrl: "/auth/login?expired=true" });
+                throw new Error("انتهت صلاحية الجلسة");
+            }
+            if (!res.status) {
+                throw new Error(res.message || "فشل استرجاع المبلغ للمريض");
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queueKeys.all });
+            queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            toast.success("تم استرجاع المبلغ للمريض بنجاح");
             router.refresh();
         },
         onError: (err) => {

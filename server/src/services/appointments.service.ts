@@ -765,6 +765,80 @@ export class AppointmentsService {
     };
   }
 
+  /**
+   * استرجاع المبلغ للمريض (كلياً أو جزئياً) حتى لو انتهى الكشف أو غادر المريض
+   */
+  static async refundAppointment(appointmentId: string, dto: any, actor: { id: string }, ip = '') {
+    const { amount, reason, method = 'CASH' } = dto;
+
+    const appt = await Appointment.findById(appointmentId);
+    if (!appt) throw new NotFoundError('الموعد غير موجود');
+
+    const currentPaid = Number(appt.paidAmount || 0);
+    if (currentPaid <= 0) {
+      throw new BadRequestError('لا يوجد مبلغ مدفوع مسبقاً لاسترجاعه لهذا المريض');
+    }
+
+    const refundAmount = Number(amount !== undefined && amount !== null && amount !== '' ? amount : currentPaid);
+    if (refundAmount <= 0) {
+      throw new BadRequestError('مبلغ الاسترجاع يجب أن يكون أكبر من صفر');
+    }
+    if (refundAmount > currentPaid) {
+      throw new BadRequestError(`مبلغ الاسترجاع (${refundAmount} ج.م) أكبر من إجمالي المدفوع (${currentPaid} ج.م)`);
+    }
+
+    // خصم مبلغ الاسترجاع من المدفوع
+    const newPaidAmount = Math.max(0, currentPaid - refundAmount);
+    appt.paidAmount = newPaidAmount;
+    appt.remainingAmount = Math.max(0, appt.totalAmount - newPaidAmount);
+
+    if (newPaidAmount === 0) {
+      appt.paymentStatus = 'UNPAID';
+    } else {
+      appt.paymentStatus = 'PARTIAL';
+    }
+    await appt.save();
+
+    // تحديث سجلات الدفع في نموذج Payment
+    const { Payment } = await import('../models');
+    const existingPayment = await Payment.findOne({ appointmentId: appt.id, status: 'RECORDED' });
+
+    if (existingPayment) {
+      if (newPaidAmount === 0) {
+        existingPayment.status = 'VOIDED';
+        existingPayment.voidReason = reason || 'استرجاع كامل المبلغ للمريض بتعليمات الطبيب';
+        existingPayment.notes = `تم استرجاع كامل المبلغ (${refundAmount} ج.م) للمريض - ${reason || 'بتعليمات الطبيب'}`;
+        await existingPayment.save();
+      } else {
+        existingPayment.amount = newPaidAmount;
+        existingPayment.paymentType = 'DEPOSIT';
+        existingPayment.notes = `تم استرجاع جزئي (${refundAmount} ج.م) - المتبقي المدفوع ${newPaidAmount} ج.م - ${reason || 'بتعليمات الطبيب'}`;
+        await existingPayment.save();
+      }
+    }
+
+    await logAudit({
+      userId: actor.id,
+      action: 'UPDATE',
+      entityType: 'Appointment',
+      entityId: appt.id,
+      after: {
+        refundAmount,
+        refundReason: reason,
+        newPaidAmount,
+        paymentStatus: appt.paymentStatus,
+        method,
+      },
+      ip,
+    });
+
+    return {
+      appointment: appt.toJSON(),
+      refundAmount,
+      newPaidAmount,
+    };
+  }
+
   static async getAppointmentById(id: string) {
     const appt = await Appointment.findById(id);
     if (!appt) throw new NotFoundError('Appointment not found');

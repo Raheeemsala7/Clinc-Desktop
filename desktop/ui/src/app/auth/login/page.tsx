@@ -1,10 +1,13 @@
+import { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/auth';
 import { AuthLanguageBtn } from '@/features/auth/components/auth-language-btn';
 import { LoginForm } from '@/features/auth/components/login-form';
 import { LoginHero } from '@/features/auth/components/login-hero';
 import { ArrowLeft } from 'lucide-react';
-import { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 
 /**
  * إنشاء الـ Metadata الخاصة بالصفحة ديناميكياً بناءً على لغة المستخدم الحالية
@@ -23,6 +26,11 @@ export async function generateMetadata(): Promise<Metadata> {
  * بدون الحاجة لقراءة كود اللغة أو حقن سمة dir يدوياً
  */
 export default async function LoginPage() {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    redirect('/dashboard');
+  }
+
   const t = await getTranslations('Auth.login');
 
   return (

@@ -177,3 +177,30 @@ export async function finishAndSubmitExamAction(
     return { status: false, code: 500, message: 'فشل اعتماد وإنهاء الكشف' };
   }
 }
+
+/**
+ * استرجاع تاريخ الروشتات السابقة للمريض من الزيارات السابقة
+ */
+export async function getPatientPrescriptionHistoryAction(
+  patientId: string
+): Promise<ApiResponse<any[]>> {
+  const token = await getNextAuthToken();
+  if (!token?.accessToken) return RESPONSES.unauthorized;
+
+  try {
+    const res = await fetch(`${process.env.API_URL}/patients/${patientId}/prescriptions?pageSize=50`, {
+      method: 'GET',
+      headers: {
+        ...HEADERS.JsonBody,
+        ...HEADERS.authorize(token.accessToken),
+      },
+      cache: 'no-store',
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error('getPatientPrescriptionHistoryAction error:', error);
+    return { status: false, code: 500, message: 'فشل جلب سجل الروشتات السابقة' };
+  }
+}

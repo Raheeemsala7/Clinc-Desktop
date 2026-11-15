@@ -120,6 +120,18 @@ export class AppointmentsController {
     RealtimeService.emitQueueUpdate({ appointmentId: req.params.id });
     sendSuccess(res, result, { message: 'Remaining balance paid successfully' });
   });
+
+  refundAppointment = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const result = await AppointmentsService.refundAppointment(
+      req.params.id,
+      req.body,
+      { id: req.user!.id },
+      ip,
+    );
+    RealtimeService.emitQueueUpdate({ appointmentId: req.params.id });
+    sendSuccess(res, result, { message: 'تم استرجاع المبلغ للمريض بنجاح' });
+  });
 }
 
 export const appointmentsController = new AppointmentsController();

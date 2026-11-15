@@ -152,6 +152,39 @@ export async function checkoutAppointmentAction(
 }
 
 /**
+ * استرجاع المبلغ للمريض (كلياً أو جزئياً)
+ */
+export async function refundAppointmentAction(
+  id: string,
+  payload: {
+    amount?: number;
+    reason?: string;
+    method?: 'CASH' | 'CARD' | 'WALLET';
+  } = {},
+): Promise<ApiResponse<any>> {
+  const token = await getNextAuthToken();
+  if (!token?.accessToken) return RESPONSES.unauthorized;
+
+  try {
+    const res = await fetch(`${process.env.API_URL}/appointments/${id}/refund`, {
+      method: 'POST',
+      headers: {
+        ...HEADERS.JsonBody,
+        ...HEADERS.authorize(token.accessToken),
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.status) {
+      await revalidateAppointmentsCache();
+    }
+    return data;
+  } catch (error) {
+    return { status: false, code: 500, message: 'فشل استرجاع المبلغ للمريض' };
+  }
+}
+
+/**
  * تأجيل دور المريض في صالة الانتظار
  * المسار: POST /api/v1/appointments/:id/postpone
  */
