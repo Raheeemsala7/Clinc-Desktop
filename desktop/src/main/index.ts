@@ -209,6 +209,7 @@ async function bootServicesAndLoadUrl() {
             <p>قد تكون الخدمة بصدد التهيئة لأول مرة أو هناك تعارض في منفذ التشغيل (Port 3000).</p>
             <div class="actions">
               <button class="btn-primary" onclick="location.reload()">إعادة المحاولة</button>
+              <button class="btn-secondary" onclick="if (window.electronAPI && window.electronAPI.openSetup) { window.electronAPI.openSetup(); } else { location.reload(); }">إعدادات الوضع والاتصال</button>
             </div>
           </div>
         </body>

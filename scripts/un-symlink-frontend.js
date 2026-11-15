@@ -63,6 +63,18 @@ function deJunctionDir(baseDir) {
       }
     }
   }
+
+  // Safely remove .pnpm to eliminate any internal symlinks
+  const pnpmDir = path.join(nmDir, '.pnpm');
+  if (fs.existsSync(pnpmDir)) {
+    try {
+      const longPnpm = process.platform === 'win32' ? `\\\\?\\${path.resolve(pnpmDir)}` : pnpmDir;
+      fs.rmSync(longPnpm, { recursive: true, force: true, maxRetries: 3 });
+      console.log('🧹 Cleaned up .pnpm folder to eliminate all symlinks');
+    } catch (err) {
+      console.warn('⚠️ Warning cleaning .pnpm:', err.message);
+    }
+  }
 }
 
 // 1. Process desktop/dist-installer/win-unpacked/resources/frontend

@@ -12,7 +12,7 @@
     "build": "pnpm run build:main",
     "start": "electron .",
     "dev": "tsc -p tsconfig.json && electron .",
-    "dist": "electron-builder --win --x64"
+    "dist": "node ../scripts/prepare-standalone-frontend.js && electron-builder --win --x64"
   },
   "dependencies": {
     "electron-updater": "^6.8.11"
