@@ -8,6 +8,7 @@ import { AuthLanguageBtn } from '@/features/auth/components/auth-language-btn';
 import { DashboardNotifications } from './dashboard-notifications';
 import { DashboardSignOutBtn } from './dashboard-sign-out-btn';
 import { RealtimeStatusBadge } from '@/shared/components/realtime-status-badge';
+import { AppUpdateButton } from '@/shared/components/app-update-button';
 import { UserRole } from '../types';
 import { ROLE_CONFIG } from '../constants';
 
@@ -52,11 +53,10 @@ export function DashboardHeader({ role }: DashboardHeaderProps) {
         </h1>
       </div>
 
-      {/* الجانب الأيسر (في RTL): حالة الطبيب + زر اللغة المتجاوب + زر الإشعارات + زر الخروج */}
+      {/* الجانب الأيسر (في RTL): زر التحديثات + حالة الطبيب + زر اللغة المتجاوب + زر الإشعارات + زر الخروج */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 text-[11px] font-black rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300">
-          تحديث v1.0.1 🚀
-        </span>
+        {/* زر التحديث التلقائي المباشر */}
+        <AppUpdateButton />
 
         {/* شارة حالة الاتصال اللحظي بالشبكة / السيرفر */}
         <RealtimeStatusBadge />

@@ -18,6 +18,10 @@ export interface IElectronAPI {
   getMachineId: () => Promise<string>;
   checkLicense: () => Promise<any>;
   activateLicense: (key: string) => Promise<any>;
+  checkForUpdates: () => Promise<any>;
+  installUpdateNow: () => Promise<void>;
+  onUpdateAvailable: (callback: (info: any) => void) => void;
+  onUpdateDownloaded: (callback: (info: any) => void) => void;
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -38,4 +42,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getMachineId: () => ipcRenderer.invoke('license:get-machine-id'),
   checkLicense: () => ipcRenderer.invoke('license:check'),
   activateLicense: (key: string) => ipcRenderer.invoke('license:activate', key),
+  checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
+  installUpdateNow: () => ipcRenderer.invoke('app:install-update-now'),
+  onUpdateAvailable: (callback: (info: any) => void) => {
+    ipcRenderer.on('app:update-available', (_e, info) => callback(info));
+  },
+  onUpdateDownloaded: (callback: (info: any) => void) => {
+    ipcRenderer.on('app:update-downloaded', (_e, info) => callback(info));
+  },
 });
