@@ -299,8 +299,10 @@ function buildMenu() {
               return;
             }
             try {
+              isManualUpdateCheck = true;
               const res = await autoUpdater.checkForUpdates();
               if (!res || !res.downloadPromise) {
+                isManualUpdateCheck = false;
                 dialog.showMessageBox({
                   type: 'info',
                   title: 'أحدث إصدار',
@@ -310,10 +312,11 @@ function buildMenu() {
                 dialog.showMessageBox({
                   type: 'info',
                   title: 'جاري تحميل التحديث',
-                  message: 'تم العثور على إصدار أحدث وجاري تحميله في الخلفية الآن تلقائياً... ستصلك رسالة عند اكتمال التحميل.',
+                  message: `تم العثور على إصدار أحدث (v${res.updateInfo?.version || ''}) وجاري تحميله الآن تلقائياً في الخلفية...\n\nستظهر لك نافذة تأكيد فور اكتمال التحميل لإعادة تشغيل البرنامج وتطبيق التحديث.`,
                 });
               }
             } catch (err: any) {
+              isManualUpdateCheck = false;
               dialog.showMessageBox({
                 type: 'error',
                 title: 'خطأ أثناء فحص التحديثات',
@@ -545,6 +548,8 @@ ipcMain.handle('license:activate', async (_event, key: string) => {
 
 // ─── Auto-Update (GitHub Releases Silent Auto-Updater) ─────────────────────────
 
+let isManualUpdateCheck = false;
+
 function setupAutoUpdater() {
   if (!app.isPackaged) {
     appLog('ℹ️ [AUTO-UPDATE] Skipping auto-updater in dev mode (app.isPackaged=false).');
@@ -572,13 +577,29 @@ function setupAutoUpdater() {
 
     autoUpdater.on('error', (err) => {
       appLog(`⚠️ [AUTO-UPDATE] Update error: ${err?.message || err}`);
+      if (isManualUpdateCheck) {
+        isManualUpdateCheck = false;
+        dialog.showMessageBox({
+          type: 'error',
+          title: 'تعذر اكتمال تحميل التحديث',
+          message: `حدث خطأ أثناء تحميل ملف التحديث الجديد من الخادم:\n${err?.message || err}\n\nيرجى التحقق من اتصال الإنترنت، أو التأكد من رفع ملف التحديث بصيغة صحيحة على GitHub.`,
+        });
+      }
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app:update-error', err?.message || err);
+      }
     });
 
     autoUpdater.on('download-progress', (progressObj) => {
-      appLog(`📥 [AUTO-UPDATE] Downloading: ${Math.round(progressObj.percent)}%`);
+      const pct = Math.round(progressObj.percent);
+      appLog(`📥 [AUTO-UPDATE] Downloading: ${pct}%`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app:update-progress', pct);
+      }
     });
 
     autoUpdater.on('update-downloaded', (info) => {
+      isManualUpdateCheck = false;
       appLog(`🎉 [AUTO-UPDATE] Update v${info.version} downloaded! Showing notification.`);
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('app:update-downloaded', info);
