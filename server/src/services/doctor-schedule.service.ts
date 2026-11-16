@@ -17,42 +17,27 @@ export function getDefaultWeeklySchedule(): IDoctorDaySchedule[] {
     {
       dayOfWeek: 0, // الأحد
       isAvailable: true,
-      shifts: [
-        { startTime: '08:00', endTime: '12:00' },
-        { startTime: '16:00', endTime: '21:00' },
-      ],
+      shifts: [{ startTime: '10:00', endTime: '18:00' }],
     },
     {
       dayOfWeek: 1, // الاثنين
       isAvailable: true,
-      shifts: [
-        { startTime: '08:00', endTime: '12:00' },
-        { startTime: '16:00', endTime: '21:00' },
-      ],
+      shifts: [{ startTime: '10:00', endTime: '18:00' }],
     },
     {
       dayOfWeek: 2, // الثلاثاء
       isAvailable: true,
-      shifts: [
-        { startTime: '08:00', endTime: '12:00' },
-        { startTime: '16:00', endTime: '21:00' },
-      ],
+      shifts: [{ startTime: '10:00', endTime: '18:00' }],
     },
     {
       dayOfWeek: 3, // الأربعاء
       isAvailable: true,
-      shifts: [
-        { startTime: '08:00', endTime: '12:00' },
-        { startTime: '16:00', endTime: '21:00' },
-      ],
+      shifts: [{ startTime: '10:00', endTime: '18:00' }],
     },
     {
       dayOfWeek: 4, // الخميس
       isAvailable: true,
-      shifts: [
-        { startTime: '08:00', endTime: '12:00' },
-        { startTime: '16:00', endTime: '21:00' },
-      ],
+      shifts: [{ startTime: '10:00', endTime: '18:00' }],
     },
     {
       dayOfWeek: 5, // الجمعة - إجازة أسبوعية
@@ -60,9 +45,9 @@ export function getDefaultWeeklySchedule(): IDoctorDaySchedule[] {
       shifts: [],
     },
     {
-      dayOfWeek: 6, // السبت - غير متاح / إجازة
-      isAvailable: false,
-      shifts: [],
+      dayOfWeek: 6, // السبت - متاح للعمل
+      isAvailable: true,
+      shifts: [{ startTime: '10:00', endTime: '18:00' }],
     },
   ];
 }
@@ -85,9 +70,14 @@ export class DoctorScheduleService {
 
     let schedule = await DoctorSchedule.findOne({ doctorId });
     if (!schedule || !schedule.weeklySchedule || schedule.weeklySchedule.length === 0) {
+      // إذا لم يكن هناك جدول مخصص لهذا الطبيب، نحاول جلب أي جدول محفوظ بالعيادة
+      const anySchedule = await DoctorSchedule.findOne({ 'weeklySchedule.0': { $exists: true } });
+      if (anySchedule) {
+        return anySchedule.toJSON();
+      }
       return {
         doctorId,
-        slotDurationMinutes: schedule?.slotDurationMinutes || 30,
+        slotDurationMinutes: 20,
         weeklySchedule: getDefaultWeeklySchedule(),
       };
     }
@@ -99,7 +89,7 @@ export class DoctorScheduleService {
     const doctor = await User.findOne({ _id: doctorId, role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
     if (!doctor) throw new NotFoundError('Doctor not found');
 
-    const slotDurationMinutes = dto.slotDurationMinutes && dto.slotDurationMinutes > 0 ? dto.slotDurationMinutes : 30;
+    const slotDurationMinutes = dto.slotDurationMinutes && dto.slotDurationMinutes > 0 ? dto.slotDurationMinutes : 20;
     const weeklySchedule = dto.weeklySchedule || getDefaultWeeklySchedule();
 
     // Validate shifts
@@ -130,6 +120,20 @@ export class DoctorScheduleService {
       { upsert: true, new: true, setDefaultsOnInsert: true },
     );
 
+    // مزامنة الجدول مع كافة أطباء العيادة لضمان ظهور نفس المواعيد للاستقبال بغض النظر عن اختيار اسم الطبيب
+    try {
+      const allDoctors = await User.find({ role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
+      for (const d of allDoctors) {
+        if (d.id !== doctorId) {
+          await DoctorSchedule.findOneAndUpdate(
+            { doctorId: d.id },
+            { doctorId: d.id, slotDurationMinutes, weeklySchedule },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
+        }
+      }
+    } catch {}
+
     return schedule.toJSON();
   }
 
@@ -156,15 +160,21 @@ export class DoctorScheduleService {
       };
     }
 
-    const doctor = await User.findOne({ _id: doctorId, role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
+    let doctor = await User.findOne({ _id: doctorId, role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
+    if (!doctor) {
+      doctor = await User.findOne({ role: { $in: ['DOCTOR', 'ADMIN'] }, deletedAt: null });
+    }
     if (!doctor) throw new NotFoundError('Doctor not found');
 
-    const scheduleDoc = await DoctorSchedule.findOne({ doctorId });
+    let scheduleDoc = await DoctorSchedule.findOne({ doctorId });
+    if (!scheduleDoc || !scheduleDoc.weeklySchedule || scheduleDoc.weeklySchedule.length === 0) {
+      scheduleDoc = await DoctorSchedule.findOne({ 'weeklySchedule.0': { $exists: true } });
+    }
     const weeklySchedule =
       scheduleDoc?.weeklySchedule && scheduleDoc.weeklySchedule.length > 0
         ? scheduleDoc.weeklySchedule
         : getDefaultWeeklySchedule();
-    const slotDuration = scheduleDoc?.slotDurationMinutes || 30;
+    const slotDuration = scheduleDoc?.slotDurationMinutes || 20;
 
     // Determine day of week
     const targetDate = new Date(dateStr + 'T12:00:00Z');

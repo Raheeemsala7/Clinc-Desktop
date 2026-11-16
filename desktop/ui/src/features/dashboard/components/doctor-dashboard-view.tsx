@@ -95,7 +95,7 @@ export const DoctorDashboardView = ({
 
   const [dashboardView, setDashboardView] = useState<'queue' | 'calendar'>(initialView || 'calendar');
   const [currentDate, setCurrentDate] = useState<string>(
-    selectedDate || initialCalendarData?.date || new Date().toISOString().slice(0, 10)
+    selectedDate || initialCalendarData?.date || new Date().toLocaleDateString('en-CA')
   );
   const [calendarData, setCalendarData] = useState<AppointmentsCalendarData | null>(initialCalendarData || null);
   const [calendarDisplayMode, setCalendarDisplayMode] = useState<'day-grid' | 'grid' | 'timeline'>('day-grid');
@@ -137,7 +137,7 @@ export const DoctorDashboardView = ({
   };
 
   const handleResetToToday = () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toLocaleDateString('en-CA');
     fetchCalendarForDate(today);
   };
 

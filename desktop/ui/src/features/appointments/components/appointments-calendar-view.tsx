@@ -31,7 +31,7 @@ export function AppointmentsCalendarView({
   const currentView: CalendarViewMode =
     (searchParams?.get('view') as CalendarViewMode) || initialView || 'week';
   const currentDate =
-    searchParams?.get('date') || initialDate || data.date || new Date().toISOString().split('T')[0];
+    searchParams?.get('date') || initialDate || data.date || new Date().toLocaleDateString('en-CA');
   const currentDoctorId =
     searchParams?.get('doctorId') !== null
       ? (searchParams?.get('doctorId') || '')

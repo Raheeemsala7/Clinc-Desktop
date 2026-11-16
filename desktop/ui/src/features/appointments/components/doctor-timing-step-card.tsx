@@ -100,22 +100,20 @@ export function DoctorTimingStepCard() {
     });
   };
 
-  // قائمة المواعيد المعروضة: المتاحة والمحجوزة فقط
+  // قائمة المواعيد المعروضة: المتاحة والمحجوزة والسابقة لليوم
   const hasApiSlots = Boolean(slotsData && Array.isArray(slotsData.slots));
-  const rawSlots = hasApiSlots ? slotsData!.slots : SAMPLE_SLOTS;
+  const rawSlots = hasApiSlots ? slotsData!.slots : [];
 
-  const displayableSlots = rawSlots.filter((slot: any) => {
-    return Boolean(slot.isAvailable || slot.isBooked);
-  });
+  const displayableSlots = rawSlots;
 
-  // حماية ذكية: إذا تغير اليوم أو الطبيب في وضع الحجز المسبق، نتحقق أن الوقت المختار ما زال متاحاً في اليوم الجديد
+  // حماية ذكية: إذا تغير اليوم أو الطبيب في وضع الحجز المسبق، نتحقق أن الوقت المختار ما زال متاحاً أو صالحاً
   useEffect(() => {
     if (source === 'SCHEDULED' && displayableSlots.length > 0) {
       const isCurrentTimeAvailable = displayableSlots.some(
-        (s: any) => s.isAvailable && (s.label === selectedTime || s.startTime === selectedTime)
+        (s: any) => !s.isBooked && (s.label === selectedTime || s.startTime === selectedTime)
       );
       if (!isCurrentTimeAvailable) {
-        const firstAvailable = displayableSlots.find((s: any) => s.isAvailable);
+        const firstAvailable = displayableSlots.find((s: any) => !s.isBooked && !s.isPast) || displayableSlots.find((s: any) => !s.isBooked);
         if (firstAvailable) {
           const slotLabel = (firstAvailable as any).label || (firstAvailable as any).startTime || (firstAvailable as any).time;
           setValue('appointmentTime', slotLabel, {
@@ -277,7 +275,9 @@ export function DoctorTimingStepCard() {
                   onClick={() => {
                     field.onChange('SCHEDULED');
                     // إذا لم يكن هناك موعد مسبق مختار، نحدد أول موعد متاح
-                    const firstAvailable = displayableSlots.find((s: any) => s.isAvailable);
+                    const firstAvailable =
+                      displayableSlots.find((s: any) => !s.isBooked && !s.isPast) ||
+                      displayableSlots.find((s: any) => !s.isBooked);
                     if (firstAvailable) {
                       const slotLabel = (firstAvailable as any).label || (firstAvailable as any).startTime || (firstAvailable as any).time;
                       handleSelectSlot(slotLabel);
@@ -365,25 +365,47 @@ export function DoctorTimingStepCard() {
             {/* أزرار الساعات */}
             {displayableSlots.map((slot: any, idx: number) => {
               const label = slot.label || slot.startTime || `slot-${idx}`;
-              const isAvailable = Boolean(slot.isAvailable);
+              const isBooked = Boolean(slot.isBooked);
+              const isPast = Boolean(slot.isPast);
               const isSelected = selectedTime === label;
 
-              // موعد محجوز (مشطوب وغير قابل للاختيار)
-              if (slot.isBooked || !isAvailable) {
+              // 1. موعد محجوز لمريض آخر (مشطوب وغير متاح)
+              if (isBooked) {
                 return (
                   <button
                     key={slot.time || slot.startTime || idx}
                     type="button"
                     disabled
-                    title="موعد محجوز"
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-300 border border-slate-200 line-through cursor-not-allowed select-none"
+                    title="موعد محجوز لمريض آخر"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-400 border border-slate-200 line-through cursor-not-allowed select-none opacity-80"
+                  >
+                    <span>{label}</span>
+                    <span className="text-[10px] mr-1">(محجوز)</span>
+                  </button>
+                );
+              }
+
+              // 2. موعد انقضى وقته اليوم (متاح للاختيار لتسجيل الحضور الفعلي أو المتأخر)
+              if (isPast) {
+                return (
+                  <button
+                    key={slot.time || slot.startTime || idx}
+                    type="button"
+                    onClick={() => handleSelectSlot(label)}
+                    title="موعد سابق اليوم (متاح للاختيار)"
+                    className={cn(
+                      'px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer select-none',
+                      isSelected
+                        ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] shadow-xs font-black ring-2 ring-[#0B7B5E]/20'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE]/40'
+                    )}
                   >
                     {label}
                   </button>
                 );
               }
 
-              // موعد متاح (قابل للاختيار بالضغط عليه)
+              // 3. موعد متاح قادم (قابل للاختيار بالضغط عليه)
               return (
                 <button
                   key={slot.time || slot.startTime || idx}
@@ -392,7 +414,7 @@ export function DoctorTimingStepCard() {
                   className={cn(
                     'px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer select-none',
                     isSelected
-                      ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] shadow-xs font-black ring-2 ring-blue-600/10'
+                      ? 'bg-[#0B7B5E] text-white border-[#0B7B5E] shadow-xs font-black ring-2 ring-[#0B7B5E]/20'
                       : 'bg-white text-slate-700 border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE]/40'
                   )}
                 >

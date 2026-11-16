@@ -14,6 +14,8 @@ import {
   Loader2,
   Plus,
   Trash2,
+  User as UserIcon,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -46,15 +48,41 @@ export default function DoctorSchedulePage() {
   const [slotDurationMinutes, setSlotDurationMinutes] = useState<number>(20);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [doctorsList, setDoctorsList] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
 
-  // 1. جلب الجدول الفعلي المحفوظ في قاعدة البيانات عند فتح الصفحة
+  // 1. جلب قائمة أطباء العيادة
+  useEffect(() => {
+    async function loadDoctors() {
+      try {
+        const res = await fetch('/api/doctors');
+        if (!res.ok) return;
+        const json = await res.json();
+        const list = Array.isArray(json?.payload) ? json.payload : [];
+        setDoctorsList(list);
+        if (list.length > 0 && !selectedDoctorId) {
+          const myId = (session?.user as any)?.id;
+          const found = list.find((d: any) => d.id === myId);
+          setSelectedDoctorId(found ? found.id : list[0].id);
+        }
+      } catch (err) {
+        console.warn('Failed to load doctors list:', err);
+      }
+    }
+    loadDoctors();
+  }, [session, selectedDoctorId]);
+
+  // 2. جلب الجدول الفعلي المحفوظ في قاعدة البيانات عند فتح الصفحة
   useEffect(() => {
     let isMounted = true;
 
     async function loadSchedule() {
       try {
         setIsLoading(true);
-        const res = await fetch('/api/doctor-schedule');
+        const url = selectedDoctorId
+          ? `/api/doctor-schedule?doctorId=${encodeURIComponent(selectedDoctorId)}`
+          : '/api/doctor-schedule';
+        const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch schedule');
         const json = await res.json();
         const payload = json?.data || json?.payload;
@@ -111,7 +139,7 @@ export default function DoctorSchedulePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [selectedDoctorId]);
 
   const toggleDay = (id: string) => {
     setSchedule((prev) =>
@@ -187,6 +215,7 @@ export default function DoctorSchedulePage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          doctorId: selectedDoctorId || (session?.user as any)?.id,
           slotDurationMinutes,
           weeklySchedule,
         }),
@@ -225,7 +254,25 @@ export default function DoctorSchedulePage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {doctorsList.length > 1 && (
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-2xl">
+              <UserIcon className="w-4 h-4 text-[#0B7B5E]" />
+              <span className="text-xs font-bold text-slate-500">الطبيب:</span>
+              <select
+                value={selectedDoctorId}
+                onChange={(e) => setSelectedDoctorId(e.target.value)}
+                className="bg-transparent text-xs font-black text-[#074C3A] focus:outline-none cursor-pointer"
+              >
+                {doctorsList.map((doc) => (
+                  <option key={doc.id} value={doc.id}>
+                    {doc.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {isLoading && (
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
               <Loader2 className="w-4 h-4 animate-spin text-[#0B7B5E]" />

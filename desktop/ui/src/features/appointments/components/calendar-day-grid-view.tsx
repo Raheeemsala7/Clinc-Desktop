@@ -146,7 +146,7 @@ export function CalendarDayGridView({
       const monthName = arabicMonths[d.getUTCMonth()];
       const year = d.getUTCFullYear();
 
-      const todayIso = new Date().toISOString().split('T')[0];
+      const todayIso = new Date().toLocaleDateString('en-CA');
       const isToday = initialIsToday !== undefined ? initialIsToday : date === todayIso;
 
       return {
