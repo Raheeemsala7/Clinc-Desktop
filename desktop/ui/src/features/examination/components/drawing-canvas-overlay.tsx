@@ -80,6 +80,8 @@ export function DrawingCanvasOverlay({
         setHasDrawn(true);
       };
       img.src = initialDrawing;
+    } else {
+      setHasDrawn(false);
     }
   }, [initialDrawing, viewingSnapshotId]);
 
@@ -206,21 +208,32 @@ export function DrawingCanvasOverlay({
     onSaveDrawing?.('');
   };
 
-  // إضافة لقطة جديدة وتاريخ جديد للرسمة في هذه الزيارة
+  // أرشفة الرسمة الحالية (إن وُجدت) وفتح صورة جديدة فارغة تماماً بدون أي رسم
   const handleCreateNewSnapshot = () => {
     const canvas = canvasRef.current;
     const currentDrawing = canvas ? canvas.toDataURL('image/png') : initialDrawing || '';
     const today = new Date().toISOString().slice(0, 10);
 
-    const newSnapshot: DrawingSnapshot = {
-      id: 'snap_' + Date.now(),
-      date: today,
-      drawing: currentDrawing,
-      label: `زيارة ${today}`,
-    };
+    if (hasDrawn || initialDrawing) {
+      const newSnapshot: DrawingSnapshot = {
+        id: 'snap_' + Date.now(),
+        date: today,
+        drawing: currentDrawing,
+        label: `زيارة ${today}`,
+      };
+      onAddSnapshot?.(newSnapshot);
+    }
 
-    onAddSnapshot?.(newSnapshot);
-    toast.success(`تم حفظ لقطة رسمة سابقة بتاريخ ${today}، يمكنك الآن تعديل الرسمة الحالية.`);
+    // مسح الكانفاس بالكامل لفتح الصورة نظيفة بدون أي رسم
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    setHistory([]);
+    setHasDrawn(false);
+    setViewingSnapshotId(null);
+    onSaveDrawing?.('');
+    toast.success('تم فتح صورة جديدة نظيفة بدون أي رسم');
   };
 
   return (

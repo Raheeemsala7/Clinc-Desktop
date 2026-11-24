@@ -165,7 +165,58 @@ export function formatDose(rawDose?: string, form?: string): string {
     if (num !== null) return `${num} أقراص استحلاب`;
   }
 
-  // ط. الأقراص الافتراضية (Tablet / ODT / أقراص / الافتراضي)
+  // ط. المضمضة والغرغرة (Mouthwash / Gargle)
+  if (
+    normalizedForm.includes('mouthwash') ||
+    normalizedForm.includes('gargle') ||
+    normalizedForm.includes('مضمض') ||
+    normalizedForm.includes('غرغر')
+  ) {
+    if (/[\u0600-\u06FF]/.test(cleanStr) && !cleanStr.includes('قرص') && !cleanStr.includes('كبسول')) {
+      return trimmed;
+    }
+    return 'مضمضة وغرغرة 15 مل (بدون تخفيف لمدة دقيقة ثم تبصق)';
+  }
+
+  // ي. جل الأنف والجل الموضعي (Nasal Gel / Gel)
+  if (
+    normalizedForm.includes('nasal gel') ||
+    normalizedForm.includes('nesl gel') ||
+    normalizedForm.includes('جل انف') ||
+    normalizedForm.includes('جل أنف')
+  ) {
+    if (/[\u0600-\u06FF]/.test(cleanStr) && !cleanStr.includes('قرص') && !cleanStr.includes('كبسول')) {
+      return trimmed;
+    }
+    return 'دهان جل موضعي داخل الأنف طبقة رقيقة';
+  }
+  if (normalizedForm.includes('gel') || normalizedForm.includes('جل')) {
+    if (/[\u0600-\u06FF]/.test(cleanStr) && !cleanStr.includes('قرص') && !cleanStr.includes('كبسول')) {
+      return trimmed;
+    }
+    return 'دهان جل موضعي طبقة رقيقة على المكان المصاب';
+  }
+
+  // ك. الكريمات والمراهم واللوشن والشامبو
+  if (
+    normalizedForm.includes('cream') ||
+    normalizedForm.includes('ointment') ||
+    normalizedForm.includes('كريم') ||
+    normalizedForm.includes('مرهم')
+  ) {
+    if (/[\u0600-\u06FF]/.test(cleanStr) && !cleanStr.includes('قرص') && !cleanStr.includes('كبسول')) {
+      return trimmed;
+    }
+    return 'دهان موضعي طبقة رقيقة';
+  }
+  if (normalizedForm.includes('lotion') || normalizedForm.includes('لوشن')) {
+    return 'دهان لوشن موضعي';
+  }
+  if (normalizedForm.includes('shampoo') || normalizedForm.includes('شامبو')) {
+    return 'غسيل الفروة مع تركه 5 دقائق ثم يشطف';
+  }
+
+  // ل. الأقراص الافتراضية (Tablet / ODT / أقراص / الافتراضي)
   if (isHalf) return 'نصف قرص';
   if (isOneAndHalf) return 'قرص ونصف';
   if (num === 1) return 'قرص واحد';

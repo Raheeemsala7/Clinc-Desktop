@@ -52,6 +52,7 @@ export interface DrugFormOption {
   id: string;
   labelEn: string;
   labelAr: string;
+  defaultDose?: string;
   isCustom?: boolean;
 }
 
@@ -179,7 +180,8 @@ export function PrescriptionView({
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
-  // 1. أشكال الأدوية المخصصة والمحذوفة
+  // 1. أشكال الأدوية من قاعدة البيانات والمخصصة والمحذوفة
+  const [dbForms, setDbForms] = useState<DrugFormOption[]>([]);
   const [customForms, setCustomForms] = useState<DrugFormOption[]>([]);
   const [deletedFormIds, setDeletedFormIds] = useState<string[]>([]);
 
@@ -335,6 +337,30 @@ export function PrescriptionView({
         return next;
       });
 
+      // حفظ في قاعدة البيانات أيضاً ليتزامن مع صفحة إدارة أنواع الأدوية
+      fetch('/api/drugs/forms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: en, nameAr: ar }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((resData) => {
+          const saved = resData?.payload || resData;
+          if (saved?.id) {
+            setDbForms((prev) => [
+              ...prev.filter((f) => f.labelEn.toLowerCase() !== en.toLowerCase()),
+              {
+                id: saved.id,
+                labelEn: saved.name,
+                labelAr: saved.nameAr,
+                defaultDose: saved.defaultDose || '',
+                isCustom: Boolean(saved.isCustom),
+              },
+            ]);
+          }
+        })
+        .catch(() => {});
+
       setDeletedFormIds((prev) => {
         const next = prev.filter((x) => x !== id);
         try {
@@ -422,9 +448,12 @@ export function PrescriptionView({
   };
 
   const allDrugForms = useMemo(() => {
-    const combined = [...DRUG_FORMS, ...customForms];
+    const baseList = dbForms.length > 0 ? dbForms : DRUG_FORMS;
+    const seen = new Set(baseList.map((f) => f.labelEn.toLowerCase()));
+    const extras = customForms.filter((cf) => !seen.has(cf.labelEn.toLowerCase()));
+    const combined = [...baseList, ...extras];
     return combined.filter((f) => !deletedFormIds.includes(f.id));
-  }, [customForms, deletedFormIds]);
+  }, [dbForms, customForms, deletedFormIds]);
 
   const handleRemoveSuggestion = (
     field: 'dose' | 'concentration' | 'frequency' | 'duration',
@@ -480,9 +509,32 @@ export function PrescriptionView({
     return combined.filter((x) => !deletedSuggestions.dose.includes(x));
   };
 
-  // 1. جلب الأدوية المسجلة مسبقاً من الخادم
+  // 1. جلب الأدوية وأشكال الأدوية المسجلة مسبقاً من الخادم
   useEffect(() => {
     let isMounted = true;
+    fetch('/api/drugs/forms')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data) return;
+        const list = Array.isArray(data.payload)
+          ? data.payload
+          : Array.isArray(data)
+          ? data
+          : [];
+        if (list.length > 0) {
+          setDbForms(
+            list.map((f: any) => ({
+              id: f.id || f.name,
+              labelEn: f.name,
+              labelAr: f.nameAr,
+              defaultDose: f.defaultDose || '',
+              isCustom: Boolean(f.isCustom),
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+
     fetch('/api/drugs')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -582,7 +634,13 @@ export function PrescriptionView({
   // 6. اختيار شكل دواء جديد مع تحديث وحدة الجرعة تلقائياً وفوراً
   const handleSelectFormForRow = (itemId: string, newForm: string) => {
     const currentItem = items.find((it) => it.id === itemId);
-    const nextDose = adaptDoseToNewForm(currentItem?.dose, newForm);
+    const matchedForm = allDrugForms.find(
+      (f) => f.labelEn.toLowerCase() === newForm.toLowerCase() || f.id.toLowerCase() === newForm.toLowerCase()
+    );
+    const nextDose =
+      matchedForm?.defaultDose && matchedForm.defaultDose.trim()
+        ? matchedForm.defaultDose.trim()
+        : adaptDoseToNewForm(currentItem?.dose, newForm);
 
     onChange((prev) => ({
       ...prev,
@@ -1435,15 +1493,14 @@ export function PrescriptionView({
  */
 /**
  * نموذج الروشتة الطبية الجاهز للطباعة الدقيقة على ورق العيادة المطبوع مسبقاً
- * المقاسات المعتمدة لطابعة العيادة:
- * - عرض الورقة: 16.5cm
- * - طول الورقة: 25cm (على ورق A4)
- * - مساحة فارغة في الأعلى: 10cm بالضبط
- * - مساحة فارغة في الأسفل: 2cm
- * - تقسيم الأدوية تلقائياً على صفحتين إذا زادت عن 5 أدوية (لكل صفحة نفس الهوامش العلوية 10cm)
- * - منع ظهور أي ورقة ثانية فارغة نهائياً
- * - ترقيم الأدوية بنقاط (•) بدلاً من الأرقام
- * - إخفاء الاسم والتشخيص ورمز R بالكامل (تطبع الأدوية والجرعات فقط)
+ * المقاسات المعتمدة لطابعة العيادة (A4 / ورق الروشتة 16.5cm × 24cm):
+ * - طول الورقة: 24cm
+ * - إزالة الخط الأخضر الجانبي بالكامل عند الطباعة
+ * - طباعة الاسم (top: 6.45cm, right: 1.5cm)، التاريخ (top: 6.45cm)، والكود (top: 6.45cm, left: 1.4cm)
+ * - هامش الأدوية الأيسر: 3.5cm بالضبط
+ * - هامش سفلي: 1.5cm فقط لاستيعاب حتى 8 أدوية في الوجه الأول
+ * - ظهر الورقة (الصفحة الثانية): يبدأ من الأعلى بهامش علوي 3cm وهامش أيسر 3.5cm
+ * - التعليمات الإضافية: هامش أيمن 2cm
  */
 export function PrintablePrescriptionSlip({
   examData,
@@ -1458,55 +1515,84 @@ export function PrintablePrescriptionSlip({
 }) {
   const items = examData.prescriptionItems || [];
 
-  // تقسيم الأدوية: بحد أقصى 5 أدوية لكل ورقة لضمان عدم ملامسة الهامش السفلي 2cm
-  // إذا زادت الأدوية، تُقسم على ورقتين بنفس المقاسات بالضبط
-  const ITEMS_PER_SLIP = 5;
+  // تقسيم الأدوية: الوجه الأول يستوعب حتى 8 أدوية (من 10cm حتى 1.5cm من الأسفل)
+  // وما يزيد يُطبع في ظهر الورقة (يبدأ من 3cm من الأعلى ويستوعب حتى 12 دواء)
+  const FRONT_PAGE_LIMIT = 8;
+  const BACK_PAGE_LIMIT = 12;
   const pages: PrescriptionMedicine[][] = [];
   if (items.length === 0) {
     pages.push([]);
   } else {
-    for (let i = 0; i < items.length; i += ITEMS_PER_SLIP) {
-      pages.push(items.slice(i, i + ITEMS_PER_SLIP));
+    pages.push(items.slice(0, FRONT_PAGE_LIMIT));
+    for (let i = FRONT_PAGE_LIMIT; i < items.length; i += BACK_PAGE_LIMIT) {
+      pages.push(items.slice(i, i + BACK_PAGE_LIMIT));
     }
   }
 
+  // تنسيق الاسم والتاريخ والكود للطباعة على الوجه الأول
+  const patientNameText = patient?.fullName || '';
+  const patientCodeText = patient?.fileNumber || examData.fileNo || '';
+  const rawDate = examData.date || new Date().toISOString().slice(0, 10);
+  const formattedDateText = (() => {
+    const m = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return `${m[3]} / ${m[2]} / ${m[1]}`;
+    return rawDate;
+  })();
+
   return (
     <>
-      {/* ستايل الطباعة الدقيق لمقاسات ورق روشتة د. إسلام ومنع أي ورقة فارغة نهائياً */}
+      {/* ستايل الطباعة الدقيق لمقاسات ورق روشتة د. إسلام ومنع أي خطوط جانبية أو ورق فارغ */}
       <style dangerouslySetInnerHTML={{ __html: `
         @page {
-          size: 16.5cm 25cm;
+          size: 16.5cm 24cm;
           margin: 0;
         }
         @media print {
           html, body {
-            width: 16.5cm !important;
+            width: auto !important;
             height: auto !important;
             min-height: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
             background: #ffffff !important;
+            background-color: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             overflow: visible !important;
+          }
+          [data-slot="sidebar"],
+          [data-slot="sidebar-container"],
+          [data-slot="sidebar-gap"],
+          [data-slot="sidebar-rail"],
+          aside {
+            display: none !important;
+            width: 0 !important;
           }
           .rx-print-wrapper {
             width: 16.5cm !important;
             margin: 0 !important;
             padding: 0 !important;
+            background: #ffffff !important;
           }
           .rx-print-page {
+            position: relative !important;
             width: 16.5cm !important;
-            height: 24.8cm !important;
-            max-height: 24.8cm !important;
+            height: 23.9cm !important;
+            max-height: 23.9cm !important;
             box-sizing: border-box !important;
-            padding-top: 10cm !important;
-            padding-bottom: 2cm !important;
-            padding-left: 1.2cm !important;
-            padding-right: 1.2cm !important;
-            margin: 0 auto !important;
+            padding-bottom: 1.5cm !important;
+            padding-left: 3.5cm !important;
+            padding-right: 0 !important;
+            margin: 0 !important;
             border: none !important;
+            background: #ffffff !important;
             overflow: hidden !important;
+          }
+          .rx-print-page-front {
+            padding-top: 9.8cm !important;
+          }
+          .rx-print-page-back {
+            padding-top: 3cm !important;
           }
           .rx-print-page:not(:last-child) {
             page-break-after: always !important;
@@ -1521,35 +1607,89 @@ export function PrintablePrescriptionSlip({
 
       <div className="rx-print-wrapper" dir="ltr">
         {pages.map((pageItems, pageIdx) => {
+          const isFirstPage = pageIdx === 0;
           const isLastPage = pageIdx === pages.length - 1;
 
           return (
             <div
               key={pageIdx}
               dir="ltr"
-              className="rx-print-page bg-white text-black font-sans mx-auto box-border"
+              className={`rx-print-page ${isFirstPage ? 'rx-print-page-front' : 'rx-print-page-back'} bg-white text-black font-sans relative box-border`}
               style={{
                 width: '16.5cm',
-                height: '24.8cm',
-                maxHeight: '24.8cm',
+                height: '23.9cm',
+                maxHeight: '23.9cm',
                 boxSizing: 'border-box',
-                paddingTop: '10cm',
-                paddingBottom: '2cm',
-                paddingLeft: '1.2cm',
-                paddingRight: '1.2cm',
+                paddingTop: isFirstPage ? '9.8cm' : '3cm',
+                paddingBottom: '1.5cm',
+                paddingLeft: '3.5cm',
+                paddingRight: '0',
                 pageBreakAfter: isLastPage ? 'avoid' : 'always',
                 breakAfter: isLastPage ? 'avoid' : 'page',
                 overflow: 'hidden',
               }}
             >
-              {/* قائمة الأدوية الموصوفة الخاصة بهذه الصفحة بنقاط (•) وبدون اسم أو تشخيص أو R */}
-              <div className="space-y-4" dir="ltr">
+              {/* بيانات المريض في الوجه الأول فقط حسب الإحداثيات المليمترية الدقيقة */}
+              {isFirstPage && (
+                <>
+                  {/* الاسم: من فوق 6.45cm ومن اليمين 1.5cm */}
+                  {patientNameText && (
+                    <div
+                      dir="rtl"
+                      style={{
+                        position: 'absolute',
+                        top: '6.45cm',
+                        right: '1.5cm',
+                        maxWidth: '6.8cm',
+                      }}
+                      className="text-xs sm:text-sm font-black text-black text-right leading-none whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      {patientNameText}
+                    </div>
+                  )}
+
+                  {/* التاريخ: على نفس السطر 6.45cm في خانة التاريخ */}
+                  {formattedDateText && (
+                    <div
+                      dir="ltr"
+                      style={{
+                        position: 'absolute',
+                        top: '6.45cm',
+                        left: '4.6cm',
+                      }}
+                      className="text-xs font-bold font-mono text-black leading-none whitespace-nowrap"
+                    >
+                      {formattedDateText}
+                    </div>
+                  )}
+
+                  {/* الكود: من فوق 6.45cm ومن الشمال 1.4cm */}
+                  {patientCodeText && (
+                    <div
+                      dir="ltr"
+                      style={{
+                        position: 'absolute',
+                        top: '6.45cm',
+                        left: '1.4cm',
+                      }}
+                      className="text-xs sm:text-sm font-black font-mono text-black leading-none whitespace-nowrap"
+                    >
+                      {patientCodeText}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* قائمة الأدوية الموصوفة بنقاط (•) مع هامش أيسر 3.5cm لاستغلال المساحة حتى 1.5cm أسفل الورقة */}
+              <div style={{ paddingRight: '1.2cm' }} dir="ltr">
                 {pageItems.length === 0 ? (
                   <p className="text-sm text-slate-400 italic">No medications prescribed.</p>
                 ) : (
-                  <div className="space-y-3.5 text-left">
+                  <div className="space-y-2 text-left">
                     {pageItems.map((item, idx) => {
-                      const formObj = DRUG_FORMS.find((f) => f.id === item.form);
+                      const formObj = DRUG_FORMS.find(
+                        (f) => f.id.toLowerCase() === (item.form || '').toLowerCase()
+                      );
                       const formEnglish = formObj ? formObj.labelEn : (item.form || 'Tablet');
 
                       // ترجمة الجرعة والتكرار والمدة للصياغة الطبية المطلوبة
@@ -1562,27 +1702,27 @@ export function PrintablePrescriptionSlip({
 
                       return (
                         <div key={item.id || idx} className="space-y-0.5 text-left leading-tight">
-                          {/* السطر الأول: نقطة (•) بدلاً من الرقم + اسم الدواء + التركيز + الشكل */}
-                          <div className="flex items-baseline gap-2 flex-wrap font-black text-black">
-                            <span className="text-xl font-black min-w-[14px] text-slate-900">•</span>
-                            <span className="text-base sm:text-lg tracking-wide font-black text-slate-950">
+                          {/* السطر الأول: نقطة (•) + اسم الدواء + التركيز + الشكل */}
+                          <div className="flex items-baseline gap-1.5 flex-wrap font-black text-black">
+                            <span className="text-base font-black min-w-[10px] text-slate-900">•</span>
+                            <span className="text-[14px] tracking-wide font-black text-slate-950">
                               {item.drugName}
                             </span>
                             {item.concentration && (
-                              <span className="font-mono font-bold text-xs px-1.5 py-0.2 rounded border border-black/40 text-black">
+                              <span className="font-mono font-bold text-[11px] px-1 py-0 rounded border border-black/40 text-black">
                                 {item.concentration}
                               </span>
                             )}
                             {formEnglish && (
-                              <span className="font-bold text-xs px-1.5 py-0.2 rounded border border-black/40 text-black">
+                              <span className="font-bold text-[11px] px-1 py-0 rounded border border-black/40 text-black">
                                 {formEnglish}
                               </span>
                             )}
                           </div>
 
                           {/* السطر الثاني: الجرعة والتكرار والمدة أسفل اسم الدواء */}
-                          <div className="pl-5 space-y-0.5 text-left">
-                            <div className="text-xs sm:text-sm font-bold flex items-center gap-2 flex-wrap text-black">
+                          <div className="pl-4 space-y-0 text-left">
+                            <div className="text-[11px] font-bold flex items-center gap-1.5 flex-wrap text-black">
                               {displayDose && (
                                 <span className="font-black">{displayDose}</span>
                               )}
@@ -1599,9 +1739,9 @@ export function PrintablePrescriptionSlip({
                               )}
                             </div>
 
-                            {/* سطر الإرشادات والتعليمات إن وجد */}
+                            {/* سطر الإرشادات والتعليمات الخاصة بالدواء إن وجد */}
                             {item.instructions && (
-                              <div className="text-xs font-semibold text-slate-800" dir="rtl">
+                              <div className="text-[10.5px] font-semibold text-slate-800" dir="rtl">
                                 <span>◄ {item.instructions}</span>
                               </div>
                             )}
@@ -1613,9 +1753,13 @@ export function PrintablePrescriptionSlip({
                 )}
               </div>
 
-              {/* ملاحظات العلاج الإضافية إن وجدت (تظهر في الصفحة الأخيرة فقط) */}
+              {/* ملاحظات العلاج الإضافية إن وجدت (تظهر في الصفحة الأخيرة مع هامش يمين 2cm) */}
               {isLastPage && examData.treatmentNotes && (
-                <div dir="rtl" className="mt-4 pt-2 border-t border-dotted border-black/50 text-xs text-right">
+                <div
+                  dir="rtl"
+                  style={{ paddingRight: '2cm' }}
+                  className="mt-3 pt-2 border-t border-dotted border-black/50 text-[11px] text-right"
+                >
                   <span className="font-bold text-black block mb-0.5">تعليمات إضافية:</span>
                   <p className="text-slate-800 whitespace-pre-line leading-4">
                     {examData.treatmentNotes}

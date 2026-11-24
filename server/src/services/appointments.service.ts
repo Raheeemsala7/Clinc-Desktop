@@ -870,11 +870,21 @@ export class AppointmentsService {
         ],
       }).sort({ createdAt: -1 });
 
-      const initialExam =
+      const rawInitialExam =
         previousVisitWithExam?.entExamination &&
         Object.keys(previousVisitWithExam.entExamination).length > 0
           ? previousVisitWithExam.entExamination
           : (patient as any)?.masterExamination || {};
+
+      // التأكد في أول كشف للمريض (بدون زيارات فحص سابقة) أن تكون رسومات الفحص فارغة تماماً
+      const initialExam = previousVisitWithExam
+        ? rawInitialExam
+        : {
+            ...rawInitialExam,
+            ...(rawInitialExam.ear ? { ear: { ...rawInitialExam.ear, drawing: '', drawingHistory: [] } } : {}),
+            ...(rawInitialExam.nose ? { nose: { ...rawInitialExam.nose, drawing: '', drawingHistory: [] } } : {}),
+            ...(rawInitialExam.larynx ? { larynx: { ...rawInitialExam.larynx, drawing: '', drawingHistory: [] } } : {}),
+          };
 
       visit = await Visit.create({
         appointmentId: appt.id,
@@ -895,11 +905,21 @@ export class AppointmentsService {
         ],
       }).sort({ createdAt: -1 });
 
-      const initialExam =
+      const rawInitialExam =
         previousVisitWithExam?.entExamination &&
         Object.keys(previousVisitWithExam.entExamination).length > 0
           ? previousVisitWithExam.entExamination
           : (patient as any)?.masterExamination || {};
+
+      // التأكد في أول كشف للمريض (بدون زيارات فحص سابقة) أن تكون رسومات الفحص فارغة تماماً
+      const initialExam = previousVisitWithExam
+        ? rawInitialExam
+        : {
+            ...rawInitialExam,
+            ...(rawInitialExam.ear ? { ear: { ...rawInitialExam.ear, drawing: '', drawingHistory: [] } } : {}),
+            ...(rawInitialExam.nose ? { nose: { ...rawInitialExam.nose, drawing: '', drawingHistory: [] } } : {}),
+            ...(rawInitialExam.larynx ? { larynx: { ...rawInitialExam.larynx, drawing: '', drawingHistory: [] } } : {}),
+          };
 
       if (initialExam && Object.keys(initialExam).length > 0) {
         visit.entExamination = initialExam;

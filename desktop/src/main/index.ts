@@ -237,7 +237,7 @@ function buildMenu() {
           label: 'إعادة تحميل الصفحة',
           accelerator: 'CmdOrCtrl+R',
           click: () => {
-            mainWindow?.reload();
+            BrowserWindow.getFocusedWindow()?.reload() ?? mainWindow?.reload();
           },
         },
         { type: 'separator' },
@@ -247,6 +247,26 @@ function buildMenu() {
           click: () => {
             app.quit();
           },
+        },
+      ],
+    },
+    {
+      label: 'عرض وتكبير',
+      submenu: [
+        {
+          label: 'تكبير الشاشة (Zoom In)',
+          accelerator: 'CmdOrCtrl+=',
+          role: 'zoomIn',
+        },
+        {
+          label: 'تصغير الشاشة (Zoom Out)',
+          accelerator: 'CmdOrCtrl+-',
+          role: 'zoomOut',
+        },
+        {
+          label: 'الحجم الطبيعي (100%)',
+          accelerator: 'CmdOrCtrl+0',
+          role: 'resetZoom',
         },
       ],
     },
@@ -351,6 +371,61 @@ function buildMenu() {
   Menu.setApplicationMenu(menu);
 }
 
+function attachWindowHelpers(win: BrowserWindow) {
+  // دعم اختصارات التكبير والتصغير (Ctrl+ / Ctrl- / Ctrl+0) على أي لوحة مفاتيح (عربي/إنجليزي/أرقام)
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown' || (!input.control && !input.meta)) return;
+
+    const code = input.code;
+    const key = input.key;
+    const isZoomIn = key === '+' || key === '=' || code === 'Equal' || code === 'NumpadAdd';
+    const isZoomOut = key === '-' || key === '_' || code === 'Minus' || code === 'NumpadSubtract';
+    const isReset = key === '0' || code === 'Digit0' || code === 'Numpad0';
+
+    if (isZoomIn) {
+      event.preventDefault();
+      const next = Math.min(2.0, Number((win.webContents.getZoomFactor() + 0.1).toFixed(2)));
+      win.webContents.setZoomFactor(next);
+    } else if (isZoomOut) {
+      event.preventDefault();
+      const next = Math.max(0.5, Number((win.webContents.getZoomFactor() - 0.1).toFixed(2)));
+      win.webContents.setZoomFactor(next);
+    } else if (isReset) {
+      event.preventDefault();
+      win.webContents.setZoomFactor(1.0);
+    }
+  });
+
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    // النوافذ الداخلية للمنظومة (كشف، ملف مريض، روشتة) تفتح كنوافذ ديسكتوب مستقلة
+    if (url.includes('localhost:3000') || url.includes('127.0.0.1:3000') || url.startsWith('data:') || !url.startsWith('http')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          width: 1400,
+          height: 900,
+          autoHideMenuBar: true,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+          },
+        },
+      };
+    }
+
+    if (url.startsWith('http:') || url.startsWith('https:')) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    return { action: 'allow' };
+  });
+
+  // تطبيق نفس الاختصارات ومعالج النوافذ على أي نافذة فرعية جديدة
+  win.webContents.on('did-create-window', (childWin) => {
+    attachWindowHelpers(childWin);
+  });
+}
+
 async function createWindow() {
   buildMenu();
 
@@ -374,29 +449,7 @@ async function createWindow() {
     },
   });
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    // النوافذ الداخلية للمنظومة (كشف، ملف مريض، روشتة) تفتح كنوافذ ديسكتوب مستقلة
-    if (url.includes('localhost:3000') || url.includes('127.0.0.1:3000') || url.startsWith('data:') || !url.startsWith('http')) {
-      return {
-        action: 'allow',
-        overrideBrowserWindowOptions: {
-          width: 1400,
-          height: 900,
-          autoHideMenuBar: true,
-          webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: true,
-          },
-        },
-      };
-    }
-
-    if (url.startsWith('http:') || url.startsWith('https:')) {
-      shell.openExternal(url);
-      return { action: 'deny' };
-    }
-    return { action: 'allow' };
-  });
+  attachWindowHelpers(mainWindow);
 
   mainWindow.maximize();
   mainWindow.show();

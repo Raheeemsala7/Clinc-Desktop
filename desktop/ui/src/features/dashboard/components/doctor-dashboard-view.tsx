@@ -163,6 +163,15 @@ export const DoctorDashboardView = ({
   const admitMutation = useAdmitAppointmentMutation();
   const finishExamMutation = useFinishExamAppointmentMutation();
 
+  // إدخال المريض للكشف ثم فتح استمارة الفحص في نافذة مستقلة تلقائياً
+  const handleAdmitAndOpenExam = (appointmentId: string) => {
+    admitMutation.mutate(appointmentId, {
+      onSuccess: () => {
+        window.open(`/dashboard/examination/${appointmentId}`, '_blank', 'width=1400,height=900,scrollbars=yes,resizable=yes');
+      },
+    });
+  };
+
   const isAvailable = (doctorStatusData?.status || 'AVAILABLE') === 'AVAILABLE';
 
   // تصنيف المرضى
@@ -533,7 +542,7 @@ export const DoctorDashboardView = ({
                 slots={calendarData?.daySlots || []}
                 selectedDate={currentDate}
                 isDoctorView={true}
-                onAdmit={(id) => admitMutation.mutate(id)}
+                onAdmit={handleAdmitAndOpenExam}
                 isAdmitting={admitMutation.isPending}
                 admittingId={admitMutation.variables as string}
                 onFinishExam={(id) => finishExamMutation.mutate(id)}
@@ -659,7 +668,7 @@ export const DoctorDashboardView = ({
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => admitMutation.mutate(waitingPatients[0].id)}
+                  onClick={() => handleAdmitAndOpenExam(waitingPatients[0].id)}
                   disabled={admitMutation.isPending}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer disabled:opacity-60 whitespace-nowrap"
                 >
@@ -672,6 +681,8 @@ export const DoctorDashboardView = ({
                 </button>
                 <Link
                   href={`/dashboard/examination/${waitingPatients[0].id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs whitespace-nowrap"
                 >
                   <Stethoscope className="w-4 h-4 text-[#0B7B5E]" />
@@ -934,7 +945,7 @@ export const DoctorDashboardView = ({
                         {(isWaiting || isBooked) && (
                           <button
                             type="button"
-                            onClick={() => admitMutation.mutate(patient.id)}
+                            onClick={() => handleAdmitAndOpenExam(patient.id)}
                             disabled={admitMutation.isPending}
                             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer disabled:opacity-60 whitespace-nowrap"
                           >

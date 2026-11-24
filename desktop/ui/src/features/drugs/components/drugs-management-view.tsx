@@ -45,7 +45,7 @@ const FORM_OPTIONS = [
 ];
 
 export function DrugsManagementView() {
-  const [activeTab, setActiveTab] = useState<'catalog' | 'analytics'>('catalog');
+  const [activeTab, setActiveTab] = useState<'catalog' | 'forms' | 'analytics'>('catalog');
   const [drugs, setDrugs] = useState<DrugItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,9 +92,19 @@ export function DrugsManagementView() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Custom Forms State (إدارة الأشكال والأنواع الدوائية المخصصة للطبيب)
-  const [customForms, setCustomForms] = useState<Array<{ id: string; name: string; nameAr: string; defaultDose?: string }>>([]);
+  // Custom Forms State (إدارة الأشكال والأنواع الدوائية الكاملة للطبيب)
+  const [customForms, setCustomForms] = useState<
+    Array<{ id: string; name: string; nameAr: string; defaultDose?: string; defaultInstructions?: string; isCustom?: boolean }>
+  >([]);
+  const [formsSearchQuery, setFormsSearchQuery] = useState('');
   const [isAddFormModalOpen, setIsAddFormModalOpen] = useState(false);
+  const [editingForm, setEditingForm] = useState<{
+    id: string;
+    name: string;
+    nameAr: string;
+    defaultDose?: string;
+    isCustom?: boolean;
+  } | null>(null);
   const [newFormInput, setNewFormInput] = useState({ name: '', nameAr: '', defaultDose: '' });
   const [isSavingForm, setIsSavingForm] = useState(false);
 
@@ -109,6 +119,17 @@ export function DrugsManagementView() {
     } catch {}
   };
 
+  const filteredForms = useMemo(() => {
+    if (!formsSearchQuery.trim()) return customForms;
+    const q = formsSearchQuery.trim().toLowerCase();
+    return customForms.filter(
+      (cf) =>
+        cf.name.toLowerCase().includes(q) ||
+        cf.nameAr.toLowerCase().includes(q) ||
+        (cf.defaultDose && cf.defaultDose.toLowerCase().includes(q))
+    );
+  }, [customForms, formsSearchQuery]);
+
   const allFormOptions = useMemo(() => {
     const base = [...FORM_OPTIONS];
     customForms.forEach((cf) => {
@@ -119,6 +140,43 @@ export function DrugsManagementView() {
     return base;
   }, [customForms]);
 
+  const handleOpenAddFormModal = () => {
+    setEditingForm(null);
+    setNewFormInput({ name: '', nameAr: '', defaultDose: '' });
+    setIsAddFormModalOpen(true);
+  };
+
+  const handleOpenEditFormModal = (form: {
+    id: string;
+    name: string;
+    nameAr: string;
+    defaultDose?: string;
+    isCustom?: boolean;
+  }) => {
+    setEditingForm(form);
+    setNewFormInput({
+      name: form.name || '',
+      nameAr: form.nameAr || '',
+      defaultDose: form.defaultDose || '',
+    });
+    setIsAddFormModalOpen(true);
+  };
+
+  const handleDeleteCustomForm = async (form: { id: string; name: string; nameAr: string }) => {
+    if (!confirm(`هل أنت متأكد من حذف النوع "${form.name} (${form.nameAr})" من القائمة؟`)) return;
+    try {
+      const res = await fetch(`/api/drugs/forms/${form.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success(`✓ تم حذف "${form.name}" بنجاح`);
+        fetchCustomForms();
+      } else {
+        toast.error('تعذر حذف الشكل الدوائي');
+      }
+    } catch {
+      toast.error('حدث خطأ أثناء حذف الشكل الدوائي');
+    }
+  };
+
   const handleSaveCustomForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFormInput.name.trim() || !newFormInput.nameAr.trim()) {
@@ -127,8 +185,10 @@ export function DrugsManagementView() {
     }
     setIsSavingForm(true);
     try {
-      const res = await fetch('/api/drugs/forms', {
-        method: 'POST',
+      const url = editingForm ? `/api/drugs/forms/${editingForm.id}` : '/api/drugs/forms';
+      const method = editingForm ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newFormInput.name.trim(),
@@ -140,13 +200,20 @@ export function DrugsManagementView() {
       if (res.ok) {
         const addedName = newFormInput.name.trim();
         const defaultDose = newFormInput.defaultDose.trim();
-        toast.success(`✓ تم حفظ وإضافة الشكل الدوائي "${addedName}" بنجاح`);
-        setModalForm((prev) => ({
-          ...prev,
-          form: addedName,
-          dose: defaultDose || adaptDoseToNewForm(prev.dose, addedName),
-        }));
+        toast.success(
+          editingForm
+            ? `✓ تم تعديل الشكل الدوائي "${addedName}" بنجاح`
+            : `✓ تم حفظ وإضافة الشكل الدوائي "${addedName}" بنجاح`
+        );
+        if (!editingForm) {
+          setModalForm((prev) => ({
+            ...prev,
+            form: addedName,
+            dose: defaultDose || adaptDoseToNewForm(prev.dose, addedName),
+          }));
+        }
         setNewFormInput({ name: '', nameAr: '', defaultDose: '' });
+        setEditingForm(null);
         setIsAddFormModalOpen(false);
         fetchCustomForms();
       } else {
@@ -423,7 +490,7 @@ export function DrugsManagementView() {
 
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* تبديل التبويبات */}
-          <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/70 flex items-center gap-1">
+          <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/70 flex items-center gap-1 flex-wrap">
             <button
               type="button"
               onClick={() => setActiveTab('catalog')}
@@ -435,6 +502,18 @@ export function DrugsManagementView() {
             >
               <FileSpreadsheet className="w-4 h-4" />
               <span>دليل الأدوية ({drugs.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('forms')}
+              className={`h-9 px-3.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'forms'
+                  ? 'bg-[#074C3A] text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>أنواع وأشكال الأدوية ({customForms.length})</span>
             </button>
             <button
               type="button"
@@ -453,7 +532,7 @@ export function DrugsManagementView() {
           {/* زر إضافة شكل دوائي جديد */}
           <button
             type="button"
-            onClick={() => setIsAddFormModalOpen(true)}
+            onClick={handleOpenAddFormModal}
             className="h-11 px-4 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-200 text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -921,6 +1000,114 @@ export function DrugsManagementView() {
         </div>
       )}
 
+      {/* 3.5 محتوى تبويب: إدارة أنواع وأشكال الأدوية (Forms CRUD Page) */}
+      {activeTab === 'forms' && (
+        <div className="space-y-4">
+          <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <input
+                type="text"
+                value={formsSearchQuery}
+                onChange={(e) => setFormsSearchQuery(e.target.value)}
+                placeholder="ابحث عن نوع الدواء بالإنجليزية أو العربية..."
+                className="w-full h-10 pr-9 pl-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
+              />
+              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              {formsSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setFormsSearchQuery('')}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+              <span>إجمالي الأنواع: <strong className="text-[#074C3A]">{filteredForms.length}</strong></span>
+              <button
+                type="button"
+                onClick={handleOpenAddFormModal}
+                className="px-3.5 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>إضافة نوع دوائي جديد</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+            {filteredForms.length === 0 ? (
+              <div className="p-12 text-center space-y-3">
+                <Sparkles className="w-10 h-10 text-slate-300 mx-auto" />
+                <p className="text-sm font-bold text-slate-700">لا توجد أنواع دوائية مطابقة للبحث</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-start border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold">
+                      <th className="py-3.5 px-5 text-start">الاسم بالإنجليزية (Form)</th>
+                      <th className="py-3.5 px-4 text-start">الترجمة بالعربية</th>
+                      <th className="py-3.5 px-4 text-start">الجرعة الافتراضية المقترحة</th>
+                      <th className="py-3.5 px-4 text-center">التصنيف</th>
+                      <th className="py-3.5 px-5 text-end">إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredForms.map((cf) => (
+                      <tr key={cf.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3 px-5 font-black text-[#074C3A] text-sm" dir="ltr">
+                          {cf.name}
+                        </td>
+                        <td className="py-3 px-4 font-bold text-slate-800">
+                          {cf.nameAr}
+                        </td>
+                        <td className="py-3 px-4 text-slate-600 font-medium">
+                          {cf.defaultDose || <span className="text-slate-400">— (تلقائي حسب النوع)</span>}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                              cf.isCustom
+                                ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                : 'bg-[#E3F5EE] text-[#0B7B5E]'
+                            }`}
+                          >
+                            {cf.isCustom ? 'مضاف بواسطة الطبيب ★' : 'أساسي بالنظام'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-5 text-end">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditFormModal(cf)}
+                              className="p-2 rounded-xl border border-slate-200 hover:border-[#0B7B5E] hover:bg-emerald-50 text-slate-600 hover:text-[#074C3A] transition-colors cursor-pointer"
+                              title="تعديل هذا النوع"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCustomForm(cf)}
+                              className="p-2 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+                              title="حذف هذا النوع"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 4. نافذة منبثقة لإضافة أو تعديل دواء (Modal) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-50">
@@ -1123,15 +1310,18 @@ export function DrugsManagementView() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#0B7B5E] flex items-center justify-center font-bold">
-                  <Plus className="w-4 h-4 stroke-[3]" />
+                  {editingForm ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4 stroke-[3]" />}
                 </div>
                 <h3 className="font-black text-base text-[#074C3A]">
-                  إضافة شكل أو نوع دوائي جديد
+                  {editingForm ? `تعديل الشكل الدوائي: ${editingForm.name}` : 'إضافة شكل أو نوع دوائي جديد'}
                 </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setIsAddFormModalOpen(false)}
+                onClick={() => {
+                  setIsAddFormModalOpen(false);
+                  setEditingForm(null);
+                }}
                 className="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center cursor-pointer"
               >
                 ✕
@@ -1139,7 +1329,9 @@ export function DrugsManagementView() {
             </div>
 
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
-              يمكنك هنا إضافة أشكال أو مستحضرات جديدة غير مدرجة في القائمة (مثل جل أنف، مضمضة، غسول، بخاخ فم، أمبولات...) لتصبح متاحة فوراً في الروشتات وقائمة الأدوية.
+              {editingForm
+                ? 'يمكنك تعديل الاسم أو الترجمة العربية أو الجرعة الافتراضية لهذا النوع ليظهر محدّثاً فوراً في جميع الروشتات.'
+                : 'يمكنك هنا إضافة أشكال أو مستحضرات جديدة غير مدرجة في القائمة (مثل جل أنف، مضمضة، غسول، بخاخ فم، أمبولات...) لتصبح متاحة فوراً في الروشتات وقائمة الأدوية.'}
             </p>
 
             <form onSubmit={handleSaveCustomForm} className="space-y-3.5">
@@ -1187,7 +1379,10 @@ export function DrugsManagementView() {
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsAddFormModalOpen(false)}
+                  onClick={() => {
+                    setIsAddFormModalOpen(false);
+                    setEditingForm(null);
+                  }}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   إلغاء
@@ -1197,7 +1392,7 @@ export function DrugsManagementView() {
                   disabled={isSavingForm}
                   className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-[#0B7B5E] hover:bg-[#09634C] transition-all shadow-xs cursor-pointer disabled:opacity-60"
                 >
-                  {isSavingForm ? 'جاري الحفظ...' : 'حفظ وإضافة للقائمة'}
+                  {isSavingForm ? 'جاري الحفظ...' : editingForm ? 'حفظ التعديلات' : 'حفظ وإضافة للقائمة'}
                 </button>
               </div>
             </form>

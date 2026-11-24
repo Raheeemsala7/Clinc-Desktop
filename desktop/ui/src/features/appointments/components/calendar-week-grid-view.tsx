@@ -206,6 +206,8 @@ export function CalendarWeekGridView({
                             return (
                               <Link
                                 key={appt.id}
+                                target={isDoctorView ? '_blank' : undefined}
+                                rel={isDoctorView ? 'noopener noreferrer' : undefined}
                                 href={
                                   isDoctorView
                                     ? `/dashboard/examination/${appt.id}`

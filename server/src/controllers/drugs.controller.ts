@@ -46,6 +46,12 @@ export class DrugsController {
     sendSuccess(res, form, { message: 'تم حفظ الشكل الدوائي بنجاح' });
   });
 
+  updateForm = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const form = await DrugsService.updateForm(id, req.body);
+    sendSuccess(res, form, { message: 'تم تحديث الشكل الدوائي بنجاح' });
+  });
+
   deleteForm = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     await DrugsService.deleteForm(id);

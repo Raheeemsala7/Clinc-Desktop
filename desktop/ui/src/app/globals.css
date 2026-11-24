@@ -200,13 +200,30 @@
   @page {
     margin: 0;
   }
-  html, body {
+  :root, html, body, [data-slot="sidebar-wrapper"], [data-slot="sidebar-inset"], main {
     overflow: visible !important;
     height: auto !important;
     min-height: auto !important;
-    background: white !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+  [data-slot="sidebar"],
+  [data-slot="sidebar-container"],
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-rail"],
+  aside,
+  header,
+  nav,
+  .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
   }
   .sheet-page-1 {
     page-break-after: always !important;

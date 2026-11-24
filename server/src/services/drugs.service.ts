@@ -1,5 +1,48 @@
 import { Drug, DrugForm, Prescription } from '../models';
 
+const DEFAULT_DRUG_FORMS: Array<{ name: string; nameAr: string; defaultDose: string; isCustom: boolean }> = [
+  { name: 'Tablet', nameAr: 'أقراص', defaultDose: 'قرص واحد', isCustom: false },
+  { name: 'ODT', nameAr: 'أقراص تذوب في الفم', defaultDose: 'قرص واحد يذوب بالفم', isCustom: false },
+  { name: 'ODF', nameAr: 'شرائط تذوب في الفم', defaultDose: 'شريط واحد يذوب على اللسان', isCustom: false },
+  { name: 'Capsule', nameAr: 'كبسولات', defaultDose: '1 كبسولة', isCustom: false },
+  { name: 'Syrup', nameAr: 'شراب', defaultDose: '5 سم (ملعقة صغيرة)', isCustom: false },
+  { name: 'Suspension', nameAr: 'معلق', defaultDose: '5 سم (ملعقة صغيرة)', isCustom: false },
+  { name: 'Oral Drops', nameAr: 'نقط بالفم', defaultDose: '5 نقط بالفم', isCustom: false },
+  { name: 'Oral Solution', nameAr: 'محلول فموي', defaultDose: '10 سم بالفم', isCustom: false },
+  { name: 'Effervescent Tablet', nameAr: 'أقراص فوارة', defaultDose: 'قرص فوار في نصف كوب ماء', isCustom: false },
+  { name: 'Chewable Tablet', nameAr: 'أقراص للمضغ', defaultDose: 'قرص للمضغ', isCustom: false },
+  { name: 'Sublingual Tablet', nameAr: 'أقراص تحت اللسان', defaultDose: 'قرص تحت اللسان', isCustom: false },
+  { name: 'Injection', nameAr: 'حقن', defaultDose: 'حقنة واحدة', isCustom: false },
+  { name: 'Ampoule', nameAr: 'أمبول', defaultDose: 'حقنة واحدة', isCustom: false },
+  { name: 'Vial', nameAr: 'فيال', defaultDose: 'حقنة واحدة', isCustom: false },
+  { name: 'Cream', nameAr: 'كريم', defaultDose: 'دهان موضعي طبقة رقيقة صباحاً ومساءً', isCustom: false },
+  { name: 'Ointment', nameAr: 'مرهم', defaultDose: 'دهان موضعي خفيف على المنطقة المصابة', isCustom: false },
+  { name: 'Gel', nameAr: 'جل موضعي', defaultDose: 'دهان جل موضعي طبقة رقيقة على المكان المصاب', isCustom: false },
+  { name: 'Lotion', nameAr: 'لوشن', defaultDose: 'دهان لوشن موضعي مع التدليك الخفيف', isCustom: false },
+  { name: 'Eye Drops', nameAr: 'نقط عين', defaultDose: 'نقطة واحدة بالعين المصابة', isCustom: false },
+  { name: 'Eye Ointment', nameAr: 'مرهم عين', defaultDose: 'دهان مرهم داخل جفن العين ليلاً', isCustom: false },
+  { name: 'Ear Drops', nameAr: 'نقط أذن', defaultDose: '3 نقط بالأذن المصابة', isCustom: false },
+  { name: 'Ear Spray', nameAr: 'بخاخ أذن', defaultDose: 'بخة واحدة بالأذن', isCustom: false },
+  { name: 'Nasal Drops', nameAr: 'نقط أنف', defaultDose: 'نقطتين في كل فتحة أنف', isCustom: false },
+  { name: 'Nasal Spray', nameAr: 'بخاخ أنف', defaultDose: 'بخة واحدة في كل فتحة أنف', isCustom: false },
+  { name: 'Nasal Gel', nameAr: 'جل أنف موضعي', defaultDose: 'دهان جل موضعي داخل الأنف طبقة رقيقة', isCustom: false },
+  { name: 'Nasal Wash', nameAr: 'غسول تنظيف الأنف', defaultDose: 'غسيل وتشطيف الأنف بالمحلول', isCustom: false },
+  { name: 'Inhaler', nameAr: 'بخاخ استنشاق', defaultDose: 'بختين استنشاق', isCustom: false },
+  { name: 'Nebulizer Solution', nameAr: 'محلول جلسات استنشاق', defaultDose: 'أمبول واحد بجهاز الاستنشاق', isCustom: false },
+  { name: 'Inhalation Solution', nameAr: 'محلول استنشاق', defaultDose: 'جلسة استنشاق واحدة', isCustom: false },
+  { name: 'Suppository', nameAr: 'لبوس', defaultDose: 'لبوسة واحدة', isCustom: false },
+  { name: 'Vaginal Suppository', nameAr: 'لبوس مهبلي', defaultDose: 'لبوسة مهبلية مساءً', isCustom: false },
+  { name: 'Vaginal Cream', nameAr: 'كريم مهبلي', defaultDose: 'دهان موضعي مساءً', isCustom: false },
+  { name: 'Powder', nameAr: 'مسحوق', defaultDose: 'كيس واحد في نصف كوب ماء', isCustom: false },
+  { name: 'Sachet', nameAr: 'أكياس فوار', defaultDose: 'كيس واحد في نصف كوب ماء', isCustom: false },
+  { name: 'Granules', nameAr: 'حبيبات فوارة', defaultDose: 'كيس واحد في نصف كوب ماء', isCustom: false },
+  { name: 'Patch', nameAr: 'لصقات جلدية', defaultDose: 'لصقة واحدة موضعية تُغير يومياً', isCustom: false },
+  { name: 'Mouthwash', nameAr: 'مضمضة وغسول فم', defaultDose: 'مضمضة وغرغرة 15 مل (بدون تخفيف لمدة دقيقة ثم تبصق)', isCustom: false },
+  { name: 'Oral Spray', nameAr: 'بخاخ فم وحلق', defaultDose: 'بختين بالفم والحلق', isCustom: false },
+  { name: 'Lozenges', nameAr: 'أقراص استحلاب', defaultDose: 'قرص استحلاب واحد', isCustom: false },
+  { name: 'Gargle', nameAr: 'غرغرة ومطهر حلق', defaultDose: 'مضمضة وغرغرة 15 مل لمدة دقيقة ثم تبصق', isCustom: false },
+];
+
 export class DrugsService {
   static async searchDrugs(query = '', limit = 100) {
     const filter: any = { isActive: true };
@@ -189,7 +232,15 @@ export class DrugsService {
   }
 
   static async getForms() {
-    const customForms = await DrugForm.find().sort({ createdAt: -1 });
+    const count = await DrugForm.countDocuments();
+    if (count === 0) {
+      try {
+        await DrugForm.insertMany(DEFAULT_DRUG_FORMS, { ordered: false });
+      } catch {
+        // ignore duplicate seed errors
+      }
+    }
+    const customForms = await DrugForm.find().sort({ isCustom: -1, createdAt: 1 });
     return customForms.map((f) => ({
       id: f.id,
       name: f.name,
@@ -229,7 +280,35 @@ export class DrugsService {
       nameAr: form.nameAr,
       defaultDose: form.defaultDose || '',
       defaultInstructions: form.defaultInstructions || '',
-      isCustom: true,
+      isCustom: Boolean(form.isCustom),
+    };
+  }
+
+  static async updateForm(
+    id: string,
+    dto: {
+      name?: string;
+      nameAr?: string;
+      defaultDose?: string;
+      defaultInstructions?: string;
+    }
+  ) {
+    const updateData: any = {};
+    if (dto.name !== undefined) updateData.name = dto.name.trim();
+    if (dto.nameAr !== undefined) updateData.nameAr = dto.nameAr.trim();
+    if (dto.defaultDose !== undefined) updateData.defaultDose = dto.defaultDose.trim();
+    if (dto.defaultInstructions !== undefined) updateData.defaultInstructions = dto.defaultInstructions.trim();
+
+    const form = await DrugForm.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+    if (!form) return null;
+
+    return {
+      id: form.id,
+      name: form.name,
+      nameAr: form.nameAr,
+      defaultDose: form.defaultDose || '',
+      defaultInstructions: form.defaultInstructions || '',
+      isCustom: Boolean(form.isCustom),
     };
   }
 
