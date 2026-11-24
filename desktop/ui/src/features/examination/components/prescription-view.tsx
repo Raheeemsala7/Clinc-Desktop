@@ -19,6 +19,8 @@ import {
   Calendar,
   X,
   RotateCcw,
+  Ruler,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getPatientPrescriptionHistoryAction } from '../apis/examination.action';
@@ -179,6 +181,8 @@ export function PrescriptionView({
   const [expandedManualEditRows, setExpandedManualEditRows] = useState<Record<string, boolean>>({});
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
+  const [showPrintGuides, setShowPrintGuides] = useState(true);
 
   // 1. أشكال الأدوية من قاعدة البيانات والمخصصة والمحذوفة
   const [dbForms, setDbForms] = useState<DrugFormOption[]>([]);
@@ -1324,6 +1328,17 @@ export function PrescriptionView({
             <span>{isSaving ? 'جاري الحفظ...' : 'حفظ التعديلات'}</span>
           </button>
 
+          {/* معاينة المقاسات والمسافات بالمسطرة قبل الطباعة */}
+          <button
+            type="button"
+            onClick={() => setIsPrintPreviewOpen(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-black transition-all cursor-pointer"
+            title="معاينة الورقة بالمسطرة والتحقق من كافة المسافات بالسنتيمتر قبل الطباعة"
+          >
+            <Ruler className="w-4 h-4 text-amber-700" />
+            <span>معاينة المقاسات والمسافات 📏</span>
+          </button>
+
           {/* طباعة أدوية فقط للورق المطبوع مسبقاً */}
           <button
             type="button"
@@ -1481,6 +1496,89 @@ export function PrescriptionView({
         onSelectDrug={addQuickDrug}
         onCopyEntireRx={handleCopyEntireRx}
       />
+
+      {/* نافذة معاينة المقاسات والمسافات بالمسطرة بالسنتيمتر */}
+      {isPrintPreviewOpen && (
+        <div
+          className="fixed inset-0 z-[110] bg-slate-900/80 backdrop-blur-xs flex flex-col p-3 sm:p-5 print:hidden animate-in fade-in duration-150"
+          dir="rtl"
+          onClick={() => setIsPrintPreviewOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-5xl mx-auto flex flex-col max-h-[94vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* رأس نافذة المعاينة */}
+            <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/90">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                  <Ruler className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm sm:text-base text-[#074C3A]">
+                    معاينة الطباعة والتحقق من المسافات بالسنتيمتر (16.5cm × 24cm)
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-bold">
+                    تحقق من موضع الاسم (6.45cm / يمين 1.5cm) والكود (شمال 1.4cm) والأدوية (شمال 3.5cm) والهامش السفلي (1.5cm)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShowPrintGuides((v) => !v)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                    showPrintGuides
+                      ? 'bg-amber-100 border-amber-300 text-amber-900'
+                      : 'bg-white border-slate-200 text-slate-600'
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>{showPrintGuides ? 'إخفاء خطوط القياس' : 'إظهار خطوط القياس'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPrintPreviewOpen(false);
+                    setTimeout(() => onPrintRx('plain'), 100);
+                  }}
+                  className="px-4 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>طباعة الآن / حفظ PDF</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPrintPreviewOpen(false)}
+                  className="w-8 h-8 rounded-xl hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* منطقة عرض الورقة الفعلية مع المسطرة */}
+            <div className="flex-1 overflow-y-auto bg-slate-200/80 p-4 sm:p-6 flex flex-col items-center gap-6">
+              <div className="text-xs font-bold text-slate-700 bg-white/90 px-4 py-2 rounded-xl border border-slate-300 shadow-2xs text-center">
+                💡 نصيحة للتجربة العملية: اضغط <strong>&quot;طباعة الآن&quot;</strong> واطبع على <strong>ورقة بيضاء عادية A4</strong> (أو احفظها PDF) ثم ضع الورقة المطبوعة فوق الروشتة الأصلية أمام الإضاءة للتأكد 100% من تطابق السنتيمترات.
+              </div>
+
+              <div className="shadow-2xl rounded-sm overflow-hidden border border-slate-400 bg-white">
+                <PrintablePrescriptionSlip
+                  examData={examData}
+                  patient={patient}
+                  doctor={doctor}
+                  printMode="plain"
+                  showGuides={showPrintGuides}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1507,11 +1605,13 @@ export function PrintablePrescriptionSlip({
   patient,
   doctor,
   printMode = 'full',
+  showGuides = false,
 }: {
   examData: EntExaminationData;
   patient: any;
   doctor?: any;
   printMode?: 'full' | 'plain';
+  showGuides?: boolean;
 }) {
   const items = examData.prescriptionItems || [];
 
@@ -1630,6 +1730,77 @@ export function PrintablePrescriptionSlip({
               }}
             >
               {/* بيانات المريض في الوجه الأول فقط حسب الإحداثيات المليمترية الدقيقة */}
+              {showGuides && (
+                <div className="print:hidden pointer-events-none select-none">
+                  {/* شريط الهامش الأيسر 3.5cm */}
+                  <div
+                    style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '3.5cm' }}
+                    className="bg-sky-400/15 border-r-2 border-dashed border-sky-500 flex items-center justify-center"
+                  >
+                    <span className="bg-sky-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded -rotate-90 whitespace-nowrap">
+                      هامش أيسر 3.5cm
+                    </span>
+                  </div>
+
+                  {/* شريط الهامش السفلي 1.5cm */}
+                  <div
+                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1.5cm' }}
+                    className="bg-rose-400/15 border-t-2 border-dashed border-rose-500 flex items-center justify-center"
+                  >
+                    <span className="bg-rose-600 text-white text-[9px] font-bold px-2 py-0.5 rounded">
+                      هامش سفلي 1.5cm
+                    </span>
+                  </div>
+
+                  {/* شريط هامش التعليمات الأيمن 2cm */}
+                  <div
+                    style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '2cm' }}
+                    className="bg-amber-400/10 border-l border-dashed border-amber-500"
+                  >
+                    <span
+                      style={{ position: 'absolute', bottom: '2cm', right: '0.1cm' }}
+                      className="bg-amber-600 text-white text-[8px] font-bold px-1 py-0.5 rounded whitespace-nowrap"
+                    >
+                      يمين 2cm
+                    </span>
+                  </div>
+
+                  {isFirstPage ? (
+                    <>
+                      {/* خط سطر الاسم والتاريخ والكود 6.45cm */}
+                      <div
+                        style={{ position: 'absolute', top: '6.45cm', left: 0, right: 0 }}
+                        className="border-t-2 border-dashed border-rose-500"
+                      >
+                        <span className="bg-rose-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
+                          سطر البيانات 6.45cm
+                        </span>
+                      </div>
+
+                      {/* خط بداية الأدوية 9.8cm */}
+                      <div
+                        style={{ position: 'absolute', top: '9.8cm', left: 0, right: 0 }}
+                        className="border-t-2 border-dashed border-emerald-500"
+                      >
+                        <span className="bg-emerald-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
+                          بداية الأدوية ~10cm
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    /* خط بداية ظهر الورقة 3cm */
+                    <div
+                      style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3cm' }}
+                      className="bg-emerald-400/15 border-b-2 border-dashed border-emerald-500 flex items-end justify-center pb-1"
+                    >
+                      <span className="bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded">
+                        ظهر الورقة: هامش علوي 3cm
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {isFirstPage && (
                 <>
                   {/* الاسم: من فوق 6.45cm ومن اليمين 1.5cm */}

@@ -343,6 +343,7 @@
         "financialStatus": "الموقف المالي",
         "doctor": "الطبيب المعالج",
         "paidInFull": "مدفوع بالكامل",
+        "partiallyPaid": "مدفوع جزئياً",
         "remaining": "متبقي",
         "exempt": "معفى من الرسوم",
         "unpaid": "غير مدفوع",

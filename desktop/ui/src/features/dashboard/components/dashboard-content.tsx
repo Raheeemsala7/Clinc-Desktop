@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 import { authOptions } from "@/auth";
 
@@ -21,6 +22,7 @@ export default async function DashboardContent({
   doctor,
   receptionist,
 }: DashboardContentProps) {
+  await connection();
   const session = await getServerSession(authOptions);
 
   // المستخدم غير مسجل دخول

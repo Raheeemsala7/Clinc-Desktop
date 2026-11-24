@@ -343,6 +343,7 @@
         "financialStatus": "Financial Status",
         "doctor": "Doctor",
         "paidInFull": "Paid in Full",
+        "partiallyPaid": "Partially Paid",
         "remaining": "Remaining",
         "exempt": "Fee Exempt",
         "unpaid": "Unpaid",
