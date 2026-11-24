@@ -17,13 +17,10 @@ export class QueueService {
       // نتحقق من كشوفات اليوم النشطة، وأيضاً أي كشوفات سابقة لم تكتمل بعد (حجوزات قديمة متبقية)
       filter = {
         $or: [
-          // 1. كشوفات اليوم (نشطة أو بانتظار المحاسبة أو عليها متبقي)
+          // 1. كشوفات اليوم (نشطة، بانتظار المحاسبة، أو مكتملة لليوم، مع استبعاد الملغاة فقط)
           {
             clinicDate: today,
-            $or: [
-              { status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED', 'PENDING_CHECKOUT'] } },
-              { remainingAmount: { $gt: 0 }, isExempt: { $ne: true }, status: { $ne: 'CANCELLED' } },
-            ],
+            status: { $ne: 'CANCELLED' },
           },
           // 2. الحجوزات السابقة التي لم تكتمل بعد (حجوزات قديمة متبقية من أيام سابقة)
           {
@@ -50,7 +47,7 @@ export class QueueService {
     return Promise.all(
       appointments.map(async (appt) => {
         const [patient, doctor, visit] = await Promise.all([
-          Patient.findById(appt.patientId).select('id fullName phone gender age dateOfBirth'),
+          Patient.findById(appt.patientId).select('id fullName phone gender age dateOfBirth fileNumber'),
           User.findById(appt.doctorId).select('id name'),
           Visit.findOne({ appointmentId: appt.id }).select('id status'),
         ]);
@@ -90,6 +87,8 @@ export class QueueService {
           postponedCount: appt.postponedCount || 0,
           patientId: appt.patientId,
           patientName: patient?.fullName || 'Unknown',
+          patientFileNumber: (patient as any)?.fileNumber || '',
+          fileNumber: (patient as any)?.fileNumber || '',
           patientPhone: patient?.phone || '',
           patientGender: patient?.gender,
           patientAge: patient?.age,

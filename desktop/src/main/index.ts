@@ -375,6 +375,22 @@ async function createWindow() {
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    // النوافذ الداخلية للمنظومة (كشف، ملف مريض، روشتة) تفتح كنوافذ ديسكتوب مستقلة
+    if (url.includes('localhost:3000') || url.includes('127.0.0.1:3000') || url.startsWith('data:') || !url.startsWith('http')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          width: 1400,
+          height: 900,
+          autoHideMenuBar: true,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+          },
+        },
+      };
+    }
+
     if (url.startsWith('http:') || url.startsWith('https:')) {
       shell.openExternal(url);
       return { action: 'deny' };

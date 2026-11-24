@@ -27,6 +27,8 @@ export function TablePatientsRowActions({ patient }: TablePatientsRowActionsProp
       {/* 1. زر عرض الملف */}
       <Link
         href={profileUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         className="h-8 px-3 rounded-lg bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-xs shadow-2xs transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
       >
         <span>عرض الملف</span>

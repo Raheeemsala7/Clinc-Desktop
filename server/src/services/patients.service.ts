@@ -1,4 +1,5 @@
 import { Patient, Visit, Prescription, Appointment, User } from '../models';
+import { RealtimeService } from '../realtime/socket.server';
 import { normalizeArabic, validateFourPartName } from '../utils/arabic';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 import { NotFoundError, ForbiddenError, BadRequestError, ValidationError } from '../utils/errors';
@@ -251,6 +252,14 @@ export class PatientsService {
     }
 
     await patient.save();
+
+    try {
+      RealtimeService.emitPatientUpdated({
+        patientId: patient.id,
+        fileNumber: patient.fileNumber,
+        fullName: patient.fullName,
+      });
+    } catch {}
 
     await logAudit({
       userId: actor.id,
@@ -558,6 +567,14 @@ export class PatientsService {
     patient.deletedAt = new Date();
     await patient.save();
 
+    try {
+      RealtimeService.emitPatientUpdated({
+        patientId: patient.id,
+        fileNumber: patient.fileNumber,
+        fullName: patient.fullName,
+      });
+    } catch {}
+
     await logAudit({
       userId: actor.id,
       action: 'DELETE',
@@ -577,6 +594,14 @@ export class PatientsService {
     patient.isArchived = true;
     patient.archivedAt = new Date();
     await patient.save();
+
+    try {
+      RealtimeService.emitPatientUpdated({
+        patientId: patient.id,
+        fileNumber: patient.fileNumber,
+        fullName: patient.fullName,
+      });
+    } catch {}
 
     await logAudit({
       userId: actor.id,

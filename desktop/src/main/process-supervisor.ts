@@ -222,7 +222,12 @@ export class ProcessSupervisor {
     let command = this.getNodeBinary(projectRoot);
     let args: string[] = [];
 
-    if (scriptPath) {
+    if (!app.isPackaged) {
+      // وضع التطوير (Live Development Mode): تشغيل كود TypeScript المباشر فورياً
+      cwd = devServerDir;
+      command = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+      args = ['run', 'start:dev'];
+    } else if (scriptPath) {
       args = [scriptPath];
     } else {
       cwd = devServerDir;
@@ -321,11 +326,21 @@ export class ProcessSupervisor {
     }
 
     let command = this.getNodeBinary(projectRoot);
-    let args = resolved ? [resolved.scriptPath] : ['run', 'dev'];
-    let cwd = resolved ? resolved.cwd : desktopUiDir;
+    let args: string[] = [];
+    let cwd = desktopUiDir;
 
-    if (!resolved) {
+    if (!app.isPackaged) {
+      // وضع التطوير (Live Development Mode): تشغيل Next.js dev server مع Hot Reloading المباشر
       command = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+      args = ['run', 'dev'];
+      cwd = desktopUiDir;
+    } else if (resolved) {
+      args = [resolved.scriptPath];
+      cwd = resolved.cwd;
+    } else {
+      command = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+      args = ['run', 'dev'];
+      cwd = desktopUiDir;
     }
 
     supervisorLog(`[SUPERVISOR] Frontend spawn: command=${command}, args=${args.join(' ')}, cwd=${cwd}`);
@@ -343,7 +358,7 @@ export class ProcessSupervisor {
         NEXT_PUBLIC_SOCKET_URL: socketUrl,
         NEXTAUTH_SECRET: '204a49bce159670a0bba3850cac547dc8d8dfb04ef7402b6cbb5eac7986c5545',
         NEXTAUTH_URL: 'http://localhost:3000',
-        NODE_ENV: 'production',
+        NODE_ENV: !app.isPackaged ? 'development' : 'production',
       },
       stdio: 'pipe',
       shell: process.platform === 'win32' && command.endsWith('.cmd'),

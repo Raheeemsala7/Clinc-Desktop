@@ -22,6 +22,8 @@ export interface TodayWaitingPatient {
   patientName: string;
   patientPhone: string;
   patientAge?: number;
+  fileNumber?: string;
+  patientFileNumber?: string;
   doctorName?: string;
   type: string;
   source: string;
@@ -69,15 +71,18 @@ export function ReceptionQueueSearchTable({
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearchingExternal, setIsSearchingExternal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'WAITING' | 'COMPLETED'>('WAITING');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'WAITING' | 'COMPLETED'>('ALL');
 
-  // فصل قائمة اليوم إلى قائمة الانتظار النشطة وقائمة المكتملين
-  const { waitingList, completedList } = useMemo(() => {
+  // فصل وترتيب قائمة اليوم: شاشة العرض الموحدة (النشطين أولاً ثم المكتملين)، الانتظار، والمكتملين
+  const { allList, waitingList, completedList } = useMemo(() => {
+    const active = initialPatients.filter((p) => p.status !== 'COMPLETED');
+    const done = initialPatients.filter((p) => p.status === 'COMPLETED');
+
     const waiting: TodayWaitingPatient[] = [];
     const completed: TodayWaitingPatient[] = [];
 
     initialPatients.forEach((p) => {
-      const isCompleted = p.status === 'COMPLETED' && (p.isExempt || (p.remainingAmount || 0) === 0);
+      const isCompleted = p.status === 'COMPLETED';
       if (isCompleted) {
         completed.push(p);
       } else {
@@ -85,11 +90,11 @@ export function ReceptionQueueSearchTable({
       }
     });
 
-    return { waitingList: waiting, completedList: completed };
+    return { allList: [...active, ...done], waitingList: waiting, completedList: completed };
   }, [initialPatients]);
 
   // القائمة المحددة حسب التبويب النشط
-  const currentList = activeTab === 'WAITING' ? waitingList : completedList;
+  const currentList = activeTab === 'ALL' ? allList : activeTab === 'WAITING' ? waitingList : completedList;
 
   // فلترة القائمة المحلية بالبحث
   const filteredLocal = useMemo(() => {
@@ -99,15 +104,15 @@ export function ReceptionQueueSearchTable({
       const nameMatch = p.patientName?.toLowerCase().includes(term);
       const phoneMatch = p.patientPhone?.includes(term);
       const queueMatch = String(p.queueNumber).includes(term);
-      return nameMatch || phoneMatch || queueMatch;
+      const codeMatch = (p.fileNumber && p.fileNumber.toLowerCase().includes(term)) || ((p as any).patientFileNumber && (p as any).patientFileNumber.toLowerCase().includes(term));
+      return nameMatch || phoneMatch || queueMatch || codeMatch;
     });
   }, [searchTerm, currentList]);
 
-  // في قائمة الانتظار: التقيد بـ 10 مرضى كحد أقصى دائم
-  // في قائمة المكتملين: عرض جميع مرضى اليوم المكتملين
+  // عرض القائمة المفلترة
   const visiblePatients = useMemo(() => {
     if (activeTab === 'WAITING') {
-      return filteredLocal.slice(0, 10);
+      return filteredLocal.slice(0, 15);
     }
     return filteredLocal;
   }, [activeTab, filteredLocal]);
@@ -168,8 +173,27 @@ export function ReceptionQueueSearchTable({
 
   return (
     <div className="space-y-4 select-none" dir="rtl">
-      {/* 📑 تبويبات التبديل بين قائمة الانتظار الحالية وقائمة كشوفات اليوم المكتملة */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+      {/* 📑 تبويبات التبديل: شاشة العرض الموحدة (الكل)، صالة الانتظار، والمكتملين */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setActiveTab('ALL')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+            activeTab === 'ALL'
+              ? 'bg-[#0B7B5E] text-white shadow-sm'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <span>شاشة عرض اليوم الكاملة (الكل)</span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+              activeTab === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+            }`}
+          >
+            {allList.length}
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab('WAITING')}
@@ -179,7 +203,7 @@ export function ReceptionQueueSearchTable({
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          <span>صالة الانتظار الحالية</span>
+          <span>صالة الانتظار النشطة</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
               activeTab === 'WAITING' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
@@ -198,7 +222,7 @@ export function ReceptionQueueSearchTable({
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          <span>مرضى اليوم المكتملين والمغادرين</span>
+          <span>المكتملين والمغادرين</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
               activeTab === 'COMPLETED' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
@@ -400,8 +424,10 @@ export function ReceptionQueueSearchTable({
                   return (
                     <tr
                       key={patient.id}
-                      className={`transition-colors ${
-                        patient.status === 'PENDING_CHECKOUT'
+                      className={`transition-all ${
+                        patient.status === 'COMPLETED'
+                          ? 'bg-slate-50/60 opacity-60 hover:opacity-95 border-r-4 border-r-slate-300'
+                          : patient.status === 'PENDING_CHECKOUT'
                           ? 'bg-amber-50/50 hover:bg-amber-50/80 border-r-4 border-r-amber-500'
                           : patient.status === 'IN_PROGRESS'
                           ? 'bg-emerald-50/30 hover:bg-emerald-50/60 border-r-4 border-r-emerald-500'
@@ -418,9 +444,16 @@ export function ReceptionQueueSearchTable({
                       {/* اسم المريض وبياناته */}
                       <td className="py-4 px-6 text-start">
                         <div className="flex flex-col">
-                          <span className="font-bold text-[#074C3A] text-sm">
-                            {patient.patientName}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[#074C3A] text-sm">
+                              {patient.patientName}
+                            </span>
+                            {(patient.fileNumber || patient.patientFileNumber) && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-emerald-100/90 text-emerald-800 text-[10px] font-mono font-black border border-emerald-300/60 shadow-2xs">
+                                #{patient.fileNumber || patient.patientFileNumber}
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-slate-400 font-mono" dir="ltr">
                               {patient.patientPhone || 'لا يوجد هاتف'}
@@ -451,7 +484,7 @@ export function ReceptionQueueSearchTable({
                       {/* نوع الكشف ومصدر الحجز */}
                       <td className="py-4 px-6 text-center">
                         <div className="flex flex-col items-center gap-1">
-                          <span className="inline-block px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700">
+                          <span className="inline-block px-2.5 py-0.5 rounded-md text-xs font-black opacity-100 shadow-2xs bg-[#E3F5EE] text-[#0B7B5E] border border-[#D0E5DC]">
                             {patient.type === 'EXAMINATION'
                               ? t.checkup
                               : patient.type === 'CONSULTATION'

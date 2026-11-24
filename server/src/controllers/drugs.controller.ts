@@ -35,6 +35,22 @@ export class DrugsController {
     const stats = await DrugsService.getDrugAnalytics({ period, startDate, endDate });
     sendSuccess(res, stats);
   });
+
+  getForms = asyncHandler(async (req: Request, res: Response) => {
+    const forms = await DrugsService.getForms();
+    sendSuccess(res, forms);
+  });
+
+  saveForm = asyncHandler(async (req: Request, res: Response) => {
+    const form = await DrugsService.saveForm(req.body);
+    sendSuccess(res, form, { message: 'تم حفظ الشكل الدوائي بنجاح' });
+  });
+
+  deleteForm = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    await DrugsService.deleteForm(id);
+    sendSuccess(res, { success: true, message: 'تم حذف الشكل الدوائي بنجاح' });
+  });
 }
 
 export const drugsController = new DrugsController();

@@ -92,6 +92,73 @@ export function DrugsManagementView() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  // Custom Forms State (إدارة الأشكال والأنواع الدوائية المخصصة للطبيب)
+  const [customForms, setCustomForms] = useState<Array<{ id: string; name: string; nameAr: string; defaultDose?: string }>>([]);
+  const [isAddFormModalOpen, setIsAddFormModalOpen] = useState(false);
+  const [newFormInput, setNewFormInput] = useState({ name: '', nameAr: '', defaultDose: '' });
+  const [isSavingForm, setIsSavingForm] = useState(false);
+
+  const fetchCustomForms = async () => {
+    try {
+      const res = await fetch('/api/drugs/forms');
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data.payload) ? data.payload : Array.isArray(data) ? data : [];
+        setCustomForms(list);
+      }
+    } catch {}
+  };
+
+  const allFormOptions = useMemo(() => {
+    const base = [...FORM_OPTIONS];
+    customForms.forEach((cf) => {
+      if (!base.includes(cf.name)) {
+        base.push(cf.name);
+      }
+    });
+    return base;
+  }, [customForms]);
+
+  const handleSaveCustomForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFormInput.name.trim() || !newFormInput.nameAr.trim()) {
+      toast.error('يرجى كتابة اسم الشكل الدوائي بالإنجليزية والعربية');
+      return;
+    }
+    setIsSavingForm(true);
+    try {
+      const res = await fetch('/api/drugs/forms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newFormInput.name.trim(),
+          nameAr: newFormInput.nameAr.trim(),
+          defaultDose: newFormInput.defaultDose.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        const addedName = newFormInput.name.trim();
+        const defaultDose = newFormInput.defaultDose.trim();
+        toast.success(`✓ تم حفظ وإضافة الشكل الدوائي "${addedName}" بنجاح`);
+        setModalForm((prev) => ({
+          ...prev,
+          form: addedName,
+          dose: defaultDose || adaptDoseToNewForm(prev.dose, addedName),
+        }));
+        setNewFormInput({ name: '', nameAr: '', defaultDose: '' });
+        setIsAddFormModalOpen(false);
+        fetchCustomForms();
+      } else {
+        toast.error('تعذر حفظ الشكل الدوائي');
+      }
+    } catch {
+      toast.error('حدث خطأ أثناء حفظ الشكل الدوائي');
+    } finally {
+      setIsSavingForm(false);
+    }
+  };
+
   // 1. Fetch Drugs Catalog
   const fetchDrugs = async () => {
     setIsLoading(true);
@@ -117,6 +184,7 @@ export function DrugsManagementView() {
 
   useEffect(() => {
     fetchDrugs();
+    fetchCustomForms();
   }, []);
 
   // 2. Fetch Drug Analytics
@@ -381,6 +449,16 @@ export function DrugsManagementView() {
               <span>الأدوية الأكثر استخداماً</span>
             </button>
           </div>
+
+          {/* زر إضافة شكل دوائي جديد */}
+          <button
+            type="button"
+            onClick={() => setIsAddFormModalOpen(true)}
+            className="h-11 px-4 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-200 text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>إضافة شكل / نوع جديد</span>
+          </button>
 
           {/* زر إضافة دواء جديد */}
           <button
@@ -882,9 +960,19 @@ export function DrugsManagementView() {
               {/* نوع وشكل الدواء + التركيز */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    الشكل الدوائي (Form)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700">
+                      الشكل الدوائي (Form)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddFormModalOpen(true)}
+                      className="text-[11px] font-bold text-[#0B7B5E] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>إضافة شكل جديد</span>
+                    </button>
+                  </div>
                   <select
                     value={modalForm.form}
                     onChange={(e) => {
@@ -897,11 +985,14 @@ export function DrugsManagementView() {
                     }}
                     className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                   >
-                    {FORM_OPTIONS.map((f) => (
-                      <option key={f} value={f}>
-                        {f}
-                      </option>
-                    ))}
+                    {allFormOptions.map((f) => {
+                      const customMatch = customForms.find((cf) => cf.name === f);
+                      return (
+                        <option key={f} value={f}>
+                          {f} {customMatch ? `(${customMatch.nameAr}) ★` : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -1019,6 +1110,94 @@ export function DrugsManagementView() {
                   className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-[#0B7B5E] hover:bg-[#09634C] transition-all shadow-xs cursor-pointer disabled:opacity-60"
                 >
                   {isSaving ? 'جاري الحفظ...' : editingDrug ? 'حفظ التعديلات' : 'إضافة لقاعدة البيانات'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* 4. نافذة منبثقة لإضافة شكل / نوع دوائي مخصص جديد */}
+      {isAddFormModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-50" dir="rtl">
+          <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#0B7B5E] flex items-center justify-center font-bold">
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                </div>
+                <h3 className="font-black text-base text-[#074C3A]">
+                  إضافة شكل أو نوع دوائي جديد
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddFormModalOpen(false)}
+                className="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              يمكنك هنا إضافة أشكال أو مستحضرات جديدة غير مدرجة في القائمة (مثل جل أنف، مضمضة، غسول، بخاخ فم، أمبولات...) لتصبح متاحة فوراً في الروشتات وقائمة الأدوية.
+            </p>
+
+            <form onSubmit={handleSaveCustomForm} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  اسم الشكل بالإنجليزية (English Form Name) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newFormInput.name}
+                  onChange={(e) => setNewFormInput((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="مثال: Nasal Gel, Mouthwash, Throat Spray..."
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold text-xs text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  اسم الشكل بالعربية (Arabic Form Name) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newFormInput.nameAr}
+                  onChange={(e) => setNewFormInput((prev) => ({ ...prev, nameAr: e.target.value }))}
+                  placeholder="مثال: جل أنف، مضمضة وغسول فم، بخاخ للحلق..."
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold text-xs text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  الجرعة الافتراضية المقترحة (اختياري)
+                </label>
+                <input
+                  type="text"
+                  value={newFormInput.defaultDose}
+                  onChange={(e) => setNewFormInput((prev) => ({ ...prev, defaultDose: e.target.value }))}
+                  placeholder="مثال: دهان جل موضعي داخل الأنف، مضمضة 15 مل..."
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddFormModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingForm}
+                  className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-[#0B7B5E] hover:bg-[#09634C] transition-all shadow-xs cursor-pointer disabled:opacity-60"
+                >
+                  {isSavingForm ? 'جاري الحفظ...' : 'حفظ وإضافة للقائمة'}
                 </button>
               </div>
             </form>

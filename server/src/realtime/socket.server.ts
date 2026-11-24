@@ -213,6 +213,20 @@ export class RealtimeService {
     this.emitQueueUpdate({ appointmentId: payload.appointmentId, doctorId: payload.doctorId });
   }
 
+  static emitPatientUpdated(payload: {
+    patientId: string;
+    fileNumber?: string;
+    code?: string;
+    fullName?: string;
+  }) {
+    if (!this.io) return;
+    this.io.emit('patient:updated', {
+      ...payload,
+      timestamp: new Date().toISOString(),
+    });
+    this.emitQueueUpdate({});
+  }
+
   static emitPaymentRecorded(payload: {
     paymentId: string;
     appointmentId: string;

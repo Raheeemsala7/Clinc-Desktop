@@ -4,8 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { Toaster } from '../components/ui/sonner';
 import NextAuthProvider from './components/next-auth-provider';
 import ReactQueryProvider from './components/react-query.provider';
-// import { ThemeProvider } from "./_components/theme-provider";
-// import NextAuthProvider from "./_components/next-auth-provider";
+import { GlobalContextMenu } from '../components/global-context-menu';
 
 export const Providers = ({ children , locale }: { children: React.ReactNode , locale :string }) => {
     return (
@@ -14,6 +13,7 @@ export const Providers = ({ children , locale }: { children: React.ReactNode , l
             {/* <ThemeProvider> */}
             <NextAuthProvider>
                 <Toaster richColors  position={locale === "en" ? "top-left" : "top-right"}/>
+                <GlobalContextMenu />
                 {children}
             </NextAuthProvider>
             {/* </ThemeProvider> */}

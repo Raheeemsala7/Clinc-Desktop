@@ -34,3 +34,28 @@ const DrugSchema = new Schema(
 );
 
 export const Drug = mongoose.models.Drug || mongoose.model<IDrug>('Drug', DrugSchema);
+
+export interface IDrugForm extends Document {
+  id: string;
+  name: string;
+  nameAr: string;
+  defaultDose?: string | null;
+  defaultInstructions?: string | null;
+  isCustom: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const DrugFormSchema = new Schema(
+  {
+    _id: { type: String, default: uuidv4 },
+    name: { type: String, required: true, unique: true, trim: true },
+    nameAr: { type: String, required: true, trim: true },
+    defaultDose: { type: String, default: null },
+    defaultInstructions: { type: String, default: null },
+    isCustom: { type: Boolean, default: true },
+  },
+  { timestamps: true, toJSON: transformOptions, toObject: transformOptions }
+);
+
+export const DrugForm = mongoose.models.DrugForm || mongoose.model<IDrugForm>('DrugForm', DrugFormSchema);

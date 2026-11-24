@@ -1,4 +1,4 @@
-import { Drug, Prescription } from '../models';
+import { Drug, DrugForm, Prescription } from '../models';
 
 export class DrugsService {
   static async searchDrugs(query = '', limit = 100) {
@@ -186,5 +186,55 @@ export class DrugsService {
         lastPrescribed: a.lastPrescribed,
       })),
     };
+  }
+
+  static async getForms() {
+    const customForms = await DrugForm.find().sort({ createdAt: -1 });
+    return customForms.map((f) => ({
+      id: f.id,
+      name: f.name,
+      nameAr: f.nameAr,
+      defaultDose: f.defaultDose || '',
+      defaultInstructions: f.defaultInstructions || '',
+      isCustom: Boolean(f.isCustom),
+    }));
+  }
+
+  static async saveForm(dto: {
+    name: string;
+    nameAr: string;
+    defaultDose?: string;
+    defaultInstructions?: string;
+  }) {
+    const name = dto.name.trim();
+    const nameAr = dto.nameAr.trim();
+
+    const form = await DrugForm.findOneAndUpdate(
+      { name },
+      {
+        $set: {
+          name,
+          nameAr,
+          defaultDose: dto.defaultDose || '',
+          defaultInstructions: dto.defaultInstructions || '',
+          isCustom: true,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    return {
+      id: form.id,
+      name: form.name,
+      nameAr: form.nameAr,
+      defaultDose: form.defaultDose || '',
+      defaultInstructions: form.defaultInstructions || '',
+      isCustom: true,
+    };
+  }
+
+  static async deleteForm(id: string) {
+    await DrugForm.findByIdAndDelete(id);
+    return { success: true };
   }
 }

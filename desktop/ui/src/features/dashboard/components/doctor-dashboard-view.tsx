@@ -193,6 +193,13 @@ export const DoctorDashboardView = ({
       list = pastPatients;
     } else if (activeTab === 'done') {
       list = completedPatients;
+    } else if (activeTab === 'all') {
+      // إبقاء المرضى النشطين في الأعلى أولاً، ثم الحالات المكتملة
+      list = [...queue].sort((a, b) => {
+        const aCompleted = a.status === 'COMPLETED' ? 1 : 0;
+        const bCompleted = b.status === 'COMPLETED' ? 1 : 0;
+        return aCompleted - bCompleted;
+      });
     }
 
     if (!searchQuery.trim()) return list;
@@ -202,7 +209,8 @@ export const DoctorDashboardView = ({
       const nameMatch = p.patientName?.toLowerCase().includes(query);
       const phoneMatch = p.patientPhone?.toLowerCase().includes(query);
       const queueMatch = String(p.queueNumber).includes(query);
-      return nameMatch || phoneMatch || queueMatch;
+      const fileMatch = (p.fileNumber || p.patientFileNumber)?.toLowerCase().includes(query);
+      return nameMatch || phoneMatch || queueMatch || Boolean(fileMatch);
     });
   }, [queue, activeTab, waitingPatients, inProgressPatients, pastPatients, completedPatients, searchQuery]);
 
@@ -590,6 +598,8 @@ export const DoctorDashboardView = ({
                 <div className="flex items-center gap-2.5 flex-wrap shrink-0">
                   <Link
                     href={`/dashboard/examination/${inProgressPatient.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer whitespace-nowrap"
                   >
                     <Stethoscope className="w-4 h-4 stroke-[2.2]" />
@@ -612,6 +622,8 @@ export const DoctorDashboardView = ({
 
                   <Link
                     href={`/dashboard/view-patients/${inProgressPatient.patientId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     title="فتح الملف الطبي للمريض"
                     className="w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors shadow-2xs"
                   >
@@ -798,8 +810,8 @@ export const DoctorDashboardView = ({
                     cardStyle = 'bg-amber-50/30 border-amber-200 hover:border-amber-300';
                     queueBadgeStyle = 'bg-amber-100 text-amber-900 border border-amber-200';
                   } else if (isCompleted || isPendingCheckout) {
-                    cardStyle = 'bg-slate-50/60 border-slate-200 opacity-90';
-                    queueBadgeStyle = 'bg-slate-200 text-slate-700';
+                    cardStyle = 'bg-slate-50/70 border-slate-200/90 opacity-60 hover:opacity-95 transition-opacity';
+                    queueBadgeStyle = 'bg-slate-200 text-slate-700 opacity-80';
                   }
 
                   return (
@@ -826,6 +838,12 @@ export const DoctorDashboardView = ({
                             <h4 className="font-black text-[#074C3A] text-base sm:text-lg">
                               {patient.patientName}
                             </h4>
+
+                            {(patient.fileNumber || patient.patientFileNumber) && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-emerald-100/90 text-emerald-800 text-[11px] font-mono font-black border border-emerald-300/60 shadow-2xs">
+                                #{patient.fileNumber || patient.patientFileNumber}
+                              </span>
+                            )}
 
                             {isInProgress && (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-600 text-white shadow-2xs">
@@ -878,7 +896,7 @@ export const DoctorDashboardView = ({
                             {patient.patientGender && (
                               <span>• {patient.patientGender === 'MALE' ? 'ذكر' : 'أنثى'}</span>
                             )}
-                            <span className="px-2 py-0.5 rounded-md bg-[#E3F5EE] text-[#0B7B5E] font-bold">
+                            <span className="px-2.5 py-0.5 rounded-md bg-[#E3F5EE] text-[#0B7B5E] font-black text-xs opacity-100 shadow-2xs border border-[#D0E5DC]">
                               {getAppointmentTypeLabel(patient.type)}
                             </span>
                             <span className="inline-flex items-center gap-1 text-slate-600">
@@ -904,6 +922,8 @@ export const DoctorDashboardView = ({
                         {/* زر فتح الكشف والروشتة */}
                         <Link
                           href={`/dashboard/examination/${patient.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
                         >
                           <Stethoscope className="w-4 h-4 stroke-[2.2]" />

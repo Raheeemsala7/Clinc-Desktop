@@ -19,6 +19,8 @@ export interface TodayQueueItem {
   patientPhone: string;
   patientGender?: 'MALE' | 'FEMALE';
   patientAge?: number;
+  fileNumber?: string;
+  patientFileNumber?: string;
   doctorId: string;
   doctorName: string;
   visitId?: string | null;

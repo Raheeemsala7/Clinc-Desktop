@@ -1,6 +1,6 @@
 /**
  * مساعدات صياغة وترجمة جرعات وتكرار ومدد الروشتة الطبية
- * مصممة لتلبية متطلبات د. إسلام بدقة متناهية
+ * مصممة لتلبية متطلبات عيادات ومراكز Vyro Skin للجلدية والتجميل بدقة متناهية
  */
 
 /**
@@ -74,22 +74,23 @@ export function formatDose(rawDose?: string, form?: string): string {
     if (num !== null) return `${num} حقن`;
   }
 
-  // ب. بخاخات الأنف والفم والأذن والاستنشاق (Sprays / Inhalers)
+  // ب. بخاخات الفروة والجلد والاستنشاق (Sprays / Inhalers)
   if (
     normalizedForm.includes('spray') ||
     normalizedForm.includes('inhaler') ||
     normalizedForm.includes('بخاخ') ||
     normalizedForm.includes('استنشاق')
   ) {
-    const isNasal = normalizedForm.includes('nasal') || normalizedForm.includes('أنف');
-    if (num === 1) return isNasal ? 'بخة بكل فتحة أنف' : 'بخة واحدة';
-    if (num === 2) return isNasal ? 'بختين بكل فتحة أنف' : 'بختين';
+    const isScalp = normalizedForm.includes('scalp') || normalizedForm.includes('فروة') || normalizedForm.includes('شعر');
+    if (isScalp) return num ? `${num} بخات على الفروة الجافة` : '6 بخات على الفروة الجافة';
+    if (num === 1) return 'بخة واحدة';
+    if (num === 2) return 'بختين';
     if (num !== null && num >= 3 && num <= 10) return `${num} بخات`;
     if (num !== null && num > 10) return `${num} بخة`;
     if (num !== null) return `${num} بخات`;
   }
 
-  // ج. نقط الأذن والعين والأنف والفم (Drops)
+  // ج. نقط وسيرومات البشرة والجلد (Drops / Serums)
   if (
     normalizedForm.includes('drops') ||
     normalizedForm.includes('drop') ||
@@ -181,6 +182,81 @@ export function formatDose(rawDose?: string, form?: string): string {
  */
 export function getDoseSuggestionsForForm(form?: string): string[] {
   const norm = (form || '').toLowerCase();
+  
+  if (norm.includes('mouthwash') || norm.includes('gargle') || norm.includes('مضمض') || norm.includes('غرغر')) {
+    return [
+      'مضمضة وغرغرة 15 مل (بدون تخفيف لمدة دقيقة ثم تبصق)',
+      'مضمضة وغرغرة 10 مل بعد الأكل',
+      'غرغرة ومضمضة مرتين يومياً',
+      'مضمضة مخففة بنصف كوب ماء دافئ',
+    ];
+  }
+
+  if (norm.includes('nasal gel') || norm.includes('nesl gel') || norm.includes('جل انف') || norm.includes('جل أنف')) {
+    return [
+      'دهان جل موضعي داخل الأنف طبقة رقيقة',
+      'دهان جل مرطب لبطانة الأنف مرتين يومياً',
+      'طبقة رقيقة داخل فتحتي الأنف قبل النوم',
+    ];
+  }
+
+  if (norm.includes('gel') || norm.includes('جل')) {
+    return [
+      'دهان جل موضعي طبقة رقيقة على المكان المصاب',
+      'دهان جل خفيف بحجم حبة البازلاء',
+      'دهان جل موضعي مرتين يومياً',
+      'دهان جل مساءً قبل النوم على بشرة جافة',
+    ];
+  }
+
+  if (norm.includes('cream') || norm.includes('كريم') || norm.includes('ointment') || norm.includes('مرهم')) {
+    return [
+      'دهان موضعي طبقة رقيقة صباحاً ومساءً',
+      'دهان موضعي خفيف على المنطقة المصابة',
+      'كمية بحجم حبة البازلاء مساءً',
+      'دهان مرطب بعد غسيل البشرة مباشرة',
+      'دهان موضعي 3 مرات يومياً',
+    ];
+  }
+
+  if (norm.includes('serum') || norm.includes('سيروم')) {
+    return [
+      '4 إلى 5 قطرات على بشرة نظيفة مع تدليك لطيف',
+      '3 قطرات صباحاً ومساءً قبل المرطب',
+      'قطرات خفيفة على الوجه والرقبة',
+    ];
+  }
+
+  if (norm.includes('lotion') || norm.includes('لوشن')) {
+    return [
+      'دهان لوشن موضعي على الجلد مع التدليك الخفيف',
+      'دهان لوشن مرطب للجسم بعد الاستحمام',
+      'لوشن موضعي مرتين يومياً',
+    ];
+  }
+
+  if (norm.includes('shampoo') || norm.includes('شامبو')) {
+    return [
+      'غسيل الفروة مع تركه 5 دقائق ثم يشطف جيداً بالماء',
+      'استخدام مرتين إلى 3 مرات أسبوعياً',
+      'غسيل الفروة وتركه 10 دقائق ثم الشطف',
+    ];
+  }
+
+  if (norm.includes('sunscreen') || norm.includes('واقي شمس') || norm.includes('spf')) {
+    return [
+      'طبقة واقية كافية قبل الخروج بـ 20 دقيقة ويجدد كل ساعتين',
+      'دهان واقي شمس صباحاً قبل التعرض للضوء',
+    ];
+  }
+
+  if (norm.includes('cleanser') || norm.includes('غسول')) {
+    return [
+      'غسول رغوي مع تدليك لطيف ثم الشطف بالماء الفاتر',
+      'غسيل الوجه صباحاً ومساءً',
+    ];
+  }
+
   if (
     norm.includes('injection') ||
     norm.includes('ampoule') ||
@@ -191,12 +267,21 @@ export function getDoseSuggestionsForForm(form?: string): string[] {
     return ['حقنة واحدة', 'حقنتين', '3 حقن', 'أمبول واحد', 'أمبولين', '1 حقنة عضل', '1 حقنة وريد'];
   }
   if (norm.includes('spray') || norm.includes('بخاخ') || norm.includes('inhaler')) {
+    if (norm.includes('scalp') || norm.includes('فروة') || norm.includes('شعر')) {
+      return ['6 بخات على الفروة الجافة', '8 بخات على الفروة الجافة', 'بخة واحدة', 'بختين', '3 بخات'];
+    }
     if (norm.includes('nasal') || norm.includes('أنف')) {
-      return ['بخة بكل فتحة أنف', 'بختين بكل فتحة أنف', 'بخة واحدة', 'بختين', '3 بخات'];
+      return ['بخة واحدة في كل فتحة أنف', 'بختين في كل فتحة أنف'];
+    }
+    if (norm.includes('oral') || norm.includes('فم')) {
+      return ['بختين بالفم والحلق', '3 بخات في الفم'];
     }
     return ['بخة واحدة', 'بختين', '3 بخات', '4 بخات'];
   }
-  if (norm.includes('drops') || norm.includes('نقط')) {
+  if (norm.includes('drops') || norm.includes('نقط') || norm.includes('قطرة')) {
+    if (norm.includes('eye') || norm.includes('عين')) return ['نقطة واحدة بالعين المصابة', 'نقطتين بالعين المصابة'];
+    if (norm.includes('ear') || norm.includes('أذن')) return ['3 نقط بالأذن المصابة', '4 نقط بالأذن المصابة'];
+    if (norm.includes('oral') || norm.includes('فم')) return ['5 نقط بالفم', '10 نقط بالفم'];
     return ['نقطة واحدة', 'نقطتين', '3 نقط', '4 نقط', '5 نقط'];
   }
   if (
@@ -227,80 +312,242 @@ export function getDoseSuggestionsForForm(form?: string): string[] {
  */
 export function getDefaultDoseForForm(form?: string): string {
   const norm = (form || '').toLowerCase();
+
+  // غسول ومضمضة الفم والغرغرة
+  if (norm.includes('mouthwash') || norm.includes('gargle') || norm.includes('مضمض') || norm.includes('غرغر')) {
+    return 'مضمضة وغرغرة 15 مل (بدون تخفيف لمدة دقيقة ثم تبصق)';
+  }
+
+  // جل موضعي / جل الأنف
+  if (norm.includes('nasal gel') || norm.includes('nesl gel') || norm.includes('جل انف') || norm.includes('جل أنف')) {
+    return 'دهان جل موضعي داخل الأنف طبقة رقيقة';
+  }
+  if (norm.includes('gel') || norm.includes('جل')) {
+    return 'دهان جل موضعي طبقة رقيقة على المكان المصاب';
+  }
+
+  // كريم ومرهم
+  if (norm.includes('cream') || norm.includes('كريم')) {
+    return 'دهان موضعي طبقة رقيقة صباحاً ومساءً';
+  }
+  if (norm.includes('ointment') || norm.includes('مرهم')) {
+    return 'دهان موضعي خفيف على المنطقة المصابة';
+  }
+
+  // سيروم للبشرة والوجه
+  if (norm.includes('serum') || norm.includes('سيروم')) {
+    return '4 إلى 5 قطرات على بشرة نظيفة مع تدليك لطيف';
+  }
+
+  // لوشن
+  if (norm.includes('lotion') || norm.includes('لوشن')) {
+    return 'دهان لوشن موضعي على الجلد مع التدليك الخفيف';
+  }
+
+  // شامبو طبي
+  if (norm.includes('shampoo') || norm.includes('شامبو')) {
+    return 'غسيل الفروة مع تركه 5 دقائق ثم يشطف جيداً بالماء';
+  }
+
+  // واقي شمس
+  if (norm.includes('sunscreen') || norm.includes('واقي شمس') || norm.includes('spf')) {
+    return 'طبقة واقية كافية قبل الخروج بـ 20 دقيقة ويجدد كل ساعتين';
+  }
+
+  // غسول بشرة
+  if (norm.includes('cleanser') || norm.includes('غسول')) {
+    return 'غسول رغوي مع تدليك لطيف ثم الشطف بالماء الفاتر';
+  }
+
+  // لصقات جلدية
+  if (norm.includes('patch') || norm.includes('لصق')) {
+    return 'لصقة واحدة موضعية تُغير يومياً';
+  }
+
+  // حقن
   if (
     norm.includes('injection') ||
     norm.includes('ampoule') ||
     norm.includes('vial') ||
     norm.includes('حقن') ||
-    norm.includes('أمبول')
+    norm.includes('أمبول') ||
+    norm.includes('فيال')
   ) {
     return 'حقنة واحدة';
   }
+
+  // بخاخ
   if (norm.includes('spray') || norm.includes('بخاخ') || norm.includes('inhaler')) {
-    if (norm.includes('nasal') || norm.includes('أنف')) return 'بخة بكل فتحة أنف';
+    if (norm.includes('scalp') || norm.includes('فروة') || norm.includes('شعر')) return '6 بخات على الفروة الجافة';
+    if (norm.includes('oral') || norm.includes('فم') || norm.includes('حلق')) return 'بختين بالفم والحلق';
+    if (norm.includes('nasal') || norm.includes('أنف')) return 'بخة واحدة في كل فتحة أنف';
     return 'بخة واحدة';
   }
-  if (norm.includes('drops') || norm.includes('نقط')) return '3 نقط';
+
+  // قطرات
+  if (norm.includes('eye') || norm.includes('عين')) return 'نقطة واحدة بالعين المصابة';
+  if (norm.includes('ear') || norm.includes('أذن')) return '3 نقط بالأذن المصابة';
+  if (norm.includes('oral drops') || norm.includes('نقط بالفم')) return '5 نقط بالفم';
+  if (norm.includes('drops') || norm.includes('نقط') || norm.includes('قطرة')) return '3 نقط';
+
+  // شراب ومعلق ومحلول
   if (
     norm.includes('syrup') ||
     norm.includes('suspension') ||
     norm.includes('شراب') ||
-    norm.includes('معلق')
+    norm.includes('معلق') ||
+    norm.includes('محلول')
   ) {
     return '5 سم (ملعقة صغيرة)';
   }
+
   if (norm.includes('capsule') || norm.includes('كبسول')) return '1 كبسولة';
   if (norm.includes('sachet') || norm.includes('أكياس') || norm.includes('فوار')) return 'كيس واحد في نصف كوب ماء';
   if (norm.includes('suppository') || norm.includes('لبوس')) return 'لبوسة واحدة';
   if (norm.includes('lozenge') || norm.includes('استحلاب')) return 'قرص استحلاب واحد';
+
   return 'قرص واحد';
 }
 
 /**
  * تحويل وملاءمة الجرعة تلقائياً وفوراً عند تغيير شكل الدواء (Form)
- * مثال: من Tablet (1 قرص) إلى Syrup -> "1 ملعقة كبيرة (10 سم)"
- * من Tablet إلى Nasal Spray -> "بخة بكل فتحة أنف"
- * من Tablet إلى Drops -> "3 نقط"
+ * مثال: من Tablet (1 قرص) إلى Mouthwash -> "مضمضة وغرغرة 15 مل (بدون تخفيف لمدة دقيقة ثم تبصق)"
+ * من Tablet إلى Nasal Gel -> "دهان جل موضعي داخل الأنف طبقة رقيقة"
+ * من Tablet إلى Cream/Gel -> "دهان موضعي طبقة رقيقة صباحاً ومساءً"
  * من Syrup إلى Tablet -> "قرص واحد"
  */
 export function adaptDoseToNewForm(currentDose?: string, newForm?: string): string {
   if (!newForm) return currentDose || '';
   const normForm = newForm.toLowerCase();
 
+  // إذا لم تكن هناك جرعة سابقة، نأخذ الجرعة الافتراضية للشكل الجديد مباشرة
   if (!currentDose || !currentDose.trim()) {
     return getDefaultDoseForForm(newForm);
   }
 
   const clean = currentDose.trim();
 
-  // هل الجرعة السابقة كانت شراب أو معلق وتم التحويل إلى أقراص؟
+  // 1. التحويل إلى غسول / مضمضة / غرغرة:
+  if (normForm.includes('mouthwash') || normForm.includes('gargle') || normForm.includes('مضمض') || normForm.includes('غرغر')) {
+    return 'مضمضة وغرغرة 15 مل (بدون تخفيف لمدة دقيقة ثم تبصق)';
+  }
+
+  // 2. التحويل إلى جل أنف:
+  if (normForm.includes('nasal gel') || normForm.includes('nesl gel') || normForm.includes('جل انف') || normForm.includes('جل أنف')) {
+    return 'دهان جل موضعي داخل الأنف طبقة رقيقة';
+  }
+
+  // 3. التحويل إلى جل موضعي عام:
+  if (normForm.includes('gel') || normForm.includes('جل')) {
+    return 'دهان جل موضعي طبقة رقيقة على المكان المصاب';
+  }
+
+  // 4. التحويل إلى كريم أو مرهم:
+  if (normForm.includes('cream') || normForm.includes('كريم')) {
+    return 'دهان موضعي طبقة رقيقة صباحاً ومساءً';
+  }
+  if (normForm.includes('ointment') || normForm.includes('مرهم')) {
+    return 'دهان موضعي خفيف على المنطقة المصابة';
+  }
+
+  // 5. التحويل إلى سيروم:
+  if (normForm.includes('serum') || normForm.includes('سيروم')) {
+    return '4 إلى 5 قطرات على بشرة نظيفة مع تدليك لطيف';
+  }
+
+  // 6. التحويل إلى لوشن:
+  if (normForm.includes('lotion') || normForm.includes('لوشن')) {
+    return 'دهان لوشن موضعي على الجلد مع التدليك الخفيف';
+  }
+
+  // 7. التحويل إلى شامبو طبي:
+  if (normForm.includes('shampoo') || normForm.includes('شامبو')) {
+    return 'غسيل الفروة مع تركه 5 دقائق ثم يشطف جيداً بالماء';
+  }
+
+  // 8. التحويل إلى واقي شمس:
+  if (normForm.includes('sunscreen') || normForm.includes('واقي شمس') || normForm.includes('spf')) {
+    return 'طبقة واقية كافية قبل الخروج بـ 20 دقيقة ويجدد كل ساعتين';
+  }
+
+  // 9. التحويل إلى غسول بشرة:
+  if (normForm.includes('cleanser') || normForm.includes('غسول')) {
+    return 'غسول رغوي مع تدليك لطيف ثم الشطف بالماء الفاتر';
+  }
+
+  // 10. التحويل إلى لصقات جلدية:
+  if (normForm.includes('patch') || normForm.includes('لصق')) {
+    return 'لصقة واحدة موضعية تُغير يومياً';
+  }
+
+  // 11. التحويل من موضعي/شراب/حقن/مضمضة إلى أقراص:
   if (normForm.includes('tablet') || normForm.includes('قرص') || normForm.includes('أقراص') || normForm === 'odt' || normForm === 'odf') {
-    if (clean.includes('ملعقة') || clean.includes('معلقة') || clean.includes('سم') || clean.includes('نقط') || clean.includes('بخة') || clean.includes('حقن')) {
-      if (/2|ملعقتين|معلقتين/.test(clean)) return 'قرصين';
+    if (
+      clean.includes('دهان') ||
+      clean.includes('مضمضة') ||
+      clean.includes('غرغرة') ||
+      clean.includes('ملعقة') ||
+      clean.includes('معلقة') ||
+      clean.includes('سم') ||
+      clean.includes('نقط') ||
+      clean.includes('بخة') ||
+      clean.includes('حقن') ||
+      clean.includes('غسيل') ||
+      clean.includes('قطرات') ||
+      clean.includes('جل')
+    ) {
+      if (/2|قرصين|ملعقتين|مرتين/.test(clean)) return 'قرصين';
       if (/نصف/.test(clean)) return 'نصف قرص';
       return 'قرص واحد';
     }
   }
 
-  // هل تم التحويل إلى شراب أو معلق؟
-  if (normForm.includes('syrup') || normForm.includes('suspension') || normForm.includes('شراب') || normForm.includes('معلق')) {
-    if (clean.includes('قرص') || clean.includes('كبسول') || clean.includes('حقن') || clean.includes('بخة') || clean.includes('نقط')) {
-      if (/2|قرصين|كبسولتين/.test(clean)) return '2 ملعقة كبيرة';
-      return '1 ملعقة كبيرة (10 سم)';
+  // 12. التحويل إلى كبسولات:
+  if (normForm.includes('capsule') || normForm.includes('كبسول')) {
+    if (
+      clean.includes('دهان') ||
+      clean.includes('مضمضة') ||
+      clean.includes('غرغرة') ||
+      clean.includes('ملعقة') ||
+      clean.includes('معلقة') ||
+      clean.includes('سم') ||
+      clean.includes('نقط') ||
+      clean.includes('بخة') ||
+      clean.includes('حقن') ||
+      clean.includes('غسيل') ||
+      clean.includes('جل')
+    ) {
+      if (/2|كبسولتين|قرصين|مرتين/.test(clean)) return 'كبسولتين';
+      return '1 كبسولة';
     }
   }
 
-  // هل تم التحويل إلى بخاخ أنف؟
+  // 13. التحويل إلى شراب أو معلق:
+  if (normForm.includes('syrup') || normForm.includes('suspension') || normForm.includes('شراب') || normForm.includes('معلق')) {
+    if (/2|قرصين|كبسولتين/.test(clean)) return '2 ملعقة كبيرة';
+    return '1 ملعقة كبيرة (10 سم)';
+  }
+
+  // 14. التحويل إلى بخاخ:
   if (normForm.includes('spray') || normForm.includes('بخاخ')) {
+    if (normForm.includes('scalp') || normForm.includes('فروة') || normForm.includes('شعر')) {
+      return '6 بخات على الفروة الجافة';
+    }
+    if (normForm.includes('oral') || normForm.includes('فم') || normForm.includes('حلق')) {
+      return 'بختين بالفم والحلق';
+    }
     if (normForm.includes('nasal') || normForm.includes('أنف')) {
-      return /2|بختين|قرصين/.test(clean) ? 'بختين بكل فتحة أنف' : 'بخة بكل فتحة أنف';
+      return 'بخة واحدة في كل فتحة أنف';
     }
     return 'بخة واحدة';
   }
 
-  // هل تم التحويل إلى نقط؟
-  if (normForm.includes('drops') || normForm.includes('نقط')) {
-    if (/1|قرص واحد|واحد/.test(clean) && !clean.includes('نقط')) return '3 نقط';
+  // 15. التحويل إلى نقط:
+  if (normForm.includes('drops') || normForm.includes('نقط') || normForm.includes('قطرة')) {
+    if (normForm.includes('eye') || normForm.includes('عين')) return 'نقطة واحدة بالعين المصابة';
+    if (normForm.includes('ear') || normForm.includes('أذن')) return '3 نقط بالأذن المصابة';
+    if (normForm.includes('oral') || normForm.includes('فم')) return '5 نقط بالفم';
+    return '3 نقط';
   }
 
   // استخدام المفسر القياسي formatDose

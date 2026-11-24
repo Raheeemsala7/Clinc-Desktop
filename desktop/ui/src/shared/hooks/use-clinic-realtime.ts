@@ -81,6 +81,14 @@ export function useClinicRealtime() {
 
         socket.on('appointment:updated', handleRefresh);
 
+        socket.on('patient:updated', (payload: any) => {
+          queryClient.invalidateQueries({ queryKey: ['patients'] });
+          queryClient.invalidateQueries({ queryKey: ['patient'] });
+          queryClient.invalidateQueries({ queryKey: ['queue'] });
+          queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          handleRefresh();
+        });
+
         socket.on('appointment:status_changed', (payload: any) => {
           handleRefresh();
           if (payload?.status === 'IN_PROGRESS') {
