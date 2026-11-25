@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -27,6 +27,7 @@ import {
   finishAndSubmitExamAction,
 } from '../apis/examination.action';
 import { admitAppointmentAction } from '@/features/appointments/apis/appointment.action';
+import { updatePatientAction } from '@/features/patient/apis/patient.action';
 
 interface EntExaminationFormProps {
   appointment: any;
@@ -60,9 +61,23 @@ export function EntExaminationForm({
   // الحالة الابتدائية لبيانات الفحص
   const existingExam = visit?.entExamination || {};
   const defaultFileNo =
-    existingExam.fileNo ||
     (patient as any)?.fileNumber ||
+    existingExam.fileNo ||
     (patient?.id ? patient.id.slice(-4) : '101');
+
+  const [livePatientFileNumber, setLivePatientFileNumber] = useState<string>(
+    String((patient as any)?.fileNumber || defaultFileNo || '').trim()
+  );
+  const lastSyncedFileNoRef = useRef<string>(
+    String((patient as any)?.fileNumber || existingExam.fileNo || '').trim()
+  );
+  const effectivePatient = useMemo(
+    () =>
+      patient
+        ? { ...patient, fileNumber: livePatientFileNumber || (patient as any).fileNumber }
+        : patient,
+    [patient, livePatientFileNumber]
+  );
 
   const defaultMarital =
     existingExam.maritalStatus ||
@@ -145,6 +160,74 @@ export function EntExaminationForm({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // مزامنة فورية لـ File NO عند تحديث كود المريض من الخادم (router.refresh) أو عبر Socket.IO (الاستقبال <-> الطبيب)
+  useEffect(() => {
+    const incoming = String((patient as any)?.fileNumber || '').trim();
+    if (incoming && incoming !== lastSyncedFileNoRef.current) {
+      lastSyncedFileNoRef.current = incoming;
+      setLivePatientFileNumber(incoming);
+      setExamData((prev) => (prev.fileNo === incoming ? prev : { ...prev, fileNo: incoming }));
+    }
+  }, [(patient as any)?.fileNumber]);
+
+  useEffect(() => {
+    const patientId = patient?.id || (patient as any)?._id;
+    if (!patientId) return;
+
+    const onPatientUpdated = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail;
+      if (!detail || detail.patientId !== patientId) return;
+      const incoming = String(detail.fileNumber ?? detail.code ?? '').trim();
+      if (!incoming || incoming === lastSyncedFileNoRef.current) return;
+
+      lastSyncedFileNoRef.current = incoming;
+      setLivePatientFileNumber(incoming);
+      setExamData((prev) => (prev.fileNo === incoming ? prev : { ...prev, fileNo: incoming }));
+      toast.info(`تم تحديث كود المريض إلى #${incoming}`);
+      router.refresh();
+    };
+
+    window.addEventListener('clinic:patient-updated', onPatientUpdated);
+    return () => window.removeEventListener('clinic:patient-updated', onPatientUpdated);
+  }, [patient?.id, (patient as any)?._id, router]);
+
+  // حفظ كود المريض فوراً في ملف المريض عند تعديل حقل File NO في استمارة الكشف وبث التحديث للجميع
+  const handleFileNoCommit = async (rawValue: string) => {
+    const nextCode = String(rawValue || '').trim();
+    const patientId = patient?.id || (patient as any)?._id;
+    if (!nextCode) {
+      if (lastSyncedFileNoRef.current) {
+        setExamData((prev) => ({ ...prev, fileNo: lastSyncedFileNoRef.current }));
+      }
+      return;
+    }
+    if (!patientId || nextCode === lastSyncedFileNoRef.current) {
+      return;
+    }
+
+    const prevSynced = lastSyncedFileNoRef.current;
+    lastSyncedFileNoRef.current = nextCode;
+    setLivePatientFileNumber(nextCode);
+
+    try {
+      const res = await updatePatientAction(patientId, { fileNumber: nextCode });
+      if (res.status) {
+        toast.success(`تم تحديث كود المريض إلى #${nextCode}`);
+        router.refresh();
+      } else {
+        lastSyncedFileNoRef.current = prevSynced;
+        setLivePatientFileNumber(prevSynced);
+        setExamData((prev) => ({ ...prev, fileNo: prevSynced }));
+        toast.error(res.message || 'تعذر تحديث كود المريض');
+      }
+    } catch {
+      lastSyncedFileNoRef.current = prevSynced;
+      setLivePatientFileNumber(prevSynced);
+      setExamData((prev) => ({ ...prev, fileNo: prevSynced }));
+      toast.error('تعذر الاتصال بالخادم لتحديث كود المريض');
+    }
+  };
+
   // إدخال المريض وبدء الكشف
   const handleAdmit = async () => {
     const targetApptId = appointment?.id || appointment?._id || '';
@@ -185,6 +268,11 @@ export function EntExaminationForm({
       );
       if (res.status) {
         if (showToast) toast.success('تم حفظ التعديلات بنجاح');
+        const savedCode = String(examData.fileNo || '').trim();
+        if (savedCode) {
+          lastSyncedFileNoRef.current = savedCode;
+          setLivePatientFileNumber(savedCode);
+        }
         setVersion((v) => v + 1);
         setLastSavedTime(new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }));
         return true;
@@ -297,6 +385,11 @@ export function EntExaminationForm({
             <span className="text-xs text-slate-500 font-bold">
               ({patient?.age ? `${patient.age} سنة` : 'عمر غير محدد'})
             </span>
+            {(effectivePatient?.fileNumber || examData.fileNo) && (
+              <span className="text-[11px] font-mono font-black text-[#0B7B5E] bg-[#E3F5EE] border border-[#CBE7DB] px-2 py-0.5 rounded-full">
+                #{effectivePatient?.fileNumber || examData.fileNo}
+              </span>
+            )}
             {lastSavedTime && (
               <span className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold hidden lg:inline-block">
                 تم الحفظ {lastSavedTime}
@@ -424,9 +517,10 @@ export function EntExaminationForm({
         {/* شيت الكشف الورقي التفاعلي المطابق للصورة */}
         <EntPaperSheet
           examData={examData}
-          patient={patient}
+          patient={effectivePatient}
           doctor={doctor}
           onChange={setExamData}
+          onFileNoCommit={handleFileNoCommit}
         />
 
         {/* شريط الإجراءات في أسفل استمارة الكشف */}
@@ -480,7 +574,7 @@ export function EntExaminationForm({
       <div className={activeTab === 'prescription' ? 'space-y-6 print:hidden' : 'hidden'}>
         <PrescriptionView
           examData={examData}
-          patient={patient}
+          patient={effectivePatient}
           doctor={doctor}
           onChange={setExamData}
           onBackToExam={() => {
@@ -503,7 +597,7 @@ export function EntExaminationForm({
       <div className={`hidden ${printTarget === 'exam' ? 'print:block' : ''}`}>
         <EntPaperSheet
           examData={examData}
-          patient={patient}
+          patient={effectivePatient}
           doctor={doctor}
           onChange={setExamData}
           isPrintOnly={true}
@@ -514,7 +608,7 @@ export function EntExaminationForm({
       <div className={`hidden ${printTarget === 'prescription' ? 'print:block' : ''}`}>
         <PrintablePrescriptionSlip
           examData={examData}
-          patient={patient}
+          patient={effectivePatient}
           doctor={doctor}
           printMode={rxPrintMode}
           pageMode={rxPrintPageMode}

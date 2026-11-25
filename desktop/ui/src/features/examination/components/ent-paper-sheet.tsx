@@ -17,6 +17,7 @@ interface EntPaperSheetProps {
   patient: any;
   doctor?: any;
   onChange: (updater: (prev: EntExaminationData) => EntExaminationData) => void;
+  onFileNoCommit?: (nextFileNo: string) => void;
   isPrintOnly?: boolean;
 }
 
@@ -73,6 +74,7 @@ export function EntPaperSheet({
   patient,
   doctor,
   onChange,
+  onFileNoCommit,
   isPrintOnly = false,
 }: EntPaperSheetProps) {
   // تحديث حقل مباشر
@@ -504,6 +506,14 @@ export function EntPaperSheet({
               type="text"
               value={examData.fileNo || ''}
               onChange={(e) => setField('fileNo', e.target.value)}
+              onBlur={(e) => onFileNoCommit?.(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                }
+              }}
+              title="تعديل كود المريض (يحفظ في ملف المريض ويتحدث لحظياً)"
               className="w-full bg-transparent border-none p-0 text-[13px] font-mono font-bold focus:outline-none"
             />
           </div>

@@ -1,6 +1,7 @@
 import { Visit, Patient, Prescription, Drug } from '../models';
 import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
+import { RealtimeService } from '../realtime/socket.server';
 
 export class VisitsService {
   static async getVisitById(id: string, actorId: string) {
@@ -9,7 +10,7 @@ export class VisitsService {
 
     const [patient, prescriptions] = await Promise.all([
       Patient.findById(visit.patientId).select(
-        'id fullName phone gender dateOfBirth allergies chronicConditions generalNotes',
+        'id fileNumber age fullName phone gender dateOfBirth allergies chronicConditions generalNotes',
       ),
       Prescription.find({ visitId: visit.id }).sort({ versionNumber: -1 }),
     ]);
@@ -63,14 +64,43 @@ export class VisitsService {
 
     await visit.save();
 
-    // مزامنة استمارة الكشف لتصبح الاستمارة الرئيسية الدائمة للمريض (Master Examination)
+    // مزامنة استمارة الكشف وكود المريض (fileNumber) مع الملف الدائم وبث التحديث لحظياً عند تغيير الكود
     if (entExamination !== undefined && entExamination !== null) {
       try {
-        await Patient.findByIdAndUpdate(visit.patientId, {
-          masterExamination: entExamination,
-        });
+        const patientDoc = await Patient.findById(visit.patientId);
+        if (patientDoc) {
+          const prevFileNo = patientDoc.fileNumber || '';
+          const incomingFileNo =
+            typeof entExamination.fileNo === 'string' ? entExamination.fileNo.trim() : '';
+          const fileNoChanged = Boolean(incomingFileNo && incomingFileNo !== prevFileNo);
+          const syncedFileNo = incomingFileNo || prevFileNo;
+
+          if (fileNoChanged) {
+            patientDoc.fileNumber = incomingFileNo;
+          }
+          patientDoc.masterExamination = {
+            ...entExamination,
+            ...(syncedFileNo ? { fileNo: syncedFileNo } : {}),
+          };
+          patientDoc.markModified('masterExamination');
+          await patientDoc.save();
+
+          if (fileNoChanged) {
+            await Visit.updateMany(
+              { patientId: visit.patientId, status: 'OPEN', _id: { $ne: visit._id } },
+              { $set: { 'entExamination.fileNo': incomingFileNo } },
+            );
+            try {
+              RealtimeService.emitPatientUpdated({
+                patientId: patientDoc.id,
+                fileNumber: patientDoc.fileNumber,
+                fullName: patientDoc.fullName,
+              });
+            } catch {}
+          }
+        }
       } catch (pErr) {
-        console.error('[VisitsService] Failed to sync masterExamination to Patient:', pErr);
+        console.error('[VisitsService] Failed to sync masterExamination / fileNumber to Patient:', pErr);
       }
     }
 

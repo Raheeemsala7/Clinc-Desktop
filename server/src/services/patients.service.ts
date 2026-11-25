@@ -230,7 +230,20 @@ export class PatientsService {
     if (dto.phone !== undefined) patient.phone = dto.phone;
     if (dto.gender !== undefined) patient.gender = dto.gender;
     if (dto.maritalStatus !== undefined) patient.maritalStatus = dto.maritalStatus;
-    if (dto.fileNumber !== undefined) patient.fileNumber = dto.fileNumber;
+    const previousFileNumber = patient.fileNumber || '';
+    if (dto.fileNumber !== undefined) {
+      const trimmedFileNo = dto.fileNumber !== null ? String(dto.fileNumber).trim() : '';
+      patient.fileNumber = trimmedFileNo || undefined;
+    }
+    const nextFileNumber = patient.fileNumber || '';
+    const fileNumberChanged = dto.fileNumber !== undefined && nextFileNumber !== previousFileNumber;
+    if (fileNumberChanged && nextFileNumber) {
+      patient.masterExamination = {
+        ...(patient.masterExamination || {}),
+        fileNo: nextFileNumber,
+      };
+      patient.markModified('masterExamination');
+    }
     if (dto.age !== undefined) {
       patient.age = dto.age !== null && dto.age !== '' ? Number(dto.age) : undefined;
     }
@@ -252,6 +265,15 @@ export class PatientsService {
     }
 
     await patient.save();
+
+    if (fileNumberChanged && nextFileNumber) {
+      try {
+        await Visit.updateMany(
+          { patientId: patient.id, status: 'OPEN' },
+          { $set: { 'entExamination.fileNo': nextFileNumber } },
+        );
+      } catch {}
+    }
 
     try {
       RealtimeService.emitPatientUpdated({

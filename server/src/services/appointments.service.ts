@@ -853,7 +853,7 @@ export class AppointmentsService {
 
     const [patient, doctor] = await Promise.all([
       Patient.findById(appt.patientId).select(
-        'id fullName phone gender dateOfBirth age address occupation maritalStatus generalNotes masterExamination',
+        'id fileNumber fullName phone gender dateOfBirth age address occupation maritalStatus generalNotes masterExamination',
       ),
       User.findById(appt.doctorId).select('id name'),
     ]);
@@ -934,12 +934,21 @@ export class AppointmentsService {
     }
 
     const apptJson = appt.toJSON();
+    const visitJson = visit ? visit.toJSON() : null;
+    const liveFileNo = (patient as any)?.fileNumber;
+    if (visitJson && liveFileNo) {
+      visitJson.entExamination = {
+        ...(visitJson.entExamination || {}),
+        fileNo: liveFileNo,
+      };
+    }
+
     return {
       ...apptJson,
       appointment: apptJson,
       patient: patient ? patient.toJSON() : null,
       doctor: doctor ? doctor.toJSON() : null,
-      visit: visit ? visit.toJSON() : null,
+      visit: visitJson,
     };
   }
 

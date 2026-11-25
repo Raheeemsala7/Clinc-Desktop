@@ -82,6 +82,9 @@ export function useClinicRealtime() {
         socket.on('appointment:updated', handleRefresh);
 
         socket.on('patient:updated', (payload: any) => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('clinic:patient-updated', { detail: payload }));
+          }
           queryClient.invalidateQueries({ queryKey: ['patients'] });
           queryClient.invalidateQueries({ queryKey: ['patient'] });
           queryClient.invalidateQueries({ queryKey: ['queue'] });
