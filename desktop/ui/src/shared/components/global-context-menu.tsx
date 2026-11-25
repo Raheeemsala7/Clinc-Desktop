@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { ExternalLink, Copy, RefreshCw, ArrowRight, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { openInNewWindow } from '../utils/open-window';
 
 interface ContextMenuState {
   isOpen: boolean;
@@ -98,9 +99,9 @@ export function GlobalContextMenu() {
 
   const handleOpenNewWindow = () => {
     if (menu.url) {
-      window.open(menu.url, '_blank', 'width=1400,height=900,scrollbars=yes,resizable=yes');
+      openInNewWindow(menu.url);
     } else {
-      window.open(window.location.href, '_blank', 'width=1400,height=900,scrollbars=yes,resizable=yes');
+      openInNewWindow(window.location.href);
     }
     closeMenu();
   };

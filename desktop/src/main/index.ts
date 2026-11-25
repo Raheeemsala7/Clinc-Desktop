@@ -406,8 +406,10 @@ function attachWindowHelpers(win: BrowserWindow) {
           height: 900,
           autoHideMenuBar: true,
           webPreferences: {
+            preload: path.join(__dirname, '../preload/index.js'),
             nodeIntegration: false,
             contextIsolation: true,
+            sandbox: false,
           },
         },
       };
@@ -552,6 +554,37 @@ ipcMain.handle('app:open-setup', async () => {
     const setupHtmlPath = path.resolve(__dirname, '../renderer/setup.html');
     mainWindow.loadFile(setupHtmlPath);
   }
+});
+
+ipcMain.handle('app:open-new-window', async (_event, urlOrPath: string) => {
+  const targetUrl =
+    urlOrPath.startsWith('http://') || urlOrPath.startsWith('https://')
+      ? urlOrPath
+      : `http://localhost:3000${urlOrPath.startsWith('/') ? '' : '/'}${urlOrPath}`;
+
+  const iconPath = path.resolve(__dirname, '../../resources/icon.ico');
+  const childWin = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    minWidth: 1000,
+    minHeight: 700,
+    title: 'نظام نَفَس · الكشف الطبي وملف المريض',
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
+    backgroundColor: '#F8FBF9',
+    autoHideMenuBar: true,
+    show: true,
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  });
+
+  attachWindowHelpers(childWin);
+  await childWin.loadURL(targetUrl);
+  childWin.focus();
+  return true;
 });
 
 ipcMain.handle('dialog:select-backup-file', async () => {

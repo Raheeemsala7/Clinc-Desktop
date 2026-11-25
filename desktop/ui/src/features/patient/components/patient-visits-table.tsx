@@ -168,6 +168,8 @@ export function PatientVisitsTable({ visits, onViewPrescription }: PatientVisits
                 <div className="flex items-center justify-center gap-1.5 flex-wrap">
                   <Link
                     href={`/dashboard/examination/${v.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     title="عرض استمارة الفحص والكشف الطبي"
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#E3F5EE] hover:bg-[#E3F5EE] text-[#0B7B5E] text-[11px] font-bold border border-[#D0E5DC]/60 transition-all cursor-pointer whitespace-nowrap"
                   >
@@ -187,6 +189,8 @@ export function PatientVisitsTable({ visits, onViewPrescription }: PatientVisits
                   ) : (
                     <Link
                       href={`/dashboard/examination/${v.id}?tab=prescription`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       title="عرض وطباعة الروشتة الطبية"
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200/60 transition-all cursor-pointer whitespace-nowrap"
                     >

@@ -9,6 +9,7 @@ export interface IElectronAPI {
   goToLogin: () => Promise<void>;
   startApp: () => Promise<void>;
   openSetup: () => Promise<void>;
+  openNewWindow: (urlOrPath: string) => Promise<boolean>;
   saveConfig: (config: { mode: 'server' | 'client'; serverIp?: string; serverPort?: number }) => Promise<any>;
   printPrescription: (htmlContent: string) => Promise<boolean>;
   printReceipt: (htmlContent: string) => Promise<boolean>;
@@ -33,6 +34,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   goToLogin: () => ipcRenderer.invoke('app:go-to-login'),
   startApp: () => ipcRenderer.invoke('app:start-app'),
   openSetup: () => ipcRenderer.invoke('app:open-setup'),
+  openNewWindow: (urlOrPath: string) => ipcRenderer.invoke('app:open-new-window', urlOrPath),
   saveConfig: (config: any) => ipcRenderer.invoke('app:save-config', config),
   printPrescription: (html: string) => ipcRenderer.invoke('print:prescription', html),
   printReceipt: (html: string) => ipcRenderer.invoke('print:receipt', html),
