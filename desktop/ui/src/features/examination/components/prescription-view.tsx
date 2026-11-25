@@ -144,7 +144,7 @@ interface PrescriptionViewProps {
   onBackToExam: () => void;
   onSave: () => void;
   onFinish: () => void;
-  onPrintRx: (mode?: 'full' | 'plain') => void;
+  onPrintRx: (mode?: 'full' | 'plain', pageMode?: 'all' | 'front' | 'back', useDuplex?: boolean) => void;
   isSaving: boolean;
   isFinishing: boolean;
 }
@@ -183,6 +183,19 @@ export function PrescriptionView({
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
   const [showPrintGuides, setShowPrintGuides] = useState(true);
+  const [twoSidedPrintState, setTwoSidedPrintState] = useState<{
+    isOpen: boolean;
+    mode: 'full' | 'plain';
+    frontPrinted: boolean;
+  }>({ isOpen: false, mode: 'plain', frontPrinted: false });
+
+  const handleSmartPrintClick = (mode: 'full' | 'plain') => {
+    if (items.length > 8) {
+      setTwoSidedPrintState({ isOpen: true, mode, frontPrinted: false });
+    } else {
+      onPrintRx(mode, 'all', false);
+    }
+  };
 
   // 1. أشكال الأدوية من قاعدة البيانات والمخصصة والمحذوفة
   const [dbForms, setDbForms] = useState<DrugFormOption[]>([]);
@@ -1342,7 +1355,7 @@ export function PrescriptionView({
           {/* طباعة أدوية فقط للورق المطبوع مسبقاً */}
           <button
             type="button"
-            onClick={() => onPrintRx('plain')}
+            onClick={() => handleSmartPrintClick('plain')}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black transition-all cursor-pointer"
             title="طباعة أدوية فقط بدون ترويسة أو توقيع (للورق الجاهز)"
           >
@@ -1353,7 +1366,7 @@ export function PrescriptionView({
           {/* طباعة روشتة كاملة */}
           <button
             type="button"
-            onClick={() => onPrintRx('full')}
+            onClick={() => handleSmartPrintClick('full')}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE]/60 hover:bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
@@ -1519,7 +1532,7 @@ export function PrescriptionView({
                     معاينة الطباعة والتحقق من المسافات بالسنتيمتر (16.5cm × 24cm)
                   </h3>
                   <p className="text-[11px] text-slate-500 font-bold">
-                    تحقق من موضع الاسم (6.45cm / يمين 1.5cm) والكود (شمال 1.4cm) والأدوية (شمال 3.5cm) والهامش السفلي (1.5cm)
+                    تحقق من موضع الاسم (5.95cm / يمين 0.6cm) والتاريخ العربي والكود (شمال 1.9cm) والأدوية (شمال 3.5cm) والهامش السفلي (1.5cm)
                   </p>
                 </div>
               </div>
@@ -1542,7 +1555,7 @@ export function PrescriptionView({
                   type="button"
                   onClick={() => {
                     setIsPrintPreviewOpen(false);
-                    setTimeout(() => onPrintRx('plain'), 100);
+                    setTimeout(() => handleSmartPrintClick('plain'), 100);
                   }}
                   className="px-4 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
@@ -1579,6 +1592,102 @@ export function PrescriptionView({
           </div>
         </div>
       )}
+
+      {/* نافذة خيارات الطباعة على الوجهين (وجه أول ثم ظهر نفس الورقة) عند زيادة الأدوية عن 8 */}
+      {twoSidedPrintState.isOpen && (
+        <div
+          className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden animate-in fade-in duration-150"
+          dir="rtl"
+          onClick={() => setTwoSidedPrintState((prev) => ({ ...prev, isOpen: false }))}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#0B7B5E] flex items-center justify-center font-bold">
+                  <Printer className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-[#074C3A]">
+                    الروشتة تحتوي على {items.length} أصناف (وجه + ظهر)
+                  </h3>
+                  <p className="text-xs text-slate-500 font-bold">
+                    اختر طريقة الطباعة المناسبة لطابعتك للطباعة على ظهر نفس الورقة
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTwoSidedPrintState((prev) => ({ ...prev, isOpen: false }))}
+                className="w-8 h-8 rounded-xl hover:bg-slate-100 text-slate-500 flex items-center justify-center font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* الطريقة 1: طباعة الوجه الأول ثم قلب الورقة لطباعة الظهر (للطابعات العادية) */}
+            <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-[#074C3A]">
+                  1. للطابعات العادية (بدون قلب أوتوماتيك — الأضمن لعدم سحب ورقة ثانية):
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onPrintRx(twoSidedPrintState.mode, 'front', false);
+                    setTwoSidedPrintState((prev) => ({ ...prev, frontPrinted: true }));
+                  }}
+                  className="px-4 py-3 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>1️⃣ طباعة الوجه الأول فقط (1/2)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onPrintRx(twoSidedPrintState.mode, 'back', false);
+                  }}
+                  className={`px-4 py-3 rounded-xl text-xs font-black shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    twoSidedPrintState.frontPrinted
+                      ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
+                      : 'bg-white hover:bg-amber-50 text-amber-900 border border-amber-300'
+                  }`}
+                >
+                  <span>2️⃣ طباعة الظهر على نفس الورقة (2/2)</span>
+                </button>
+              </div>
+
+              {twoSidedPrintState.frontPrinted && (
+                <p className="text-[11px] font-black text-amber-900 bg-amber-100 px-3 py-2 rounded-xl border border-amber-300 text-center">
+                  ⚠️ اقلب الورقة التي خرجت الآن وأعد وضعها في الطابعة ثم اضغط زر &quot;طباعة الظهر على نفس الورقة (2/2)&quot;
+                </p>
+              )}
+            </div>
+
+            {/* الطريقة 2: طباعة الوجهين أوتوماتيكياً معاً */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+              <div className="text-xs text-slate-600 font-bold">
+                2. للطابعات الداعمة للوجهين أوتوماتيك (Duplex) أو حفظ PDF:
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setTwoSidedPrintState((prev) => ({ ...prev, isOpen: false }));
+                  onPrintRx(twoSidedPrintState.mode, 'all', true);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold shrink-0 cursor-pointer"
+              >
+                طباعة الوجهين معاً ⚡
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1591,27 +1700,34 @@ export function PrescriptionView({
  */
 /**
  * نموذج الروشتة الطبية الجاهز للطباعة الدقيقة على ورق العيادة المطبوع مسبقاً
- * المقاسات المعتمدة لطابعة العيادة (A4 / ورق الروشتة 16.5cm × 24cm):
+ * المقاسات المعتمدة لطابعة العيادة (ورق الروشتة 16.5cm × 24cm):
  * - طول الورقة: 24cm
  * - إزالة الخط الأخضر الجانبي بالكامل عند الطباعة
- * - طباعة الاسم (top: 6.45cm, right: 1.5cm)، التاريخ (top: 6.45cm)، والكود (top: 6.45cm, left: 1.4cm)
+ * - طباعة الاسم (top: 6.02cm, right: 0.5cm)، التاريخ العربي ٢٥ / ١١ / ٢٠٢٦ (top: 6.00cm)، والكود (top: 6.02cm, left: 2.1cm)
  * - هامش الأدوية الأيسر: 3.5cm بالضبط
  * - هامش سفلي: 1.5cm فقط لاستيعاب حتى 8 أدوية في الوجه الأول
- * - ظهر الورقة (الصفحة الثانية): يبدأ من الأعلى بهامش علوي 3cm وهامش أيسر 3.5cm
+ * - ظهر الورقة (الصفحة الثانية): يبدأ من الأعلى بهامش علوي 3cm وهامش أيسر 3.5cm ويدعم الطباعة اليدوية والآلية
  * - التعليمات الإضافية: هامش أيمن 2cm
  */
+function toArabicDigits(value: string): string {
+  const map = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return String(value).replace(/\d/g, (d) => map[Number(d)] ?? d);
+}
+
 export function PrintablePrescriptionSlip({
   examData,
   patient,
   doctor,
   printMode = 'full',
   showGuides = false,
+  pageMode = 'all',
 }: {
   examData: EntExaminationData;
   patient: any;
   doctor?: any;
   printMode?: 'full' | 'plain';
   showGuides?: boolean;
+  pageMode?: 'all' | 'front' | 'back';
 }) {
   const items = examData.prescriptionItems || [];
 
@@ -1629,14 +1745,34 @@ export function PrintablePrescriptionSlip({
     }
   }
 
-  // تنسيق الاسم والتاريخ والكود للطباعة على الوجه الأول
+  const visiblePages = pages
+    .map((pageItems, originalIndex) => ({ pageItems, originalIndex }))
+    .filter(({ originalIndex }) => {
+      if (pageMode === 'front') return originalIndex === 0;
+      if (pageMode === 'back') return originalIndex > 0;
+      return true;
+    });
+
+  // تنسيق الاسم والتاريخ العربي (٢٥  ١١  ٢٦) والكود للطباعة على الوجه الأول
   const patientNameText = patient?.fullName || '';
   const patientCodeText = patient?.fileNumber || examData.fileNo || '';
   const rawDate = examData.date || new Date().toISOString().slice(0, 10);
-  const formattedDateText = (() => {
+  const dateParts = (() => {
     const m = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (m) return `${m[3]} / ${m[2]} / ${m[1]}`;
-    return rawDate;
+    if (m) {
+      return {
+        year2Ar: toArabicDigits(m[1].slice(-2)),
+        monthAr: toArabicDigits(m[2]),
+        dayAr: toArabicDigits(m[3]),
+        fallbackAr: '',
+      };
+    }
+    return {
+      year2Ar: '',
+      monthAr: '',
+      dayAr: '',
+      fallbackAr: toArabicDigits(rawDate),
+    };
   })();
 
   return (
@@ -1706,13 +1842,14 @@ export function PrintablePrescriptionSlip({
       `}} />
 
       <div className="rx-print-wrapper" dir="ltr">
-        {pages.map((pageItems, pageIdx) => {
-          const isFirstPage = pageIdx === 0;
-          const isLastPage = pageIdx === pages.length - 1;
+        {visiblePages.map(({ pageItems, originalIndex }, renderIdx) => {
+          const isFirstPage = originalIndex === 0;
+          const isLastPage = originalIndex === pages.length - 1;
+          const isLastRenderedPage = renderIdx === visiblePages.length - 1;
 
           return (
             <div
-              key={pageIdx}
+              key={originalIndex}
               dir="ltr"
               className={`rx-print-page ${isFirstPage ? 'rx-print-page-front' : 'rx-print-page-back'} bg-white text-black font-sans relative box-border`}
               style={{
@@ -1724,8 +1861,8 @@ export function PrintablePrescriptionSlip({
                 paddingBottom: '1.5cm',
                 paddingLeft: '3.5cm',
                 paddingRight: '0',
-                pageBreakAfter: isLastPage ? 'avoid' : 'always',
-                breakAfter: isLastPage ? 'avoid' : 'page',
+                pageBreakAfter: isLastRenderedPage ? 'avoid' : 'always',
+                breakAfter: isLastRenderedPage ? 'avoid' : 'page',
                 overflow: 'hidden',
               }}
             >
@@ -1767,13 +1904,13 @@ export function PrintablePrescriptionSlip({
 
                   {isFirstPage ? (
                     <>
-                      {/* خط سطر الاسم والتاريخ والكود 6.45cm */}
+                      {/* خط سطر الاسم والتاريخ والكود 6.02cm */}
                       <div
-                        style={{ position: 'absolute', top: '6.45cm', left: 0, right: 0 }}
+                        style={{ position: 'absolute', top: '6.02cm', left: 0, right: 0 }}
                         className="border-t-2 border-dashed border-rose-500"
                       >
                         <span className="bg-rose-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
-                          سطر البيانات 6.45cm
+                          سطر البيانات 6.02cm
                         </span>
                       </div>
 
@@ -1803,45 +1940,85 @@ export function PrintablePrescriptionSlip({
 
               {isFirstPage && (
                 <>
-                  {/* الاسم: من فوق 6.45cm ومن اليمين 1.5cm */}
+                  {/* الاسم: مضبوط أعلى على خط الاسم (من فوق 6.02cm ومن اليمين 0.5cm) */}
                   {patientNameText && (
                     <div
                       dir="rtl"
                       style={{
                         position: 'absolute',
-                        top: '6.45cm',
-                        right: '1.5cm',
-                        maxWidth: '6.8cm',
+                        top: '6.02cm',
+                        right: '0.5cm',
+                        maxWidth: '4.9cm',
                       }}
-                      className="text-xs sm:text-sm font-black text-black text-right leading-none whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="text-[11.5px] font-black text-black text-right leading-none whitespace-nowrap overflow-hidden text-ellipsis"
                     >
                       {patientNameText}
                     </div>
                   )}
 
-                  {/* التاريخ: على نفس السطر 6.45cm في خانة التاريخ */}
-                  {formattedDateText && (
-                    <div
-                      dir="ltr"
-                      style={{
-                        position: 'absolute',
-                        top: '6.45cm',
-                        left: '4.6cm',
-                      }}
-                      className="text-xs font-bold font-mono text-black leading-none whitespace-nowrap"
-                    >
-                      {formattedDateText}
-                    </div>
+                  {/* التاريخ العربي (٢٥ / ١١ / ٢٠٢٦): على سطر التاريخ ٢٠ / / مباشرة */}
+                  {dateParts.year2Ar ? (
+                    <>
+                      <div
+                        dir="ltr"
+                        style={{
+                          position: 'absolute',
+                          top: '6.00cm',
+                          left: '6.12cm',
+                        }}
+                        className="text-[11.5px] font-bold text-black leading-none whitespace-nowrap"
+                      >
+                        {dateParts.year2Ar}
+                      </div>
+                      <div
+                        dir="ltr"
+                        style={{
+                          position: 'absolute',
+                          top: '6.00cm',
+                          left: '6.49cm',
+                          width: '0.6cm',
+                        }}
+                        className="text-[11.5px] font-bold text-black text-center leading-none whitespace-nowrap"
+                      >
+                        {dateParts.monthAr}
+                      </div>
+                      <div
+                        dir="ltr"
+                        style={{
+                          position: 'absolute',
+                          top: '6.00cm',
+                          left: '7.05cm',
+                          width: '0.6cm',
+                        }}
+                        className="text-[11.5px] font-bold text-black text-center leading-none whitespace-nowrap"
+                      >
+                        {dateParts.dayAr}
+                      </div>
+                    </>
+                  ) : (
+                    dateParts.fallbackAr && (
+                      <div
+                        dir="ltr"
+                        style={{
+                          position: 'absolute',
+                          top: '6.00cm',
+                          left: '6.2cm',
+                        }}
+                        className="text-[11.5px] font-bold text-black leading-none whitespace-nowrap"
+                      >
+                        {dateParts.fallbackAr}
+                      </div>
+                    )
                   )}
 
-                  {/* الكود: من فوق 6.45cm ومن الشمال 1.4cm */}
+                  {/* الكود: مضبوط على خط الرقم (من فوق 6.02cm ومن الشمال 2.1cm) */}
                   {patientCodeText && (
                     <div
                       dir="ltr"
                       style={{
                         position: 'absolute',
-                        top: '6.45cm',
-                        left: '1.4cm',
+                        top: '6.02cm',
+                        left: '2.1cm',
                       }}
                       className="text-xs sm:text-sm font-black font-mono text-black leading-none whitespace-nowrap"
                     >

@@ -207,7 +207,7 @@ export default function AdminSettingsPage() {
               </div>
             </div>
             <span className="text-xs font-mono font-bold bg-sky-50 text-sky-800 border border-sky-200 px-3 py-1 rounded-full self-start sm:self-auto">
-              الإصدار المثبت: v1.0.4 (Production)
+              الإصدار المثبت: v1.0.5 (Production)
             </span>
           </div>
 

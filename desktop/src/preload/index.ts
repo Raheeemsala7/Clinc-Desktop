@@ -13,6 +13,7 @@ export interface IElectronAPI {
   saveConfig: (config: { mode: 'server' | 'client'; serverIp?: string; serverPort?: number }) => Promise<any>;
   printPrescription: (htmlContent: string) => Promise<boolean>;
   printReceipt: (htmlContent: string) => Promise<boolean>;
+  printCurrentWindow: (options?: { duplexMode?: 'simplex' | 'longEdge' | 'shortEdge' }) => Promise<boolean>;
   triggerBackup: () => Promise<any>;
   restoreBackup: (filePath: string) => Promise<any>;
   selectBackupFile: () => Promise<string | null>;
@@ -38,6 +39,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveConfig: (config: any) => ipcRenderer.invoke('app:save-config', config),
   printPrescription: (html: string) => ipcRenderer.invoke('print:prescription', html),
   printReceipt: (html: string) => ipcRenderer.invoke('print:receipt', html),
+  printCurrentWindow: (options?: { duplexMode?: 'simplex' | 'longEdge' | 'shortEdge' }) =>
+    ipcRenderer.invoke('print:current-window', options),
   triggerBackup: () => ipcRenderer.invoke('backup:trigger'),
   restoreBackup: (filePath: string) => ipcRenderer.invoke('backup:restore', filePath),
   selectBackupFile: () => ipcRenderer.invoke('dialog:select-backup-file'),

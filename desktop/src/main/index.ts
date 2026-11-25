@@ -636,6 +636,24 @@ ipcMain.handle('print:receipt', async (_event, htmlContent: string) => {
   });
 });
 
+ipcMain.handle('print:current-window', async (event, options?: { duplexMode?: 'simplex' | 'longEdge' | 'shortEdge' }) => {
+  const win = BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getFocusedWindow() || mainWindow;
+  if (!win || win.isDestroyed()) return false;
+
+  return new Promise((resolve) => {
+    win.webContents.print(
+      {
+        silent: false,
+        printBackground: true,
+        duplexMode: options?.duplexMode || 'simplex',
+      },
+      (success) => {
+        resolve(success);
+      }
+    );
+  });
+});
+
 ipcMain.handle('license:get-machine-id', async () => {
   return LicenseManager.getMachineId();
 });

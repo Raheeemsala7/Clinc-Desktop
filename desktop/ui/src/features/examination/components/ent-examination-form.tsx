@@ -55,6 +55,7 @@ export function EntExaminationForm({
     requestedTab === 'prescription' ? 'prescription' : 'exam'
   );
   const [rxPrintMode, setRxPrintMode] = useState<'full' | 'plain'>('full');
+  const [rxPrintPageMode, setRxPrintPageMode] = useState<'all' | 'front' | 'back'>('all');
 
   // الحالة الابتدائية لبيانات الفحص
   const existingExam = visit?.entExamination || {};
@@ -250,13 +251,23 @@ export function EntExaminationForm({
     }, 150);
   };
 
-  // طباعة الروشتة الطبية
-  const handlePrintRx = (mode: 'full' | 'plain' = 'full') => {
+  // طباعة الروشتة الطبية (كاملة، أو الوجه فقط، أو الظهر فقط، أو Duplex)
+  const handlePrintRx = (
+    mode: 'full' | 'plain' = 'full',
+    pageMode: 'all' | 'front' | 'back' = 'all',
+    useDuplex = false
+  ) => {
     setRxPrintMode(mode);
+    setRxPrintPageMode(pageMode);
     setPrintTarget('prescription');
     setTimeout(() => {
-      window.print();
-    }, 150);
+      const electronApi = (window as any).electronAPI;
+      if (useDuplex && electronApi?.printCurrentWindow) {
+        electronApi.printCurrentWindow({ duplexMode: 'longEdge' }).catch(() => window.print());
+      } else {
+        window.print();
+      }
+    }, 180);
   };
 
   return (
@@ -506,6 +517,7 @@ export function EntExaminationForm({
           patient={patient}
           doctor={doctor}
           printMode={rxPrintMode}
+          pageMode={rxPrintPageMode}
         />
       </div>
     </div>
