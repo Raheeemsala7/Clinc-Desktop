@@ -1,6 +1,6 @@
 {
   "name": "clinic-management-desktop",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Clinic Management Desktop Application for Windows",
   "main": "dist/main/index.js",
   "author": "Clinic Team",

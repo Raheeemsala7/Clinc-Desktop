@@ -161,7 +161,7 @@ export function DashboardSidebar({
       {/* 3. أسفل الشريط الجانبي: رقم الإصدار ونوع اللوحة المترجمة */}
       <SidebarFooter className="border-t border-white/10 p-0 bg-[#071510]">
         <div className="py-4 px-5 flex items-center justify-between text-xs text-slate-300 font-semibold group-data-[collapsible=icon]:justify-center">
-          <span className="group-data-[collapsible=icon]:hidden font-mono text-emerald-300">نَفَس v1.0.3 🚀</span>
+          <span className="group-data-[collapsible=icon]:hidden font-mono text-emerald-300">نَفَس v1.0.4 🚀</span>
           <span className="text-emerald-400 font-bold">{t(config.roleKey)}</span>
         </div>
       </SidebarFooter>
