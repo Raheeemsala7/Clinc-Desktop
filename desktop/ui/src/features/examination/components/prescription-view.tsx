@@ -1532,7 +1532,7 @@ export function PrescriptionView({
                     معاينة الطباعة والتحقق من المسافات بالسنتيمتر (16.5cm × 24cm)
                   </h3>
                   <p className="text-[11px] text-slate-500 font-bold">
-                    تحقق من موضع الاسم (5.95cm / يمين 0.6cm) والتاريخ العربي والكود (شمال 1.9cm) والأدوية (شمال 3.5cm) والهامش السفلي (1.5cm)
+                    تحقق من موضع الاسم (6.00cm / يمين 0.5cm) والسن والتاريخ العربي والكود (شمال 2.1cm) والأدوية (شمال 3.5cm) والهامش السفلي (1.5cm)
                   </p>
                 </div>
               </div>
@@ -1703,7 +1703,7 @@ export function PrescriptionView({
  * المقاسات المعتمدة لطابعة العيادة (ورق الروشتة 16.5cm × 24cm):
  * - طول الورقة: 24cm
  * - إزالة الخط الأخضر الجانبي بالكامل عند الطباعة
- * - طباعة الاسم (top: 6.02cm, right: 0.5cm)، التاريخ العربي ٢٥ / ١١ / ٢٠٢٦ (top: 6.00cm)، والكود (top: 6.02cm, left: 2.1cm)
+ * - طباعة الاسم (top: 6.00cm, right: 0.5cm, 12.5px)، السن (top: 6.02cm, left: 8.95cm)، التاريخ العربي ٢٥ / ١١ / ٢٠٢٦ (top: 6.00cm)، والكود (top: 6.02cm, left: 2.1cm)
  * - هامش الأدوية الأيسر: 3.5cm بالضبط
  * - هامش سفلي: 1.5cm فقط لاستيعاب حتى 8 أدوية في الوجه الأول
  * - ظهر الورقة (الصفحة الثانية): يبدأ من الأعلى بهامش علوي 3cm وهامش أيسر 3.5cm ويدعم الطباعة اليدوية والآلية
@@ -1753,8 +1753,46 @@ export function PrintablePrescriptionSlip({
       return true;
     });
 
-  // تنسيق الاسم والتاريخ العربي (٢٥  ١١  ٢٦) والكود للطباعة على الوجه الأول
+  // تنسيق الاسم والسن والتاريخ العربي (٢٥  ١١  ٢٦) والكود للطباعة على الوجه الأول
   const patientNameText = patient?.fullName || '';
+  const patientAgeText = (() => {
+    const rawAge = patient?.age;
+    let resolved = '';
+    if (
+      rawAge !== undefined &&
+      rawAge !== null &&
+      String(rawAge).trim() !== '' &&
+      Number(rawAge) !== 0
+    ) {
+      resolved = String(rawAge).trim();
+    } else {
+      const dobRaw = patient?.dateOfBirth || patient?.birthDate;
+      if (dobRaw) {
+        const dob = new Date(dobRaw);
+        if (!Number.isNaN(dob.getTime())) {
+          const today = new Date();
+          let years = today.getFullYear() - dob.getFullYear();
+          const mDiff = today.getMonth() - dob.getMonth();
+          if (mDiff < 0 || (mDiff === 0 && today.getDate() < dob.getDate())) {
+            years -= 1;
+          }
+          if (years > 0) {
+            resolved = String(years);
+          } else if (years === 0) {
+            const months = Math.max(
+              1,
+              (today.getFullYear() - dob.getFullYear()) * 12 + (today.getMonth() - dob.getMonth())
+            );
+            return `${toArabicDigits(String(months))} شهر`;
+          }
+        }
+      }
+    }
+    if (!resolved) return '';
+    return /[a-zA-Z\u0600-\u06FF]/.test(resolved)
+      ? toArabicDigits(resolved)
+      : `${toArabicDigits(resolved)} سنة`;
+  })();
   const patientCodeText = patient?.fileNumber || examData.fileNo || '';
   const rawDate = examData.date || new Date().toISOString().slice(0, 10);
   const dateParts = (() => {
@@ -1940,19 +1978,35 @@ export function PrintablePrescriptionSlip({
 
               {isFirstPage && (
                 <>
-                  {/* الاسم: مضبوط أعلى على خط الاسم (من فوق 6.02cm ومن اليمين 0.5cm) */}
+                  {/* الاسم: حجم 12.5px مضبوط أعلى على خط الاسم (من فوق 6.00cm ومن اليمين 0.5cm) */}
                   {patientNameText && (
                     <div
                       dir="rtl"
                       style={{
                         position: 'absolute',
-                        top: '6.02cm',
+                        top: '6.00cm',
                         right: '0.5cm',
-                        maxWidth: '4.9cm',
+                        maxWidth: '4.45cm',
                       }}
-                      className="text-[11.5px] font-black text-black text-right leading-none whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="text-[12.5px] font-black text-black text-right leading-none whitespace-nowrap overflow-hidden text-ellipsis"
                     >
                       {patientNameText}
+                    </div>
+                  )}
+
+                  {/* السن: في خانة السن بين (السن :) و(التاريخ :) */}
+                  {patientAgeText && (
+                    <div
+                      dir="rtl"
+                      style={{
+                        position: 'absolute',
+                        top: '6.02cm',
+                        left: '8.95cm',
+                        width: '1.55cm',
+                      }}
+                      className="text-[11.5px] font-black text-black text-center leading-none whitespace-nowrap"
+                    >
+                      {patientAgeText}
                     </div>
                   )}
 
