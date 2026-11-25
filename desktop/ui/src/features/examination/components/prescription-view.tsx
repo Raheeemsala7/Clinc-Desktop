@@ -145,8 +145,30 @@ interface PrescriptionViewProps {
   onSave: () => void;
   onFinish: () => void;
   onPrintRx: (mode?: 'full' | 'plain', pageMode?: 'all' | 'front' | 'back', useDuplex?: boolean) => void;
+  externalPrintRequest?: { seq: number; mode: 'full' | 'plain' } | null;
   isSaving: boolean;
   isFinishing: boolean;
+}
+
+const RX_FRONT_PAGE_LIMIT = 8;
+const RX_BACK_PAGE_LIMIT = 12;
+
+function splitPrescriptionPages(
+  items: PrescriptionMedicine[],
+  treatmentNotes?: string
+): PrescriptionMedicine[][] {
+  if (!items || items.length === 0) {
+    return [[]];
+  }
+  const pages: PrescriptionMedicine[][] = [];
+  pages.push(items.slice(0, RX_FRONT_PAGE_LIMIT));
+  for (let i = RX_FRONT_PAGE_LIMIT; i < items.length; i += RX_BACK_PAGE_LIMIT) {
+    pages.push(items.slice(i, i + RX_BACK_PAGE_LIMIT));
+  }
+  if (items.length === RX_FRONT_PAGE_LIMIT && Boolean(treatmentNotes?.trim())) {
+    pages.push([]);
+  }
+  return pages;
 }
 
 const QUICK_ENT_DRUGS: Array<Omit<PrescriptionMedicine, 'id'>> = [
@@ -170,6 +192,7 @@ export function PrescriptionView({
   onSave,
   onFinish,
   onPrintRx,
+  externalPrintRequest,
   isSaving,
   isFinishing,
 }: PrescriptionViewProps) {
@@ -189,13 +212,25 @@ export function PrescriptionView({
     frontPrinted: boolean;
   }>({ isOpen: false, mode: 'plain', frontPrinted: false });
 
+  const hasBackPage = useMemo(
+    () => splitPrescriptionPages(items, examData.treatmentNotes).length > 1,
+    [items, examData.treatmentNotes]
+  );
+
   const handleSmartPrintClick = (mode: 'full' | 'plain') => {
-    if (items.length > 8) {
+    if (hasBackPage) {
       setTwoSidedPrintState({ isOpen: true, mode, frontPrinted: false });
     } else {
       onPrintRx(mode, 'all', false);
     }
   };
+
+  useEffect(() => {
+    if (externalPrintRequest?.seq) {
+      handleSmartPrintClick(externalPrintRequest.mode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalPrintRequest?.seq]);
 
   // 1. أشكال الأدوية من قاعدة البيانات والمخصصة والمحذوفة
   const [dbForms, setDbForms] = useState<DrugFormOption[]>([]);
@@ -844,23 +879,33 @@ export function PrescriptionView({
             {/* زر طباعة روشتة كاملة */}
             <button
               type="button"
-              onClick={() => onPrintRx('full')}
+              onClick={() => handleSmartPrintClick('full')}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
               title="طباعة روشتة كاملة مع ترويسة العيادة واسم الطبيب"
             >
               <Printer className="w-4 h-4 text-slate-500" />
               <span>طباعة كاملة (مع الترويسة)</span>
+              {hasBackPage && (
+                <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-black">
+                  وجه + ظهر
+                </span>
+              )}
             </button>
 
             {/* زر طباعة أدوية فقط للورق الجاهز */}
             <button
               type="button"
-              onClick={() => onPrintRx('plain')}
+              onClick={() => handleSmartPrintClick('plain')}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black transition-all shadow-2xs cursor-pointer"
               title="طباعة على ورق عيادة مطبوع مسبقاً (تطبع فقط الأدوية والجرعات والإرشادات بدون ترويسة أو توقيع)"
             >
               <FileCheck className="w-4 h-4 text-emerald-600" />
               <span>طباعة أدوية فقط (ورق بدون ترويسة) 📄</span>
+              {hasBackPage && (
+                <span className="px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-900 text-[10px] font-black">
+                  وجه + ظهر
+                </span>
+              )}
             </button>
 
             {/* زر سجل الروشتات السابقة للمريض */}
@@ -1611,10 +1656,10 @@ export function PrescriptionView({
                 </div>
                 <div>
                   <h3 className="font-black text-base text-[#074C3A]">
-                    الروشتة تحتوي على {items.length} أصناف (وجه + ظهر)
+                    الروشتة تتطلب وجهين (وجه + ظهر نفس الورقة — {items.length} أصناف)
                   </h3>
                   <p className="text-xs text-slate-500 font-bold">
-                    اختر طريقة الطباعة المناسبة لطابعتك للطباعة على ظهر نفس الورقة
+                    لمنع الطابعة من سحب ورقة ثانية جديدة، اطبع الوجه الأول أولاً ثم اقلب نفس الورقة لطباعة الظهر
                   </p>
                 </div>
               </div>
@@ -1631,7 +1676,7 @@ export function PrescriptionView({
             <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-[#074C3A]">
-                  1. للطابعات العادية (بدون قلب أوتوماتيك — الأضمن لعدم سحب ورقة ثانية):
+                  1. الطريقة المضمونة (اقلب نفس الورقة يدوياً — تعمل مع جميع الطابعات):
                 </span>
               </div>
 
@@ -1664,7 +1709,7 @@ export function PrescriptionView({
 
               {twoSidedPrintState.frontPrinted && (
                 <p className="text-[11px] font-black text-amber-900 bg-amber-100 px-3 py-2 rounded-xl border border-amber-300 text-center">
-                  ⚠️ اقلب الورقة التي خرجت الآن وأعد وضعها في الطابعة ثم اضغط زر &quot;طباعة الظهر على نفس الورقة (2/2)&quot;
+                  ⚠️ اقلب نفس الورقة التي خرجت الآن وأعد إدخالها في الطابعة ثم اضغط &quot;طباعة الظهر على نفس الورقة (2/2)&quot;
                 </p>
               )}
             </div>
@@ -1672,7 +1717,7 @@ export function PrescriptionView({
             {/* الطريقة 2: طباعة الوجهين أوتوماتيكياً معاً */}
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
               <div className="text-xs text-slate-600 font-bold">
-                2. للطابعات الداعمة للوجهين أوتوماتيك (Duplex) أو حفظ PDF:
+                2. للطابعات المزوّدة بوحدة قلب أوتوماتيك (Auto-Duplex) فقط أو حفظ PDF (الطابعات العادية ستسحب ورقة ثانية):
               </div>
               <button
                 type="button"
@@ -1732,18 +1777,8 @@ export function PrintablePrescriptionSlip({
   const items = examData.prescriptionItems || [];
 
   // تقسيم الأدوية: الوجه الأول يستوعب حتى 8 أدوية (من 10cm حتى 1.5cm من الأسفل)
-  // وما يزيد يُطبع في ظهر الورقة (يبدأ من 3cm من الأعلى ويستوعب حتى 12 دواء)
-  const FRONT_PAGE_LIMIT = 8;
-  const BACK_PAGE_LIMIT = 12;
-  const pages: PrescriptionMedicine[][] = [];
-  if (items.length === 0) {
-    pages.push([]);
-  } else {
-    pages.push(items.slice(0, FRONT_PAGE_LIMIT));
-    for (let i = FRONT_PAGE_LIMIT; i < items.length; i += BACK_PAGE_LIMIT) {
-      pages.push(items.slice(i, i + BACK_PAGE_LIMIT));
-    }
-  }
+  // وما يزيد (أو التعليمات مع 8 أدوية) يُطبع في ظهر الورقة بدءاً من 3cm من الأعلى
+  const pages = splitPrescriptionPages(items, examData.treatmentNotes);
 
   const visiblePages = pages
     .map((pageItems, originalIndex) => ({ pageItems, originalIndex }))
@@ -2083,10 +2118,8 @@ export function PrintablePrescriptionSlip({
               )}
 
               {/* قائمة الأدوية الموصوفة بنقاط (•) مع هامش أيسر 3.5cm لاستغلال المساحة حتى 1.5cm أسفل الورقة */}
-              <div style={{ paddingRight: '1.2cm' }} dir="ltr">
-                {pageItems.length === 0 ? (
-                  <p className="text-sm text-slate-400 italic">No medications prescribed.</p>
-                ) : (
+              {pageItems.length > 0 ? (
+                <div style={{ paddingRight: '1.2cm' }} dir="ltr">
                   <div className="space-y-2 text-left">
                     {pageItems.map((item, idx) => {
                       const formObj = DRUG_FORMS.find(
@@ -2152,8 +2185,12 @@ export function PrintablePrescriptionSlip({
                       );
                     })}
                   </div>
-                )}
-              </div>
+                </div>
+              ) : isFirstPage ? (
+                <div style={{ paddingRight: '1.2cm' }} dir="ltr">
+                  <p className="text-sm text-slate-400 italic">No medications prescribed.</p>
+                </div>
+              ) : null}
 
               {/* ملاحظات العلاج الإضافية إن وجدت (تظهر في الصفحة الأخيرة مع هامش يمين 2cm) */}
               {isLastPage && examData.treatmentNotes && (

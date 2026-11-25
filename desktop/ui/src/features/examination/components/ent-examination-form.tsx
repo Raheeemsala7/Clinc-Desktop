@@ -57,6 +57,7 @@ export function EntExaminationForm({
   );
   const [rxPrintMode, setRxPrintMode] = useState<'full' | 'plain'>('full');
   const [rxPrintPageMode, setRxPrintPageMode] = useState<'all' | 'front' | 'back'>('all');
+  const [externalRxPrintReq, setExternalRxPrintReq] = useState<{ seq: number; mode: 'full' | 'plain' } | null>(null);
 
   // الحالة الابتدائية لبيانات الفحص
   const existingExam = visit?.entExamination || {};
@@ -461,7 +462,11 @@ export function EntExaminationForm({
 
           <button
             type="button"
-            onClick={activeTab === 'exam' ? handlePrintExam : () => handlePrintRx('full')}
+            onClick={
+              activeTab === 'exam'
+                ? handlePrintExam
+                : () => setExternalRxPrintReq((prev) => ({ seq: (prev?.seq || 0) + 1, mode: 'plain' }))
+            }
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
             title="طباعة (Alt+P)"
           >
@@ -584,6 +589,7 @@ export function EntExaminationForm({
           onSave={() => handleSave(true)}
           onFinish={handleFinish}
           onPrintRx={handlePrintRx}
+          externalPrintRequest={externalRxPrintReq}
           isSaving={isSaving}
           isFinishing={isFinishing}
         />
