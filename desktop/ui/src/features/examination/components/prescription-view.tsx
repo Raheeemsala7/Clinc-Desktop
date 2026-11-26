@@ -2211,15 +2211,15 @@ export function PrintablePrescriptionSlip({
 
               {isFirstPage && (
                 <>
-                  {/* الاسم: حجم 12.5px مضبوط أعلى على خط الاسم (من فوق 6.00cm ومن اليمين 0.5cm) */}
+                  {/* الاسم: حجم 12.5px مضبوط في خانة الاسم على اليمين (right: 0.1cm) */}
                   {patientNameText && (
                     <div
                       dir="rtl"
                       style={{
                         position: 'absolute',
                         top: '6.00cm',
-                        right: '0.5cm',
-                        maxWidth: '4.45cm',
+                        right: '0.1cm',
+                        maxWidth: '5.5cm',
                       }}
                       className="text-[12.5px] font-black text-black text-right leading-none whitespace-nowrap overflow-hidden text-ellipsis"
                     >
@@ -2227,15 +2227,15 @@ export function PrintablePrescriptionSlip({
                     </div>
                   )}
 
-                  {/* السن: في خانة السن بين (السن :) و(التاريخ :) */}
+                  {/* السن: في خانة السن مضبوطة تماماً تحت (السن :) عند 11.4cm */}
                   {patientAgeText && (
                     <div
                       dir="rtl"
                       style={{
                         position: 'absolute',
                         top: '6.02cm',
-                        left: '8.95cm',
-                        width: '1.55cm',
+                        left: '11.4cm',
+                        width: '1.8cm',
                       }}
                       className="text-[11.5px] font-black text-black text-center leading-none whitespace-nowrap"
                     >
@@ -2243,7 +2243,7 @@ export function PrintablePrescriptionSlip({
                     </div>
                   )}
 
-                  {/* التاريخ العربي (٢٥ / ١١ / ٢٠٢٦): على سطر التاريخ ٢٠ / / مباشرة */}
+                  {/* التاريخ العربي (٢٥ / ١١ / ٢٠٢٦): مضبوط تماماً في خانة (التاريخ : / / 20) عند 8.4cm - 9.8cm */}
                   {dateParts.year2Ar ? (
                     <>
                       <div
@@ -2251,7 +2251,7 @@ export function PrintablePrescriptionSlip({
                         style={{
                           position: 'absolute',
                           top: '6.00cm',
-                          left: '6.12cm',
+                          left: '8.40cm',
                         }}
                         className="text-[11.5px] font-bold text-black leading-none whitespace-nowrap"
                       >
@@ -2262,7 +2262,7 @@ export function PrintablePrescriptionSlip({
                         style={{
                           position: 'absolute',
                           top: '6.00cm',
-                          left: '6.49cm',
+                          left: '8.85cm',
                           width: '0.6cm',
                         }}
                         className="text-[11.5px] font-bold text-black text-center leading-none whitespace-nowrap"
@@ -2274,7 +2274,7 @@ export function PrintablePrescriptionSlip({
                         style={{
                           position: 'absolute',
                           top: '6.00cm',
-                          left: '7.05cm',
+                          left: '9.45cm',
                           width: '0.6cm',
                         }}
                         className="text-[11.5px] font-bold text-black text-center leading-none whitespace-nowrap"
@@ -2289,7 +2289,7 @@ export function PrintablePrescriptionSlip({
                         style={{
                           position: 'absolute',
                           top: '6.00cm',
-                          left: '6.2cm',
+                          left: '8.50cm',
                         }}
                         className="text-[11.5px] font-bold text-black leading-none whitespace-nowrap"
                       >
@@ -2298,14 +2298,14 @@ export function PrintablePrescriptionSlip({
                     )
                   )}
 
-                  {/* الكود: مضبوط على خط الرقم (من فوق 6.02cm ومن الشمال 2.1cm) */}
+                  {/* الكود: مضبوط على خط الرقم بجانب (رقم :) داخل الصفحة عند 4.2cm */}
                   {patientCodeText && (
                     <div
                       dir="ltr"
                       style={{
                         position: 'absolute',
                         top: '6.02cm',
-                        left: '2.1cm',
+                        left: '4.20cm',
                       }}
                       className="text-xs sm:text-sm font-black font-mono text-black leading-none whitespace-nowrap"
                     >
