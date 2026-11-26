@@ -18,6 +18,7 @@ import {
   useCheckoutAppointmentMutation,
   useRefundAppointmentMutation,
 } from '../hooks/appointments.hook';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface CheckoutPaymentModalProps {
   isOpen: boolean;
@@ -41,12 +42,17 @@ export function CheckoutPaymentModal({
   onSuccess,
 }: CheckoutPaymentModalProps) {
   const t = useTranslations('Dashboard.receptionist.table');
+  const { isAr, dir, tr } = useAppLocale();
   const [settlementType, setSettlementType] = useState<'FULL' | 'PARTIAL' | 'EXEMPT' | 'REFUND'>('FULL');
   const [method, setMethod] = useState<'CASH' | 'CARD' | 'WALLET'>('CASH');
   const [amount, setAmount] = useState<number>(remainingAmount);
   const [refundAmount, setRefundAmount] = useState<number>(paidAmount > 0 ? Math.min(paidAmount, 100) : 0);
-  const [refundReason, setRefundReason] = useState<string>('بتوجيه الطبيب بعد إنهاء الكشف');
-  const [exemptionReason, setExemptionReason] = useState<string>('بتعليمات الطبيب المعالج');
+  const [refundReason, setRefundReason] = useState<string>(
+    tr('بتوجيه الطبيب بعد إنهاء الكشف', 'Per doctor instructions after exam')
+  );
+  const [exemptionReason, setExemptionReason] = useState<string>(
+    tr('بتعليمات الطبيب المعالج', 'Per treating doctor instructions')
+  );
   const [notes, setNotes] = useState<string>('');
 
   const checkoutMutation = useCheckoutAppointmentMutation();
@@ -63,7 +69,9 @@ export function CheckoutPaymentModal({
           id: appointmentId,
           payload: {
             amount: refundAmt,
-            reason: refundReason || 'بتوجيه الطبيب بعد إنهاء الكشف',
+            reason:
+              refundReason ||
+              tr('بتوجيه الطبيب بعد إنهاء الكشف', 'Per doctor instructions after exam'),
             method,
           },
         },
@@ -108,8 +116,22 @@ export function CheckoutPaymentModal({
   const calculatedRemainingAfterPartial = Math.max(0, remainingAmount - (Number(amount) || 0));
   const calculatedPaidAfterRefund = Math.max(0, paidAmount - (Number(refundAmount) || 0));
 
+  const exemptionTags = [
+    tr('بتعليمات الطبيب المعالج', 'Per treating doctor instructions'),
+    tr('حالة إنسانية / خصم كامل', 'Humanitarian case / Full waiver'),
+    tr('متابعة بدون رسوم', 'Complimentary follow-up'),
+    tr('أقارب ومعارف', 'Relatives & acquaintances'),
+  ];
+
+  const refundTags = [
+    tr('بتعليمات الطبيب بعد إنهاء الكشف', 'Per doctor instructions after exam'),
+    tr('تخفيض قيمة الكشف', 'Reduced exam fee'),
+    tr('إلغاء إجراء طبي إضافي', 'Cancelled additional procedure'),
+    tr('طلب الطبيب إرجاع جزء من الكشف', 'Doctor requested partial refund'),
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200" dir="rtl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200" dir={dir}>
       <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
@@ -119,10 +141,10 @@ export function CheckoutPaymentModal({
             </div>
             <div>
               <h3 className="text-base font-black text-[#074C3A]">
-                تسوية الحساب ومغادرة المريض
+                {tr('تسوية الحساب ومغادرة المريض', 'Settle Balance & Patient Checkout')}
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                المريض: <span className="font-bold text-slate-800">{patientName}</span>
+                {tr('المريض:', 'Patient:')} <span className="font-bold text-slate-800">{patientName}</span>
               </p>
             </div>
           </div>
@@ -140,16 +162,28 @@ export function CheckoutPaymentModal({
           {/* Card Summary */}
           <div className="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/80 flex items-center justify-between text-xs">
             <div>
-              <span className="text-slate-400 block mb-0.5">سعر الكشف الإجمالي:</span>
-              <span className="font-black text-slate-700 text-sm">{totalAmount} ج.م</span>
+              <span className="text-slate-400 block mb-0.5">
+                {tr('سعر الكشف الإجمالي:', 'Total Fee:')}
+              </span>
+              <span className="font-black text-slate-700 text-sm">
+                {totalAmount} {tr('ج.م', 'EGP')}
+              </span>
             </div>
             <div className="text-center">
-              <span className="text-slate-400 block mb-0.5">المسدد مسبقاً (عربون):</span>
-              <span className="font-black text-emerald-600 text-sm">{paidAmount} ج.م</span>
+              <span className="text-slate-400 block mb-0.5">
+                {tr('المسدد مسبقاً (عربون):', 'Paid Previously:')}
+              </span>
+              <span className="font-black text-emerald-600 text-sm">
+                {paidAmount} {tr('ج.م', 'EGP')}
+              </span>
             </div>
             <div className="text-end">
-              <span className="text-slate-400 block mb-0.5">المتبقي المطلوب:</span>
-              <span className="font-black text-amber-700 text-base">{remainingAmount} ج.م</span>
+              <span className="text-slate-400 block mb-0.5">
+                {tr('المتبقي المطلوب:', 'Remaining Due:')}
+              </span>
+              <span className="font-black text-amber-700 text-base">
+                {remainingAmount} {tr('ج.م', 'EGP')}
+              </span>
             </div>
           </div>
 
@@ -158,7 +192,7 @@ export function CheckoutPaymentModal({
               {/* خيارات تسوية المتبقي (سداد كامل / سداد جزء / إعفاء) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-2">
-                  اختر إجراء تسوية المبلغ المتبقي:
+                  {tr('اختر إجراء تسوية المبلغ المتبقي:', 'Choose how to settle the remaining balance:')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {/* خيار 1: سداد كامل المتبقي */}
@@ -175,8 +209,10 @@ export function CheckoutPaymentModal({
                     }`}
                   >
                     <CheckCircle2 className="w-5 h-5 mb-1.5 text-[#0B7B5E]" />
-                    <span>سداد كامل</span>
-                    <span className="text-[10px] opacity-75 font-normal">({remainingAmount} ج.م)</span>
+                    <span>{tr('سداد كامل', 'Full Payment')}</span>
+                    <span className="text-[10px] opacity-75 font-normal">
+                      ({remainingAmount} {tr('ج.م', 'EGP')})
+                    </span>
                   </button>
 
                   {/* خيار 2: سداد جزء من المتبقي */}
@@ -193,8 +229,10 @@ export function CheckoutPaymentModal({
                     }`}
                   >
                     <Split className="w-5 h-5 mb-1.5 text-amber-600" />
-                    <span>سداد جزء</span>
-                    <span className="text-[10px] opacity-75 font-normal">دفعة وتأجيل الباقي</span>
+                    <span>{tr('سداد جزء', 'Partial Payment')}</span>
+                    <span className="text-[10px] opacity-75 font-normal">
+                      {tr('دفعة وتأجيل الباقي', 'Pay part, defer rest')}
+                    </span>
                   </button>
 
                   {/* خيار 3: إعفاء من باقي المبلغ */}
@@ -211,8 +249,10 @@ export function CheckoutPaymentModal({
                     }`}
                   >
                     <HeartHandshake className="w-5 h-5 mb-1.5 text-purple-600" />
-                    <span>إعفاء من المتبقي</span>
-                    <span className="text-[10px] opacity-75 font-normal">تصفير الحساب</span>
+                    <span>{tr('إعفاء من المتبقي', 'Waive Balance')}</span>
+                    <span className="text-[10px] opacity-75 font-normal">
+                      {tr('تصفير الحساب', 'Clear balance')}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -225,10 +265,13 @@ export function CheckoutPaymentModal({
                     <div className="bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200/70 space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-bold text-amber-900">
-                          المبلغ المُسدد الآن من المريض:
+                          {tr('المبلغ المُسدد الآن من المريض:', 'Amount Paid Now:')}
                         </label>
                         <span className="text-xs font-bold text-amber-800">
-                          سيتبقى: {calculatedRemainingAfterPartial} ج.م
+                          {tr(
+                            `سيتبقى: ${calculatedRemainingAfterPartial} ج.م`,
+                            `Remaining: ${calculatedRemainingAfterPartial} EGP`
+                          )}
                         </span>
                       </div>
                       <div className="relative">
@@ -240,10 +283,10 @@ export function CheckoutPaymentModal({
                           onFocus={(e) => e.target.select()}
                           onChange={(e) => setAmount(e.target.value === '' ? 0 : Number(e.target.value))}
                           placeholder="0"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white text-sm font-black text-amber-950 focus:outline-hidden focus:ring-2 focus:ring-amber-400"
+                          className="w-full ps-3.5 pe-12 py-2.5 rounded-xl border border-amber-300 bg-white text-sm font-black text-amber-950 focus:outline-hidden focus:ring-2 focus:ring-amber-400"
                         />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-700">
-                          ج.م
+                        <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-700">
+                          {tr('ج.م', 'EGP')}
                         </span>
                       </div>
                     </div>
@@ -304,24 +347,24 @@ export function CheckoutPaymentModal({
                   <div className="flex items-start gap-2.5 text-purple-900 text-xs">
                     <ShieldCheck className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold">إعفاء المريض وتصفير باقي الحساب</p>
+                      <p className="font-bold">
+                        {tr('إعفاء المريض وتصفير باقي الحساب', 'Waive remaining balance and clear account')}
+                      </p>
                       <p className="text-purple-700 text-[11px] mt-0.5">
-                        سيتم إعفاء المريض من باقي المبلغ ({remainingAmount} ج.م) رسمياً ولن تُحسب كديون متأخرة على العيادة.
+                        {tr(
+                          `سيتم إعفاء المريض من باقي المبلغ (${remainingAmount} ج.م) رسمياً ولن تُحسب كديون متأخرة على العيادة.`,
+                          `The patient will be officially exempted from the remaining ${remainingAmount} EGP with no outstanding balance.`
+                        )}
                       </p>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-purple-900 mb-1.5">
-                      سبب الإعفاء:
+                      {tr('سبب الإعفاء:', 'Exemption Reason:')}
                     </label>
                     <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                      {[
-                        'بتعليمات الطبيب المعالج',
-                        'حالة إنسانية / خصم كامل',
-                        'متابعة بدون رسوم',
-                        'أقارب ومعارف',
-                      ].map((tag) => (
+                      {exemptionTags.map((tag) => (
                         <button
                           key={tag}
                           type="button"
@@ -340,7 +383,7 @@ export function CheckoutPaymentModal({
                       type="text"
                       value={exemptionReason}
                       onChange={(e) => setExemptionReason(e.target.value)}
-                      placeholder="اكتب سبب الإعفاء..."
+                      placeholder={tr('اكتب سبب الإعفاء...', 'Enter exemption reason...')}
                       className="w-full px-3 py-2 rounded-xl border border-purple-200 bg-white text-xs text-purple-950 focus:outline-hidden focus:ring-2 focus:ring-purple-400"
                     />
                   </div>
@@ -350,11 +393,11 @@ export function CheckoutPaymentModal({
               {/* ملاحظات إضافية */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  ملاحظات إضافية (اختياري)
+                  {tr('ملاحظات إضافية (اختياري)', 'Additional Notes (Optional)')}
                 </label>
                 <input
                   type="text"
-                  placeholder="مثال: تم تسليم الروشتة للمريض"
+                  placeholder={tr('مثال: تم تسليم الروشتة للمريض', 'e.g., Prescription handed to patient')}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-hidden focus:border-[#0B7B5E] focus:ring-2 focus:ring-emerald-100 transition-all"
@@ -375,7 +418,7 @@ export function CheckoutPaymentModal({
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      مغادرة عادية (الحساب مسدد)
+                      {tr('مغادرة عادية (الحساب مسدد)', 'Standard Checkout (Paid)')}
                     </button>
                     <button
                       type="button"
@@ -387,16 +430,16 @@ export function CheckoutPaymentModal({
                       }`}
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>استرجاع جزء من الفلوس بتوجيه الطبيب</span>
+                      <span>{tr('استرجاع جزء من الفلوس بتوجيه الطبيب', 'Partial Refund per Doctor')}</span>
                     </button>
                   </div>
 
                   {settlementType === 'REFUND' ? (
                     <div className="bg-rose-50/70 p-4 rounded-2xl border border-rose-200 space-y-3.5 animate-in fade-in-50">
                       <div className="flex items-center justify-between text-xs font-bold text-rose-950">
-                        <span>المبلغ المراد رده للمريض (ج.م):</span>
+                        <span>{tr('المبلغ المراد رده للمريض (ج.م):', 'Refund Amount (EGP):')}</span>
                         <span className="text-[11px] text-rose-700">
-                          المدفوع: {paidAmount} ج.م
+                          {tr(`المدفوع: ${paidAmount} ج.م`, `Paid: ${paidAmount} EGP`)}
                         </span>
                       </div>
 
@@ -409,10 +452,10 @@ export function CheckoutPaymentModal({
                           onFocus={(e) => e.target.select()}
                           onChange={(e) => setRefundAmount(e.target.value === '' ? 0 : Number(e.target.value))}
                           placeholder="0"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-rose-300 bg-white text-sm font-black text-rose-950 focus:outline-hidden focus:ring-2 focus:ring-rose-400"
+                          className="w-full ps-3.5 pe-12 py-2.5 rounded-xl border border-rose-300 bg-white text-sm font-black text-rose-950 focus:outline-hidden focus:ring-2 focus:ring-rose-400"
                         />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-rose-700">
-                          ج.م
+                        <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-rose-700">
+                          {tr('ج.م', 'EGP')}
                         </span>
                       </div>
 
@@ -431,7 +474,9 @@ export function CheckoutPaymentModal({
                                   : 'bg-white text-rose-800 border-rose-200 hover:bg-rose-100'
                               }`}
                             >
-                              {val === paidAmount ? `كامل المبلغ (${val} ج.م)` : `${val} ج.م`}
+                              {val === paidAmount
+                                ? tr(`كامل المبلغ (${val} ج.م)`, `Full Amount (${val} EGP)`)
+                                : tr(`${val} ج.م`, `${val} EGP`)}
                             </button>
                           ))}
                       </div>
@@ -439,15 +484,10 @@ export function CheckoutPaymentModal({
                       {/* سبب الاسترجاع */}
                       <div>
                         <label className="block text-xs font-bold text-rose-950 mb-1.5">
-                          سبب استرجاع الفلوس:
+                          {tr('سبب استرجاع الفلوس:', 'Refund Reason:')}
                         </label>
                         <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                          {[
-                            'بتعليمات الطبيب بعد إنهاء الكشف',
-                            'تخفيض قيمة الكشف',
-                            'إلغاء إجراء طبي إضافي',
-                            'طلب الطبيب إرجاع جزء من الكشف',
-                          ].map((tag) => (
+                          {refundTags.map((tag) => (
                             <button
                               key={tag}
                               type="button"
@@ -466,7 +506,7 @@ export function CheckoutPaymentModal({
                           type="text"
                           value={refundReason}
                           onChange={(e) => setRefundReason(e.target.value)}
-                          placeholder="اكتب سبب الاسترجاع..."
+                          placeholder={tr('اكتب سبب الاسترجاع...', 'Enter refund reason...')}
                           className="w-full px-3 py-2 rounded-xl border border-rose-200 bg-white text-xs text-rose-950 focus:outline-hidden focus:ring-2 focus:ring-rose-400"
                         />
                       </div>
@@ -474,7 +514,7 @@ export function CheckoutPaymentModal({
                       {/* طريقة رد الفلوس */}
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-2">
-                          طريقة رد المبلغ للمريض:
+                          {tr('طريقة رد المبلغ للمريض:', 'Refund Method:')}
                         </label>
                         <div className="grid grid-cols-3 gap-2">
                           <button
@@ -487,7 +527,7 @@ export function CheckoutPaymentModal({
                             }`}
                           >
                             <Banknote className="w-4 h-4" />
-                            <span>نقدي (كاش)</span>
+                            <span>{tr('نقدي (كاش)', 'Cash')}</span>
                           </button>
                           <button
                             type="button"
@@ -499,7 +539,7 @@ export function CheckoutPaymentModal({
                             }`}
                           >
                             <CreditCard className="w-4 h-4" />
-                            <span>بطاقة</span>
+                            <span>{tr('بطاقة', 'Card')}</span>
                           </button>
                           <button
                             type="button"
@@ -511,26 +551,46 @@ export function CheckoutPaymentModal({
                             }`}
                           >
                             <Wallet className="w-4 h-4" />
-                            <span>محفظة</span>
+                            <span>{tr('محفظة', 'Wallet')}</span>
                           </button>
                         </div>
                       </div>
 
                       <div className="p-3 bg-white/80 rounded-xl border border-rose-200 text-[11px] text-rose-900 font-semibold">
-                        💡 سيتم رد <strong>{refundAmount} ج.م</strong> من الخزينة، وتصبح قيمة الكشف الصافية <strong>{calculatedPaidAfterRefund} ج.م</strong>، وتسوية الزيارة ومغادرة المريض دون أي دين.
+                        {isAr ? (
+                          <>
+                            💡 سيتم رد <strong>{refundAmount} ج.م</strong> من الخزينة، وتصبح قيمة الكشف الصافية{' '}
+                            <strong>{calculatedPaidAfterRefund} ج.م</strong>، وتسوية الزيارة ومغادرة المريض دون أي دين.
+                          </>
+                        ) : (
+                          <>
+                            💡 <strong>{refundAmount} EGP</strong> will be refunded from the register; net visit fee becomes{' '}
+                            <strong>{calculatedPaidAfterRefund} EGP</strong> with zero remaining balance.
+                          </>
+                        )}
                       </div>
                     </div>
                   ) : (
                     <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2 border border-emerald-200">
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <span>المبلغ مدفوع بالكامل مسبقاً ({paidAmount} ج.م)، اضغط &quot;تأكيد المغادرة&quot; لإنهاء الزيارة.</span>
+                      <span>
+                        {tr(
+                          `المبلغ مدفوع بالكامل مسبقاً (${paidAmount} ج.م)، اضغط "تأكيد المغادرة" لإنهاء الزيارة.`,
+                          `Amount is already paid in full (${paidAmount} EGP). Click "Confirm Checkout" to finish the visit.`
+                        )}
+                      </span>
                     </div>
                   )}
                 </>
               ) : (
                 <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2 border border-emerald-200">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <span>المبلغ مدفوع بالكامل مسبقاً، يمكنك تأكيد إنهاء الزيارة ومغادرة المريض الآن.</span>
+                  <span>
+                    {tr(
+                      'المبلغ مدفوع بالكامل مسبقاً، يمكنك تأكيد إنهاء الزيارة ومغادرة المريض الآن.',
+                      'Amount is already paid in full. You can confirm visit completion and checkout now.'
+                    )}
+                  </span>
                 </div>
               )}
             </div>
@@ -568,16 +628,25 @@ export function CheckoutPaymentModal({
             )}
             <span>
               {isPending
-                ? 'جاري الحفظ...'
+                ? tr('جاري الحفظ...', 'Saving...')
                 : settlementType === 'REFUND'
-                ? `تأكيد استرجاع ${refundAmount || 0} ج.م وإنهاء الزيارة`
+                ? tr(
+                    `تأكيد استرجاع ${refundAmount || 0} ج.م وإنهاء الزيارة`,
+                    `Confirm Refund of ${refundAmount || 0} EGP & Complete`
+                  )
                 : settlementType === 'EXEMPT'
-                ? 'تأكيد الإعفاء وإنهاء الزيارة'
+                ? tr('تأكيد الإعفاء وإنهاء الزيارة', 'Confirm Exemption & Complete')
                 : settlementType === 'PARTIAL'
-                ? `تحصيل ${amount || 0} ج.م ومغادرة المريض`
+                ? tr(
+                    `تحصيل ${amount || 0} ج.م ومغادرة المريض`,
+                    `Collect ${amount || 0} EGP & Checkout`
+                  )
                 : remainingAmount > 0
-                ? `تحصيل ${remainingAmount} ج.م ومغادرة المريض`
-                : 'تأكيد المغادرة'}
+                ? tr(
+                    `تحصيل ${remainingAmount} ج.م ومغادرة المريض`,
+                    `Collect ${remainingAmount} EGP & Checkout`
+                  )
+                : tr('تأكيد المغادرة', 'Confirm Checkout')}
             </span>
           </button>
         </div>

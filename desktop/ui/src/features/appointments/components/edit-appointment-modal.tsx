@@ -5,9 +5,10 @@ import { X, CheckCircle2, User, Stethoscope, DollarSign, Calendar, Clock, Trash2
 import { toast } from 'sonner';
 import { updateAppointmentAction, deleteAppointmentAction } from '../apis/appointment.action';
 import { useDoctorsQuery } from '../hooks/appointments.hook';
-import { APPOINTMENT_TYPES } from '../constants/booking.constant';
+import { getLocalizedAppointmentTypes } from '../constants/booking.constant';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface EditAppointmentModalProps {
   isOpen: boolean;
@@ -33,10 +34,12 @@ export function EditAppointmentModal({
   appointment,
   onSuccess,
 }: EditAppointmentModalProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: doctorsData } = useDoctorsQuery();
   const doctors = doctorsData || [];
+  const appointmentTypes = getLocalizedAppointmentTypes(isAr);
 
   const [selectedDoctorId, setSelectedDoctorId] = useState(appointment.doctorId || '');
   const [selectedType, setSelectedType] = useState(appointment.type || 'EXAMINATION');
@@ -69,7 +72,12 @@ export function EditAppointmentModal({
       });
 
       if (res.status) {
-        toast.success('تم تعديل بيانات الحجز وتحديث الطبيب بنجاح');
+        toast.success(
+          tr(
+            'تم تعديل بيانات الحجز وتحديث الطبيب بنجاح',
+            'Appointment updated successfully'
+          )
+        );
         queryClient.invalidateQueries({ queryKey: ['queue'] });
         queryClient.invalidateQueries({ queryKey: ['appointments'] });
         queryClient.invalidateQueries({ queryKey: ['doctors'] });
@@ -77,24 +85,36 @@ export function EditAppointmentModal({
         if (onSuccess) onSuccess();
         router.refresh();
       } else {
-        toast.error(res.message || 'فشل تعديل الحجز');
+        toast.error(res.message || tr('فشل تعديل الحجز', 'Failed to update appointment'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء تعديل الحجز');
+      toast.error(tr('حدث خطأ أثناء تعديل الحجز', 'An error occurred while updating the appointment'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm(`هل أنت متأكد من حذف حجز المريض (${appointment.patientName}) نهائياً؟\nسيتم حذف الحجز وإلغاء مبالغه من تقارير المدفوعات والخزينة.`)) {
+    if (
+      !confirm(
+        tr(
+          `هل أنت متأكد من حذف حجز المريض (${appointment.patientName}) نهائياً؟\nسيتم حذف الحجز وإلغاء مبالغه من تقارير المدفوعات والخزينة.`,
+          `Are you sure you want to permanently delete the appointment for (${appointment.patientName})?\nThe appointment and its payment records will be removed from reports and register.`
+        )
+      )
+    ) {
       return;
     }
     setIsDeleting(true);
     try {
       const res = await deleteAppointmentAction(appointment.id);
       if (res.status) {
-        toast.success('تم حذف الحجز وإلغاء مدفوعاته بنجاح');
+        toast.success(
+          tr(
+            'تم حذف الحجز وإلغاء مدفوعاته بنجاح',
+            'Appointment and its payments deleted successfully'
+          )
+        );
         queryClient.invalidateQueries({ queryKey: ['queue'] });
         queryClient.invalidateQueries({ queryKey: ['appointments'] });
         queryClient.invalidateQueries({ queryKey: ['payments'] });
@@ -102,17 +122,17 @@ export function EditAppointmentModal({
         if (onSuccess) onSuccess();
         router.refresh();
       } else {
-        toast.error(res.message || 'فشل حذف الحجز');
+        toast.error(res.message || tr('فشل حذف الحجز', 'Failed to delete appointment'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء حذف الحجز');
+      toast.error(tr('حدث خطأ أثناء حذف الحجز', 'An error occurred while deleting the appointment'));
     } finally {
       setIsDeleting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200" dir="rtl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200" dir={dir}>
       <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
@@ -122,10 +142,10 @@ export function EditAppointmentModal({
             </div>
             <div>
               <h3 className="text-base font-black text-[#074C3A]">
-                تعديل بيانات الحجز والطبيب
+                {tr('تعديل بيانات الحجز والطبيب', 'Edit Appointment & Doctor')}
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                المريض: <span className="font-bold text-slate-800">{appointment.patientName}</span>
+                {tr('المريض:', 'Patient:')} <span className="font-bold text-slate-800">{appointment.patientName}</span>
               </p>
             </div>
           </div>
@@ -143,7 +163,7 @@ export function EditAppointmentModal({
           {/* اختيار الطبيب المعالج */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              الطبيب المعالج (تحويل الكشف إلى طبيب آخر):
+              {tr('الطبيب المعالج (تحويل الكشف إلى طبيب آخر):', 'Doctor (Transfer to another doctor):')}
             </label>
             <div className="relative">
               <select
@@ -163,14 +183,14 @@ export function EditAppointmentModal({
           {/* نوع الكشف */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              نوع الكشف أو الإجراء:
+              {tr('نوع الكشف أو الإجراء:', 'Appointment Type / Procedure:')}
             </label>
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
               className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
             >
-              {APPOINTMENT_TYPES.map((t) => (
+              {appointmentTypes.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.label}
                 </option>
@@ -182,7 +202,7 @@ export function EditAppointmentModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                سعر الكشف الإجمالي (ج.م):
+                {tr('سعر الكشف الإجمالي (ج.م):', 'Total Fee (EGP):')}
               </label>
               <input
                 type="number"
@@ -196,7 +216,7 @@ export function EditAppointmentModal({
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                المبلغ المسدد (ج.م):
+                {tr('المبلغ المسدد (ج.م):', 'Paid Amount (EGP):')}
               </label>
               <input
                 type="number"
@@ -213,13 +233,13 @@ export function EditAppointmentModal({
           {/* ملاحظات */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              ملاحظات إضافية:
+              {tr('ملاحظات إضافية:', 'Additional Notes:')}
             </label>
             <input
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="أي ملاحظات تخص الحجز..."
+              placeholder={tr('أي ملاحظات تخص الحجز...', 'Any booking notes...')}
               className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
             />
           </div>
@@ -233,7 +253,11 @@ export function EditAppointmentModal({
               className="w-full py-2.5 px-3 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <Trash2 className="w-4 h-4 text-rose-600" />
-              <span>{isDeleting ? 'جاري حذف الحجز...' : 'حذف هذا الحجز نهائياً وإلغاء مدفوعاته'}</span>
+              <span>
+                {isDeleting
+                  ? tr('جاري حذف الحجز...', 'Deleting appointment...')
+                  : tr('حذف هذا الحجز نهائياً وإلغاء مدفوعاته', 'Permanently delete booking & cancel payments')}
+              </span>
             </button>
           </div>
 
@@ -245,7 +269,7 @@ export function EditAppointmentModal({
               disabled={isSubmitting}
               className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold transition-colors cursor-pointer"
             >
-              إلغاء
+              {tr('إلغاء', 'Cancel')}
             </button>
             <button
               type="submit"
@@ -253,7 +277,7 @@ export function EditAppointmentModal({
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-60 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>{isSubmitting ? 'جاري الحفظ...' : 'حفظ التعديلات'}</span>
+              <span>{isSubmitting ? tr('جاري الحفظ...', 'Saving...') : tr('حفظ التعديلات', 'Save Changes')}</span>
             </button>
           </div>
         </form>

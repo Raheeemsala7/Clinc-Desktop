@@ -11,6 +11,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useRefundAppointmentMutation } from '../hooks/appointments.hook';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface RefundPaymentModalProps {
   isOpen: boolean;
@@ -31,19 +32,22 @@ export function RefundPaymentModal({
   paidAmount,
   onSuccess,
 }: RefundPaymentModalProps) {
+  const { dir, tr } = useAppLocale();
   const [refundType, setRefundType] = useState<'FULL' | 'PARTIAL'>('FULL');
   const [amount, setAmount] = useState<number>(paidAmount);
-  const [reason, setReason] = useState<string>('بتعليمات الطبيب المعالج');
+  const [reason, setReason] = useState<string>(
+    tr('بتعليمات الطبيب المعالج', 'Per treating doctor instructions')
+  );
   const [method, setMethod] = useState<'CASH' | 'CARD' | 'WALLET'>('CASH');
 
   useEffect(() => {
     if (isOpen) {
       setRefundType('FULL');
       setAmount(paidAmount);
-      setReason('بتعليمات الطبيب المعالج');
+      setReason(tr('بتعليمات الطبيب المعالج', 'Per treating doctor instructions'));
       setMethod('CASH');
     }
-  }, [isOpen, paidAmount]);
+  }, [isOpen, paidAmount, tr]);
 
   const refundMutation = useRefundAppointmentMutation();
   const isPending = refundMutation.isPending;
@@ -58,7 +62,7 @@ export function RefundPaymentModal({
         id: appointmentId,
         payload: {
           amount: refundAmt,
-          reason: reason || 'بتعليمات الطبيب المعالج',
+          reason: reason || tr('بتعليمات الطبيب المعالج', 'Per treating doctor instructions'),
           method,
         },
       },
@@ -80,7 +84,7 @@ export function RefundPaymentModal({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in-50 select-none">
       <div
         className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-150"
-        dir="rtl"
+        dir={dir}
       >
         {/* رأس النافذة */}
         <div className="p-4 sm:p-5 border-b border-rose-100 bg-rose-50/60 flex items-center justify-between">
@@ -90,10 +94,10 @@ export function RefundPaymentModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-black text-rose-950">
-                استرجاع فلوس للمريض (Refund)
+                {tr('استرجاع فلوس للمريض (Refund)', 'Refund Payment to Patient')}
               </h3>
               <p className="text-xs text-rose-700 font-bold">
-                المريض: <strong className="text-rose-900">{patientName}</strong>
+                {tr('المريض:', 'Patient:')} <strong className="text-rose-900">{patientName}</strong>
               </p>
             </div>
           </div>
@@ -112,19 +116,27 @@ export function RefundPaymentModal({
           {/* ملخص الموقف المالي للمريض */}
           <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
             <div>
-              <span className="text-[11px] font-bold text-slate-500 block">إجمالي قيمة الكشف:</span>
-              <span className="text-sm font-black text-slate-800">{totalAmount} ج.م</span>
+              <span className="text-[11px] font-bold text-slate-500 block">
+                {tr('إجمالي قيمة الكشف:', 'Total Exam Fee:')}
+              </span>
+              <span className="text-sm font-black text-slate-800">
+                {totalAmount} {tr('ج.م', 'EGP')}
+              </span>
             </div>
             <div>
-              <span className="text-[11px] font-bold text-slate-500 block">المبلغ المدفوع حالياً:</span>
-              <span className="text-sm font-black text-emerald-700">{paidAmount} ج.م</span>
+              <span className="text-[11px] font-bold text-slate-500 block">
+                {tr('المبلغ المدفوع حالياً:', 'Currently Paid:')}
+              </span>
+              <span className="text-sm font-black text-emerald-700">
+                {paidAmount} {tr('ج.م', 'EGP')}
+              </span>
             </div>
           </div>
 
           {/* نوع الاسترجاع: كامل أو جزئي */}
           <div className="space-y-1.5">
             <label className="text-xs font-black text-slate-700 block">
-              طبيعة استرجاع المبلغ:
+              {tr('طبيعة استرجاع المبلغ:', 'Refund Type:')}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -139,8 +151,10 @@ export function RefundPaymentModal({
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                <span>استرجاع كامل المبلغ</span>
-                <span className="text-[11px] font-normal text-rose-700">({paidAmount} ج.م)</span>
+                <span>{tr('استرجاع كامل المبلغ', 'Full Refund')}</span>
+                <span className="text-[11px] font-normal text-rose-700">
+                  ({paidAmount} {tr('ج.م', 'EGP')})
+                </span>
               </button>
 
               <button
@@ -155,8 +169,10 @@ export function RefundPaymentModal({
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                <span>استرجاع جزء من المبلغ</span>
-                <span className="text-[11px] font-normal text-amber-700">تحديد المبلغ يدويّاً</span>
+                <span>{tr('استرجاع جزء من المبلغ', 'Partial Refund')}</span>
+                <span className="text-[11px] font-normal text-amber-700">
+                  {tr('تحديد المبلغ يدويّاً', 'Enter custom amount')}
+                </span>
               </button>
             </div>
           </div>
@@ -165,7 +181,7 @@ export function RefundPaymentModal({
           {refundType === 'PARTIAL' && (
             <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200 space-y-2">
               <label className="text-xs font-black text-amber-900 block">
-                مبلغ الاسترجاع المراد إرجاعه للمريض:
+                {tr('مبلغ الاسترجاع المراد إرجاعه للمريض:', 'Amount to Refund:')}
               </label>
               <div className="relative">
                 <input
@@ -179,14 +195,17 @@ export function RefundPaymentModal({
                     setAmount(Math.min(paidAmount, Math.max(0, val)));
                   }}
                   placeholder="0"
-                  className="w-full h-11 px-3.5 pr-8 rounded-xl border border-amber-300 bg-white font-mono font-black text-base text-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full h-11 ps-3.5 pe-12 rounded-xl border border-amber-300 bg-white font-mono font-black text-base text-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-700">
-                  ج.م
+                <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-700">
+                  {tr('ج.م', 'EGP')}
                 </span>
               </div>
               <p className="text-[11px] font-bold text-slate-500">
-                المبلغ المتبقي لدى العيادة بعد الاسترجاع: <strong className="text-emerald-700">{calculatedPaidAfterRefund} ج.م</strong>
+                {tr('المبلغ المتبقي لدى العيادة بعد الاسترجاع:', 'Net retained by clinic after refund:')}{' '}
+                <strong className="text-emerald-700">
+                  {calculatedPaidAfterRefund} {tr('ج.م', 'EGP')}
+                </strong>
               </p>
             </div>
           )}
@@ -194,13 +213,13 @@ export function RefundPaymentModal({
           {/* طريقة إرجاع المبلغ */}
           <div className="space-y-1.5">
             <label className="text-xs font-black text-slate-700 block">
-              طريقة الإرجاع:
+              {tr('طريقة الإرجاع:', 'Refund Method:')}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { id: 'CASH', label: 'نقدي (كاش)', icon: Banknote },
-                { id: 'WALLET', label: 'محفظة', icon: Wallet },
-                { id: 'CARD', label: 'كارت / فيزا', icon: CreditCard },
+                { id: 'CASH', label: tr('نقدي (كاش)', 'Cash'), icon: Banknote },
+                { id: 'WALLET', label: tr('محفظة', 'E-Wallet'), icon: Wallet },
+                { id: 'CARD', label: tr('كارت / فيزا', 'Card / Visa'), icon: CreditCard },
               ].map((m) => {
                 const Icon = m.icon;
                 const isSelected = method === m.id;
@@ -226,13 +245,16 @@ export function RefundPaymentModal({
           {/* سبب الاسترجاع */}
           <div className="space-y-1.5">
             <label className="text-xs font-black text-slate-700 block">
-              سبب الاسترجاع (للتوثيق والحسابات):
+              {tr('سبب الاسترجاع (للتوثيق والحسابات):', 'Refund Reason (for records & accounting):')}
             </label>
             <input
               type="text"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="مثال: بتعليمات الطبيب المعالج / عدم اكتمال الكشف..."
+              placeholder={tr(
+                'مثال: بتعليمات الطبيب المعالج / عدم اكتمال الكشف...',
+                'e.g., Per doctor instructions / incomplete exam...'
+              )}
               className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-rose-500"
             />
           </div>
@@ -246,7 +268,7 @@ export function RefundPaymentModal({
             disabled={isPending}
             className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
           >
-            إلغاء
+            {tr('إلغاء', 'Cancel')}
           </button>
           <button
             type="button"
@@ -254,7 +276,12 @@ export function RefundPaymentModal({
             disabled={isPending || (refundType === 'PARTIAL' && (!amount || amount <= 0))}
             className="px-5 py-2 rounded-xl text-xs font-black text-white bg-rose-600 hover:bg-rose-700 active:scale-95 transition-all cursor-pointer shadow-xs disabled:opacity-50"
           >
-            {isPending ? 'جاري الاسترجاع...' : `تأكيد استرجاع ${refundType === 'FULL' ? paidAmount : amount} ج.م`}
+            {isPending
+              ? tr('جاري الاسترجاع...', 'Refunding...')
+              : tr(
+                  `تأكيد استرجاع ${refundType === 'FULL' ? paidAmount : amount} ج.م`,
+                  `Confirm Refund of ${refundType === 'FULL' ? paidAmount : amount} EGP`
+                )}
           </button>
         </div>
       </div>
