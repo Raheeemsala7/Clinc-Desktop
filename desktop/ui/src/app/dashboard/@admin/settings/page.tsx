@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Building2,
@@ -13,17 +13,37 @@ import {
 import { toast } from 'sonner';
 import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
+const DEFAULT_CLINIC_NAME_AR = 'عيادة الأنف والأذن والحنجرة - د. إسلام عبدالله كريمة';
+const DEFAULT_CLINIC_NAME_EN = 'ENT Clinic - Dr. Eslam Abdallah Kareema';
+const DEFAULT_ADDRESS_AR = 'جمهورية مصر العربية';
+const DEFAULT_ADDRESS_EN = 'Egypt';
+
 export default function AdminSettingsPage() {
   const { isAr, dir, tr } = useAppLocale();
   const [clinicName, setClinicName] = useState(() =>
-    isAr
-      ? 'عيادة الأنف والأذن والحنجرة - د. إسلام عبدالله كريمة'
-      : 'ENT Clinic - Dr. Eslam Abdallah Kareema'
+    isAr ? DEFAULT_CLINIC_NAME_AR : DEFAULT_CLINIC_NAME_EN
   );
   const [phone, setPhone] = useState('01018566478');
   const [address, setAddress] = useState(() =>
-    isAr ? 'جمهورية مصر العربية' : 'Egypt'
+    isAr ? DEFAULT_ADDRESS_AR : DEFAULT_ADDRESS_EN
   );
+
+  useEffect(() => {
+    setClinicName((prev) =>
+      prev === DEFAULT_CLINIC_NAME_AR || prev === DEFAULT_CLINIC_NAME_EN
+        ? isAr
+          ? DEFAULT_CLINIC_NAME_AR
+          : DEFAULT_CLINIC_NAME_EN
+        : prev
+    );
+    setAddress((prev) =>
+      prev === DEFAULT_ADDRESS_AR || prev === DEFAULT_ADDRESS_EN
+        ? isAr
+          ? DEFAULT_ADDRESS_AR
+          : DEFAULT_ADDRESS_EN
+        : prev
+    );
+  }, [isAr]);
   const [checkupPrice, setCheckupPrice] = useState(300);
   const [consultationPrice, setConsultationPrice] = useState(100);
   const [expenseAutoApproveLimit, setExpenseAutoApproveLimit] = useState(1000);
