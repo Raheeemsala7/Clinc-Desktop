@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   Clock,
@@ -24,6 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { openInNewWindow } from '@/shared/utils/open-window';
 import { TodayQueueItem } from '@/features/appointments/apis/appointment.api';
 import { AppointmentsCalendarData } from '@/features/appointments/types/calendar';
 import { CalendarDayTimelineView } from '@/features/appointments/components/calendar-day-timeline-view';
@@ -95,7 +95,6 @@ export const DoctorDashboardView = ({
   selectedDate,
 }: DoctorDashboardViewProps) => {
   const { dir, tr } = useAppLocale();
-  const router = useRouter();
   const t = useTranslations('Dashboard.doctor');
   const tDoctorStatus = useTranslations('Dashboard.doctorStatus');
 
@@ -169,11 +168,11 @@ export const DoctorDashboardView = ({
   const admitMutation = useAdmitAppointmentMutation();
   const finishExamMutation = useFinishExamAppointmentMutation();
 
-  // إدخال المريض للكشف ثم فتح استمارة الفحص مباشرة في نفس الشاشة
+  // إدخال المريض للكشف ثم فتح استمارة الفحص في نافذة مستقلة تلقائياً
   const handleAdmitAndOpenExam = (appointmentId: string) => {
     admitMutation.mutate(appointmentId, {
       onSuccess: () => {
-        router.push(`/dashboard/examination/${appointmentId}`);
+        openInNewWindow(`/dashboard/examination/${appointmentId}`);
       },
     });
   };
@@ -644,6 +643,12 @@ export const DoctorDashboardView = ({
                 <div className="flex items-center gap-2.5 flex-wrap shrink-0">
                   <Link
                     href={`/dashboard/examination/${inProgressPatient.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openInNewWindow(`/dashboard/examination/${inProgressPatient.id}`);
+                    }}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer whitespace-nowrap"
                   >
                     <Stethoscope className="w-4 h-4 stroke-[2.2]" />
@@ -977,6 +982,12 @@ export const DoctorDashboardView = ({
                         {/* زر فتح الكشف والروشتة */}
                         <Link
                           href={`/dashboard/examination/${patient.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openInNewWindow(`/dashboard/examination/${patient.id}`);
+                          }}
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
                         >
                           <Stethoscope className="w-4 h-4 stroke-[2.2]" />
