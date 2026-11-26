@@ -3,14 +3,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export const ComparisonSection = () => {
+  const { dir, tr } = useAppLocale();
+
   return (
-    <section className="py-8 select-none" dir="rtl">
+    <section className="py-8 select-none" dir={dir}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           
-          {/* كرت قبل نَفَس */}
+          {/* كرت قبل ميدورا */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -22,15 +25,18 @@ export const ComparisonSection = () => {
                 <X className="w-4 h-4 text-[#C0282E]" />
               </div>
               <h3 className="font-heading font-black text-lg text-[#0B241D]">
-                قبل نَفَس
+                {tr('قبل ميدورا', 'Before Medora')}
               </h3>
             </div>
             <p className="text-sm sm:text-base text-[#4A635B] leading-relaxed font-medium">
-              دفاتر ورق، وزحام في الاستقبال، ووقت ضائع، وحسابات متفرقة بين أكثر من مكان، وسجلات مفقودة يصعب تتبعها في الزيارات المتكررة.
+              {tr(
+                'دفاتر ورق، وزحام في الاستقبال، ووقت ضائع، وحسابات متفرقة بين أكثر من مكان، وسجلات مفقودة يصعب تتبعها في الزيارات المتكررة.',
+                'Paper notebooks, crowded reception areas, wasted time, scattered accounts across multiple places, and lost records that are hard to track across follow-up visits.'
+              )}
             </p>
           </motion.div>
 
-          {/* كرت مع نَفَس (بالأخضر الزمردي) */}
+          {/* كرت مع ميدورا (بالأخضر الزمردي) */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -42,11 +48,14 @@ export const ComparisonSection = () => {
                 <Check className="w-4 h-4 text-[#45DBA5]" />
               </div>
               <h3 className="font-heading font-black text-lg text-white">
-                مع نَفَس
+                {tr('مع ميدورا', 'With Medora')}
               </h3>
             </div>
             <p className="text-sm sm:text-base text-emerald-50 leading-relaxed font-medium">
-              حجز منظم، دور واضح لكل مريض، وروشتة مطبوعة في ثوانٍ، وحسابات تنتهي بضغطة زر واحدة، وعيادتك جاهزة للبداية في أي وقت.
+              {tr(
+                'حجز منظم، دور واضح لكل مريض، وروشتة مطبوعة في ثوانٍ، وحسابات تنتهي بضغطة زر واحدة، وعيادتك جاهزة للبداية في أي وقت.',
+                'Organized bookings, a clear turn for every patient, prescriptions printed in seconds, accounts settled with one click, and your clinic ready to run anytime.'
+              )}
             </p>
           </motion.div>
 

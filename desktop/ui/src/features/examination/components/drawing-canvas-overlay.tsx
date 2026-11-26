@@ -12,6 +12,7 @@ import {
   Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { DrawingSnapshot } from '../types/ent-examination.types';
 
 interface DrawingCanvasOverlayProps {
@@ -26,12 +27,6 @@ interface DrawingCanvasOverlayProps {
   title?: string;
 }
 
-const PEN_COLORS = [
-  { id: 'green', value: '#16A34A', label: 'أخضر' },
-  { id: 'red', value: '#DC2626', label: 'أحمر' },
-  { id: 'blue', value: '#2563EB', label: 'أزرق' },
-];
-
 export function DrawingCanvasOverlay({
   initialDrawing,
   onSaveDrawing,
@@ -43,6 +38,13 @@ export function DrawingCanvasOverlay({
   children,
   title,
 }: DrawingCanvasOverlayProps) {
+  const { dir, tr } = useAppLocale();
+  const penColors = [
+    { id: 'green', value: '#16A34A', label: tr('أخضر', 'Green') },
+    { id: 'red', value: '#DC2626', label: tr('أحمر', 'Red') },
+    { id: 'blue', value: '#2563EB', label: tr('أزرق', 'Blue') },
+  ];
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -219,7 +221,7 @@ export function DrawingCanvasOverlay({
         id: 'snap_' + Date.now(),
         date: today,
         drawing: currentDrawing,
-        label: `زيارة ${today}`,
+        label: tr(`زيارة ${today}`, `Visit ${today}`),
       };
       onAddSnapshot?.(newSnapshot);
     }
@@ -233,12 +235,13 @@ export function DrawingCanvasOverlay({
     setHasDrawn(false);
     setViewingSnapshotId(null);
     onSaveDrawing?.('');
-    toast.success('تم فتح صورة جديدة نظيفة بدون أي رسم');
+    toast.success(tr('تم فتح صورة جديدة نظيفة بدون أي رسم', 'Opened a clean new diagram'));
   };
 
   return (
     <div
       ref={containerRef}
+      dir={dir}
       className="flex flex-col items-center justify-center select-none w-full"
     >
       {/* شريط تاريخ الزيارات والرسومات السابقة إن وجدت */}
@@ -255,7 +258,7 @@ export function DrawingCanvasOverlay({
             }`}
           >
             <Pen className="w-3 h-3" />
-            <span>الرسم الحالي (نشط)</span>
+            <span>{tr('الرسم الحالي (نشط)', 'Current Drawing (Active)')}</span>
           </button>
 
           {/* أزرار الرسومات السابقة المحفوظة للمريض بتواريخ الزيارات */}
@@ -269,10 +272,10 @@ export function DrawingCanvasOverlay({
                   ? 'bg-amber-600 text-white shadow-2xs'
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
               }`}
-              title={`معاينة رسمة زيارة ${snap.date}`}
+              title={tr(`معاينة رسمة زيارة ${snap.date}`, `Preview visit drawing ${snap.date}`)}
             >
               <Eye className="w-3 h-3" />
-              <span>{snap.label || `رسمة ${snap.date}`}</span>
+              <span>{snap.label || tr(`رسمة ${snap.date}`, `Drawing ${snap.date}`)}</span>
             </button>
           ))}
 
@@ -282,10 +285,13 @@ export function DrawingCanvasOverlay({
               type="button"
               onClick={handleCreateNewSnapshot}
               className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all flex items-center gap-1 cursor-pointer"
-              title="حفظ نسخة من الرسمة الحالية بتاريخ اليوم وبدء رسمة جديدة لهذه الزيارة"
+              title={tr(
+                'حفظ نسخة من الرسمة الحالية بتاريخ اليوم وبدء رسمة جديدة لهذه الزيارة',
+                'Archive current drawing for today and start a fresh drawing for this visit'
+              )}
             >
               <Plus className="w-3 h-3" />
-              <span>+ إضافة رسمة جديدة لهذه الزيارة</span>
+              <span>{tr('إضافة رسمة جديدة لهذه الزيارة', 'Add new drawing for this visit')}</span>
             </button>
           )}
         </div>
@@ -295,13 +301,18 @@ export function DrawingCanvasOverlay({
       {activeSnapshot && (
         <div className="mb-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-[11px] font-bold flex items-center gap-1.5 print:hidden animate-in fade-in-50">
           <History className="w-3.5 h-3.5 text-amber-600" />
-          <span>أنت تشاهد الآن رسمة محفوظة بتاريخ: {activeSnapshot.date}</span>
+          <span>
+            {tr(
+              `أنت تشاهد الآن رسمة محفوظة بتاريخ: ${activeSnapshot.date}`,
+              `Viewing archived drawing from: ${activeSnapshot.date}`
+            )}
+          </span>
           <button
             type="button"
             onClick={() => setViewingSnapshotId(null)}
-            className="text-[#0B7B5E] underline text-[11px] mr-2 cursor-pointer font-bold"
+            className="text-[#0B7B5E] underline text-[11px] ms-2 cursor-pointer font-bold"
           >
-            (العودة للرسم الحالي)
+            {tr('(العودة للرسم الحالي)', '(Back to current drawing)')}
           </button>
         </div>
       )}
@@ -341,7 +352,10 @@ export function DrawingCanvasOverlay({
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
             className="absolute inset-0 w-full h-full z-10 touch-none cursor-crosshair"
-            title="انقر واسحب للرسم وتحديد مكان الإصابة أو التثقب بالقلم"
+            title={tr(
+              'انقر واسحب للرسم وتحديد مكان الإصابة أو التثقب بالقلم',
+              'Click and drag to draw and mark findings with the pen'
+            )}
           />
         ) : (
           initialDrawing && (
@@ -370,7 +384,7 @@ export function DrawingCanvasOverlay({
                   ? 'bg-[#0B7B5E] text-white shadow-2xs'
                   : 'text-slate-600 hover:bg-slate-200'
               }`}
-              title="قلم للكتابة والتأشير"
+              title={tr('قلم للكتابة والتأشير', 'Pen tool')}
             >
               <Pen className="w-3 h-3" />
             </button>
@@ -383,7 +397,7 @@ export function DrawingCanvasOverlay({
                   ? 'bg-amber-600 text-white shadow-2xs'
                   : 'text-slate-600 hover:bg-slate-200'
               }`}
-              title="ممحاة لمسح الشخبطة فقط"
+              title={tr('ممحاة لمسح الشخبطة فقط', 'Eraser tool')}
             >
               <Eraser className="w-3 h-3" />
             </button>
@@ -392,7 +406,7 @@ export function DrawingCanvasOverlay({
           {/* ألوان القلم */}
           {activeTool === 'pen' && (
             <div className="flex items-center gap-1.5 px-1.5 border-x border-slate-200">
-              {PEN_COLORS.map((c) => (
+              {penColors.map((c) => (
                 <button
                   key={c.id}
                   type="button"
@@ -416,7 +430,7 @@ export function DrawingCanvasOverlay({
               onClick={handleUndo}
               disabled={history.length === 0}
               className="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 cursor-pointer"
-              title="تراجع عن آخر خطوة"
+              title={tr('تراجع عن آخر خطوة', 'Undo last stroke')}
             >
               <RotateCcw className="w-3 h-3" />
             </button>
@@ -426,7 +440,7 @@ export function DrawingCanvasOverlay({
               onClick={handleClear}
               disabled={!hasDrawn && !initialDrawing}
               className="p-1 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30 cursor-pointer"
-              title="مسح رسمة القلم بالكامل"
+              title={tr('مسح رسمة القلم بالكامل', 'Clear all pen strokes')}
             >
               <Trash2 className="w-3 h-3" />
             </button>

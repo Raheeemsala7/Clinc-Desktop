@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { ClosingPreview } from '../types/closing';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface ClosingKpiCardsProps {
   preview?: ClosingPreview;
@@ -10,6 +11,7 @@ interface ClosingKpiCardsProps {
 
 export function ClosingKpiCards({ preview }: ClosingKpiCardsProps) {
   const t = useTranslations('Closing');
+  const { dir } = useAppLocale();
   const paymentsCount = preview?.paymentsCount ?? 0;
   const totalCashPayments = Number(preview?.totalCashPayments ?? 0);
   const totalApprovedExpenses = Number(preview?.totalApprovedExpenses ?? 0);
@@ -20,7 +22,7 @@ export function ClosingKpiCards({ preview }: ClosingKpiCardsProps) {
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" dir={dir}>
       {/* 1. عدد المدفوعات */}
       <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
         <span className="text-xs font-bold text-slate-500">

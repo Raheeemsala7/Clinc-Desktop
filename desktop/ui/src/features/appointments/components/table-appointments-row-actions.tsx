@@ -12,6 +12,7 @@ import {
 import { CheckoutPaymentModal } from './checkout-payment-modal';
 import { EditAppointmentModal } from './edit-appointment-modal';
 import { RefundPaymentModal } from './refund-payment-modal';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface TableAppointmentsRowActionsProps {
   appointmentId: string;
@@ -41,6 +42,7 @@ export function TableAppointmentsRowActions({
   notes,
 }: TableAppointmentsRowActionsProps) {
   const t = useTranslations('Dashboard.receptionist.table');
+  const { tr } = useAppLocale();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
@@ -69,7 +71,15 @@ export function TableAppointmentsRowActions({
   };
 
   const handleCancel = () => {
-    if (!confirm(`هل أنت متأكد من رغبتك في إلغاء حجز المريض ${patientName}؟`)) return;
+    if (
+      !confirm(
+        tr(
+          `هل أنت متأكد من رغبتك في إلغاء حجز المريض ${patientName}؟`,
+          `Are you sure you want to cancel the appointment for ${patientName}?`
+        )
+      )
+    )
+      return;
     cancelMutation.mutate(appointmentId);
   };
 
@@ -110,7 +120,11 @@ export function TableAppointmentsRowActions({
             type="button"
             onClick={() => setIsCheckoutModalOpen(true)}
             disabled={isAnyPending}
-            title={hasRemaining ? 'تسوية المتبقي (سداد كامل / جزء / إعفاء)' : t('checkout')}
+            title={
+              hasRemaining
+                ? tr('تسوية المتبقي (سداد كامل / جزء / إعفاء)', 'Settle balance (full / partial / exempt)')
+                : t('checkout')
+            }
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg active:scale-95 disabled:opacity-60 text-white font-bold text-xs transition-all cursor-pointer shadow-sm ${
               status === 'PENDING_CHECKOUT'
                 ? 'bg-amber-600 hover:bg-amber-700 animate-pulse'
@@ -118,7 +132,7 @@ export function TableAppointmentsRowActions({
             }`}
           >
             <CreditCard className="w-3.5 h-3.5" />
-            <span>{hasRemaining ? 'تسوية المتبقي' : t('checkout')}</span>
+            <span>{hasRemaining ? tr('تسوية المتبقي', 'Settle Balance') : t('checkout')}</span>
           </button>
         )}
 
@@ -127,7 +141,7 @@ export function TableAppointmentsRowActions({
           type="button"
           onClick={() => setIsEditModalOpen(true)}
           disabled={isAnyPending}
-          title="تعديل بيانات الحجز والطبيب والرسوم"
+          title={tr('تعديل بيانات الحجز والطبيب والرسوم', 'Edit booking, doctor, and fees')}
           className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 hover:text-[#0B7B5E] active:scale-95 disabled:opacity-60 text-slate-500 transition-colors cursor-pointer"
         >
           <Edit2 className="w-3.5 h-3.5" />
@@ -139,7 +153,10 @@ export function TableAppointmentsRowActions({
             type="button"
             onClick={() => setIsRefundModalOpen(true)}
             disabled={isAnyPending}
-            title="استرجاع فلوس للمريض (كامل أو جزئي بتعليمات الطبيب)"
+            title={tr(
+              'استرجاع فلوس للمريض (كامل أو جزئي بتعليمات الطبيب)',
+              'Issue refund to patient (full or partial per doctor instructions)'
+            )}
             className={
               status === 'COMPLETED'
                 ? 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs active:scale-95 disabled:opacity-60 transition-all cursor-pointer shadow-2xs'
@@ -147,7 +164,7 @@ export function TableAppointmentsRowActions({
             }
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            {status === 'COMPLETED' && <span>استرجاع فلوس</span>}
+            {status === 'COMPLETED' && <span>{tr('استرجاع فلوس', 'Refund')}</span>}
           </button>
         )}
 

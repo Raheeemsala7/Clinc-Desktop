@@ -3,6 +3,7 @@
 import React from 'react';
 import { DrawingCanvasOverlay } from './drawing-canvas-overlay';
 import { DrawingSnapshot } from '../types/ent-examination.types';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { Check } from 'lucide-react';
 
 /**
@@ -27,6 +28,8 @@ export function EarAnatomyDiagram({
   onAddSnapshot?: (snapshot: DrawingSnapshot) => void;
   readOnly?: boolean;
 }) {
+  const { dir, tr } = useAppLocale();
+
   return (
     <div className="flex flex-col items-center justify-center p-1 bg-transparent border-none select-none print:border-none print:p-0 print:bg-transparent">
       {/* عنوان الفحص كما في الأصل بـ Double Underline */}
@@ -45,7 +48,7 @@ export function EarAnatomyDiagram({
         height={270}
         readOnly={readOnly}
       >
-        <div className="flex items-center justify-between w-full h-full px-4 text-black font-serif">
+        <div dir="ltr" className="flex items-center justify-between w-full h-full px-4 text-black font-serif">
           {/* Right Ear (الأذن اليمنى) - صورة المنظار الحقيقية */}
           <div className="flex flex-col items-center">
             <span className="text-lg font-black font-serif mb-1 tracking-tight text-slate-900">Rt</span>
@@ -112,8 +115,10 @@ export function EarAnatomyDiagram({
 
       {/* أزرار اختيار اختبار ويبر السريعة */}
       {!readOnly && (
-        <div className="flex items-center gap-1.5 mt-2 print:hidden">
-          <span className="text-[11px] font-bold text-slate-600 ml-1">اختبار ويبر (Weber):</span>
+        <div dir={dir} className="flex items-center gap-1.5 mt-2 print:hidden">
+          <span className="text-[11px] font-bold text-slate-600 me-1">
+            {tr('اختبار ويبر (Weber):', 'Weber Test:')}
+          </span>
           {['Rt', 'Center', 'Lt'].map((pos) => {
             const val = pos === 'Center' ? 'Centralized' : `Lateralized ${pos}`;
             const isSelected = selectedWeber === val;
@@ -128,7 +133,7 @@ export function EarAnatomyDiagram({
                     : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                {pos === 'Center' ? 'Midline (Center)' : pos}
+                {pos === 'Center' ? tr('المنتصف (Center)', 'Midline (Center)') : pos}
               </button>
             );
           })}
@@ -151,10 +156,15 @@ export function NoseAnatomyDiagram({
   onAddSnapshot?: (snapshot: DrawingSnapshot) => void;
   readOnly?: boolean;
 }) {
+  const { dir, tr } = useAppLocale();
+
   return (
     <div className="flex flex-col items-center justify-center p-2 bg-slate-50/70 border border-slate-200 rounded-2xl select-none print:border-none print:p-0 print:bg-transparent">
-      <span className="text-[11px] font-black text-[#074C3A] uppercase tracking-wider mb-1 print:hidden">
-        Nose Pyramid & Septum (متاح الرسم بالقلم ✍️)
+      <span
+        dir={dir}
+        className="text-[11px] font-black text-[#074C3A] uppercase tracking-wider mb-1 print:hidden"
+      >
+        {tr('هرم الأنف والحاجز الأنفي (متاح الرسم بالقلم ✍️)', 'Nose Pyramid & Septum (Pen Drawing Enabled ✍️)')}
       </span>
 
       <DrawingCanvasOverlay
@@ -166,7 +176,7 @@ export function NoseAnatomyDiagram({
         height={220}
         readOnly={readOnly}
       >
-        <div className="relative w-full h-full flex items-center justify-center text-black font-serif">
+        <div dir="ltr" className="relative w-full h-full flex items-center justify-center text-black font-serif">
           <svg
             className="w-44 h-44 text-black"
             viewBox="0 0 100 100"
@@ -207,39 +217,48 @@ export function MallampatiSelector({
   selectedClass?: string;
   onSelect?: (val: string) => void;
 }) {
+  const { dir, tr } = useAppLocale();
+
   const classes = [
     {
       id: 'Class I',
       label: 'Class I',
-      sublabel: 'حلق لين + لهاة + رتوج',
+      sublabel: tr('حلق لين + لهاة + رتوج', 'Soft palate + uvula + pillars'),
       img: '/images/mallampati-1.svg',
     },
     {
       id: 'Class II',
       label: 'Class II',
-      sublabel: 'حلق لين + لهاة',
+      sublabel: tr('حلق لين + لهاة', 'Soft palate + uvula'),
       img: '/images/mallampati-2.svg',
     },
     {
       id: 'Class III',
       label: 'Class III',
-      sublabel: 'حلق لين + قاعدة اللهاة',
+      sublabel: tr('حلق لين + قاعدة اللهاة', 'Soft palate + base of uvula'),
       img: '/images/mallampati-3.svg',
     },
     {
       id: 'Class IV',
       label: 'Class IV',
-      sublabel: 'حلق صلب فقط',
+      sublabel: tr('حلق صلب فقط', 'Hard palate only'),
       img: '/images/mallampati-4.svg',
     },
   ];
 
   return (
-    <div className="p-3 bg-slate-50/80 border border-slate-200 rounded-2xl select-none print:border-none print:p-0 print:bg-transparent">
+    <div
+      dir={dir}
+      className="p-3 bg-slate-50/80 border border-slate-200 rounded-2xl select-none print:border-none print:p-0 print:bg-transparent"
+    >
       <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-black text-slate-900">Mallampati classification:</span>
-          <span className="text-[11px] font-bold text-slate-500">اختر درجة الرؤية المناسبة للمريض</span>
+          <span className="text-xs font-black text-slate-900">
+            {tr('تصنيف مالامباتي (Mallampati):', 'Mallampati Classification:')}
+          </span>
+          <span className="text-[11px] font-bold text-slate-500">
+            {tr('اختر درجة الرؤية المناسبة للمريض', 'Select airway visibility class')}
+          </span>
         </div>
         <span className="text-xs font-black text-[#0B7B5E] bg-[#E3F5EE] border border-[#D0E5DC] px-3 py-0.5 rounded-full print:border-black print:text-black print:bg-transparent">
           {selectedClass || 'Class I'}
@@ -261,7 +280,7 @@ export function MallampatiSelector({
               }`}
             >
               {isSelected && (
-                <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0B7B5E] rounded-full flex items-center justify-center text-white print:hidden">
+                <div className="absolute top-1.5 end-1.5 w-4 h-4 bg-[#0B7B5E] rounded-full flex items-center justify-center text-white print:hidden">
                   <Check className="w-2.5 h-2.5" />
                 </div>
               )}
@@ -300,10 +319,15 @@ export function LarynxVocalCordDiagram({
   onAddSnapshot?: (snapshot: DrawingSnapshot) => void;
   readOnly?: boolean;
 }) {
+  const { dir, tr } = useAppLocale();
+
   return (
     <div className="flex flex-col items-center justify-center p-2 bg-slate-50/70 border border-slate-200 rounded-2xl select-none print:border-none print:p-0 print:bg-transparent">
-      <span className="text-[11px] font-black text-[#074C3A] uppercase tracking-wider mb-1 print:hidden">
-        Larynx & Vocal Cords (متاح الرسم بالقلم ✍️)
+      <span
+        dir={dir}
+        className="text-[11px] font-black text-[#074C3A] uppercase tracking-wider mb-1 print:hidden"
+      >
+        {tr('الحنجرة والأحبال الصوتية (متاح الرسم بالقلم ✍️)', 'Larynx & Vocal Cords (Pen Drawing Enabled ✍️)')}
       </span>
 
       <DrawingCanvasOverlay

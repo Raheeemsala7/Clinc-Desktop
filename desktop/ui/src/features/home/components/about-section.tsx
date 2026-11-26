@@ -2,21 +2,21 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useTranslations, useLocale } from 'next-intl';
-import { TIMELINE_MILESTONES } from '../constants';
+import { useTranslations } from 'next-intl';
+import { getTimelineMilestones } from '../constants';
 import { Stethoscope } from 'lucide-react';
-import { cn } from 'cn';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * قسم نبذة والمؤهلات - خط زمني ينساب بنعومة وإطار صور تفاعلي
  */
 export const AboutSection = () => {
   const t = useTranslations('About');
-  const locale = useLocale();
-  const isArabic = locale === 'ar';
+  const { isAr, dir } = useAppLocale();
+  const milestones = getTimelineMilestones(isAr);
 
   return (
-    <section id="about" className="py-16 sm:py-20 bg-white overflow-hidden">
+    <section id="about" dir={dir} className="py-16 sm:py-20 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* رأس القسم */}
         <motion.div
@@ -41,18 +41,11 @@ export const AboutSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* الخط الزمني */}
           <div className="lg:col-span-7 order-1">
-            <div
-              className={cn(
-                'relative space-y-8 py-2',
-                isArabic
-                  ? 'pr-6 border-r-2 border-[#0B7B5E]'
-                  : 'pl-6 border-l-2 border-[#0B7B5E]'
-              )}
-            >
-              {TIMELINE_MILESTONES.map((milestone, idx) => (
+            <div className="relative space-y-8 py-2 ps-6 border-s-2 border-[#0B7B5E]">
+              {milestones.map((milestone, idx) => (
                 <motion.div
                   key={milestone.id}
-                  initial={{ opacity: 0, x: isArabic ? 16 : -16 }}
+                  initial={{ opacity: 0, x: isAr ? 16 : -16 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: '-30px' }}
                   transition={{ duration: 0.3, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
@@ -60,10 +53,7 @@ export const AboutSection = () => {
                 >
                   {/* النقطة الصفراء على الخط الزمني مع تأثير نبض حيوي ورنين ناعم */}
                   <span
-                    className={cn(
-                      'absolute top-1.5 w-3.5 h-3.5 bg-[#F5B800] rounded-xs ring-4 ring-white group-hover:scale-125 transition-transform duration-200 flex items-center justify-center',
-                      isArabic ? '-right-[31px]' : '-left-[31px]'
-                    )}
+                    className="absolute top-1.5 -start-[31px] w-3.5 h-3.5 bg-[#F5B800] rounded-xs ring-4 ring-white group-hover:scale-125 transition-transform duration-200 flex items-center justify-center"
                     aria-hidden="true"
                   >
                     <span className="absolute inset-0 rounded-xs bg-[#F5B800] animate-ping opacity-40 pointer-events-none" />
@@ -90,12 +80,12 @@ export const AboutSection = () => {
             <div className="relative w-full max-w-[360px]">
               {/* المربع الأزرق البارز الثابت خلف الإطار */}
               <div
-                className="absolute -top-3.5 -right-3.5 w-24 h-24 bg-[#0B7B5E] rounded-3xl -z-10"
+                className="absolute -top-3.5 -start-3.5 w-24 h-24 bg-[#0B7B5E] rounded-3xl -z-10"
                 aria-hidden="true"
               />
               {/* المربع الأصفر البارز الثابت خلف الإطار */}
               <div
-                className="absolute -bottom-4 -left-4 w-28 h-28 bg-[#F5B800] rounded-3xl -z-10"
+                className="absolute -bottom-4 -end-4 w-28 h-28 bg-[#F5B800] rounded-3xl -z-10"
                 aria-hidden="true"
               />
 

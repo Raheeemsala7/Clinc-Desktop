@@ -14,7 +14,6 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
-  AlertCircle,
   X,
   UserCheck,
   UserX,
@@ -26,12 +25,13 @@ import {
   createUserAction,
   updateUserAction,
   resetUserPasswordAction,
-  deactivateUserAction,
   deleteUserAction,
   UserItem,
 } from '@/features/users/apis/users.action';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export default function AdminUsersPage() {
+  const { dir, tr } = useAppLocale();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,20 +68,19 @@ export default function AdminUsersPage() {
     try {
       const res = await getUsersAction(1, 100);
       if (res.status && res.payload) {
-        // payload might be array or paginated items
         const list = Array.isArray(res.payload)
           ? res.payload
           : (res.payload as any).items || [];
         setUsers(list);
       } else {
-        toast.error(res.message || 'تعذر تحميل المستخدمين');
+        toast.error(res.message || tr('تعذر تحميل المستخدمين', 'Failed to load users'));
       }
-    } catch (err) {
-      toast.error('حدث خطأ أثناء الاتصال بالخادم');
+    } catch {
+      toast.error(tr('حدث خطأ أثناء الاتصال بالخادم', 'Server connection error'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [tr]);
 
   useEffect(() => {
     fetchUsers();
@@ -99,11 +98,16 @@ export default function AdminUsersPage() {
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.name.trim() || !createForm.username.trim() || !createForm.password.trim()) {
-      toast.error('يرجى ملء جميع الحقول المطلوبة');
+      toast.error(tr('يرجى ملء جميع الحقول المطلوبة', 'Please fill in all required fields'));
       return;
     }
     if (createForm.password.length < 4) {
-      toast.error('كلمة المرور يجب أن لا تقل عن 4 أحرف أو أرقام');
+      toast.error(
+        tr(
+          'كلمة المرور يجب أن لا تقل عن 4 أحرف أو أرقام',
+          'Password must be at least 4 characters'
+        )
+      );
       return;
     }
 
@@ -117,15 +121,20 @@ export default function AdminUsersPage() {
       });
 
       if (res.status) {
-        toast.success(`تم إنشاء حساب ${createForm.name} بنجاح`);
+        toast.success(
+          tr(
+            `تم إنشاء حساب ${createForm.name} بنجاح`,
+            `Account for ${createForm.name} created successfully`
+          )
+        );
         setIsCreateOpen(false);
         setCreateForm({ name: '', username: '', password: '', role: 'DOCTOR' });
         fetchUsers();
       } else {
-        toast.error(res.message || 'فشل إنشاء المستخدم');
+        toast.error(res.message || tr('فشل إنشاء المستخدم', 'Failed to create user'));
       }
-    } catch (err) {
-      toast.error('حدث خطأ أثناء حفظ المستخدم');
+    } catch {
+      toast.error(tr('حدث خطأ أثناء حفظ المستخدم', 'An error occurred while saving user'));
     } finally {
       setIsSubmitting(false);
     }
@@ -147,7 +156,7 @@ export default function AdminUsersPage() {
     e.preventDefault();
     if (!selectedUser) return;
     if (!editForm.name.trim() || !editForm.username.trim()) {
-      toast.error('الاسم واسم المستخدم مطلوبان');
+      toast.error(tr('الاسم واسم المستخدم مطلوبان', 'Name and username are required'));
       return;
     }
 
@@ -161,14 +170,14 @@ export default function AdminUsersPage() {
       });
 
       if (res.status) {
-        toast.success('تم تحديث بيانات المستخدم بنجاح');
+        toast.success(tr('تم تحديث بيانات المستخدم بنجاح', 'User details updated successfully'));
         setIsEditOpen(false);
         fetchUsers();
       } else {
-        toast.error(res.message || 'فشل تحديث البيانات');
+        toast.error(res.message || tr('فشل تحديث البيانات', 'Failed to update user'));
       }
-    } catch (err) {
-      toast.error('حدث خطأ أثناء تعديل البيانات');
+    } catch {
+      toast.error(tr('حدث خطأ أثناء تعديل البيانات', 'An error occurred while updating user'));
     } finally {
       setIsSubmitting(false);
     }
@@ -186,15 +195,22 @@ export default function AdminUsersPage() {
     e.preventDefault();
     if (!selectedUser) return;
     if (!passwordForm.newPassword) {
-      toast.error('يرجى إدخال كلمة المرور الجديدة');
+      toast.error(tr('يرجى إدخال كلمة المرور الجديدة', 'Please enter the new password'));
       return;
     }
     if (passwordForm.newPassword.length < 4) {
-      toast.error('كلمة المرور يجب أن لا تقل عن 4 أحرف أو أرقام');
+      toast.error(
+        tr(
+          'كلمة المرور يجب أن لا تقل عن 4 أحرف أو أرقام',
+          'Password must be at least 4 characters'
+        )
+      );
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('كلمة المرور وتأكيدها غير متطابقين');
+      toast.error(
+        tr('كلمة المرور وتأكيدها غير متطابقين', 'Password and confirmation do not match')
+      );
       return;
     }
 
@@ -202,13 +218,20 @@ export default function AdminUsersPage() {
     try {
       const res = await resetUserPasswordAction(selectedUser.id, passwordForm.newPassword);
       if (res.status) {
-        toast.success(`تم تغيير كلمة المرور للمستخدم (${selectedUser.name}) بنجاح`);
+        toast.success(
+          tr(
+            `تم تغيير كلمة المرور للمستخدم (${selectedUser.name}) بنجاح`,
+            `Password changed for ${selectedUser.name} successfully`
+          )
+        );
         setIsPasswordOpen(false);
       } else {
-        toast.error(res.message || 'فشل تغيير كلمة المرور');
+        toast.error(res.message || tr('فشل تغيير كلمة المرور', 'Failed to change password'));
       }
-    } catch (err) {
-      toast.error('حدث خطأ أثناء تغيير كلمة المرور');
+    } catch {
+      toast.error(
+        tr('حدث خطأ أثناء تغيير كلمة المرور', 'An error occurred while changing password')
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -220,33 +243,46 @@ export default function AdminUsersPage() {
     try {
       const res = await updateUserAction(user.id, { isActive: newStatus });
       if (res.status) {
-        toast.success(newStatus ? 'تم تفعيل الحساب' : 'تم تعطيل الحساب');
+        toast.success(
+          newStatus
+            ? tr('تم تفعيل الحساب', 'Account activated')
+            : tr('تم تعطيل الحساب', 'Account deactivated')
+        );
         setUsers((prev) =>
           prev.map((u) => (u.id === user.id ? { ...u, isActive: newStatus } : u))
         );
       } else {
-        toast.error(res.message || 'فشل تعديل الحالة');
+        toast.error(res.message || tr('فشل تعديل الحالة', 'Failed to update status'));
       }
-    } catch (err) {
-      toast.error('حدث خطأ أثناء تحديث الحالة');
+    } catch {
+      toast.error(tr('حدث خطأ أثناء تحديث الحالة', 'An error occurred while updating status'));
     }
   };
 
   // Delete User
   const handleDeleteUser = async (user: UserItem) => {
-    if (!confirm(`هل أنت متأكد تماماً من رغبتك في حذف المستخدم (${user.name}) نهائياً من النظام؟`)) {
+    if (
+      !confirm(
+        tr(
+          `هل أنت متأكد تماماً من رغبتك في حذف المستخدم (${user.name}) نهائياً من النظام؟`,
+          `Are you sure you want to permanently delete user (${user.name})?`
+        )
+      )
+    ) {
       return;
     }
     try {
       const res = await deleteUserAction(user.id);
       if (res.status) {
-        toast.success(`تم حذف المستخدم (${user.name}) بنجاح`);
+        toast.success(
+          tr(`تم حذف المستخدم (${user.name}) بنجاح`, `User (${user.name}) deleted successfully`)
+        );
         setUsers((prev) => prev.filter((u) => u.id !== user.id));
       } else {
-        toast.error(res.message || 'فشل حذف المستخدم');
+        toast.error(res.message || tr('فشل حذف المستخدم', 'Failed to delete user'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء محاولة حذف المستخدم');
+      toast.error(tr('حدث خطأ أثناء محاولة حذف المستخدم', 'An error occurred while deleting user'));
     }
   };
 
@@ -256,14 +292,14 @@ export default function AdminUsersPage() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 font-black text-xs border border-purple-200">
             <Shield className="w-3.5 h-3.5" />
-            <span>مدير النظام (Admin)</span>
+            <span>{tr('مدير النظام (Admin)', 'System Admin')}</span>
           </span>
         );
       case 'DOCTOR':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-black text-xs border border-[#D0E5DC]">
             <Stethoscope className="w-3.5 h-3.5" />
-            <span>طبيب (Doctor)</span>
+            <span>{tr('طبيب (Doctor)', 'Doctor')}</span>
           </span>
         );
       case 'RECEPTION':
@@ -272,14 +308,14 @@ export default function AdminUsersPage() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-black text-xs border border-amber-200">
             <KeyRound className="w-3.5 h-3.5" />
-            <span>موظف استقبال (Reception)</span>
+            <span>{tr('موظف استقبال (Reception)', 'Receptionist')}</span>
           </span>
         );
     }
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 select-none" dir="rtl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 select-none" dir={dir}>
       {/* 1. الترويسة الرئيسية */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-xs">
         <div className="space-y-1">
@@ -288,11 +324,14 @@ export default function AdminUsersPage() {
               <UserCog className="w-5 h-5" />
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight">
-              إدارة مستخدمي النظام والصلاحيات
+              {tr('إدارة مستخدمي النظام والصلاحيات', 'System Users & Permissions Management')}
             </h1>
           </div>
           <p className="text-xs sm:text-sm font-bold text-slate-500">
-            إضافة أطباء وموظفي استقبال جدد وتعديل الأسماء وتعيين كلمات المرور
+            {tr(
+              'إضافة أطباء وموظفي استقبال جدد وتعديل الأسماء وتعيين كلمات المرور',
+              'Add new doctors and receptionists, edit profiles, and reset passwords'
+            )}
           </p>
         </div>
 
@@ -302,10 +341,10 @@ export default function AdminUsersPage() {
             onClick={fetchUsers}
             disabled={isLoading}
             className="h-11 px-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            title="تحديث القائمة"
+            title={tr('تحديث القائمة', 'Refresh List')}
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#0B7B5E]' : 'text-slate-400'}`} />
-            <span>تحديث</span>
+            <span>{tr('تحديث', 'Refresh')}</span>
           </button>
 
           <button
@@ -314,7 +353,7 @@ export default function AdminUsersPage() {
             className="h-11 px-5 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-black text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
-            <span>إضافة مستخدم جديد</span>
+            <span>{tr('إضافة مستخدم جديد', 'Add New User')}</span>
           </button>
         </div>
       </div>
@@ -326,18 +365,21 @@ export default function AdminUsersPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="بحث بالاسم أو اسم المستخدم (Username)..."
-            className="w-full h-10 pr-10 pl-4 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
+            placeholder={tr(
+              'بحث بالاسم أو اسم المستخدم (Username)...',
+              'Search by name or username...'
+            )}
+            className="w-full h-10 ps-10 pe-4 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
           />
-          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         </div>
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
           {[
-            { id: 'ALL', label: 'الكل' },
-            { id: 'DOCTOR', label: 'الأطباء' },
-            { id: 'RECEPTION', label: 'الاستقبال' },
-            { id: 'ADMIN', label: 'المديرون' },
+            { id: 'ALL', label: tr('الكل', 'All') },
+            { id: 'DOCTOR', label: tr('الأطباء', 'Doctors') },
+            { id: 'RECEPTION', label: tr('الاستقبال', 'Reception') },
+            { id: 'ADMIN', label: tr('المديرون', 'Admins') },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -360,23 +402,27 @@ export default function AdminUsersPage() {
         {isLoading ? (
           <div className="p-12 text-center text-slate-400 text-xs space-y-2">
             <RefreshCw className="w-6 h-6 animate-spin text-[#0B7B5E] mx-auto" />
-            <p className="font-bold">جاري تحميل بيانات المستخدمين...</p>
+            <p className="font-bold">{tr('جاري تحميل بيانات المستخدمين...', 'Loading users...')}</p>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-xs space-y-2">
             <UserCog className="w-8 h-8 text-slate-300 mx-auto" />
-            <p className="font-bold">لا يوجد مستخدمين مطابقين للبحث</p>
+            <p className="font-bold">
+              {tr('لا يوجد مستخدمين مطابقين للبحث', 'No users match your search')}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-start text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-bold">
-                  <th className="py-3.5 px-4 text-start">الاسم الكامل</th>
-                  <th className="py-3.5 px-4 text-start">اسم المستخدم (تسجيل الدخول)</th>
-                  <th className="py-3.5 px-4 text-center">نوع الصلاحية</th>
-                  <th className="py-3.5 px-4 text-center">الحالة</th>
-                  <th className="py-3.5 px-4 text-center">الإجراءات</th>
+                  <th className="py-3.5 px-4 text-start">{tr('الاسم الكامل', 'Full Name')}</th>
+                  <th className="py-3.5 px-4 text-start">
+                    {tr('اسم المستخدم (تسجيل الدخول)', 'Username (Login)')}
+                  </th>
+                  <th className="py-3.5 px-4 text-center">{tr('نوع الصلاحية', 'Role')}</th>
+                  <th className="py-3.5 px-4 text-center">{tr('الحالة', 'Status')}</th>
+                  <th className="py-3.5 px-4 text-center">{tr('الإجراءات', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-bold">
@@ -392,7 +438,7 @@ export default function AdminUsersPage() {
                     </td>
 
                     <td className="py-3.5 px-4 font-mono text-slate-700">
-                      @{u.username}
+                      <span dir="ltr">@{u.username}</span>
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
@@ -403,12 +449,12 @@ export default function AdminUsersPage() {
                       {u.isActive ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-black border border-emerald-200">
                           <CheckCircle2 className="w-3 h-3" />
-                          <span>نشط</span>
+                          <span>{tr('نشط', 'Active')}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 text-[11px] font-black border border-rose-200">
                           <UserX className="w-3 h-3" />
-                          <span>معطل</span>
+                          <span>{tr('معطل', 'Inactive')}</span>
                         </span>
                       )}
                     </td>
@@ -419,20 +465,23 @@ export default function AdminUsersPage() {
                           type="button"
                           onClick={() => openEditModal(u)}
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-[#D0E5DC] bg-white hover:bg-[#E3F5EE] text-slate-700 hover:text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs cursor-pointer"
-                          title="تعديل الاسم أو اسم المستخدم أو الصلاحية"
+                          title={tr(
+                            'تعديل الاسم أو اسم المستخدم أو الصلاحية',
+                            'Edit name, username, or role'
+                          )}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                          <span>تعديل</span>
+                          <span>{tr('تعديل', 'Edit')}</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => openPasswordModal(u)}
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-200 hover:border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-                          title="تغيير كلمة المرور للمستخدم"
+                          title={tr('تغيير كلمة المرور للمستخدم', 'Change user password')}
                         >
                           <Lock className="w-3.5 h-3.5 text-amber-600" />
-                          <span>كلمة المرور</span>
+                          <span>{tr('كلمة المرور', 'Password')}</span>
                         </button>
 
                         <button
@@ -443,7 +492,11 @@ export default function AdminUsersPage() {
                               ? 'border-slate-200 text-slate-400 hover:text-amber-600 hover:bg-amber-50'
                               : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
                           }`}
-                          title={u.isActive ? 'تعطيل الحساب' : 'تفعيل الحساب'}
+                          title={
+                            u.isActive
+                              ? tr('تعطيل الحساب', 'Deactivate account')
+                              : tr('تفعيل الحساب', 'Activate account')
+                          }
                         >
                           {u.isActive ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
                         </button>
@@ -452,7 +505,7 @@ export default function AdminUsersPage() {
                           type="button"
                           onClick={() => handleDeleteUser(u)}
                           className="p-1.5 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-rose-600 hover:text-rose-700 transition-all cursor-pointer"
-                          title="حذف المستخدم نهائياً"
+                          title={tr('حذف المستخدم نهائياً', 'Delete user permanently')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -475,7 +528,9 @@ export default function AdminUsersPage() {
                 <span className="p-2 rounded-xl bg-[#E3F5EE] text-[#0B7B5E]">
                   <UserPlus className="w-5 h-5" />
                 </span>
-                <h3 className="text-base font-black text-[#074C3A]">إضافة مستخدم جديد للنظام</h3>
+                <h3 className="text-base font-black text-[#074C3A]">
+                  {tr('إضافة مستخدم جديد للنظام', 'Add New System User')}
+                </h3>
               </div>
               <button
                 type="button"
@@ -488,57 +543,77 @@ export default function AdminUsersPage() {
 
             <form onSubmit={handleCreateSubmit} className="space-y-3.5 text-xs">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">الاسم الكامل *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('الاسم الكامل *', 'Full Name *')}
+                </label>
                 <input
                   type="text"
                   required
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                  placeholder="مثال: د. إسلام كريمة، أ. أحمد الاستقبال..."
+                  placeholder={tr(
+                    'مثال: د. إسلام كريمة، أ. أحمد الاستقبال...',
+                    'e.g., Dr. Eslam Kareema, Ahmed Reception...'
+                  )}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">اسم المستخدم (لتسجيل الدخول) *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('اسم المستخدم (لتسجيل الدخول) *', 'Username (for Login) *')}
+                </label>
                 <input
                   type="text"
                   required
                   value={createForm.username}
                   onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
-                  placeholder="مثال: doctor, reception2, ahmed..."
+                  placeholder={tr(
+                    'مثال: doctor, reception2, ahmed...',
+                    'e.g., doctor, reception2, ahmed...'
+                  )}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold font-mono focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">نوع الصلاحية / الدور *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('نوع الصلاحية / الدور *', 'Role / Permissions *')}
+                </label>
                 <select
                   value={createForm.role}
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                 >
-                  <option value="DOCTOR">طبيب (Doctor) - فحص المرضى والروشتة</option>
-                  <option value="RECEPTION">موظف استقبال (Reception) - الحجوزات والمدفوعات</option>
-                  <option value="ADMIN">مدير النظام (Admin) - كافة الصلاحيات والتقارير</option>
+                  <option value="DOCTOR">
+                    {tr('طبيب (Doctor) - فحص المرضى والروشتة', 'Doctor - Examinations & Prescriptions')}
+                  </option>
+                  <option value="RECEPTION">
+                    {tr('موظف استقبال (Reception) - الحجوزات والمدفوعات', 'Receptionist - Bookings & Payments')}
+                  </option>
+                  <option value="ADMIN">
+                    {tr('مدير النظام (Admin) - كافة الصلاحيات والتقارير', 'Admin - Full Access & Reports')}
+                  </option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">كلمة المرور *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('كلمة المرور *', 'Password *')}
+                </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={createForm.password}
                     onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-                    placeholder="أدخل كلمة مرور قوية..."
-                    className="w-full h-10 pr-3 pl-10 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
+                    placeholder={tr('أدخل كلمة مرور قوية...', 'Enter a strong password...')}
+                    className="w-full h-10 ps-3 pe-10 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -551,14 +626,16 @@ export default function AdminUsersPage() {
                   onClick={() => setIsCreateOpen(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 cursor-pointer"
                 >
-                  إلغاء
+                  {tr('إلغاء', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold cursor-pointer disabled:opacity-60"
                 >
-                  {isSubmitting ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
+                  {isSubmitting
+                    ? tr('جاري الإنشاء...', 'Creating...')
+                    : tr('إنشاء المستخدم', 'Create User')}
                 </button>
               </div>
             </form>
@@ -575,7 +652,9 @@ export default function AdminUsersPage() {
                 <span className="p-2 rounded-xl bg-[#E3F5EE] text-[#0B7B5E]">
                   <Edit2 className="w-5 h-5" />
                 </span>
-                <h3 className="text-base font-black text-[#074C3A]">تعديل بيانات المستخدم</h3>
+                <h3 className="text-base font-black text-[#074C3A]">
+                  {tr('تعديل بيانات المستخدم', 'Edit User Details')}
+                </h3>
               </div>
               <button
                 type="button"
@@ -588,7 +667,9 @@ export default function AdminUsersPage() {
 
             <form onSubmit={handleEditSubmit} className="space-y-3.5 text-xs">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">الاسم الكامل *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('الاسم الكامل *', 'Full Name *')}
+                </label>
                 <input
                   type="text"
                   required
@@ -599,7 +680,9 @@ export default function AdminUsersPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">اسم المستخدم (Username) *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('اسم المستخدم (Username) *', 'Username *')}
+                </label>
                 <input
                   type="text"
                   required
@@ -610,15 +693,17 @@ export default function AdminUsersPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">نوع الصلاحية / الدور *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('نوع الصلاحية / الدور *', 'Role / Permissions *')}
+                </label>
                 <select
                   value={editForm.role}
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                 >
-                  <option value="DOCTOR">طبيب (Doctor)</option>
-                  <option value="RECEPTION">موظف استقبال (Reception)</option>
-                  <option value="ADMIN">مدير النظام (Admin)</option>
+                  <option value="DOCTOR">{tr('طبيب (Doctor)', 'Doctor')}</option>
+                  <option value="RECEPTION">{tr('موظف استقبال (Reception)', 'Receptionist')}</option>
+                  <option value="ADMIN">{tr('مدير النظام (Admin)', 'Admin')}</option>
                 </select>
               </div>
 
@@ -629,10 +714,12 @@ export default function AdminUsersPage() {
                   checked={editForm.isActive}
                   onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
                   className="w-4 h-4 rounded text-[#0B7B5E] focus:ring-0 cursor-pointer"
-                >
-                </input>
+                />
                 <label htmlFor="userActiveCheck" className="font-bold text-slate-700 cursor-pointer">
-                  الحساب نشط ومتاح لتسجيل الدخول
+                  {tr(
+                    'الحساب نشط ومتاح لتسجيل الدخول',
+                    'Account is active and enabled for login'
+                  )}
                 </label>
               </div>
 
@@ -642,14 +729,16 @@ export default function AdminUsersPage() {
                   onClick={() => setIsEditOpen(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 cursor-pointer"
                 >
-                  إلغاء
+                  {tr('إلغاء', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold cursor-pointer disabled:opacity-60"
                 >
-                  {isSubmitting ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+                  {isSubmitting
+                    ? tr('جاري الحفظ...', 'Saving...')
+                    : tr('حفظ التعديلات', 'Save Changes')}
                 </button>
               </div>
             </form>
@@ -667,8 +756,12 @@ export default function AdminUsersPage() {
                   <Lock className="w-5 h-5" />
                 </span>
                 <div>
-                  <h3 className="text-base font-black text-[#074C3A]">تغيير كلمة المرور</h3>
-                  <p className="text-[11px] font-bold text-slate-500">للمستخدم: {selectedUser.name}</p>
+                  <h3 className="text-base font-black text-[#074C3A]">
+                    {tr('تغيير كلمة المرور', 'Change Password')}
+                  </h3>
+                  <p className="text-[11px] font-bold text-slate-500">
+                    {tr('للمستخدم:', 'For user:')} {selectedUser.name}
+                  </p>
                 </div>
               </div>
               <button
@@ -682,20 +775,24 @@ export default function AdminUsersPage() {
 
             <form onSubmit={handlePasswordSubmit} className="space-y-3.5 text-xs">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">كلمة المرور الجديدة *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('كلمة المرور الجديدة *', 'New Password *')}
+                </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                    placeholder="أدخل كلمة المرور الجديدة..."
-                    className="w-full h-10 pr-3 pl-10 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
+                    onChange={(e) =>
+                      setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                    }
+                    placeholder={tr('أدخل كلمة المرور الجديدة...', 'Enter new password...')}
+                    className="w-full h-10 ps-3 pe-10 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -703,13 +800,20 @@ export default function AdminUsersPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">تأكيد كلمة المرور الجديدة *</label>
+                <label className="font-bold text-slate-700">
+                  {tr('تأكيد كلمة المرور الجديدة *', 'Confirm New Password *')}
+                </label>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                  placeholder="أعد كتابة كلمة المرور للتأكيد..."
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                  }
+                  placeholder={tr(
+                    'أعد كتابة كلمة المرور للتأكيد...',
+                    'Re-enter password to confirm...'
+                  )}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
@@ -720,14 +824,16 @@ export default function AdminUsersPage() {
                   onClick={() => setIsPasswordOpen(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 cursor-pointer"
                 >
-                  إلغاء
+                  {tr('إلغاء', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold cursor-pointer disabled:opacity-60"
                 >
-                  {isSubmitting ? 'جاري التغيير...' : 'تغيير كلمة المرور'}
+                  {isSubmitting
+                    ? tr('جاري التغيير...', 'Updating...')
+                    : tr('تغيير كلمة المرور', 'Change Password')}
                 </button>
               </div>
             </form>

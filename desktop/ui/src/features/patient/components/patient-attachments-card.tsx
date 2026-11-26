@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Image as ImageIcon, Eye, X } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { PatientDetails } from '../types/patient';
 
 interface PatientAttachmentsCardProps {
@@ -10,6 +11,7 @@ interface PatientAttachmentsCardProps {
 }
 
 export function PatientAttachmentsCard({ details }: PatientAttachmentsCardProps) {
+  const { tr } = useAppLocale();
   const attachments = details.attachments || [];
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -17,17 +19,17 @@ export function PatientAttachmentsCard({ details }: PatientAttachmentsCardProps)
     <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-xs text-start select-none">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
         <h3 className="text-base font-black text-[#074C3A]">
-          المرفقات والتحاليل
+          {tr('المرفقات والتحاليل', 'Attachments & Labs')}
         </h3>
         <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold font-sans">
-          {attachments.length} صور
+          {tr(`${attachments.length} صور`, `${attachments.length} files`)}
         </span>
       </div>
 
       {attachments.length === 0 ? (
         <div className="p-6 text-center text-slate-400 text-xs">
           <ImageIcon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-          <p>لا توجد مرفقات أو صور أشعة مسجلة لهذا المريض</p>
+          <p>{tr('لا توجد مرفقات أو صور أشعة مسجلة لهذا المريض', 'No attachments or imaging recorded for this patient')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-2.5">
@@ -40,7 +42,7 @@ export function PatientAttachmentsCard({ details }: PatientAttachmentsCardProps)
             >
               <Image
                 src={att.url}
-                alt={att.fileName || 'مرفق طبي'}
+                alt={att.fileName || tr('مرفق طبي', 'Medical attachment')}
                 fill
                 sizes="(max-width: 768px) 33vw, 120px"
                 className="object-cover group-hover:scale-105 transition-transform duration-200"
@@ -66,14 +68,14 @@ export function PatientAttachmentsCard({ details }: PatientAttachmentsCardProps)
             <button
               type="button"
               onClick={() => setPreviewUrl(null)}
-              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-700 flex items-center justify-center shadow-md cursor-pointer transition-colors"
+              className="absolute top-4 end-4 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-700 flex items-center justify-center shadow-md cursor-pointer transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
             <div className="relative w-full h-[70vh]">
               <Image
                 src={previewUrl}
-                alt="معاينة المرفق الطبي"
+                alt={tr('معاينة المرفق الطبي', 'Medical attachment preview')}
                 fill
                 className="object-contain rounded-2xl"
               />

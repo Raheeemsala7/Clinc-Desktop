@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Edit2, Trash2, FileText } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { Patient } from '../types/patient';
 import { DeletePatientModal } from './delete-patient-modal';
 import { EditPatientModal } from './edit-patient-modal';
@@ -13,6 +14,7 @@ interface TablePatientsRowActionsProps {
 }
 
 export function TablePatientsRowActions({ patient }: TablePatientsRowActionsProps) {
+  const { tr } = useAppLocale();
   const pathname = usePathname();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -31,7 +33,7 @@ export function TablePatientsRowActions({ patient }: TablePatientsRowActionsProp
         rel="noopener noreferrer"
         className="h-8 px-3 rounded-lg bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-xs shadow-2xs transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
       >
-        <span>عرض الملف</span>
+        <span>{tr('عرض الملف', 'View Profile')}</span>
       </Link>
 
       {/* 2. زر تعديل */}
@@ -40,7 +42,7 @@ export function TablePatientsRowActions({ patient }: TablePatientsRowActionsProp
         onClick={() => setIsEditOpen(true)}
         className="h-8 px-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 active:scale-95 text-slate-700 font-bold text-xs transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
       >
-        <span>تعديل</span>
+        <span>{tr('تعديل', 'Edit')}</span>
         <Edit2 className="w-3 h-3 text-slate-400" />
       </button>
 
@@ -50,7 +52,7 @@ export function TablePatientsRowActions({ patient }: TablePatientsRowActionsProp
         onClick={() => setIsDeleteOpen(true)}
         className="h-8 px-2.5 rounded-lg border border-rose-200 bg-[#FFF5F5] hover:bg-rose-100 active:scale-95 text-[#E11D48] font-bold text-xs transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
       >
-        <span>حذف</span>
+        <span>{tr('حذف', 'Delete')}</span>
         <Trash2 className="w-3 h-3 text-[#E11D48]" />
       </button>
 

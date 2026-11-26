@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { ClosingPreview } from '../types/closing';
 import { useCloseDayMutation } from '../hooks/closing.hook';
 import { Lock, CheckCircle2, Loader2 } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface ClosingFormCardProps {
   preview?: ClosingPreview;
@@ -12,6 +13,7 @@ interface ClosingFormCardProps {
 
 export function ClosingFormCard({ preview }: ClosingFormCardProps) {
   const t = useTranslations('Closing');
+  const { isAr, dir } = useAppLocale();
   const expectedCash = Number(preview?.expectedCash ?? 0);
   const isClosed = Boolean(preview?.isClosed);
   const closingRecord = preview?.closing;
@@ -54,7 +56,10 @@ export function ClosingFormCard({ preview }: ClosingFormCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-7 shadow-xs flex flex-col justify-between">
+    <div
+      className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-7 shadow-xs flex flex-col justify-between"
+      dir={dir}
+    >
       <div>
         <h3 className="text-xl font-black text-[#074C3A] mb-6">{t('formTitle')}</h3>
 
@@ -69,7 +74,9 @@ export function ClosingFormCard({ preview }: ClosingFormCardProps) {
               <p className="font-normal opacity-90">
                 {t('closedAt', {
                   time: closingRecord?.closedAt
-                    ? new Date(closingRecord.closedAt).toLocaleTimeString('ar-EG')
+                    ? new Date(closingRecord.closedAt).toLocaleTimeString(
+                        isAr ? 'ar-EG' : 'en-US'
+                      )
                     : '',
                   name: closingRecord?.closedBy?.name || '',
                 })}
@@ -93,9 +100,9 @@ export function ClosingFormCard({ preview }: ClosingFormCardProps) {
                 value={actualCashStr}
                 onChange={(e) => setActualCashStr(e.target.value)}
                 placeholder="0.00"
-                className="w-full h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-base font-bold font-sans transition-all disabled:bg-slate-50 disabled:text-slate-500"
+                className="w-full h-12 ps-4 pe-14 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-base font-bold font-sans transition-all disabled:bg-slate-50 disabled:text-slate-500"
               />
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+              <span className="absolute end-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
                 {t('currency')}
               </span>
             </div>

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Plus, Trash2, Pill, Printer, Sparkles } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { PrescriptionMedicine } from '../types/ent-examination.types';
 
 interface PrescriptionTableProps {
@@ -20,6 +21,8 @@ const COMMON_ENT_DRUGS: Array<Omit<PrescriptionMedicine, 'id'>> = [
 ];
 
 export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTableProps) {
+  const { dir, tr } = useAppLocale();
+
   const addItem = () => {
     const newItem: PrescriptionMedicine = {
       id: Math.random().toString(36).substring(2, 9),
@@ -51,16 +54,16 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={dir}>
       {/* رأس قسم الروشتة والأدوية السريعة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Pill className="w-5 h-5 text-[#0B7B5E]" />
           <h4 className="font-black text-sm text-[#074C3A]">
-            العلاج والروشتة الطبية (Rx)
+            {tr('العلاج والروشتة الطبية (Rx)', 'Treatment & Prescription (Rx)')}
           </h4>
           <span className="px-2 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold">
-            {items.length} أصناف
+            {tr(`${items.length} أصناف`, `${items.length} ${items.length === 1 ? 'item' : 'items'}`)}
           </span>
         </div>
 
@@ -72,7 +75,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5 text-slate-500" />
-              <span>طباعة الروشتة</span>
+              <span>{tr('طباعة الروشتة', 'Print Prescription')}</span>
             </button>
           )}
 
@@ -82,7 +85,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>إضافة دواء جديد</span>
+            <span>{tr('إضافة دواء جديد', 'Add New Medication')}</span>
           </button>
         </div>
       </div>
@@ -91,7 +94,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
       <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
         <div className="flex items-center gap-1.5 mb-2 text-xs font-bold text-slate-500">
           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>أدوية سريعة شائعة بالعيادة (اضغط للإضافة الفورية):</span>
+          <span>{tr('أدوية سريعة شائعة بالعيادة (اضغط للإضافة الفورية):', 'Common clinic medications (click to add):')}</span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           {COMMON_ENT_DRUGS.map((d, i) => (
@@ -110,7 +113,10 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
       {/* جدول الأدوية */}
       {items.length === 0 ? (
         <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center text-slate-400 text-xs font-medium">
-          لم يتم إضافة أي أدوية بعد. اضغط على «إضافة دواء جديد» أو اختر من الأدوية السريعة أعلاه.
+          {tr(
+            'لم يتم إضافة أي أدوية بعد. اضغط على «إضافة دواء جديد» أو اختر من الأدوية السريعة أعلاه.',
+            'No medications added yet. Click "Add New Medication" or choose from the quick drugs above.'
+          )}
         </div>
       ) : (
         <div className="overflow-x-auto border border-slate-200 rounded-2xl bg-white shadow-2xs">
@@ -118,12 +124,12 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-black">
                 <th className="py-2.5 px-3 text-start w-10">#</th>
-                <th className="py-2.5 px-3 text-start min-w-[180px]">اسم الدواء (Drug Name)</th>
-                <th className="py-2.5 px-3 text-start min-w-[110px]">الجرعة (Dose)</th>
-                <th className="py-2.5 px-3 text-start min-w-[120px]">التكرار (Frequency)</th>
-                <th className="py-2.5 px-3 text-start min-w-[90px]">المدة (Duration)</th>
-                <th className="py-2.5 px-3 text-start min-w-[160px]">ملاحظات وتعليمات</th>
-                <th className="py-2.5 px-3 text-center w-12">حذف</th>
+                <th className="py-2.5 px-3 text-start min-w-[180px]">{tr('اسم الدواء', 'Drug Name')}</th>
+                <th className="py-2.5 px-3 text-start min-w-[110px]">{tr('الجرعة', 'Dose')}</th>
+                <th className="py-2.5 px-3 text-start min-w-[120px]">{tr('التكرار', 'Frequency')}</th>
+                <th className="py-2.5 px-3 text-start min-w-[90px]">{tr('المدة', 'Duration')}</th>
+                <th className="py-2.5 px-3 text-start min-w-[160px]">{tr('ملاحظات وتعليمات', 'Instructions')}</th>
+                <th className="py-2.5 px-3 text-center w-12">{tr('حذف', 'Delete')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -135,7 +141,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                   <td className="py-2 px-2">
                     <input
                       type="text"
-                      placeholder="e.g. Augmentin 1gm"
+                      placeholder={tr('مثال: Augmentin 1gm', 'e.g. Augmentin 1gm')}
                       value={item.drugName}
                       onChange={(e) => updateItem(item.id, 'drugName', e.target.value)}
                       className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E]"
@@ -144,7 +150,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                   <td className="py-2 px-2">
                     <input
                       type="text"
-                      placeholder="e.g. 1 قرص"
+                      placeholder={tr('مثال: 1 قرص', 'e.g. 1 tablet')}
                       value={item.dose}
                       onChange={(e) => updateItem(item.id, 'dose', e.target.value)}
                       className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
@@ -153,7 +159,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                   <td className="py-2 px-2">
                     <input
                       type="text"
-                      placeholder="e.g. كل 12 ساعة"
+                      placeholder={tr('مثال: كل 12 ساعة', 'e.g. Every 12 hours')}
                       value={item.frequency}
                       onChange={(e) => updateItem(item.id, 'frequency', e.target.value)}
                       className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
@@ -162,7 +168,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                   <td className="py-2 px-2">
                     <input
                       type="text"
-                      placeholder="e.g. 7 أيام"
+                      placeholder={tr('مثال: 7 أيام', 'e.g. 7 days')}
                       value={item.duration}
                       onChange={(e) => updateItem(item.id, 'duration', e.target.value)}
                       className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
@@ -171,7 +177,7 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                   <td className="py-2 px-2">
                     <input
                       type="text"
-                      placeholder="e.g. بعد الأكل"
+                      placeholder={tr('مثال: بعد الأكل', 'e.g. After meals')}
                       value={item.instructions || ''}
                       onChange={(e) => updateItem(item.id, 'instructions', e.target.value)}
                       className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
@@ -181,7 +187,8 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
                     <button
                       type="button"
                       onClick={() => removeItem(item.id)}
-                      className="w-7 h-7 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-all cursor-pointer"
+                      title={tr('حذف', 'Delete')}
+                      className="w-7 h-7 mx-auto rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-all cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

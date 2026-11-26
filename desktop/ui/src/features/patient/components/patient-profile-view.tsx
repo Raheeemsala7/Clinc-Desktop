@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ArrowRight, Plus, Edit2, Trash2, Pill, Printer, FileText, FileCheck, ExternalLink, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, Edit2, Trash2, Pill, Printer, FileText, FileCheck, ExternalLink, X } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { PrintablePrescriptionSlip } from '@/features/examination/components/prescription-view';
 import { PatientDetails, Patient } from '../types/patient';
 import { PatientHeroBanner } from './patient-hero-banner';
@@ -23,6 +24,7 @@ interface PatientProfileViewProps {
 type TabType = 'overview' | 'visits' | 'prescriptions' | 'payments' | 'attachments' | 'notes';
 
 export function PatientProfileView({ details }: PatientProfileViewProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const router = useRouter();
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<TabType>('visits');
@@ -73,12 +75,24 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
   };
 
   const tabs: Array<{ id: TabType; label: string }> = [
-    { id: 'overview', label: 'نظرة عامة' },
-    { id: 'visits', label: `الزيارات (${details.previousAppointments?.length || 0})` },
-    { id: 'prescriptions', label: `الروشتات الطبية (${details.prescriptions?.length || 0})` },
-    { id: 'payments', label: 'المدفوعات' },
-    { id: 'attachments', label: 'المرفقات' },
-    { id: 'notes', label: 'ملاحظات' },
+    { id: 'overview', label: tr('نظرة عامة', 'Overview') },
+    {
+      id: 'visits',
+      label: tr(
+        `الزيارات (${details.previousAppointments?.length || 0})`,
+        `Visits (${details.previousAppointments?.length || 0})`
+      ),
+    },
+    {
+      id: 'prescriptions',
+      label: tr(
+        `الروشتات الطبية (${details.prescriptions?.length || 0})`,
+        `Prescriptions (${details.prescriptions?.length || 0})`
+      ),
+    },
+    { id: 'payments', label: tr('المدفوعات', 'Payments') },
+    { id: 'attachments', label: tr('المرفقات', 'Attachments') },
+    { id: 'notes', label: tr('ملاحظات', 'Notes') },
   ];
 
   const previewExamData = previewRx ? {
@@ -101,7 +115,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
 
   return (
     <>
-      <div className={`space-y-6 select-none ${previewRx ? 'print:hidden' : ''}`} dir="rtl">
+      <div className={`space-y-6 select-none ${previewRx ? 'print:hidden' : ''}`} dir={dir}>
       {/* 1. الشريط العلوي: العودة للمرضى + أزرار الإجراءات */}
       <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
         {/* أزرار الإجراءات على اليسار */}
@@ -111,17 +125,17 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
             className="h-10 px-4 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>حجز جديد</span>
+            <span>{tr('حجز جديد', 'New Booking')}</span>
           </Link>
 
           {details.previousAppointments && details.previousAppointments[0] && (
             <Link
               href={`/dashboard/examination/${details.previousAppointments[0].id}`}
               className="h-10 px-3.5 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE]/80 hover:bg-[#E3F5EE] text-[#0B7B5E] font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
-              title="فتح استمارة كشف المريض الكاملة"
+              title={tr('فتح استمارة كشف المريض الكاملة', 'Open full patient examination form')}
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>استمارة الكشف 📋</span>
+              <span>{tr('استمارة الكشف 📋', 'Examination Form 📋')}</span>
             </Link>
           )}
 
@@ -131,7 +145,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
             className="h-10 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Edit2 className="w-3.5 h-3.5 text-slate-400" />
-            <span>تعديل البيانات</span>
+            <span>{tr('تعديل البيانات', 'Edit Details')}</span>
           </button>
 
           <button
@@ -140,7 +154,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
             className="h-10 px-3.5 rounded-xl border border-rose-200 bg-[#FFF5F5] hover:bg-rose-100 text-[#E11D48] font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5 text-[#E11D48]" />
-            <span>حذف</span>
+            <span>{tr('حذف', 'Delete')}</span>
           </button>
         </div>
 
@@ -149,8 +163,9 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
           href={backUrl}
           className="h-10 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all inline-flex items-center gap-2 self-start sm:self-auto cursor-pointer"
         >
-          <span>العودة للمرضى</span>
-          <ArrowRight className="w-4 h-4 text-slate-400" />
+          {!isAr && <ArrowLeft className="w-4 h-4 text-slate-400" />}
+          <span>{tr('العودة للمرضى', 'Back to Patients')}</span>
+          {isAr && <ArrowRight className="w-4 h-4 text-slate-400" />}
         </Link>
       </div>
 
@@ -190,7 +205,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                   >
                     <span>{tab.label}</span>
                     {isActive && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0B7B5E] rounded-full" />
+                      <span className="absolute bottom-0 inset-x-0 h-0.5 bg-[#0B7B5E] rounded-full" />
                     )}
                   </button>
                 );
@@ -210,7 +225,10 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                 <div className="space-y-4">
                   {(!details.prescriptions || details.prescriptions.length === 0) ? (
                     <div className="p-8 text-center text-slate-400 text-xs bg-slate-50/50 rounded-2xl">
-                      لا توجد روشتات علاجية مسجلة سابقة لهذا المريض
+                      {tr(
+                        'لا توجد روشتات علاجية مسجلة سابقة لهذا المريض',
+                        'No previous prescriptions recorded for this patient'
+                      )}
                     </div>
                   ) : (
                     details.prescriptions.map((rx, idx) => (
@@ -226,20 +244,25 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                             <div>
                               <div className="flex items-center gap-2">
                                 <h4 className="font-black text-sm text-[#074C3A]">
-                                  روشتة علاجية #{details.prescriptions!.length - idx}
+                                  {tr(
+                                    `روشتة علاجية #${details.prescriptions!.length - idx}`,
+                                    `Prescription #${details.prescriptions!.length - idx}`
+                                  )}
                                 </h4>
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-bold text-[11px] border border-[#D0E5DC]">
-                                  <span>تاريخ الزيارة:</span>
-                                  <strong className="font-mono">
+                                  <span>{tr('تاريخ الزيارة:', 'Visit Date:')}</span>
+                                  <strong className="font-mono" dir="ltr">
                                     {(rx as any).visitDate || (rx.createdAt ? new Date(rx.createdAt).toISOString().slice(0, 10) : '—')}
                                   </strong>
                                 </span>
                               </div>
                               <p className="text-[11px] text-slate-500 font-bold mt-0.5">
-                                الطبيب المعالج: <strong className="text-slate-700">{rx.doctorName || 'د. إسلام'}</strong>
+                                {tr('الطبيب المعالج:', 'Attending Doctor:')}{' '}
+                                <strong className="text-slate-700">{rx.doctorName || tr('د. إسلام', 'Dr. Eslam')}</strong>
                                 {(rx as any).diagnosis && (
-                                  <span className="mr-2 text-slate-600">
-                                    · التشخيص: <strong className="text-[#074C3A]">{(rx as any).diagnosis}</strong>
+                                  <span className="ms-2 text-slate-600">
+                                    {tr('· التشخيص:', '· Diagnosis:')}{' '}
+                                    <strong className="text-[#074C3A]">{(rx as any).diagnosis}</strong>
                                   </span>
                                 )}
                               </p>
@@ -253,16 +276,16 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                             >
                               <Printer className="w-3.5 h-3.5" />
-                              <span>طباعة ومعاينة الروشتة</span>
+                              <span>{tr('طباعة ومعاينة الروشتة', 'Print & Preview Rx')}</span>
                             </button>
                             {((rx as any).appointmentId || rx.visitId) && (
                               <Link
                                 href={`/dashboard/examination/${(rx as any).appointmentId || rx.visitId}?tab=prescription`}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                                title="فتح ملف الكشف بالكامل"
+                                title={tr('فتح ملف الكشف بالكامل', 'Open full examination file')}
                               >
                                 <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                                <span>الكشف</span>
+                                <span>{tr('الكشف', 'Examination')}</span>
                               </Link>
                             )}
                           </div>
@@ -273,13 +296,13 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                           <table className="w-full text-start text-xs border-collapse">
                             <thead>
                               <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-100">
-                                <th className="py-2 px-3 text-start">اسم الدواء</th>
-                                <th className="py-2 px-3 text-center">النوع (Form)</th>
-                                <th className="py-2 px-3 text-center">التركيز</th>
-                                <th className="py-2 px-3 text-center">الجرعة</th>
-                                <th className="py-2 px-3 text-center">التكرار</th>
-                                <th className="py-2 px-3 text-center">المدة</th>
-                                <th className="py-2 px-3 text-start">التعليمات</th>
+                                <th className="py-2 px-3 text-start">{tr('اسم الدواء', 'Medication')}</th>
+                                <th className="py-2 px-3 text-center">{tr('النوع (Form)', 'Form')}</th>
+                                <th className="py-2 px-3 text-center">{tr('التركيز', 'Strength')}</th>
+                                <th className="py-2 px-3 text-center">{tr('الجرعة', 'Dose')}</th>
+                                <th className="py-2 px-3 text-center">{tr('التكرار', 'Frequency')}</th>
+                                <th className="py-2 px-3 text-center">{tr('المدة', 'Duration')}</th>
+                                <th className="py-2 px-3 text-start">{tr('التعليمات', 'Instructions')}</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 font-medium">
@@ -300,7 +323,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
 
                         {rx.notes && (
                           <div className="bg-slate-50 p-2.5 rounded-xl text-xs text-slate-600">
-                            <span className="font-bold text-slate-800">ملاحظات الطبيب: </span>
+                            <span className="font-bold text-slate-800">{tr('ملاحظات الطبيب: ', 'Doctor Notes: ')}</span>
                             <span>{rx.notes}</span>
                           </div>
                         )}
@@ -312,26 +335,37 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
 
               {activeTab === 'overview' && (
                 <div className="p-4 text-center text-xs text-slate-400">
-                  عرض موجز شامل لكافة التعاملات السابقة للمريض في العيادة
+                  {tr(
+                    'عرض موجز شامل لكافة التعاملات السابقة للمريض في العيادة',
+                    'Comprehensive summary of all previous patient visits and transactions at the clinic'
+                  )}
                 </div>
               )}
 
               {activeTab === 'payments' && (
                 <div className="p-4 text-center text-xs text-slate-400">
-                  إجمالي المبالغ المسددة {details.financialSummary.totalPaid} ج.م والمتبقي{' '}
-                  {details.financialSummary.outstandingBalance} ج.م
+                  {tr(
+                    `إجمالي المبالغ المسددة ${details.financialSummary.totalPaid} ج.م والمتبقي ${details.financialSummary.outstandingBalance} ج.م`,
+                    `Total paid ${details.financialSummary.totalPaid} EGP, remaining ${details.financialSummary.outstandingBalance} EGP`
+                  )}
                 </div>
               )}
 
               {activeTab === 'attachments' && (
                 <div className="p-4 text-center text-xs text-slate-400">
-                  يمكن استعراض كافة المرفقات وصور الأشعة من القائمة الجانبية أو من تبويب المرفقات
+                  {tr(
+                    'يمكن استعراض كافة المرفقات وصور الأشعة من القائمة الجانبية أو من تبويب المرفقات',
+                    'All attachments and imaging can be viewed from the side panel or the attachments section'
+                  )}
                 </div>
               )}
 
               {activeTab === 'notes' && (
                 <div className="p-4 text-center text-xs text-slate-400">
-                  انظر قسم الملاحظات أدناه لإضافة واستعراض ملاحظات الاستقبال والطبيب
+                  {tr(
+                    'انظر قسم الملاحظات أدناه لإضافة واستعراض ملاحظات الاستقبال والطبيب',
+                    'See the notes section below to add and view reception and doctor notes'
+                  )}
                 </div>
               )}
             </div>
@@ -364,7 +398,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
       {/* مودال معاينة وطباعة الروشتة الطبية مباشرة دون مغادرة الصفحة */}
       {previewRx && previewExamData && (
         <div
-          dir="rtl"
+          dir={dir}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs print:static print:p-0 print:m-0 print:bg-white print:block"
         >
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden print:max-h-none print:border-none print:shadow-none print:rounded-none">
@@ -375,9 +409,12 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                   ℞
                 </div>
                 <div>
-                  <h3 className="font-black text-slate-800 text-base">معاينة وطباعة الروشتة العلاجية</h3>
+                  <h3 className="font-black text-slate-800 text-base">
+                    {tr('معاينة وطباعة الروشتة العلاجية', 'Preview & Print Prescription')}
+                  </h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    المريض: <strong className="text-slate-700">{patient.fullName}</strong>
+                    {tr('المريض:', 'Patient:')}{' '}
+                    <strong className="text-slate-700">{patient.fullName}</strong>
                   </p>
                 </div>
               </div>
@@ -393,7 +430,9 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
             {/* Print Controls Bar - مخفي أثناء الطباعة */}
             <div className="px-6 py-3 bg-[#F0FDF8] border-b border-[#D0E5DC] flex flex-wrap items-center justify-between gap-3 print:hidden">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-600">نمط الطباعة:</span>
+                <span className="text-xs font-bold text-slate-600">
+                  {tr('نمط الطباعة:', 'Print Mode:')}
+                </span>
                 <button
                   type="button"
                   onClick={() => setPreviewRx({ ...previewRx, mode: 'full' })}
@@ -403,7 +442,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                       : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
-                  كاملة (مع ترويسة العيادة)
+                  {tr('كاملة (مع ترويسة العيادة)', 'Full (with clinic header)')}
                 </button>
                 <button
                   type="button"
@@ -414,7 +453,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                       : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
-                  أدوية فقط (للورق الجاهز)
+                  {tr('أدوية فقط (للورق الجاهز)', 'Medications only (pre-printed paper)')}
                 </button>
               </div>
 
@@ -425,7 +464,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-black text-xs shadow-md transition-all cursor-pointer"
                 >
                   <Printer className="w-4 h-4 stroke-[2.5]" />
-                  <span>طباعة الروشتة الآن</span>
+                  <span>{tr('طباعة الروشتة الآن', 'Print Prescription Now')}</span>
                 </button>
               </div>
             </div>
@@ -437,7 +476,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
                   examData={previewExamData}
                   patient={patient}
                   doctor={{
-                    name: previewRx.rx.doctorName || 'د. إسلام عبدالله كريمة',
+                    name: previewRx.rx.doctorName || tr('د. إسلام عبدالله كريمة', 'Dr. Eslam Abdallah Kareema'),
                     phone: '01018566478',
                   }}
                   printMode={previewRx.mode}

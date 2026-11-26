@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Clock } from 'lucide-react';
 import { MonthDayItem, WeekAppointmentItem } from '../types/calendar';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { formatDoctorName, getAppointmentTypeLabel } from '../constants/booking.constant';
 
 interface CalendarMonthGridViewProps {
   days: MonthDayItem[];
@@ -21,6 +23,7 @@ export function CalendarMonthGridView({
   isDoctorView,
   onSelectDay,
 }: CalendarMonthGridViewProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const router = useRouter();
 
   // تجميع مواعيد كل يوم
@@ -28,72 +31,41 @@ export function CalendarMonthGridView({
     return appointments.filter((a) => a.clinicDate === dateStr);
   };
 
-  const getTypeLabel = (type?: string) => {
-    switch (type) {
-      case 'FOLLOW_UP':
-        return 'إعادة';
-      case 'OPERATION_FOLLOWUP':
-        return 'متابعة عملية';
-      case 'ENDOSCOPY':
-        return 'منظار';
-      case 'SURGERY':
-      case 'POST_OPERATIVE':
-        return 'تدخل جراحي';
-      case 'TEST_RESULTS_REVIEW':
-        return 'متابعة';
-      case 'CONSULTATION':
-        return 'استشارة';
-      case 'LAB_TESTS_IMAGING':
-        return 'منظار';
-      default:
-        return 'كشف';
-    }
-  };
-
-  const formatDoctorName = (name?: string) => {
-    if (!name || !name.trim()) return 'د. إسلام عبدالله';
-    const clean = name.trim();
-    if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
-      return clean;
-    }
-    return `د. ${clean}`;
-  };
-
-  const ARABIC_DAYS_HEADER = [
-    'السبت',
-    'الأحد',
-    'الإثنين',
-    'الثلاثاء',
-    'الأربعاء',
-    'الخميس',
-    'الجمعة',
-  ];
+  const DAYS_HEADER = isAr
+    ? ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة']
+    : ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
   return (
-    <div className="space-y-4 select-none" dir="rtl">
+    <div className="space-y-4 select-none" dir={dir}>
       {/* 1. الشريط الفرعي ودليل الألوان (Legend) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs px-1">
         <div className="text-slate-500 font-bold flex items-center gap-1.5">
           <Clock className="w-4 h-4 text-slate-400" />
           <span>
             {isDoctorView
-              ? 'تقويم الشهر — اضغط على أي يوم لعرض قائمة مواعيده بالتفصيل'
-              : 'اضغط على أي يوم لاستعراض قائمة مواعيده أو النقر لإضافة حجز جديد'}
+              ? tr(
+                  'تقويم الشهر — اضغط على أي يوم لعرض قائمة مواعيده بالتفصيل',
+                  'Monthly calendar — click any day to view its detailed appointments'
+                )
+              : tr(
+                  'اضغط على أي يوم لاستعراض قائمة مواعيده أو النقر لإضافة حجز جديد',
+                  'Click any day to view its appointments or add a new booking'
+                )}
           </span>
         </div>
 
         <div className="flex items-center gap-4 font-bold text-xs flex-wrap">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" />
-            <span>مكتمل</span>
+            <span>{tr('مكتمل', 'Completed')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#EAB308]" />
-            <span>في الانتظار</span>
+            <span>{tr('في الانتظار', 'Waiting')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E]" />
-            <span>محجوز</span>
+            <span>{tr('محجوز', 'Booked')}</span>
           </div>
         </div>
       </div>
@@ -104,17 +76,17 @@ export function CalendarMonthGridView({
           <div className="min-w-[860px]">
             {/* صف رؤوس الأيام (7 أعمدة من السبت إلى الجمعة) */}
             <div className="grid grid-cols-7 border-b border-slate-200 text-center text-xs font-black bg-slate-50/70">
-              {ARABIC_DAYS_HEADER.map((dayName, idx) => (
+              {DAYS_HEADER.map((dayName, idx) => (
                 <div
                   key={dayName}
-                  className={`py-3.5 px-2 border-l border-slate-200 last:border-l-0 ${
+                  className={`py-3.5 px-2 border-e border-slate-200 last:border-e-0 ${
                     idx === 6 ? 'bg-slate-100/60 text-slate-400' : 'text-slate-700'
                   }`}
                 >
                   <span>{dayName}</span>
                   {idx === 6 && (
-                    <span className="text-[10px] text-slate-400 font-normal mr-1">
-                      (إجازة)
+                    <span className="text-[10px] text-slate-400 font-normal ms-1">
+                      {tr('(إجازة)', '(Off)')}
                     </span>
                   )}
                 </div>
@@ -122,7 +94,7 @@ export function CalendarMonthGridView({
             </div>
 
             {/* شبكة أيام الشهر (مقسمة إلى 7 أعمدة) */}
-            <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 dir-rtl">
+            <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
               {days.map((day) => {
                 const dayAppts = getApptsForDay(day.date);
                 const isOff = day.isOffDay;
@@ -133,7 +105,7 @@ export function CalendarMonthGridView({
                   <div
                     key={day.date}
                     onClick={() => onSelectDay(day.date)}
-                    className={`min-h-[115px] p-2 border-l border-b border-slate-100 transition-colors flex flex-col justify-between cursor-pointer ${
+                    className={`min-h-[115px] p-2 border-e border-b border-slate-100 transition-colors flex flex-col justify-between cursor-pointer ${
                       !isCurrent
                         ? 'bg-slate-50/40 text-slate-300'
                         : isOff
@@ -162,11 +134,12 @@ export function CalendarMonthGridView({
                       {/* شارة إجازة أو عدد المواعيد */}
                       {isOff ? (
                         <span className="text-[10px] text-slate-400 font-bold px-1.5 py-0.5 rounded bg-slate-100">
-                          إجازة
+                          {tr('إجازة', 'Off')}
                         </span>
                       ) : dayAppts.length > 0 ? (
                         <span className="text-[10px] text-[#0B7B5E] font-bold px-1.5 py-0.2 rounded-md bg-[#E3F5EE] border border-[#D0E5DC]">
-                          {dayAppts.length} {dayAppts.length === 1 ? 'موعد' : 'مواعيد'}
+                          {dayAppts.length}{' '}
+                          {dayAppts.length === 1 ? tr('موعد', 'appt') : tr('مواعيد', 'appts')}
                         </span>
                       ) : null}
                     </div>
@@ -187,12 +160,12 @@ export function CalendarMonthGridView({
                           <div
                             key={appt.id}
                             className={`p-1.5 rounded-lg border text-[10px] font-bold truncate shadow-2xs ${pillColor}`}
-                            title={`${appt.patientName} (${appt.startTime}) - ${formatDoctorName(appt.doctorName)}`}
+                            title={`${appt.patientName} (${appt.startTime}) - ${formatDoctorName(appt.doctorName, isAr)}`}
                           >
                             <div className="flex items-center justify-between font-mono text-[9px]">
                               <span>{appt.startTime}</span>
                               <span className="font-sans px-1 rounded bg-white/70">
-                                {getTypeLabel(appt.type)}
+                                {getAppointmentTypeLabel(appt.type, isAr)}
                               </span>
                             </div>
                             <div className="font-black truncate mt-0.5">
@@ -200,7 +173,7 @@ export function CalendarMonthGridView({
                             </div>
                             <div className="mt-1 px-1 py-0.5 rounded bg-white/95 text-[#074C3A] text-[9px] font-black truncate border border-black/10 flex items-center gap-1 shadow-2xs">
                               <span className="shrink-0 text-[10px]">👨‍⚕️</span>
-                              <span className="truncate">{formatDoctorName(appt.doctorName)}</span>
+                              <span className="truncate">{formatDoctorName(appt.doctorName, isAr)}</span>
                             </div>
                           </div>
                         );
@@ -208,7 +181,7 @@ export function CalendarMonthGridView({
 
                       {dayAppts.length > 2 && (
                         <div className="text-[10px] font-bold text-[#0B7B5E] text-center pt-0.5 hover:underline">
-                          +{dayAppts.length - 2} مواعيد أخرى
+                          {tr(`+${dayAppts.length - 2} مواعيد أخرى`, `+${dayAppts.length - 2} more`)}
                         </div>
                       )}
                     </div>

@@ -7,13 +7,26 @@ import { useTranslations } from "next-intl";
 import { AlertCircle, Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { cn } from "cn";
 import { toast } from "sonner";
+import { useAppLocale } from "@/shared/hooks/use-app-locale";
 import { useCreatePatientMutation } from "../hooks/patient.hooks";
 import { QuickPatientFormValues } from "../types/patient";
 import { CHRONIC_DISEASES } from "@/features/appointments/constants/booking.constant";
 import { BookingFormType } from "@/features/appointments";
 
+const CHRONIC_DISEASE_EN: Record<string, string> = {
+    diabetes: 'Diabetes',
+    hypertension: 'Hypertension',
+    heart: 'Heart Disease',
+    allergy: 'Allergy',
+    asthma: 'Asthma',
+    kidney: 'Kidney Disease',
+    thyroid: 'Thyroid',
+    other: 'Other',
+};
+
 export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (val: boolean) => void }) {
     const t = useTranslations()
+    const { isAr, tr } = useAppLocale();
     const {
         setValue: setValueBoking,
     } = useFormContext<BookingFormType>();
@@ -70,7 +83,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
     const handleAddCustomDisease = () => {
         const trimmed = newCustomDiseaseText.trim();
         if (!trimmed) {
-            toast.info('يرجى كتابة اسم المرض المزمن أولاً');
+            toast.info(tr('يرجى كتابة اسم المرض المزمن أولاً', 'Please enter the chronic condition name first'));
             return;
         }
         if (!selectedDiseases.includes(trimmed)) {
@@ -84,7 +97,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
             } catch {}
         }
         setNewCustomDiseaseText('');
-        toast.success(`تمت إضافة "${trimmed}" إلى الأمراض المزمنة`);
+        toast.success(tr(`تمت إضافة "${trimmed}" إلى الأمراض المزمنة`, `Added "${trimmed}" to chronic conditions`));
     };
 
     const handleDeleteCustomDisease = (name: string) => {
@@ -96,7 +109,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
         try {
             localStorage.setItem('clinic_custom_chronic_diseases', JSON.stringify(next));
         } catch {}
-        toast.success(`تم حذف "${name}"`);
+        toast.success(tr(`تم حذف "${name}"`, `Removed "${name}"`));
     };
 
     const { mutateAsync: createPatientMutation, isPending: isCreateMutation } = useCreatePatientMutation()
@@ -125,9 +138,9 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
 
             resetQuick();
             setIsQuickAddOpen(false);
-            toast.success('تم تسجيل واختيار المريض بنجاح!');
+            toast.success(tr('تم تسجيل واختيار المريض بنجاح!', 'Patient registered and selected successfully!'));
         } catch {
-            toast.error('تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.');
+            toast.error(tr('تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.', 'Failed to register patient, please try again.'));
         }
     };
 
@@ -143,11 +156,11 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                     render={({ field }) => (
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">
-                                اسم المريض رباعياً <span className="text-rose-500">*</span>
+                                {tr('اسم المريض رباعياً', 'Patient Full Name (4 parts)')} <span className="text-rose-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                placeholder="مثال: أحمد محمد علي حسن"
+                                placeholder={tr('مثال: أحمد محمد علي حسن', 'e.g. Ahmed Mohamed Ali Hassan')}
                                 className={cn(
                                     'w-full h-10 px-3.5 rounded-xl border bg-white text-xs placeholder:text-slate-400 focus:outline-none transition-all',
                                     quickErrors.fullName
@@ -162,7 +175,9 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     <span>{quickErrors.fullName.message}</span>
                                 </p>
                             ) : (
-                                <p className="text-[10px] text-slate-400 mt-1">يجب إدخال أربعة مقاطع للاسم على الأقل</p>
+                                <p className="text-[10px] text-slate-400 mt-1">
+                                    {tr('يجب إدخال أربعة مقاطع للاسم على الأقل', 'Must enter at least 4 name parts')}
+                                </p>
                             )}
                         </div>
                     )}
@@ -176,7 +191,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                         render={({ field }) => (
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    رقم الهاتف <span className="text-rose-500">*</span>
+                                    {tr('رقم الهاتف', 'Phone Number')} <span className="text-rose-500">*</span>
                                 </label>
                                 <input
                                     type="tel"
@@ -207,13 +222,13 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                         render={({ field }) => (
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    السن (بالسنوات) <span className="text-rose-500">*</span>
+                                    {tr('السن (بالسنوات)', 'Age (Years)')} <span className="text-rose-500">*</span>
                                 </label>
                                 <input
                                     type="number"
                                     min="1"
                                     max="120"
-                                    placeholder="مثال: 32"
+                                    placeholder={tr('مثال: 32', 'e.g. 32')}
                                     className={cn(
                                         'w-full h-10 px-3.5 rounded-xl border bg-white text-xs placeholder:text-slate-400 focus:outline-none transition-all',
                                         quickErrors.age
@@ -253,8 +268,12 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                     <div className="flex items-center gap-2">
                         <span className="text-xl">👶</span>
                         <div>
-                            <span className="text-xs font-bold text-slate-800 block">هل المريض طفل؟ (Pediatric)</span>
-                            <span className="text-[10px] text-slate-500">لتنبيه الطبيب في الكشف لتحديد جرعات الأطفال</span>
+                            <span className="text-xs font-bold text-slate-800 block">
+                                {tr('هل المريض طفل؟ (Pediatric)', 'Is patient a child? (Pediatric)')}
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                                {tr('لتنبيه الطبيب في الكشف لتحديد جرعات الأطفال', 'Alerts the doctor during exam for pediatric dosing')}
+                            </span>
                         </div>
                     </div>
                     <div className="inline-flex items-center p-0.5 bg-white rounded-xl border border-slate-200 shrink-0">
@@ -269,7 +288,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                 isChild ? 'bg-[#074C3A] text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
                             )}
                         >
-                            <span>نعم (طفل) 👶</span>
+                            <span>{tr('نعم (طفل) 👶', 'Yes (Child) 👶')}</span>
                             {isChild && <Check className="w-3 h-3 stroke-[3]" />}
                         </button>
                         <button
@@ -280,7 +299,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                 !isChild ? 'bg-[#074C3A] text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
                             )}
                         >
-                            <span>بالغ</span>
+                            <span>{tr('بالغ', 'Adult')}</span>
                         </button>
                     </div>
                 </div>
@@ -292,7 +311,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                     render={({ field }) => (
                         <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                النوع <span className="text-rose-500">*</span>
+                                {tr('النوع', 'Gender')} <span className="text-rose-500">*</span>
                             </label>
                             <div className="grid grid-cols-2 gap-2.5">
                                 <button
@@ -306,7 +325,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     )}
                                 >
                                     <span className="w-2 h-2 rounded-full bg-blue-400" />
-                                    <span>ذكر</span>
+                                    <span>{tr('ذكر', 'Male')}</span>
                                     {field.value === 'MALE' && <Check className="w-3.5 h-3.5" />}
                                 </button>
 
@@ -321,7 +340,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     )}
                                 >
                                     <span className="w-2 h-2 rounded-full bg-pink-400" />
-                                    <span>أنثى</span>
+                                    <span>{tr('أنثى', 'Female')}</span>
                                     {field.value === 'FEMALE' && <Check className="w-3.5 h-3.5" />}
                                 </button>
                             </div>
@@ -343,14 +362,14 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                         render={({ field }) => (
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                    الحالة الاجتماعية <span className="text-rose-500">*</span>
+                                    {tr('الحالة الاجتماعية', 'Marital Status')} <span className="text-rose-500">*</span>
                                 </label>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     {[
-                                        { id: 'MARRIED', label: 'متزوج' },
-                                        { id: 'SINGLE', label: 'أعزب' },
-                                        { id: 'WIDOWED', label: 'أرمل / أرملة' },
-                                        { id: 'DIVORCED', label: 'مطلق / مطلقة' },
+                                        { id: 'MARRIED', label: tr('متزوج', 'Married') },
+                                        { id: 'SINGLE', label: tr('أعزب', 'Single') },
+                                        { id: 'WIDOWED', label: tr('أرمل / أرملة', 'Widowed') },
+                                        { id: 'DIVORCED', label: tr('مطلق / مطلقة', 'Divorced') },
                                     ].map((item) => {
                                         const isSelected = (field.value || 'MARRIED') === item.id;
                                         return (
@@ -384,11 +403,16 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                         render={({ field }) => (
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    الوظيفة <span className="text-slate-400 font-normal">(اختياري)</span>
+                                    {tr('الوظيفة', 'Occupation')}{' '}
+                                    <span className="text-slate-400 font-normal">{tr('(اختياري)', '(Optional)')}</span>
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder={isChild ? "طالب، حضانة..." : "مثال: مهندس، معلم..."}
+                                    placeholder={
+                                        isChild
+                                            ? tr('طالب، حضانة...', 'Student, Preschool...')
+                                            : tr('مثال: مهندس، معلم...', 'e.g. Engineer, Teacher...')
+                                    }
                                     className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15 transition-all"
                                     {...field}
                                     value={field.value || ''}
@@ -403,11 +427,12 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                         render={({ field }) => (
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    العنوان / المدينة <span className="text-slate-400 font-normal">(اختياري)</span>
+                                    {tr('العنوان / المدينة', 'Address / City')}{' '}
+                                    <span className="text-slate-400 font-normal">{tr('(اختياري)', '(Optional)')}</span>
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="مثال: الزقازيق، القومية"
+                                    placeholder={tr('مثال: الزقازيق، القومية', 'e.g. Zagazig, Al-Qawmia')}
                                     className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15 transition-all"
                                     {...field}
                                     value={field.value || ''}
@@ -423,7 +448,8 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
             <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF0] border border-amber-300 space-y-4 mt-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <span className="font-bold text-xs sm:text-sm text-slate-800">
-                        هل يعاني المريض من مرض مزمن؟ <span className="text-amber-600">*</span>
+                        {tr('هل يعاني المريض من مرض مزمن؟', 'Does the patient have a chronic condition?')}{' '}
+                        <span className="text-amber-600">*</span>
                     </span>
 
                     <div className="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200">
@@ -437,7 +463,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     : 'text-slate-500 hover:text-slate-800'
                             )}
                         >
-                            نعم
+                            {tr('نعم', 'Yes')}
                         </button>
                         <button
                             type="button"
@@ -452,7 +478,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                     : 'text-slate-500 hover:text-slate-800'
                             )}
                         >
-                            لا
+                            {tr('لا', 'No')}
                         </button>
                     </div>
                 </div>
@@ -462,6 +488,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                         <div className="flex flex-wrap gap-2">
                             {CHRONIC_DISEASES.map((disease) => {
                                 const isSelected = selectedDiseases.includes(disease.id);
+                                const displayLabel = isAr ? disease.label : (CHRONIC_DISEASE_EN[disease.id] || disease.label);
                                 return (
                                     <button
                                         key={disease.id}
@@ -475,7 +502,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                         )}
                                     >
                                         {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                                        <span>{disease.label}</span>
+                                        <span>{displayLabel}</span>
                                     </button>
                                 );
                             })}
@@ -508,7 +535,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                                 handleDeleteCustomDisease(cust);
                                             }}
                                             className="text-slate-400 hover:text-rose-600 text-xs px-0.5 cursor-pointer"
-                                            title="حذف من القائمة"
+                                            title={tr('حذف من القائمة', 'Remove from list')}
                                         >
                                             ×
                                         </button>
@@ -529,7 +556,10 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                         handleAddCustomDisease();
                                     }
                                 }}
-                                placeholder="اكتب مرضاً مزمناً غير موجود بالاختيارات (مثال: حساسية بنسلين، روماتيزم، سيولة)..."
+                                placeholder={tr(
+                                    'اكتب مرضاً مزمناً غير موجود بالاختيارات (مثال: حساسية بنسلين، روماتيزم، سيولة)...',
+                                    'Enter an unlisted chronic condition (e.g. Penicillin allergy, Rheumatism)...'
+                                )}
                                 className="flex-1 h-9 px-3.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
                             />
                             <button
@@ -538,7 +568,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                                 className="h-9 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1 cursor-pointer transition-all shrink-0"
                             >
                                 <Plus className="w-3.5 h-3.5" />
-                                <span>إضافة</span>
+                                <span>{tr('إضافة', 'Add')}</span>
                             </button>
                         </div>
 
@@ -559,12 +589,12 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                     {isCreatingPatient || isCreateMutation ? (
                         <>
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>جاري حفظ المريض...</span>
+                            <span>{tr('جاري حفظ المريض...', 'Saving patient...')}</span>
                         </>
                     ) : (
                         <>
                             <Check className="w-3.5 h-3.5" />
-                            <span>حفظ واختيار المريض</span>
+                            <span>{tr('حفظ واختيار المريض', 'Save & Select Patient')}</span>
                         </>
                     )}
                 </button>
@@ -576,7 +606,7 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
                     }}
                     className="py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs transition-all cursor-pointer"
                 >
-                    إلغاء
+                    {tr('إلغاء', 'Cancel')}
                 </button>
             </div>
         </div>

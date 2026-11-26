@@ -3,6 +3,7 @@
 import React, { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export interface TablePatientsErrorProps {
   error?: Error;
@@ -10,6 +11,7 @@ export interface TablePatientsErrorProps {
 }
 
 export function TablePatientsError({ error, reset }: TablePatientsErrorProps) {
+  const { dir, tr } = useAppLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -23,18 +25,18 @@ export function TablePatientsError({ error, reset }: TablePatientsErrorProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-rose-100 shadow-xs p-8 text-center" dir="rtl">
+    <div className="bg-white rounded-2xl border border-rose-100 shadow-xs p-8 text-center" dir={dir}>
       <div className="max-w-md mx-auto flex flex-col items-center">
         <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200/60 flex items-center justify-center text-rose-500 mb-4 shadow-xs">
           <AlertTriangle className="w-7 h-7 stroke-[2.2]" />
         </div>
 
         <h3 className="text-lg font-black text-[#074C3A] mb-2">
-          تعذر تحميل سجل المرضى
+          {tr('تعذر تحميل سجل المرضى', 'Failed to load patients registry')}
         </h3>
 
         <p className="text-sm text-slate-500 mb-5 leading-relaxed">
-          {error?.message || 'حدث خطأ غير متوقع أثناء الاتصال بالخادم لجلب المرضى'}
+          {error?.message || tr('حدث خطأ غير متوقع أثناء الاتصال بالخادم لجلب المرضى', 'An unexpected error occurred while connecting to the server to fetch patients')}
         </p>
 
         <button
@@ -44,7 +46,7 @@ export function TablePatientsError({ error, reset }: TablePatientsErrorProps) {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold text-xs shadow-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
         >
           <RotateCcw className={`w-3.5 h-3.5 ${isPending ? 'animate-spin' : ''}`} />
-          <span>إعادة المحاولة الآن</span>
+          <span>{tr('إعادة المحاولة الآن', 'Retry Now')}</span>
         </button>
       </div>
     </div>

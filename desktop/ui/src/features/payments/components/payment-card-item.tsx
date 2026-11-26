@@ -3,6 +3,7 @@
 import React from 'react';
 import { PaymentItem } from '../types/payments';
 import { Phone, Clock, Printer } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface PaymentCardItemProps {
   payment: PaymentItem;
@@ -15,6 +16,7 @@ export function PaymentCardItem({
   onPayRemaining,
   onPrintReceipt,
 }: PaymentCardItemProps) {
+  const { dir, tr } = useAppLocale();
   const patient = payment.patient;
   const doctor = payment.doctor;
   const appointment = payment.appointment;
@@ -23,7 +25,9 @@ export function PaymentCardItem({
   const totalFee = appointment?.totalAmount ?? payment.amount;
   const remainingAmount = Math.max(0, Number(appointment?.remainingAmount || 0));
   const hasRemaining = !appointment?.isExempt && remainingAmount > 0;
-  const isDeposit = (payment.paymentType === 'DEPOSIT' && hasRemaining) || (hasRemaining && payment.paymentType !== 'REMAINING');
+  const isDeposit =
+    (payment.paymentType === 'DEPOSIT' && hasRemaining) ||
+    (hasRemaining && payment.paymentType !== 'REMAINING');
   const isRemainingSettlement = payment.paymentType === 'REMAINING';
 
   const formatMoney = (val: number) => {
@@ -42,7 +46,7 @@ export function PaymentCardItem({
       const minutes = d.getMinutes().toString().padStart(2, '0');
       const isPm = hours >= 12;
       const displayHours = (hours % 12 || 12).toString().padStart(2, '0');
-      return `${displayHours}:${minutes} ${isPm ? 'م' : 'ص'}`;
+      return `${displayHours}:${minutes} ${isPm ? tr('م', 'PM') : tr('ص', 'AM')}`;
     } catch {
       return '';
     }
@@ -50,13 +54,18 @@ export function PaymentCardItem({
 
   const methodLabel =
     payment.method === 'CARD'
-      ? 'بطاقة / فيزا'
+      ? tr('بطاقة / فيزا', 'Card / Visa')
       : payment.method === 'WALLET'
-      ? 'محفظة إلكترونية'
-      : 'نقدي';
+      ? tr('محفظة إلكترونية', 'E-Wallet')
+      : tr('نقدي', 'Cash');
+
+  const currencyLabel = tr('ج.م', 'EGP');
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-xs hover:shadow-md transition-all p-5 sm:p-6 relative overflow-hidden group">
+    <div
+      className="bg-white rounded-3xl border border-slate-100 shadow-xs hover:shadow-md transition-all p-5 sm:p-6 relative overflow-hidden group"
+      dir={dir}
+    >
       {/* شريط الإشارة الملون أسفل البطاقة */}
       <div
         className={`absolute bottom-0 right-0 left-0 h-1 transition-all ${
@@ -72,11 +81,11 @@ export function PaymentCardItem({
           {/* 1. اسم المريض + الهاتف + الشارات */}
           <div className="flex items-center gap-2.5 flex-wrap">
             <h4 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
-              {patient?.fullName || 'مريض غير مسجل'}
+              {patient?.fullName || tr('مريض غير مسجل', 'Unregistered Patient')}
             </h4>
 
             {patient?.phone && (
-              <span className="text-xs text-slate-500 font-mono flex items-center gap-1 dir-ltr">
+              <span className="text-xs text-slate-500 font-mono flex items-center gap-1" dir="ltr">
                 <span>{patient.phone}</span>
                 <Phone className="w-3 h-3 text-rose-500 shrink-0" />
               </span>
@@ -85,15 +94,15 @@ export function PaymentCardItem({
             {/* شارة نوع الدفعة */}
             {isDeposit ? (
               <span className="px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
-                عربون حجز موعد
+                {tr('عربون حجز موعد', 'Booking Deposit')}
               </span>
             ) : isRemainingSettlement ? (
               <span className="px-2.5 py-0.5 rounded-lg bg-[#E3F5EE] text-[#074C3A] border border-[#D0E5DC] text-[11px] font-bold">
-                سداد متبقي الحجز
+                {tr('سداد متبقي الحجز', 'Remaining Balance Payment')}
               </span>
             ) : (
               <span className="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold">
-                سداد كامل
+                {tr('سداد كامل', 'Full Payment')}
               </span>
             )}
 
@@ -110,37 +119,37 @@ export function PaymentCardItem({
                   : 'bg-emerald-600 text-white'
               }`}
             >
-              {payment.status === 'VOIDED' ? 'ملغاة' : 'مسجلة'}
+              {payment.status === 'VOIDED' ? tr('ملغاة', 'Voided') : tr('مسجلة', 'Recorded')}
             </span>
           </div>
 
           {/* 2. نوع الحجز + الطبيب + وقت الموعد */}
           <div className="flex items-center gap-2.5 text-xs text-slate-500 flex-wrap">
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">نوع الحجز:</span>
+              <span className="text-slate-400">{tr('نوع الحجز:', 'Booking Type:')}</span>
               <span className="px-2 py-0.5 rounded-md bg-[#E3F5EE] text-[#0B7B5E] font-bold text-[11px]">
                 {appointment?.type === 'FOLLOW_UP'
-                  ? 'إعادة'
+                  ? tr('إعادة', 'Follow-up')
                   : appointment?.type === 'OPERATION_FOLLOWUP'
-                  ? 'متابعة عملية'
+                  ? tr('متابعة عملية', 'Post-Op Follow-up')
                   : appointment?.type === 'ENDOSCOPY'
-                  ? 'منظار'
+                  ? tr('منظار', 'Endoscopy')
                   : appointment?.type === 'SURGERY' || appointment?.type === 'POST_OPERATIVE'
-                  ? 'تدخل جراحي'
+                  ? tr('تدخل جراحي', 'Surgery')
                   : appointment?.type === 'CONSULTATION'
-                  ? 'استشارة'
+                  ? tr('استشارة', 'Consultation')
                   : appointment?.type === 'TEST_RESULTS_REVIEW'
-                  ? 'مراجعة فحوصات'
+                  ? tr('مراجعة فحوصات', 'Test Review')
                   : appointment?.type === 'LAB_TESTS_IMAGING'
-                  ? 'منظار'
-                  : 'كشف'}
+                  ? tr('منظار', 'Endoscopy')
+                  : tr('كشف', 'Examination')}
               </span>
             </div>
 
             {doctor && (
               <div className="flex items-center gap-1">
                 <span className="text-slate-300">•</span>
-                <span className="text-slate-400">الطبيب:</span>
+                <span className="text-slate-400">{tr('الطبيب:', 'Doctor:')}</span>
                 <strong className="text-slate-700 font-bold">{doctor.name}</strong>
               </div>
             )}
@@ -148,7 +157,7 @@ export function PaymentCardItem({
             {appointment?.startTime && (
               <div className="flex items-center gap-1">
                 <span className="text-slate-300">•</span>
-                <span className="text-slate-400">الموعد:</span>
+                <span className="text-slate-400">{tr('الموعد:', 'Time:')}</span>
                 <strong className="text-slate-700 font-bold font-mono">
                   {appointment.startTime}
                 </strong>
@@ -167,11 +176,15 @@ export function PaymentCardItem({
           <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1 flex-wrap">
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span>وقت العملية: {formatTimeStr(payment.createdAt)}</span>
+              <span>
+                {tr('وقت العملية:', 'Time:')} {formatTimeStr(payment.createdAt)}
+              </span>
               {receivedBy && (
                 <>
                   <span>·</span>
-                  <span>المحصل: {receivedBy.name || receivedBy.username}</span>
+                  <span>
+                    {tr('المحصل:', 'Collector:')} {receivedBy.name || receivedBy.username}
+                  </span>
                 </>
               )}
             </div>
@@ -182,16 +195,16 @@ export function PaymentCardItem({
               className="text-[#0B7B5E] hover:text-[#074C3A] font-bold flex items-center gap-1 cursor-pointer transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>طباعة الإيصال</span>
+              <span>{tr('طباعة الإيصال', 'Print Receipt')}</span>
             </button>
           </div>
         </div>
 
         {/* الجانب الأيسر: المبالغ المالية وزر سداد المتبقي */}
-        <div className="flex md:flex-col items-end justify-between md:justify-center gap-2 border-t md:border-t-0 md:border-r border-slate-100 pt-3 md:pt-0 md:pr-6 shrink-0 min-w-[170px]">
-          <div className="text-right w-full">
+        <div className="flex md:flex-col items-end justify-between md:justify-center gap-2 border-t md:border-t-0 md:border-s border-slate-100 pt-3 md:pt-0 md:ps-6 shrink-0 min-w-[170px]">
+          <div className="text-start w-full">
             <span className="text-xs text-slate-400 font-medium block mb-1">
-              المسدد في هذا الإيصال
+              {tr('المسدد في هذا الإيصال', 'Paid in this Receipt')}
             </span>
             <div
               className={`flex items-baseline justify-end gap-1.5 ${
@@ -210,13 +223,15 @@ export function PaymentCardItem({
                     : 'text-emerald-700'
                 }`}
               >
-                ج.م
+                {currencyLabel}
               </span>
             </div>
           </div>
 
-          <div className="text-right w-full text-xs text-slate-400 font-medium">
-            <span>إجمالي الكشف: {totalFee} ج.م</span>
+          <div className="text-start w-full text-xs text-slate-400 font-medium">
+            <span>
+              {tr('إجمالي الكشف:', 'Total Fee:')} {totalFee} {currencyLabel}
+            </span>
           </div>
 
           {/* زر أو شارة سداد المتبقي */}
@@ -226,8 +241,10 @@ export function PaymentCardItem({
               onClick={() => onPayRemaining(payment)}
               className="mt-1 w-full py-1.5 px-3 rounded-xl bg-[#FEFCE8] hover:bg-[#FEF08A] text-[#854D0E] border border-[#FDE047] font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer active:scale-98"
             >
-              <span>المتبقي للتحصيل:</span>
-              <span className="font-sans font-black">{remainingAmount} ج.م</span>
+              <span>{tr('المتبقي للتحصيل:', 'Remaining:')}</span>
+              <span className="font-sans font-black">
+                {remainingAmount} {currencyLabel}
+              </span>
             </button>
           )}
         </div>

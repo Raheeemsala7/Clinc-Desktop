@@ -8,6 +8,7 @@ import {
   Trash2,
   Sparkles,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   Save,
   FileCheck,
@@ -23,6 +24,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { getPatientPrescriptionHistoryAction } from '../apis/examination.action';
 import {
   PrescriptionMedicine,
@@ -196,6 +198,7 @@ export function PrescriptionView({
   isSaving,
   isFinishing,
 }: PrescriptionViewProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const items = examData.prescriptionItems || [];
   const [savedDrugs, setSavedDrugs] = useState<SavedDrugItem[]>([]);
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
@@ -333,9 +336,12 @@ export function PrescriptionView({
     setModalState({
       isOpen: true,
       type: 'form',
-      title: 'إضافة شكل / نوع دواء جديد (Drug Form)',
-      label: 'اسم شكل الدواء بالإنجليزي',
-      placeholder: 'مثال: Nasal Gel, Eye Ointment, Suppository...',
+      title: tr('إضافة شكل / نوع دواء جديد (Drug Form)', 'Add New Drug Form'),
+      label: tr('اسم شكل الدواء بالإنجليزي', 'Drug Form Name (English)'),
+      placeholder: tr(
+        'مثال: Nasal Gel, Eye Ointment, Suppository...',
+        'e.g. Nasal Gel, Eye Ointment, Suppository...'
+      ),
       formEnglish: '',
       formArabic: '',
       inputValue: '',
@@ -351,9 +357,9 @@ export function PrescriptionView({
       isOpen: true,
       type: 'suggestion',
       field,
-      title: `إضافة اقتراح جديد - ${titleAr}`,
-      label: `نص الاقتراح المراد إضافته لـ (${titleAr})`,
-      placeholder: placeholder || `اكتب الاقتراح الجديد هنا...`,
+      title: tr(`إضافة اقتراح جديد - ${titleAr}`, `Add New Suggestion - ${titleAr}`),
+      label: tr(`نص الاقتراح المراد إضافته لـ (${titleAr})`, `Suggestion text for (${titleAr})`),
+      placeholder: placeholder || tr('اكتب الاقتراح الجديد هنا...', 'Type new suggestion here...'),
       formEnglish: '',
       formArabic: '',
       inputValue: '',
@@ -365,12 +371,12 @@ export function PrescriptionView({
       const en = (modalState.formEnglish || '').trim();
       const ar = (modalState.formArabic || '').trim() || en;
       if (!en) {
-        toast.error('يرجى إدخال اسم شكل الدواء بالإنجليزي');
+        toast.error(tr('يرجى إدخال اسم شكل الدواء بالإنجليزي', 'Please enter English drug form name'));
         return;
       }
       const id = en.toLowerCase().replace(/\s+/g, '-');
       if (allDrugForms.some((f) => f.id === id || f.labelEn.toLowerCase() === en.toLowerCase())) {
-        toast.info(`"${en}" موجود بالفعل في القائمة`);
+        toast.info(tr(`"${en}" موجود بالفعل في القائمة`, `"${en}" already exists in the list`));
         setModalState((prev) => ({ ...prev, isOpen: false }));
         return;
       }
@@ -421,13 +427,15 @@ export function PrescriptionView({
         return next;
       });
 
-      toast.success(`تمت إضافة "${en}" بنجاح إلى أشكال الأدوية`);
+      toast.success(
+        tr(`تمت إضافة "${en}" بنجاح إلى أشكال الأدوية`, `Added "${en}" to drug forms successfully`)
+      );
       setModalState((prev) => ({ ...prev, isOpen: false }));
     } else if (modalState.field) {
       const field = modalState.field;
       const clean = (modalState.inputValue || '').trim();
       if (!clean) {
-        toast.error('يرجى كتابة نص الاقتراح');
+        toast.error(tr('يرجى كتابة نص الاقتراح', 'Please enter suggestion text'));
         return;
       }
 
@@ -441,7 +449,7 @@ export function PrescriptionView({
 
       setCustomSuggestions((prev) => {
         if (prev[field].includes(clean)) {
-          toast.info(`"${clean}" موجود بالفعل في الاقتراحات`);
+          toast.info(tr(`"${clean}" موجود بالفعل في الاقتراحات`, `"${clean}" already exists in suggestions`));
           return prev;
         }
         const next = { ...prev, [field]: [...prev[field], clean] };
@@ -451,7 +459,7 @@ export function PrescriptionView({
         return next;
       });
 
-      toast.success(`تمت إضافة "${clean}" إلى الاقتراحات بنجاح`);
+      toast.success(tr(`تمت إضافة "${clean}" إلى الاقتراحات بنجاح`, `Added "${clean}" to suggestions`));
       setModalState((prev) => ({ ...prev, isOpen: false }));
     }
   };
@@ -481,7 +489,7 @@ export function PrescriptionView({
   }, []);
 
   const handleDeleteForm = (id: string, label: string) => {
-    if (!confirm(`هل تريد حذف "${label}" من قائمة أشكال الأدوية؟`)) return;
+    if (!confirm(tr(`هل تريد حذف "${label}" من قائمة أشكال الأدوية؟`, `Delete "${label}" from drug forms?`))) return;
     setDeletedFormIds((prev) => {
       const next = Array.from(new Set([...prev, id]));
       try {
@@ -496,7 +504,7 @@ export function PrescriptionView({
       } catch {}
       return next;
     });
-    toast.success(`تم حذف "${label}" من القائمة`);
+    toast.success(tr(`تم حذف "${label}" من القائمة`, `Removed "${label}" from the list`));
   };
 
   const allDrugForms = useMemo(() => {
@@ -527,7 +535,7 @@ export function PrescriptionView({
       } catch {}
       return next;
     });
-    toast.success(`تم حذف "${val}" من الاقتراحات`);
+    toast.success(tr(`تم حذف "${val}" من الاقتراحات`, `Removed "${val}" from suggestions`));
   };
 
   const allConcentrationList = useMemo(
@@ -627,12 +635,17 @@ export function PrescriptionView({
       });
       if (res.ok) {
         setSavedDrugs((prev) => prev.filter((d) => d.id !== drugId));
-        toast.success(`تم حذف "${drugName || 'الدواء'}" من الاقتراحات`);
+        toast.success(
+          tr(
+            `تم حذف "${drugName || 'الدواء'}" من الاقتراحات`,
+            `Removed "${drugName || 'medication'}" from suggestions`
+          )
+        );
       } else {
-        toast.error('فشل حذف الدواء من الاقتراحات');
+        toast.error(tr('فشل حذف الدواء من الاقتراحات', 'Failed to remove medication from suggestions'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء حذف الدواء');
+      toast.error(tr('حدث خطأ أثناء حذف الدواء', 'An error occurred while deleting medication'));
     }
   };
 
@@ -836,17 +849,22 @@ export function PrescriptionView({
       ...prev,
       prescriptionItems: [...(prev.prescriptionItems || []), ...mapped],
     }));
-    toast.success(`تم نسخ ${mapped.length} أصناف من الروشتة السابقة بنجاح`);
+    toast.success(
+      tr(
+        `تم نسخ ${mapped.length} أصناف من الروشتة السابقة بنجاح`,
+        `Copied ${mapped.length} items from previous prescription`
+      )
+    );
     setIsHistoryModalOpen(false);
   };
 
   return (
-    <div className="space-y-3.5 select-none" dir="rtl">
+    <div className="space-y-3.5 select-none" dir={dir}>
       {/* التشخيص الطبي للحالة (Diagnosis) - شريط سريع وأنيق في سطر واحد ومريح للعين */}
       <div className="bg-white rounded-2xl border border-slate-200/90 px-4 py-2.5 shadow-2xs flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-center gap-2 text-xs sm:text-sm font-black text-[#074C3A] shrink-0">
           <Stethoscope className="w-4 h-4 text-[#0B7B5E]" />
-          <span>التشخيص (Diagnosis):</span>
+          <span>{tr('التشخيص (Diagnosis):', 'Diagnosis:')}</span>
         </div>
         <input
           type="text"
@@ -854,7 +872,10 @@ export function PrescriptionView({
           onChange={(e) =>
             onChange((prev) => ({ ...prev, diagnosis: e.target.value }))
           }
-          placeholder="اكتب التشخيص الطبي للحالة هنا (مثال: Acute Tonsillitis / Allergic Rhinitis / Sinusitis)..."
+          placeholder={tr(
+            'اكتب التشخيص الطبي للحالة هنا (مثال: Acute Tonsillitis / Allergic Rhinitis / Sinusitis)...',
+            'Enter clinical diagnosis (e.g. Acute Tonsillitis / Allergic Rhinitis / Sinusitis)...'
+          )}
           className="flex-1 bg-slate-50/80 hover:bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white focus:ring-1 focus:ring-[#0B7B5E] transition-all"
         />
       </div>
@@ -866,10 +887,12 @@ export function PrescriptionView({
             <Pill className="w-5 h-5 text-[#0B7B5E]" />
             <div>
               <h4 className="font-black text-sm text-[#074C3A]">
-                قائمة الأدوية الموصوفة
+                {tr('قائمة الأدوية الموصوفة', 'Prescribed Medications')}
               </h4>
               <p className="text-[11px] text-slate-500">
-                إجمالي الأصناف: <strong className="text-[#0B7B5E]">{items.length}</strong> دواء
+                {tr('إجمالي الأصناف:', 'Total items:')}{' '}
+                <strong className="text-[#0B7B5E]">{items.length}</strong>{' '}
+                {tr('دواء', items.length === 1 ? 'medication' : 'medications')}
               </p>
             </div>
           </div>
@@ -881,13 +904,16 @@ export function PrescriptionView({
               type="button"
               onClick={() => handleSmartPrintClick('full')}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-              title="طباعة روشتة كاملة مع ترويسة العيادة واسم الطبيب"
+              title={tr(
+                'طباعة روشتة كاملة مع ترويسة العيادة واسم الطبيب',
+                'Print full prescription with clinic header and doctor signature'
+              )}
             >
               <Printer className="w-4 h-4 text-slate-500" />
-              <span>طباعة كاملة (مع الترويسة)</span>
+              <span>{tr('طباعة كاملة (مع الترويسة)', 'Full Print (With Header)')}</span>
               {hasBackPage && (
                 <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-black">
-                  وجه + ظهر
+                  {tr('وجه + ظهر', 'Front + Back')}
                 </span>
               )}
             </button>
@@ -897,13 +923,18 @@ export function PrescriptionView({
               type="button"
               onClick={() => handleSmartPrintClick('plain')}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black transition-all shadow-2xs cursor-pointer"
-              title="طباعة على ورق عيادة مطبوع مسبقاً (تطبع فقط الأدوية والجرعات والإرشادات بدون ترويسة أو توقيع)"
+              title={tr(
+                'طباعة على ورق عيادة مطبوع مسبقاً (تطبع فقط الأدوية والجرعات والإرشادات بدون ترويسة أو توقيع)',
+                'Print on pre-printed clinic Rx paper (medications, doses, and instructions only)'
+              )}
             >
               <FileCheck className="w-4 h-4 text-emerald-600" />
-              <span>طباعة أدوية فقط (ورق بدون ترويسة) 📄</span>
+              <span>
+                {tr('طباعة أدوية فقط (ورق بدون ترويسة) 📄', 'Medications Only (Pre-printed) 📄')}
+              </span>
               {hasBackPage && (
                 <span className="px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-900 text-[10px] font-black">
-                  وجه + ظهر
+                  {tr('وجه + ظهر', 'Front + Back')}
                 </span>
               )}
             </button>
@@ -913,10 +944,13 @@ export function PrescriptionView({
               type="button"
               onClick={() => setIsHistoryModalOpen(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-sky-300 bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-black transition-all shadow-2xs cursor-pointer"
-              title="عرض سجل الروشتات السابقة المكتوبة لهذا المريض في زياراته السابقة وإمكانية نسخها"
+              title={tr(
+                'عرض سجل الروشتات السابقة المكتوبة لهذا المريض في زياراته السابقة وإمكانية نسخها',
+                'View past prescriptions for this patient and copy items'
+              )}
             >
               <History className="w-4 h-4 text-sky-600" />
-              <span>الروشتات السابقة 📋</span>
+              <span>{tr('الروشتات السابقة 📋', 'Past Prescriptions 📋')}</span>
             </button>
 
             {/* زر دليل رموز الاختصارات السريعة */}
@@ -928,10 +962,13 @@ export function PrescriptionView({
                   ? 'bg-amber-100 border-amber-300 text-amber-900 font-black'
                   : 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-800'
               }`}
-              title="عرض دليل رموز وتوقيت الجرعات السريعة"
+              title={tr(
+                'عرض دليل رموز وتوقيت الجرعات السريعة',
+                'Show quick dosage and meal-timing shortcut guide'
+              )}
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>دليل رموز الاختصارات ⚡</span>
+              <span>{tr('دليل رموز الاختصارات ⚡', 'Shortcut Guide ⚡')}</span>
             </button>
 
             <button
@@ -940,7 +977,7 @@ export function PrescriptionView({
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>إضافة صنف دواء</span>
+              <span>{tr('إضافة صنف دواء', 'Add Medication')}</span>
             </button>
           </div>
         </div>
@@ -951,70 +988,145 @@ export function PrescriptionView({
             <div className="flex items-center justify-between">
               <span className="font-black text-[#074C3A] flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>دليل الرموز السريعة لترجمة الجرعات وتوقيت الطعام:</span>
+                <span>
+                  {tr(
+                    'دليل الرموز السريعة لترجمة الجرعات وتوقيت الطعام:',
+                    'Quick Shortcut Guide for Dosage & Meal Timing:'
+                  )}
+                </span>
               </span>
               <button
                 type="button"
                 onClick={() => setShowShortcutHelp(false)}
                 className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
               >
-                إغلاق ✕
+                {tr('إغلاق ✕', 'Close ✕')}
               </button>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-[11px]">
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
-                <strong className="text-amber-800 font-mono font-black text-xs">* أو r</strong>
-                <span className="block text-slate-700">على الريق فور الاستيقاظ</span>
+                <strong className="text-amber-800 font-mono font-black text-xs">
+                  {tr('* أو r', '* or r')}
+                </strong>
+                <span className="block text-slate-700">
+                  {tr('على الريق فور الاستيقاظ', 'On empty stomach upon waking')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
-                <strong className="text-amber-800 font-mono font-black text-xs">~ أو s</strong>
-                <span className="block text-slate-700">مساءً قبل النوم مباشرة</span>
+                <strong className="text-amber-800 font-mono font-black text-xs">
+                  {tr('~ أو s', '~ or s')}
+                </strong>
+                <span className="block text-slate-700">
+                  {tr('مساءً قبل النوم مباشرة', 'At bedtime')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
-                <strong className="text-amber-800 font-mono font-black text-xs">0 أو with</strong>
-                <span className="block text-slate-700">مع الأكل / وسط الطعام</span>
+                <strong className="text-amber-800 font-mono font-black text-xs">
+                  {tr('0 أو with', '0 or with')}
+                </strong>
+                <span className="block text-slate-700">
+                  {tr('مع الأكل / وسط الطعام', 'With meals / during food')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
-                <strong className="text-amber-800 font-mono font-black text-xs">! أو sos</strong>
-                <span className="block text-slate-700">عند اللزوم / عند الألم</span>
+                <strong className="text-amber-800 font-mono font-black text-xs">
+                  {tr('! أو sos', '! or sos')}
+                </strong>
+                <span className="block text-slate-700">
+                  {tr('عند اللزوم / عند الألم', 'As needed (PRN / for pain)')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
                 <strong className="text-amber-800 font-mono font-black text-xs">-30</strong>
-                <span className="block text-slate-700">قبل الأكل بنصف ساعة</span>
+                <span className="block text-slate-700">
+                  {tr('قبل الأكل بنصف ساعة', '30 mins before meals')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
                 <strong className="text-amber-800 font-mono font-black text-xs">+30</strong>
-                <span className="block text-slate-700">بعد الأكل بنصف ساعة</span>
+                <span className="block text-slate-700">
+                  {tr('بعد الأكل بنصف ساعة', '30 mins after meals')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
                 <strong className="text-amber-800 font-mono font-black text-xs">-60</strong>
-                <span className="block text-slate-700">قبل الأكل بساعة</span>
+                <span className="block text-slate-700">
+                  {tr('قبل الأكل بساعة', '1 hour before meals')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
-                <strong className="text-amber-800 font-mono font-black text-xs">+120 أو 120</strong>
-                <span className="block text-slate-700">بعد الأكل بساعتين</span>
+                <strong className="text-amber-800 font-mono font-black text-xs">
+                  {tr('+120 أو 120', '+120 or 120')}
+                </strong>
+                <span className="block text-slate-700">
+                  {tr('بعد الأكل بساعتين', '2 hours after meals')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
                 <strong className="text-amber-800 font-mono font-black text-xs">-120</strong>
-                <span className="block text-slate-700">قبل الأكل بساعتين</span>
+                <span className="block text-slate-700">
+                  {tr('قبل الأكل بساعتين', '2 hours before meals')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
-                <strong className="text-amber-800 font-mono font-black text-xs">+180 أو 180</strong>
-                <span className="block text-slate-700">بعد الأكل بثلاث ساعات</span>
+                <strong className="text-amber-800 font-mono font-black text-xs">
+                  {tr('+180 أو 180', '+180 or 180')}
+                </strong>
+                <span className="block text-slate-700">
+                  {tr('بعد الأكل بثلاث ساعات', '3 hours after meals')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
                 <strong className="text-amber-800 font-mono font-black text-xs">bw</strong>
-                <span className="block text-slate-700">بين الوجبات</span>
+                <span className="block text-slate-700">
+                  {tr('بين الوجبات', 'Between meals')}
+                </span>
               </div>
               <div className="p-2 bg-white rounded-xl border border-amber-200 shadow-2xs">
                 <strong className="text-amber-800 font-mono font-black text-xs">h2o</strong>
-                <span className="block text-slate-700">مع كوب ماء كامل</span>
+                <span className="block text-slate-700">
+                  {tr('مع كوب ماء كامل', 'With a full glass of water')}
+                </span>
               </div>
             </div>
 
             <div className="p-2 bg-white/80 rounded-xl border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
-              💡 <strong>صيغة الاختصار:</strong> اكتب <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">1/3/5/-30</code> (قرص / 3 مرات / 5 أيام / قبل الأكل بنصف ساعة) أو <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">1/1/7/*</code> (على الريق) أو <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">1/1/10/~</code> (قبل النوم) واضغط <kbd className="bg-slate-200 px-1 rounded font-mono">Enter</kbd> للترجمة الفورية.
+              {isAr ? (
+                <>
+                  💡 <strong>صيغة الاختصار:</strong> اكتب{' '}
+                  <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">
+                    1/3/5/-30
+                  </code>{' '}
+                  (قرص / 3 مرات / 5 أيام / قبل الأكل بنصف ساعة) أو{' '}
+                  <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">
+                    1/1/7/*
+                  </code>{' '}
+                  (على الريق) أو{' '}
+                  <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">
+                    1/1/10/~
+                  </code>{' '}
+                  (قبل النوم) واضغط <kbd className="bg-slate-200 px-1 rounded font-mono">Enter</kbd>{' '}
+                  للترجمة الفورية.
+                </>
+              ) : (
+                <>
+                  💡 <strong>Shortcut Format:</strong> Type{' '}
+                  <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">
+                    1/3/5/-30
+                  </code>{' '}
+                  (dose / frequency / days / 30m before meals) or{' '}
+                  <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">
+                    1/1/7/*
+                  </code>{' '}
+                  (fasting) or{' '}
+                  <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#074C3A]">
+                    1/1/10/~
+                  </code>{' '}
+                  (bedtime) and press <kbd className="bg-slate-200 px-1 rounded font-mono">Enter</kbd>{' '}
+                  to auto-format.
+                </>
+              )}
             </div>
           </div>
         )}
@@ -1023,10 +1135,13 @@ export function PrescriptionView({
           <div className="text-center py-10 bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-2">
             <Pill className="w-8 h-8 text-slate-300 mx-auto" />
             <p className="text-xs font-bold text-slate-600">
-              لم تتم إضافة أي أدوية حتى الآن.
+              {tr('لم تتم إضافة أي أدوية حتى الآن.', 'No medications added yet.')}
             </p>
             <p className="text-[11px] text-slate-500">
-              اضغط على أحد الأدوية السريعة بالأعلى أو اضغط &quot;إضافة صنف دواء&quot; لبدء كتابة الروشتة.
+              {tr(
+                'اضغط على أحد الأدوية السريعة بالأعلى أو اضغط "إضافة صنف دواء" لبدء كتابة الروشتة.',
+                'Click "Add Medication" above to start writing the prescription.'
+              )}
             </p>
           </div>
         ) : (
@@ -1055,7 +1170,10 @@ export function PrescriptionView({
                         updateItem(item.id, 'drugName', e.target.value);
                         setActiveDropdownRowId(item.id);
                       }}
-                      placeholder="اسم الدواء (Augmentin, Otrivin...)*"
+                      placeholder={tr(
+                        'اسم الدواء (Augmentin, Otrivin...)*',
+                        'Drug Name (Augmentin, Otrivin...)*'
+                      )}
                       className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:ring-1 focus:ring-[#0B7B5E]"
                     />
 
@@ -1108,7 +1226,7 @@ export function PrescriptionView({
                             setActiveDropdownRowId(null);
                           }}
                         >
-                          إغلاق الاقتراحات ✕
+                          {tr('إغلاق الاقتراحات ✕', 'Close suggestions ✕')}
                         </div>
                       </div>
                     )}
@@ -1131,13 +1249,13 @@ export function PrescriptionView({
                         }
                         setActiveFormRowId(item.id);
                       }}
-                      placeholder="الشكل (Tablet...)"
-                      className="w-full h-9 px-3 pr-7 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
+                      placeholder={tr('الشكل (Tablet...)', 'Form (Tablet...)')}
+                      className="w-full h-9 ps-3 pe-7 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
                     />
                     <button
                       type="button"
                       onClick={() => setActiveFormRowId(activeFormRowId === item.id ? null : item.id)}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      className="absolute end-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
                       <ChevronDown className="w-3.5 h-3.5" />
                     </button>
@@ -1177,7 +1295,7 @@ export function PrescriptionView({
                             setActiveFormRowId(null);
                           }}
                         >
-                          إغلاق ✕
+                          {tr('إغلاق ✕', 'Close ✕')}
                         </div>
                       </div>
                     )}
@@ -1189,7 +1307,7 @@ export function PrescriptionView({
                       type="text"
                       value={item.concentration || ''}
                       onChange={(e) => updateItem(item.id, 'concentration', e.target.value)}
-                      placeholder="التركيز (500mg)"
+                      placeholder={tr('التركيز (500mg)', 'Strength (500mg)')}
                       className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-sans focus:outline-none focus:border-[#0B7B5E]"
                     />
                   </div>
@@ -1198,9 +1316,15 @@ export function PrescriptionView({
                   <div className="relative flex-1 min-w-[200px]">
                     <input
                       type="text"
-                      placeholder="⚡ اختصار: 1/3/5/-30 أو 1/1/7/* ثم Enter"
-                      title="اكتب اختصار الجرعة مثل 1/3/5/-30 أو 1/1/7/* (على الريق) أو 1/1/10/~ (قبل النوم) واضغط Enter"
-                      className="w-full h-9 pr-3 pl-2 rounded-xl border border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 focus:bg-white font-mono text-xs font-bold text-[#074C3A] placeholder:text-emerald-700/60 placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-[#0B7B5E] transition-all"
+                      placeholder={tr(
+                        '⚡ اختصار: 1/3/5/-30 أو 1/1/7/* ثم Enter',
+                        '⚡ Shortcut: 1/3/5/-30 or 1/1/7/* + Enter'
+                      )}
+                      title={tr(
+                        'اكتب اختصار الجرعة مثل 1/3/5/-30 أو 1/1/7/* (على الريق) أو 1/1/10/~ (قبل النوم) واضغط Enter',
+                        'Type a dose shortcut like 1/3/5/-30, 1/1/7/* (fasting), or 1/1/10/~ (bedtime) and press Enter'
+                      )}
+                      className="w-full h-9 ps-3 pe-2 rounded-xl border border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 focus:bg-white font-mono text-xs font-bold text-[#074C3A] placeholder:text-emerald-700/60 placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-[#0B7B5E] transition-all"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -1210,9 +1334,16 @@ export function PrescriptionView({
                             updateItem(item.id, 'frequency', parsed.frequency);
                             if (parsed.duration) updateItem(item.id, 'duration', parsed.duration);
                             if (parsed.instructions) updateItem(item.id, 'instructions', parsed.instructions);
-                            toast.success(`✓ تمت ترجمة الاختصار: ${parsed.summary}`);
+                            toast.success(
+                              tr(`✓ تمت ترجمة الاختصار: ${parsed.summary}`, `✓ Shortcut parsed: ${parsed.summary}`)
+                            );
                           } else {
-                            toast.info('اكتب الاختصار بالشكل: 1/3/5/-30 أو 1/1/7/* (جرعة / تكرار / مدة / رمز التوقيت)');
+                            toast.info(
+                              tr(
+                                'اكتب الاختصار بالشكل: 1/3/5/-30 أو 1/1/7/* (جرعة / تكرار / مدة / رمز التوقيت)',
+                                'Enter format: 1/3/5/-30 or 1/1/7/* (dose / frequency / days / timing)'
+                              )
+                            );
                           }
                         }
                       }}
@@ -1224,7 +1355,7 @@ export function PrescriptionView({
                     type="button"
                     onClick={() => removeItem(item.id)}
                     className="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                    title="حذف هذا الدواء"
+                    title={tr('حذف هذا الدواء', 'Delete medication')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -1234,7 +1365,7 @@ export function PrescriptionView({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 bg-slate-50/80 rounded-xl border border-slate-200/70 text-xs">
                   <div className="flex items-center gap-2 flex-wrap text-xs">
                     <span className="font-black text-[#074C3A] flex items-center gap-1 shrink-0">
-                      💊 الجرعة المحددة:
+                      {tr('💊 الجرعة المحددة:', '💊 Selected Regimen:')}
                     </span>
                     {item.dose || item.frequency || item.duration || item.instructions ? (
                       <span className="font-bold text-slate-800">
@@ -1249,7 +1380,10 @@ export function PrescriptionView({
                       </span>
                     ) : (
                       <span className="text-slate-400 font-medium italic">
-                        لم يتم تحديد الجرعة بعد — اكتب اختصاراً في خانة (⚡ اختصار) واضغط Enter، أو اضغط &quot;تعديل التفاصيل&quot;.
+                        {tr(
+                          'لم يتم تحديد الجرعة بعد — اكتب اختصاراً في خانة (⚡ اختصار) واضغط Enter، أو اضغط "تعديل التفاصيل".',
+                          'No dosage set yet — type a shortcut in (⚡ Shortcut) and press Enter, or click "Edit Details".'
+                        )}
                       </span>
                     )}
                   </div>
@@ -1266,7 +1400,9 @@ export function PrescriptionView({
                   >
                     <Pencil className="w-3 h-3 text-[#0B7B5E]" />
                     <span>
-                      {expandedManualEditRows[item.id] ? 'إخفاء التعديل ✕' : 'تعديل التفاصيل ✏️'}
+                      {expandedManualEditRows[item.id]
+                        ? tr('إخفاء التعديل ✕', 'Hide Details ✕')
+                        : tr('تعديل التفاصيل ✏️', 'Edit Details ✏️')}
                     </span>
                   </button>
                 </div>
@@ -1276,20 +1412,20 @@ export function PrescriptionView({
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-2 pb-1 border-t border-slate-100 animate-in fade-in-50 text-xs">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        الجرعة (Dose):
+                        {tr('الجرعة (Dose):', 'Dose:')}
                       </label>
                       <input
                         type="text"
                         value={item.dose}
                         onChange={(e) => updateItem(item.id, 'dose', e.target.value)}
-                        placeholder="قرص واحد، 5 سم..."
+                        placeholder={tr('قرص واحد، 5 سم...', '1 tablet, 5 ml...')}
                         className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        التكرار (Frequency):
+                        {tr('التكرار (Frequency):', 'Frequency:')}
                       </label>
                       <input
                         type="text"
@@ -1301,14 +1437,14 @@ export function PrescriptionView({
                             updateItem(item.id, 'frequency', formatted);
                           }
                         }}
-                        placeholder="3 مرات في اليوم..."
+                        placeholder={tr('3 مرات في اليوم...', '3 times daily...')}
                         className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        المدة (Duration):
+                        {tr('المدة (Duration):', 'Duration:')}
                       </label>
                       <input
                         type="text"
@@ -1320,20 +1456,20 @@ export function PrescriptionView({
                             updateItem(item.id, 'duration', formatted);
                           }
                         }}
-                        placeholder="لمدة 5 أيام..."
+                        placeholder={tr('لمدة 5 أيام...', 'For 5 days...')}
                         className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        التعليمات (Instructions):
+                        {tr('التعليمات (Instructions):', 'Instructions:')}
                       </label>
                       <input
                         type="text"
                         value={item.instructions || ''}
                         onChange={(e) => updateItem(item.id, 'instructions', e.target.value)}
-                        placeholder="قبل الأكل بنصف ساعة..."
+                        placeholder={tr('قبل الأكل بنصف ساعة...', '30 mins before meals...')}
                         className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:outline-none focus:border-[#0B7B5E]"
                       />
                     </div>
@@ -1347,7 +1483,7 @@ export function PrescriptionView({
         {/* ملاحظات وإرشادات الطبيب للمريض */}
         <div className="pt-3 border-t border-slate-100 space-y-1.5">
           <label className="font-bold text-xs text-slate-700 block">
-            ملاحظات وإرشادات عامة للمريض (Treatment Notes):
+            {tr('ملاحظات وإرشادات عامة للمريض (Treatment Notes):', 'General Patient Notes & Instructions:')}
           </label>
           <textarea
             rows={3}
@@ -1355,7 +1491,10 @@ export function PrescriptionView({
             onChange={(e) =>
               onChange((prev) => ({ ...prev, treatmentNotes: e.target.value }))
             }
-            placeholder="تعليمات إضافية مثل: الراحة التامة، شرب سوائل دافئة، تجنب المأكولات الحارة..."
+            placeholder={tr(
+              'تعليمات إضافية مثل: الراحة التامة، شرب سوائل دافئة، تجنب المأكولات الحارة...',
+              'Additional instructions e.g. complete rest, warm fluids, avoid spicy foods...'
+            )}
             className="w-full p-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-bold leading-relaxed focus:outline-none focus:border-[#0B7B5E] focus:bg-white"
           />
         </div>
@@ -1368,8 +1507,12 @@ export function PrescriptionView({
           onClick={onBackToExam}
           className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4 text-slate-600" />
-          <span>العودة لتعديل استمارة الكشف الطبي</span>
+          {isAr ? (
+            <ArrowRight className="w-4 h-4 text-slate-600" />
+          ) : (
+            <ArrowLeft className="w-4 h-4 text-slate-600" />
+          )}
+          <span>{tr('العودة لتعديل استمارة الكشف الطبي', 'Back to Examination Form')}</span>
         </button>
 
         <div className="flex items-center gap-2.5 flex-wrap">
@@ -1383,7 +1526,7 @@ export function PrescriptionView({
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
           >
             <Save className="w-4 h-4 text-slate-600" />
-            <span>{isSaving ? 'جاري الحفظ...' : 'حفظ التعديلات'}</span>
+            <span>{isSaving ? tr('جاري الحفظ...', 'Saving...') : tr('حفظ التعديلات', 'Save Changes')}</span>
           </button>
 
           {/* معاينة المقاسات والمسافات بالمسطرة قبل الطباعة */}
@@ -1391,10 +1534,13 @@ export function PrescriptionView({
             type="button"
             onClick={() => setIsPrintPreviewOpen(true)}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-black transition-all cursor-pointer"
-            title="معاينة الورقة بالمسطرة والتحقق من كافة المسافات بالسنتيمتر قبل الطباعة"
+            title={tr(
+              'معاينة الورقة بالمسطرة والتحقق من كافة المسافات بالسنتيمتر قبل الطباعة',
+              'Preview Rx paper with cm ruler guides before printing'
+            )}
           >
             <Ruler className="w-4 h-4 text-amber-700" />
-            <span>معاينة المقاسات والمسافات 📏</span>
+            <span>{tr('معاينة المقاسات والمسافات 📏', 'Layout & Ruler Preview 📏')}</span>
           </button>
 
           {/* طباعة أدوية فقط للورق المطبوع مسبقاً */}
@@ -1402,10 +1548,15 @@ export function PrescriptionView({
             type="button"
             onClick={() => handleSmartPrintClick('plain')}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black transition-all cursor-pointer"
-            title="طباعة أدوية فقط بدون ترويسة أو توقيع (للورق الجاهز)"
+            title={tr(
+              'طباعة أدوية فقط بدون ترويسة أو توقيع (للورق الجاهز)',
+              'Print medications only without header or signature (pre-printed paper)'
+            )}
           >
             <FileCheck className="w-4 h-4 text-emerald-600" />
-            <span>طباعة أدوية فقط (ورق بدون ترويسة) 📄</span>
+            <span>
+              {tr('طباعة أدوية فقط (ورق بدون ترويسة) 📄', 'Medications Only (Pre-printed) 📄')}
+            </span>
           </button>
 
           {/* طباعة روشتة كاملة */}
@@ -1415,7 +1566,7 @@ export function PrescriptionView({
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE]/60 hover:bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>طباعة كاملة</span>
+            <span>{tr('طباعة كاملة', 'Full Print')}</span>
           </button>
 
           <button
@@ -1428,7 +1579,11 @@ export function PrescriptionView({
             className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-60"
           >
             <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-            <span>{isFinishing ? 'جاري إنهاء الكشف...' : 'إنهاء الكشف وتسليم للاستقبال'}</span>
+            <span>
+              {isFinishing
+                ? tr('جاري إنهاء الكشف...', 'Finishing...')
+                : tr('إنهاء الكشف وتسليم للاستقبال', 'Finish & Send to Reception')}
+            </span>
           </button>
         </div>
       </div>
@@ -1442,7 +1597,7 @@ export function PrescriptionView({
           <div
             className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
-            dir="rtl"
+            dir={dir}
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-black text-base text-[#074C3A]">
@@ -1461,7 +1616,7 @@ export function PrescriptionView({
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    اسم شكل الدواء بالإنجليزي (English Name):
+                    {tr('اسم شكل الدواء بالإنجليزي (English Name):', 'Drug Form Name (English):')}
                   </label>
                   <input
                     type="text"
@@ -1476,13 +1631,16 @@ export function PrescriptionView({
                         handleSaveModal();
                       }
                     }}
-                    placeholder="مثال: Nasal Gel, Eye Ointment, Suppository..."
+                    placeholder={tr(
+                      'مثال: Nasal Gel, Eye Ointment, Suppository...',
+                      'e.g. Nasal Gel, Eye Ointment, Suppository...'
+                    )}
                     className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0B7B5E]"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    الاسم بالعربي (اختياري):
+                    {tr('الاسم بالعربي (اختياري):', 'Arabic Name (Optional):')}
                   </label>
                   <input
                     type="text"
@@ -1496,7 +1654,10 @@ export function PrescriptionView({
                         handleSaveModal();
                       }
                     }}
-                    placeholder="مثال: جل أنف، مرهم للعين، تحاميل..."
+                    placeholder={tr(
+                      'مثال: جل أنف، مرهم للعين، تحاميل...',
+                      'e.g. جل أنف، مرهم للعين، تحاميل...'
+                    )}
                     className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0B7B5E]"
                   />
                 </div>
@@ -1531,14 +1692,14 @@ export function PrescriptionView({
                 onClick={() => setModalState((prev) => ({ ...prev, isOpen: false }))}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                إلغاء
+                {tr('إلغاء', 'Cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleSaveModal}
                 className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-[#0B7B5E] hover:bg-[#09634C] transition-colors cursor-pointer shadow-xs"
               >
-                حفظ وإضافة للقائمة
+                {tr('حفظ وإضافة للقائمة', 'Save & Add to List')}
               </button>
             </div>
           </div>
@@ -1559,7 +1720,7 @@ export function PrescriptionView({
       {isPrintPreviewOpen && (
         <div
           className="fixed inset-0 z-[110] bg-slate-900/80 backdrop-blur-xs flex flex-col p-3 sm:p-5 print:hidden animate-in fade-in duration-150"
-          dir="rtl"
+          dir={dir}
           onClick={() => setIsPrintPreviewOpen(false)}
         >
           <div
@@ -1574,10 +1735,16 @@ export function PrescriptionView({
                 </div>
                 <div>
                   <h3 className="font-black text-sm sm:text-base text-[#074C3A]">
-                    معاينة الطباعة والتحقق من المسافات بالسنتيمتر (16.5cm × 24cm)
+                    {tr(
+                      'معاينة الطباعة والتحقق من المسافات بالسنتيمتر (16.5cm × 24cm)',
+                      'Print Preview & CM Ruler Calibration (16.5cm × 24cm)'
+                    )}
                   </h3>
                   <p className="text-[11px] text-slate-500 font-bold">
-                    تحقق من موضع الاسم (6.00cm / يمين 0.5cm) والسن والتاريخ العربي والكود (شمال 2.1cm) والأدوية (شمال 3.5cm) والهامش السفلي (1.5cm)
+                    {tr(
+                      'تحقق من موضع الاسم (6.00cm / يمين 0.5cm) والسن والتاريخ العربي والكود (شمال 2.1cm) والأدوية (شمال 3.5cm) والهامش السفلي (1.5cm)',
+                      'Verify positions: Name (6.00cm / R 0.5cm), Age, Arabic Date, Code (L 2.1cm), Drugs (L 3.5cm), Bottom Margin (1.5cm)'
+                    )}
                   </p>
                 </div>
               </div>
@@ -1593,7 +1760,11 @@ export function PrescriptionView({
                   }`}
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>{showPrintGuides ? 'إخفاء خطوط القياس' : 'إظهار خطوط القياس'}</span>
+                  <span>
+                    {showPrintGuides
+                      ? tr('إخفاء خطوط القياس', 'Hide Ruler Guides')
+                      : tr('إظهار خطوط القياس', 'Show Ruler Guides')}
+                  </span>
                 </button>
 
                 <button
@@ -1605,7 +1776,7 @@ export function PrescriptionView({
                   className="px-4 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span>طباعة الآن / حفظ PDF</span>
+                  <span>{tr('طباعة الآن / حفظ PDF', 'Print Now / Save PDF')}</span>
                 </button>
 
                 <button
@@ -1621,7 +1792,17 @@ export function PrescriptionView({
             {/* منطقة عرض الورقة الفعلية مع المسطرة */}
             <div className="flex-1 overflow-y-auto bg-slate-200/80 p-4 sm:p-6 flex flex-col items-center gap-6">
               <div className="text-xs font-bold text-slate-700 bg-white/90 px-4 py-2 rounded-xl border border-slate-300 shadow-2xs text-center">
-                💡 نصيحة للتجربة العملية: اضغط <strong>&quot;طباعة الآن&quot;</strong> واطبع على <strong>ورقة بيضاء عادية A4</strong> (أو احفظها PDF) ثم ضع الورقة المطبوعة فوق الروشتة الأصلية أمام الإضاءة للتأكد 100% من تطابق السنتيمترات.
+                {isAr ? (
+                  <>
+                    💡 نصيحة للتجربة العملية: اضغط <strong>&quot;طباعة الآن&quot;</strong> واطبع على{' '}
+                    <strong>ورقة بيضاء عادية A4</strong> (أو احفظها PDF) ثم ضع الورقة المطبوعة فوق الروشتة الأصلية أمام الإضاءة للتأكد 100% من تطابق السنتيمترات.
+                  </>
+                ) : (
+                  <>
+                    💡 Calibration tip: Click <strong>&quot;Print Now&quot;</strong> on plain{' '}
+                    <strong>A4 white paper</strong> (or Save as PDF), then hold it over the pre-printed Rx sheet against light to verify exact cm alignment.
+                  </>
+                )}
               </div>
 
               <div className="shadow-2xl rounded-sm overflow-hidden border border-slate-400 bg-white">
@@ -1642,7 +1823,7 @@ export function PrescriptionView({
       {twoSidedPrintState.isOpen && (
         <div
           className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden animate-in fade-in duration-150"
-          dir="rtl"
+          dir={dir}
           onClick={() => setTwoSidedPrintState((prev) => ({ ...prev, isOpen: false }))}
         >
           <div
@@ -1656,10 +1837,16 @@ export function PrescriptionView({
                 </div>
                 <div>
                   <h3 className="font-black text-base text-[#074C3A]">
-                    الروشتة تتطلب وجهين (وجه + ظهر نفس الورقة — {items.length} أصناف)
+                    {tr(
+                      `الروشتة تتطلب وجهين (وجه + ظهر نفس الورقة — ${items.length} أصناف)`,
+                      `Two-Sided Prescription Required (Front + Back — ${items.length} items)`
+                    )}
                   </h3>
                   <p className="text-xs text-slate-500 font-bold">
-                    لمنع الطابعة من سحب ورقة ثانية جديدة، اطبع الوجه الأول أولاً ثم اقلب نفس الورقة لطباعة الظهر
+                    {tr(
+                      'لمنع الطابعة من سحب ورقة ثانية جديدة، اطبع الوجه الأول أولاً ثم اقلب نفس الورقة لطباعة الظهر',
+                      'To prevent pulling a second sheet, print the front first, flip the same sheet, then print the back'
+                    )}
                   </p>
                 </div>
               </div>
@@ -1676,7 +1863,10 @@ export function PrescriptionView({
             <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-[#074C3A]">
-                  1. الطريقة المضمونة (اقلب نفس الورقة يدوياً — تعمل مع جميع الطابعات):
+                  {tr(
+                    '1. الطريقة المضمونة (اقلب نفس الورقة يدوياً — تعمل مع جميع الطابعات):',
+                    '1. Manual Flip Method (works with all printers):'
+                  )}
                 </span>
               </div>
 
@@ -1689,7 +1879,7 @@ export function PrescriptionView({
                   }}
                   className="px-4 py-3 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <span>1️⃣ طباعة الوجه الأول فقط (1/2)</span>
+                  <span>{tr('1️⃣ طباعة الوجه الأول فقط (1/2)', '1️⃣ Print Front Only (1/2)')}</span>
                 </button>
 
                 <button
@@ -1703,13 +1893,18 @@ export function PrescriptionView({
                       : 'bg-white hover:bg-amber-50 text-amber-900 border border-amber-300'
                   }`}
                 >
-                  <span>2️⃣ طباعة الظهر على نفس الورقة (2/2)</span>
+                  <span>
+                    {tr('2️⃣ طباعة الظهر على نفس الورقة (2/2)', '2️⃣ Print Back on Same Sheet (2/2)')}
+                  </span>
                 </button>
               </div>
 
               {twoSidedPrintState.frontPrinted && (
                 <p className="text-[11px] font-black text-amber-900 bg-amber-100 px-3 py-2 rounded-xl border border-amber-300 text-center">
-                  ⚠️ اقلب نفس الورقة التي خرجت الآن وأعد إدخالها في الطابعة ثم اضغط &quot;طباعة الظهر على نفس الورقة (2/2)&quot;
+                  {tr(
+                    '⚠️ اقلب نفس الورقة التي خرجت الآن وأعد إدخالها في الطابعة ثم اضغط "طباعة الظهر على نفس الورقة (2/2)"',
+                    '⚠️ Flip the printed sheet, re-insert it into the printer, then click "Print Back on Same Sheet (2/2)"'
+                  )}
                 </p>
               )}
             </div>
@@ -1717,7 +1912,10 @@ export function PrescriptionView({
             {/* الطريقة 2: طباعة الوجهين أوتوماتيكياً معاً */}
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
               <div className="text-xs text-slate-600 font-bold">
-                2. للطابعات المزوّدة بوحدة قلب أوتوماتيك (Auto-Duplex) فقط أو حفظ PDF (الطابعات العادية ستسحب ورقة ثانية):
+                {tr(
+                  '2. للطابعات المزوّدة بوحدة قلب أوتوماتيك (Auto-Duplex) فقط أو حفظ PDF (الطابعات العادية ستسحب ورقة ثانية):',
+                  '2. Auto-Duplex printers or Save as PDF only (standard printers will feed a second sheet):'
+                )}
               </div>
               <button
                 type="button"
@@ -1727,7 +1925,7 @@ export function PrescriptionView({
                 }}
                 className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold shrink-0 cursor-pointer"
               >
-                طباعة الوجهين معاً ⚡
+                {tr('طباعة الوجهين معاً ⚡', 'Print Both Sides ⚡')}
               </button>
             </div>
           </div>
@@ -2230,6 +2428,7 @@ export function PatientPrescriptionHistoryModal({
   onSelectDrug,
   onCopyEntireRx,
 }: PatientPrescriptionHistoryModalProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -2262,7 +2461,10 @@ export function PatientPrescriptionHistoryModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-in fade-in-50">
-      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden" dir="rtl">
+      <div
+        className="bg-white rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden"
+        dir={dir}
+      >
         {/* رأس النافذة */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
           <div className="flex items-center gap-2.5">
@@ -2271,10 +2473,13 @@ export function PatientPrescriptionHistoryModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-black text-[#074C3A]">
-                سجل الروشتات السابقة للمريض
+                {tr('سجل الروشتات السابقة للمريض', 'Patient Prescription History')}
               </h3>
               <p className="text-xs text-slate-500 font-bold">
-                المريض: <strong className="text-slate-800">{patientName || 'المريض الحالي'}</strong>
+                {tr('المريض:', 'Patient:')}{' '}
+                <strong className="text-slate-800">
+                  {patientName || tr('المريض الحالي', 'Current Patient')}
+                </strong>
               </p>
             </div>
           </div>
@@ -2292,21 +2497,32 @@ export function PatientPrescriptionHistoryModal({
           {isLoading ? (
             <div className="py-16 text-center space-y-3">
               <div className="w-8 h-8 border-3 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-bold text-slate-500">جاري استرجاع روشتات الزيارات السابقة...</p>
+              <p className="text-xs font-bold text-slate-500">
+                {tr('جاري استرجاع روشتات الزيارات السابقة...', 'Loading past visit prescriptions...')}
+              </p>
             </div>
           ) : prescriptions.length === 0 ? (
             <div className="py-16 text-center space-y-2">
               <History className="w-10 h-10 text-slate-300 mx-auto" />
-              <h4 className="font-bold text-sm text-slate-700">لا توجد روشتات سابقة مسجلة</h4>
-              <p className="text-xs text-slate-400">هذا المريض ليس لديه روشتات محفوظة من زيارات سابقة حتى الآن.</p>
+              <h4 className="font-bold text-sm text-slate-700">
+                {tr('لا توجد روشتات سابقة مسجلة', 'No previous prescriptions recorded')}
+              </h4>
+              <p className="text-xs text-slate-400">
+                {tr(
+                  'هذا المريض ليس لديه روشتات محفوظة من زيارات سابقة حتى الآن.',
+                  'This patient has no saved prescriptions from earlier visits yet.'
+                )}
+              </p>
             </div>
           ) : (
             prescriptions.map((rx, idx) => {
-              const rxDate = rx.createdAt ? new Date(rx.createdAt).toLocaleDateString('ar-EG', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              }) : 'زيارة سابقة';
+              const rxDate = rx.createdAt
+                ? new Date(rx.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : tr('زيارة سابقة', 'Previous Visit');
               const itemsList = Array.isArray(rx.items) ? rx.items : [];
 
               return (
@@ -2318,10 +2534,13 @@ export function PatientPrescriptionHistoryModal({
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
                       <span className="text-xs sm:text-sm font-black text-slate-800">
-                        روشتة تاريخ: {rxDate}
+                        {tr(`روشتة تاريخ: ${rxDate}`, `Prescription Date: ${rxDate}`)}
                       </span>
                       <span className="text-[11px] font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded-full">
-                        {itemsList.length} أصناف
+                        {tr(
+                          `${itemsList.length} أصناف`,
+                          `${itemsList.length} ${itemsList.length === 1 ? 'item' : 'items'}`
+                        )}
                       </span>
                     </div>
 
@@ -2329,10 +2548,13 @@ export function PatientPrescriptionHistoryModal({
                       type="button"
                       onClick={() => onCopyEntireRx(itemsList)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95"
-                      title="نسخ جميع أصناف هذه الروشتة إلى الروشتة الحالية"
+                      title={tr(
+                        'نسخ جميع أصناف هذه الروشتة إلى الروشتة الحالية',
+                        'Copy all medications from this prescription'
+                      )}
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>نسخ الروشتة بالكامل</span>
+                      <span>{tr('نسخ الروشتة بالكامل', 'Copy Entire Rx')}</span>
                     </button>
                   </div>
 
@@ -2369,10 +2591,18 @@ export function PatientPrescriptionHistoryModal({
                           type="button"
                           onClick={() => {
                             onSelectDrug(it);
-                            toast.success(`تمت إضافة "${it.drugName}" إلى الروشتة الحالية`);
+                            toast.success(
+                              tr(
+                                `تمت إضافة "${it.drugName}" إلى الروشتة الحالية`,
+                                `Added "${it.drugName}" to current prescription`
+                              )
+                            );
                           }}
                           className="shrink-0 p-1.5 rounded-lg border border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE] text-slate-600 hover:text-[#074C3A] transition-all cursor-pointer"
-                          title="إضافة هذا الصنف منفرداً للروشتة الحالية"
+                          title={tr(
+                            'إضافة هذا الصنف منفرداً للروشتة الحالية',
+                            'Add this medication to current prescription'
+                          )}
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -2392,7 +2622,7 @@ export function PatientPrescriptionHistoryModal({
             onClick={onClose}
             className="px-5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
           >
-            إغلاق
+            {tr('إغلاق', 'Close')}
           </button>
         </div>
       </div>

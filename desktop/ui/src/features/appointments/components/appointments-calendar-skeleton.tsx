@@ -1,10 +1,13 @@
 'use client';
 
 import React from 'react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export function AppointmentsCalendarSkeleton() {
+  const { dir } = useAppLocale();
+
   return (
-    <div className="space-y-6 animate-pulse select-none" dir="rtl">
+    <div className="space-y-6 animate-pulse select-none" dir={dir}>
       {/* 1. هيكل أزرار التحكم العلوية */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5">
         <div className="flex items-center gap-2.5 flex-wrap">

@@ -73,13 +73,13 @@ export function DashboardSidebar({
               <div className="flex items-center justify-between w-full group-data-[collapsible=icon]:justify-center">
                 <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
                   <span className="font-heading font-black text-xl text-white tracking-tight">
-                    نَفَس
+                    {locale === 'ar' ? 'ميدورا' : 'Medora'}
                   </span>
                   <span className="text-[10px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.5 rounded-md">
-                    إدارة العيادات
+                    {locale === 'ar' ? 'Medora' : 'Clinic'}
                   </span>
                 </div>
-                {/* شعار نَفَس */}
+                {/* شعار ميدورا */}
                 <NafsIcon size={28} />
               </div>
             </SidebarMenuButton>
@@ -161,7 +161,7 @@ export function DashboardSidebar({
       {/* 3. أسفل الشريط الجانبي: رقم الإصدار ونوع اللوحة المترجمة */}
       <SidebarFooter className="border-t border-white/10 p-0 bg-[#071510]">
         <div className="py-4 px-5 flex items-center justify-between text-xs text-slate-300 font-semibold group-data-[collapsible=icon]:justify-center">
-          <span className="group-data-[collapsible=icon]:hidden font-mono text-emerald-300">نَفَس v1.0.5 🚀</span>
+          <span className="group-data-[collapsible=icon]:hidden font-mono text-emerald-300">{locale === 'ar' ? 'ميدورا' : 'Medora'} v1.0.5 🚀</span>
           <span className="text-emerald-400 font-bold">{t(config.roleKey)}</span>
         </div>
       </SidebarFooter>

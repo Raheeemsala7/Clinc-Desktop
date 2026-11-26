@@ -6,6 +6,7 @@ import {
   getTodayWaitingAppointmentsApi,
   getCalendarAppointmentsApi,
 } from '@/features/appointments/apis/appointment.api';
+import { getServerLocaleInfo } from '@/i18n/server-locale';
 
 interface DoctorPageProps {
   searchParams?: Promise<{
@@ -15,6 +16,7 @@ interface DoctorPageProps {
 }
 
 async function DoctorDashboardData({ searchParams }: DoctorPageProps) {
+  const { dir, tr } = await getServerLocaleInfo();
   const resolvedParams = searchParams ? await searchParams : {};
   const selectedDate = resolvedParams?.date;
 
@@ -26,20 +28,29 @@ async function DoctorDashboardData({ searchParams }: DoctorPageProps) {
 
     if (!queueRes || !queueRes.status) {
       return (
-        <div className="bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center text-red-900 shadow-sm max-w-lg mx-auto my-12 animate-in fade-in-50">
+        <div
+          className="bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center text-red-900 shadow-sm max-w-lg mx-auto my-12 animate-in fade-in-50"
+          dir={dir}
+        >
           <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 shadow-2xs">
             <AlertCircle className="w-7 h-7" />
           </div>
-          <h3 className="text-xl font-black mb-2">تعذر جلب قائمة الانتظار</h3>
+          <h3 className="text-xl font-black mb-2">
+            {tr('تعذر جلب قائمة الانتظار', 'Failed to load waiting queue')}
+          </h3>
           <p className="text-xs text-red-700 mb-6 leading-relaxed">
-            {queueRes?.message || 'حدث خطأ أثناء الاتصال بالخادم، يرجى المحاولة مرة أخرى أو التأكد من تشغيل السيرفر.'}
+            {queueRes?.message ||
+              tr(
+                'حدث خطأ أثناء الاتصال بالخادم، يرجى المحاولة مرة أخرى أو التأكد من تشغيل السيرفر.',
+                'An error occurred while connecting to the server. Please try again or ensure the server is running.'
+              )}
           </p>
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-all shadow-sm cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
-            <span>إعادة المحاولة</span>
+            <span>{tr('إعادة المحاولة', 'Retry')}</span>
           </Link>
         </div>
       );
@@ -58,20 +69,29 @@ async function DoctorDashboardData({ searchParams }: DoctorPageProps) {
       throw error;
     }
     return (
-      <div className="bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center text-red-900 shadow-sm max-w-lg mx-auto my-12 animate-in fade-in-50">
+      <div
+        className="bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center text-red-900 shadow-sm max-w-lg mx-auto my-12 animate-in fade-in-50"
+        dir={dir}
+      >
         <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 shadow-2xs">
           <AlertCircle className="w-7 h-7" />
         </div>
-        <h3 className="text-xl font-black mb-2">فشل تحميل قائمة الكشوفات</h3>
+        <h3 className="text-xl font-black mb-2">
+          {tr('فشل تحميل قائمة الكشوفات', 'Failed to load examinations list')}
+        </h3>
         <p className="text-xs text-red-700 mb-6 leading-relaxed">
-          {error?.message || 'حدث خطأ غير متوقع أثناء تحميل الصفحة.'}
+          {error?.message ||
+            tr(
+              'حدث خطأ غير متوقع أثناء تحميل الصفحة.',
+              'An unexpected error occurred while loading the page.'
+            )}
         </p>
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-all shadow-sm cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />
-          <span>إعادة المحاولة</span>
+          <span>{tr('إعادة المحاولة', 'Retry')}</span>
         </Link>
       </div>
     );

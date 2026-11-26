@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { DrugItem, DrugAnalyticsData } from '../types/drug.types';
 import { parseDoseShortcut, adaptDoseToNewForm } from '@/features/examination/utils/prescription-formatter';
 
@@ -45,6 +46,7 @@ const FORM_OPTIONS = [
 ];
 
 export function DrugsManagementView() {
+  const { isAr, dir, tr } = useAppLocale();
   const [activeTab, setActiveTab] = useState<'catalog' | 'forms' | 'analytics'>('catalog');
   const [drugs, setDrugs] = useState<DrugItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,24 +165,37 @@ export function DrugsManagementView() {
   };
 
   const handleDeleteCustomForm = async (form: { id: string; name: string; nameAr: string }) => {
-    if (!confirm(`هل أنت متأكد من حذف النوع "${form.name} (${form.nameAr})" من القائمة؟`)) return;
+    if (
+      !confirm(
+        tr(
+          `هل أنت متأكد من حذف النوع "${form.name} (${form.nameAr})" من القائمة؟`,
+          `Are you sure you want to delete "${form.name} (${form.nameAr})" from the list?`
+        )
+      )
+    )
+      return;
     try {
       const res = await fetch(`/api/drugs/forms/${form.id}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success(`✓ تم حذف "${form.name}" بنجاح`);
+        toast.success(tr(`✓ تم حذف "${form.name}" بنجاح`, `✓ Deleted "${form.name}" successfully`));
         fetchCustomForms();
       } else {
-        toast.error('تعذر حذف الشكل الدوائي');
+        toast.error(tr('تعذر حذف الشكل الدوائي', 'Failed to delete dosage form'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء حذف الشكل الدوائي');
+      toast.error(tr('حدث خطأ أثناء حذف الشكل الدوائي', 'An error occurred while deleting dosage form'));
     }
   };
 
   const handleSaveCustomForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFormInput.name.trim() || !newFormInput.nameAr.trim()) {
-      toast.error('يرجى كتابة اسم الشكل الدوائي بالإنجليزية والعربية');
+      toast.error(
+        tr(
+          'يرجى كتابة اسم الشكل الدوائي بالإنجليزية والعربية',
+          'Please enter both English and Arabic dosage form names'
+        )
+      );
       return;
     }
     setIsSavingForm(true);
@@ -202,8 +217,14 @@ export function DrugsManagementView() {
         const defaultDose = newFormInput.defaultDose.trim();
         toast.success(
           editingForm
-            ? `✓ تم تعديل الشكل الدوائي "${addedName}" بنجاح`
-            : `✓ تم حفظ وإضافة الشكل الدوائي "${addedName}" بنجاح`
+            ? tr(
+                `✓ تم تعديل الشكل الدوائي "${addedName}" بنجاح`,
+                `✓ Updated dosage form "${addedName}" successfully`
+              )
+            : tr(
+                `✓ تم حفظ وإضافة الشكل الدوائي "${addedName}" بنجاح`,
+                `✓ Saved and added dosage form "${addedName}" successfully`
+              )
         );
         if (!editingForm) {
           setModalForm((prev) => ({
@@ -217,10 +238,10 @@ export function DrugsManagementView() {
         setIsAddFormModalOpen(false);
         fetchCustomForms();
       } else {
-        toast.error('تعذر حفظ الشكل الدوائي');
+        toast.error(tr('تعذر حفظ الشكل الدوائي', 'Failed to save dosage form'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء حفظ الشكل الدوائي');
+      toast.error(tr('حدث خطأ أثناء حفظ الشكل الدوائي', 'An error occurred while saving dosage form'));
     } finally {
       setIsSavingForm(false);
     }
@@ -240,10 +261,10 @@ export function DrugsManagementView() {
           : [];
         setDrugs(list);
       } else {
-        toast.error('تعذر تحميل قائمة الأدوية');
+        toast.error(tr('تعذر تحميل قائمة الأدوية', 'Failed to load medications catalog'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء تحميل الأدوية');
+      toast.error(tr('حدث خطأ أثناء تحميل الأدوية', 'An error occurred while loading medications'));
     } finally {
       setIsLoading(false);
     }
@@ -275,7 +296,7 @@ export function DrugsManagementView() {
         setAnalyticsData(data.payload || data);
       }
     } catch {
-      toast.error('تعذر تحميل تقرير الأدوية الأكثر استخداماً');
+      toast.error(tr('تعذر تحميل تقرير الأدوية الأكثر استخداماً', 'Failed to load top prescribed report'));
     } finally {
       setIsLoadingAnalytics(false);
     }
@@ -308,7 +329,7 @@ export function DrugsManagementView() {
         })
         .catch(() => {
           if (!isCancelled) {
-            toast.error('تعذر تحميل تقرير الأدوية الأكثر استخداماً');
+            toast.error(tr('تعذر تحميل تقرير الأدوية الأكثر استخداماً', 'Failed to load top prescribed report'));
           }
         })
         .finally(() => {
@@ -359,7 +380,7 @@ export function DrugsManagementView() {
   const handleSaveModal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!modalForm.name.trim()) {
-      toast.error('يرجى كتابة اسم الدواء');
+      toast.error(tr('يرجى كتابة اسم الدواء', 'Please enter medication name'));
       return;
     }
 
@@ -382,11 +403,11 @@ export function DrugsManagementView() {
         });
 
         if (res.ok) {
-          toast.success('✓ تم تحديث بيانات الدواء بنجاح');
+          toast.success(tr('✓ تم تحديث بيانات الدواء بنجاح', '✓ Medication updated successfully'));
           setIsModalOpen(false);
           fetchDrugs();
         } else {
-          toast.error('تعذر تحديث الدواء');
+          toast.error(tr('تعذر تحديث الدواء', 'Failed to update medication'));
         }
       } else {
         // Create
@@ -406,15 +427,20 @@ export function DrugsManagementView() {
         });
 
         if (res.ok) {
-          toast.success('✓ تمت إضافة الدواء الجديد بنجاح');
+          toast.success(tr('✓ تمت إضافة الدواء الجديد بنجاح', '✓ New medication added successfully'));
           setIsModalOpen(false);
           fetchDrugs();
         } else {
-          toast.error('تعذر حفظ الدواء (تأكد من عدم تكرار الاسم)');
+          toast.error(
+            tr(
+              'تعذر حفظ الدواء (تأكد من عدم تكرار الاسم)',
+              'Failed to save medication (check for duplicate name)'
+            )
+          );
         }
       }
     } catch {
-      toast.error('حدث خطأ أثناء حفظ الدواء');
+      toast.error(tr('حدث خطأ أثناء حفظ الدواء', 'An error occurred while saving medication'));
     } finally {
       setIsSaving(false);
     }
@@ -422,20 +448,27 @@ export function DrugsManagementView() {
 
   // Delete Drug
   const handleDeleteDrug = async (drug: DrugItem) => {
-    if (!confirm(`هل أنت متأكد من حذف دواء "${drug.name}" من قاعدة البيانات؟`)) {
+    if (
+      !confirm(
+        tr(
+          `هل أنت متأكد من حذف دواء "${drug.name}" من قاعدة البيانات؟`,
+          `Are you sure you want to delete "${drug.name}" from the catalog?`
+        )
+      )
+    ) {
       return;
     }
 
     try {
       const res = await fetch(`/api/drugs/${drug.id}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success(`تم حذف "${drug.name}" بنجاح`);
+        toast.success(tr(`تم حذف "${drug.name}" بنجاح`, `Deleted "${drug.name}" successfully`));
         setDrugs((prev) => prev.filter((d) => d.id !== drug.id));
       } else {
-        toast.error('تعذر حذف الدواء');
+        toast.error(tr('تعذر حذف الدواء', 'Failed to delete medication'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء حذف الدواء');
+      toast.error(tr('حدث خطأ أثناء حذف الدواء', 'An error occurred while deleting medication'));
     }
   };
 
@@ -451,9 +484,14 @@ export function DrugsManagementView() {
         duration: parsed.duration || prev.duration,
         instructions: parsed.instructions || prev.instructions,
       }));
-      toast.success(`✓ تمت ترجمة الاختصار: ${parsed.summary}`);
+      toast.success(tr(`✓ تمت ترجمة الاختصار: ${parsed.summary}`, `✓ Shortcut applied: ${parsed.summary}`));
     } else {
-      toast.info('اكتب الاختصار بالشكل: 1/3/5/-30 (جرعة / تكرار / مدة / توقيت الأكل)');
+      toast.info(
+        tr(
+          'اكتب الاختصار بالشكل: 1/3/5/-30 (جرعة / تكرار / مدة / توقيت الأكل)',
+          'Enter shortcut as: 1/3/5/-30 (dose / frequency / days / meal timing)'
+        )
+      );
     }
   };
 
@@ -471,7 +509,7 @@ export function DrugsManagementView() {
   }, [drugs, searchQuery]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto" dir="rtl">
+    <div className="space-y-6 max-w-7xl mx-auto" dir={dir}>
       {/* 1. ترويسة الصفحة العامة */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
         <div className="flex items-center gap-3.5">
@@ -480,10 +518,13 @@ export function DrugsManagementView() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-[#074C3A]">
-              دليل وصيدلية أدوية العيادة
+              {tr('دليل وصيدلية أدوية العيادة', 'Clinic Drugs Catalog & Formulary')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 font-medium">
-              إدارة قاموس الأدوية، الجرعات الافتراضية، ومتابعة تقرير الأدوية الأكثر استخداماً
+              {tr(
+                'إدارة قاموس الأدوية، الجرعات الافتراضية، ومتابعة تقرير الأدوية الأكثر استخداماً',
+                'Manage medication dictionary, default dosages, and top prescribed analytics'
+              )}
             </p>
           </div>
         </div>
@@ -501,7 +542,7 @@ export function DrugsManagementView() {
               }`}
             >
               <FileSpreadsheet className="w-4 h-4" />
-              <span>دليل الأدوية ({drugs.length})</span>
+              <span>{tr(`دليل الأدوية (${drugs.length})`, `Drug Catalog (${drugs.length})`)}</span>
             </button>
             <button
               type="button"
@@ -513,7 +554,12 @@ export function DrugsManagementView() {
               }`}
             >
               <Sparkles className="w-4 h-4" />
-              <span>أنواع وأشكال الأدوية ({customForms.length})</span>
+              <span>
+                {tr(
+                  `أنواع وأشكال الأدوية (${customForms.length})`,
+                  `Dosage Forms (${customForms.length})`
+                )}
+              </span>
             </button>
             <button
               type="button"
@@ -525,7 +571,7 @@ export function DrugsManagementView() {
               }`}
             >
               <BarChart3 className="w-4 h-4" />
-              <span>الأدوية الأكثر استخداماً</span>
+              <span>{tr('الأدوية الأكثر استخداماً', 'Top Prescribed')}</span>
             </button>
           </div>
 
@@ -536,7 +582,7 @@ export function DrugsManagementView() {
             className="h-11 px-4 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-200 text-[#0B7B5E] text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>إضافة شكل / نوع جديد</span>
+            <span>{tr('إضافة شكل / نوع جديد', 'Add Dosage Form')}</span>
           </button>
 
           {/* زر إضافة دواء جديد */}
@@ -546,7 +592,7 @@ export function DrugsManagementView() {
             className="h-11 px-4 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>إضافة دواء جديد</span>
+            <span>{tr('إضافة دواء جديد', 'Add Medication')}</span>
           </button>
         </div>
       </div>
@@ -561,15 +607,18 @@ export function DrugsManagementView() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="ابحث باسم الدواء، التركيز، أو الشكل..."
-                className="w-full h-10 pr-9 pl-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
+                placeholder={tr(
+                  'ابحث باسم الدواء، التركيز، أو الشكل...',
+                  'Search by drug name, strength, or form...'
+                )}
+                className="w-full h-10 ps-9 pe-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
               />
-              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
                 >
                   ✕
                 </button>
@@ -581,11 +630,16 @@ export function DrugsManagementView() {
                 type="button"
                 onClick={fetchDrugs}
                 className="p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-                title="تحديث القائمة"
+                title={tr('تحديث القائمة', 'Refresh list')}
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#0B7B5E]' : ''}`} />
               </button>
-              <span>عرض {filteredDrugs.length} من إجمالي {drugs.length} صنف</span>
+              <span>
+                {tr(
+                  `عرض ${filteredDrugs.length} من إجمالي ${drugs.length} صنف`,
+                  `Showing ${filteredDrugs.length} of ${drugs.length} items`
+                )}
+              </span>
             </div>
           </div>
 
@@ -594,35 +648,39 @@ export function DrugsManagementView() {
             {isLoading ? (
               <div className="p-12 text-center space-y-3">
                 <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto" />
-                <p className="text-xs font-bold text-slate-500">جاري تحميل أدوية العيادة...</p>
+                <p className="text-xs font-bold text-slate-500">
+                  {tr('جاري تحميل أدوية العيادة...', 'Loading clinic medications...')}
+                </p>
               </div>
             ) : filteredDrugs.length === 0 ? (
               <div className="p-12 text-center space-y-3">
                 <Pill className="w-10 h-10 text-slate-300 mx-auto" />
-                <p className="text-sm font-bold text-slate-700">لا توجد أدوية مطابقة للبحث</p>
+                <p className="text-sm font-bold text-slate-700">
+                  {tr('لا توجد أدوية مطابقة للبحث', 'No medications match your search')}
+                </p>
                 <button
                   type="button"
                   onClick={handleOpenAddModal}
                   className="px-4 py-2 rounded-xl bg-[#0B7B5E] text-white text-xs font-bold shadow-xs hover:bg-[#09634C] cursor-pointer"
                 >
-                  + إضافة هذا الدواء الآن
+                  {tr('+ إضافة هذا الدواء الآن', '+ Add this medication now')}
                 </button>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-right border-collapse text-xs">
+                <table className="w-full text-start border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-black">
                       <th className="py-3.5 px-4 w-12 text-center">#</th>
-                      <th className="py-3.5 px-4">اسم الدواء (Drug Name)</th>
-                      <th className="py-3.5 px-3">الشكل (Form)</th>
-                      <th className="py-3.5 px-3">التركيز</th>
-                      <th className="py-3.5 px-3">الجرعة الافتراضية</th>
-                      <th className="py-3.5 px-3">التكرار</th>
-                      <th className="py-3.5 px-3">المدة</th>
-                      <th className="py-3.5 px-3">التعليمات</th>
-                      <th className="py-3.5 px-3 text-center">مرات الصرف</th>
-                      <th className="py-3.5 px-4 text-center">الإجراءات</th>
+                      <th className="py-3.5 px-4 text-start">{tr('اسم الدواء', 'Drug Name')}</th>
+                      <th className="py-3.5 px-3 text-start">{tr('الشكل', 'Form')}</th>
+                      <th className="py-3.5 px-3 text-start">{tr('التركيز', 'Strength')}</th>
+                      <th className="py-3.5 px-3 text-start">{tr('الجرعة الافتراضية', 'Default Dose')}</th>
+                      <th className="py-3.5 px-3 text-start">{tr('التكرار', 'Frequency')}</th>
+                      <th className="py-3.5 px-3 text-start">{tr('المدة', 'Duration')}</th>
+                      <th className="py-3.5 px-3 text-start">{tr('التعليمات', 'Instructions')}</th>
+                      <th className="py-3.5 px-3 text-center">{tr('مرات الصرف', 'Times Prescribed')}</th>
+                      <th className="py-3.5 px-4 text-center">{tr('الإجراءات', 'Actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -667,7 +725,7 @@ export function DrugsManagementView() {
                               type="button"
                               onClick={() => handleOpenEditModal(drug)}
                               className="p-1.5 rounded-lg text-slate-400 hover:text-[#0B7B5E] hover:bg-[#E3F5EE] transition-colors cursor-pointer"
-                              title="تعديل بيانات الدواء"
+                              title={tr('تعديل بيانات الدواء', 'Edit medication')}
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
@@ -675,7 +733,7 @@ export function DrugsManagementView() {
                               type="button"
                               onClick={() => handleDeleteDrug(drug)}
                               className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                              title="حذف من القاموس"
+                              title={tr('حذف من القاموس', 'Delete from catalog')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -699,7 +757,7 @@ export function DrugsManagementView() {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-[#0B7B5E]" />
-                <span>الفترة الزمنية للتقرير:</span>
+                <span>{tr('الفترة الزمنية للتقرير:', 'Report Period:')}</span>
               </span>
 
               <div className="p-1 rounded-xl bg-slate-100 border border-slate-200 flex items-center gap-1 text-xs font-bold flex-wrap">
@@ -712,7 +770,7 @@ export function DrugsManagementView() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  آخر شهر
+                  {tr('آخر شهر', 'Last Month')}
                 </button>
                 <button
                   type="button"
@@ -723,7 +781,7 @@ export function DrugsManagementView() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  آخر 6 شهور
+                  {tr('آخر 6 شهور', 'Last 6 Months')}
                 </button>
                 <button
                   type="button"
@@ -734,7 +792,7 @@ export function DrugsManagementView() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  آخر سنة
+                  {tr('آخر سنة', 'Last Year')}
                 </button>
                 <button
                   type="button"
@@ -745,7 +803,7 @@ export function DrugsManagementView() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  شهر محدد 📅
+                  {tr('شهر محدد 📅', 'Specific Month 📅')}
                 </button>
                 <button
                   type="button"
@@ -756,7 +814,7 @@ export function DrugsManagementView() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  فترة مخصصة (من - إلى) 🗓️
+                  {tr('فترة مخصصة (من - إلى) 🗓️', 'Custom Range 🗓️')}
                 </button>
               </div>
             </div>
@@ -770,21 +828,21 @@ export function DrugsManagementView() {
                   className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
                 >
                   {[
-                    { m: 1, name: 'يناير' },
-                    { m: 2, name: 'فبراير' },
-                    { m: 3, name: 'مارس' },
-                    { m: 4, name: 'أبريل' },
-                    { m: 5, name: 'مايو' },
-                    { m: 6, name: 'يونيو' },
-                    { m: 7, name: 'يوليو' },
-                    { m: 8, name: 'أغسطس' },
-                    { m: 9, name: 'سبتمبر' },
-                    { m: 10, name: 'أكتوبر' },
-                    { m: 11, name: 'نوفمبر' },
-                    { m: 12, name: 'ديسمبر' },
+                    { m: 1, ar: 'يناير', en: 'January' },
+                    { m: 2, ar: 'فبراير', en: 'February' },
+                    { m: 3, ar: 'مارس', en: 'March' },
+                    { m: 4, ar: 'أبريل', en: 'April' },
+                    { m: 5, ar: 'مايو', en: 'May' },
+                    { m: 6, ar: 'يونيو', en: 'June' },
+                    { m: 7, ar: 'يوليو', en: 'July' },
+                    { m: 8, ar: 'أغسطس', en: 'August' },
+                    { m: 9, ar: 'سبتمبر', en: 'September' },
+                    { m: 10, ar: 'أكتوبر', en: 'October' },
+                    { m: 11, ar: 'نوفمبر', en: 'November' },
+                    { m: 12, ar: 'ديسمبر', en: 'December' },
                   ].map((mo) => (
                     <option key={mo.m} value={mo.m}>
-                      شهر {mo.m} ({mo.name})
+                      {isAr ? `شهر ${mo.m} (${mo.ar})` : `${mo.en} (${mo.m})`}
                     </option>
                   ))}
                 </select>
@@ -807,7 +865,7 @@ export function DrugsManagementView() {
             {analyticsPeriod === 'range' && (
               <div className="flex items-center gap-2 animate-in fade-in-50 flex-wrap text-xs">
                 <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
-                  <span className="font-bold text-slate-500">من:</span>
+                  <span className="font-bold text-slate-500">{tr('من:', 'From:')}</span>
                   <input
                     type="date"
                     value={customStartDate}
@@ -816,7 +874,7 @@ export function DrugsManagementView() {
                   />
                 </div>
                 <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
-                  <span className="font-bold text-slate-500">إلى:</span>
+                  <span className="font-bold text-slate-500">{tr('إلى:', 'To:')}</span>
                   <input
                     type="date"
                     value={customEndDate}
@@ -829,7 +887,7 @@ export function DrugsManagementView() {
                   onClick={fetchAnalytics}
                   className="h-8 px-3 rounded-xl bg-[#0B7B5E] text-white font-bold text-xs hover:bg-[#09634C] transition-all cursor-pointer shadow-2xs"
                 >
-                  تحديث التقرير
+                  {tr('تحديث التقرير', 'Apply')}
                 </button>
               </div>
             )}
@@ -839,7 +897,9 @@ export function DrugsManagementView() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500">أكثر دواء تم وصفه</span>
+                <span className="text-xs font-bold text-slate-500">
+                  {tr('أكثر دواء تم وصفه', 'Most Prescribed Drug')}
+                </span>
                 <Sparkles className="w-4 h-4 text-amber-500" />
               </div>
               <div className="text-xl sm:text-2xl font-black text-[#074C3A] truncate">
@@ -847,34 +907,44 @@ export function DrugsManagementView() {
               </div>
               <p className="text-[11px] text-slate-400 font-medium">
                 {analyticsData?.items?.[0]
-                  ? `تم وصفه ${analyticsData.items[0].count} مرة في هذه الفترة`
-                  : 'لا توجد بيانات متاحة'}
+                  ? tr(
+                      `تم وصفه ${analyticsData.items[0].count} مرة في هذه الفترة`,
+                      `Prescribed ${analyticsData.items[0].count} times in this period`
+                    )
+                  : tr('لا توجد بيانات متاحة', 'No data available')}
               </p>
             </div>
 
             <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500">إجمالي الأصناف الموصوفة</span>
+                <span className="text-xs font-bold text-slate-500">
+                  {tr('إجمالي الأصناف الموصوفة', 'Total Items Prescribed')}
+                </span>
                 <TrendingUp className="w-4 h-4 text-[#0B7B5E]" />
               </div>
               <div className="text-2xl sm:text-3xl font-black text-[#074C3A] font-mono">
                 {analyticsData?.totalItemsPrescribed || 0}
               </div>
               <p className="text-[11px] text-slate-400 font-medium">
-                إجمالي عناصر الأدوية الصادرة بالروشتات
+                {tr(
+                  'إجمالي عناصر الأدوية الصادرة بالروشتات',
+                  'Total medication lines issued in prescriptions'
+                )}
               </p>
             </div>
 
             <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500">عدد الأدوية الفريدة</span>
+                <span className="text-xs font-bold text-slate-500">
+                  {tr('عدد الأدوية الفريدة', 'Unique Medications')}
+                </span>
                 <Pill className="w-4 h-4 text-emerald-600" />
               </div>
               <div className="text-2xl sm:text-3xl font-black text-[#074C3A] font-mono">
                 {analyticsData?.items?.length || 0}
               </div>
               <p className="text-[11px] text-slate-400 font-medium">
-                أصناف دوائية مختلفة تم صرفها
+                {tr('أصناف دوائية مختلفة تم صرفها', 'Distinct medication items prescribed')}
               </p>
             </div>
           </div>
@@ -884,30 +954,30 @@ export function DrugsManagementView() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <h3 className="text-base font-black text-[#074C3A] flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-[#0B7B5E]" />
-                <span>ترتيب الأدوية الأكثر وصفاً واستخداماً</span>
+                <span>{tr('ترتيب الأدوية الأكثر وصفاً واستخداماً', 'Top Prescribed Medications Ranking')}</span>
                 {analyticsData?.items && (
                   <span className="text-xs font-normal text-slate-500">
-                    ({filteredAnalyticsItems.length} من {analyticsData.items.length})
+                    ({filteredAnalyticsItems.length} {tr('من', 'of')} {analyticsData.items.length})
                   </span>
                 )}
               </h3>
 
               {/* حقل البحث السريع في الأدوية الأكثر استخداماً */}
               <div className="relative w-full sm:w-72">
-                <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   value={analyticsSearchQuery}
                   onChange={(e) => setAnalyticsSearchQuery(e.target.value)}
-                  placeholder="ابحث في الأدوية الأكثر استخداماً..."
-                  className="w-full pl-8 pr-9 py-1.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white focus:ring-1 focus:ring-[#0B7B5E] transition-all"
+                  placeholder={tr('ابحث في الأدوية الأكثر استخداماً...', 'Search top prescribed drugs...')}
+                  className="w-full pe-8 ps-9 py-1.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white focus:ring-1 focus:ring-[#0B7B5E] transition-all"
                 />
                 {analyticsSearchQuery && (
                   <button
                     type="button"
                     onClick={() => setAnalyticsSearchQuery('')}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs px-1"
-                    title="مسح البحث"
+                    className="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs px-1 cursor-pointer"
+                    title={tr('مسح البحث', 'Clear search')}
                   >
                     ✕
                   </button>
@@ -918,21 +988,28 @@ export function DrugsManagementView() {
             {isLoadingAnalytics ? (
               <div className="py-12 text-center space-y-3">
                 <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto" />
-                <p className="text-xs font-bold text-slate-500">جاري تجميع إحصائيات الأدوية...</p>
+                <p className="text-xs font-bold text-slate-500">
+                  {tr('جاري تجميع إحصائيات الأدوية...', 'Loading medication analytics...')}
+                </p>
               </div>
             ) : !analyticsData?.items || analyticsData.items.length === 0 ? (
               <div className="py-12 text-center text-slate-400 text-xs font-bold">
-                لا توجد أدوية موصوفة في هذه الفترة الزمنية.
+                {tr('لا توجد أدوية موصوفة في هذه الفترة الزمنية.', 'No medications prescribed in this period.')}
               </div>
             ) : filteredAnalyticsItems.length === 0 ? (
               <div className="py-12 text-center text-slate-400 text-xs font-bold space-y-2">
-                <p>لا توجد نتائج تطابق بحثك عن &quot;{analyticsSearchQuery}&quot;</p>
+                <p>
+                  {tr(
+                    `لا توجد نتائج تطابق بحثك عن "${analyticsSearchQuery}"`,
+                    `No results matching "${analyticsSearchQuery}"`
+                  )}
+                </p>
                 <button
                   type="button"
                   onClick={() => setAnalyticsSearchQuery('')}
-                  className="text-emerald-700 hover:underline text-xs"
+                  className="text-emerald-700 hover:underline text-xs cursor-pointer"
                 >
-                  إلغاء البحث وإظهار الكل
+                  {tr('إلغاء البحث وإظهار الكل', 'Clear search & show all')}
                 </button>
               </div>
             ) : (
@@ -975,10 +1052,13 @@ export function DrugsManagementView() {
                         </div>
 
                         <div className="flex items-center gap-3 font-mono font-black text-xs text-[#074C3A]">
-                          <span>{item.count} مرة</span>
+                          <span>
+                            {item.count} {tr('مرة', item.count === 1 ? 'time' : 'times')}
+                          </span>
                           {item.lastPrescribed && (
                             <span className="text-[11px] font-sans font-medium text-slate-400">
-                              آخر وصف: {new Date(item.lastPrescribed).toLocaleDateString('ar-EG')}
+                              {tr('آخر وصف:', 'Last prescribed:')}{' '}
+                              {new Date(item.lastPrescribed).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}
                             </span>
                           )}
                         </div>
@@ -987,7 +1067,9 @@ export function DrugsManagementView() {
                       {/* شريط التقدم المرئي */}
                       <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-l from-[#074C3A] to-[#0B7B5E] transition-all duration-500"
+                          className={`h-full rounded-full ${
+                            isAr ? 'bg-gradient-to-l' : 'bg-gradient-to-r'
+                          } from-[#074C3A] to-[#0B7B5E] transition-all duration-500`}
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -1009,15 +1091,18 @@ export function DrugsManagementView() {
                 type="text"
                 value={formsSearchQuery}
                 onChange={(e) => setFormsSearchQuery(e.target.value)}
-                placeholder="ابحث عن نوع الدواء بالإنجليزية أو العربية..."
-                className="w-full h-10 pr-9 pl-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
+                placeholder={tr(
+                  'ابحث عن نوع الدواء بالإنجليزية أو العربية...',
+                  'Search dosage form in English or Arabic...'
+                )}
+                className="w-full h-10 ps-9 pe-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#074C3A] placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
               />
-              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               {formsSearchQuery && (
                 <button
                   type="button"
                   onClick={() => setFormsSearchQuery('')}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
                 >
                   ✕
                 </button>
@@ -1025,14 +1110,17 @@ export function DrugsManagementView() {
             </div>
 
             <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-              <span>إجمالي الأنواع: <strong className="text-[#074C3A]">{filteredForms.length}</strong></span>
+              <span>
+                {tr('إجمالي الأنواع:', 'Total Forms:')}{' '}
+                <strong className="text-[#074C3A]">{filteredForms.length}</strong>
+              </span>
               <button
                 type="button"
                 onClick={handleOpenAddFormModal}
                 className="px-3.5 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>إضافة نوع دوائي جديد</span>
+                <span>{tr('إضافة نوع دوائي جديد', 'Add Dosage Form')}</span>
               </button>
             </div>
           </div>
@@ -1041,18 +1129,20 @@ export function DrugsManagementView() {
             {filteredForms.length === 0 ? (
               <div className="p-12 text-center space-y-3">
                 <Sparkles className="w-10 h-10 text-slate-300 mx-auto" />
-                <p className="text-sm font-bold text-slate-700">لا توجد أنواع دوائية مطابقة للبحث</p>
+                <p className="text-sm font-bold text-slate-700">
+                  {tr('لا توجد أنواع دوائية مطابقة للبحث', 'No dosage forms match your search')}
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-start border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold">
-                      <th className="py-3.5 px-5 text-start">الاسم بالإنجليزية (Form)</th>
-                      <th className="py-3.5 px-4 text-start">الترجمة بالعربية</th>
-                      <th className="py-3.5 px-4 text-start">الجرعة الافتراضية المقترحة</th>
-                      <th className="py-3.5 px-4 text-center">التصنيف</th>
-                      <th className="py-3.5 px-5 text-end">إجراءات</th>
+                      <th className="py-3.5 px-5 text-start">{tr('الاسم بالإنجليزية (Form)', 'Form Name (English)')}</th>
+                      <th className="py-3.5 px-4 text-start">{tr('الترجمة بالعربية', 'Arabic Translation')}</th>
+                      <th className="py-3.5 px-4 text-start">{tr('الجرعة الافتراضية المقترحة', 'Suggested Default Dose')}</th>
+                      <th className="py-3.5 px-4 text-center">{tr('التصنيف', 'Category')}</th>
+                      <th className="py-3.5 px-5 text-end">{tr('إجراءات', 'Actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -1065,7 +1155,11 @@ export function DrugsManagementView() {
                           {cf.nameAr}
                         </td>
                         <td className="py-3 px-4 text-slate-600 font-medium">
-                          {cf.defaultDose || <span className="text-slate-400">— (تلقائي حسب النوع)</span>}
+                          {cf.defaultDose || (
+                            <span className="text-slate-400">
+                              {tr('— (تلقائي حسب النوع)', '— (Auto by form)')}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <span
@@ -1075,7 +1169,9 @@ export function DrugsManagementView() {
                                 : 'bg-[#E3F5EE] text-[#0B7B5E]'
                             }`}
                           >
-                            {cf.isCustom ? 'مضاف بواسطة الطبيب ★' : 'أساسي بالنظام'}
+                            {cf.isCustom
+                              ? tr('مضاف بواسطة الطبيب ★', 'Custom ★')
+                              : tr('أساسي بالنظام', 'Built-in')}
                           </span>
                         </td>
                         <td className="py-3 px-5 text-end">
@@ -1084,7 +1180,7 @@ export function DrugsManagementView() {
                               type="button"
                               onClick={() => handleOpenEditFormModal(cf)}
                               className="p-2 rounded-xl border border-slate-200 hover:border-[#0B7B5E] hover:bg-emerald-50 text-slate-600 hover:text-[#074C3A] transition-colors cursor-pointer"
-                              title="تعديل هذا النوع"
+                              title={tr('تعديل هذا النوع', 'Edit form')}
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
@@ -1092,7 +1188,7 @@ export function DrugsManagementView() {
                               type="button"
                               onClick={() => handleDeleteCustomForm(cf)}
                               className="p-2 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
-                              title="حذف هذا النوع"
+                              title={tr('حذف هذا النوع', 'Delete form')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1110,13 +1206,18 @@ export function DrugsManagementView() {
 
       {/* 4. نافذة منبثقة لإضافة أو تعديل دواء (Modal) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-50">
+        <div
+          dir={dir}
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-50"
+        >
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Pill className="w-5 h-5 text-[#0B7B5E]" />
                 <h3 className="font-black text-base text-[#074C3A]">
-                  {editingDrug ? `تعديل بيانات الدواء: ${editingDrug.name}` : 'إضافة دواء جديد لقاعدة البيانات'}
+                  {editingDrug
+                    ? tr(`تعديل بيانات الدواء: ${editingDrug.name}`, `Edit Medication: ${editingDrug.name}`)
+                    : tr('إضافة دواء جديد لقاعدة البيانات', 'Add New Medication')}
                 </h3>
               </div>
               <button
@@ -1132,14 +1233,14 @@ export function DrugsManagementView() {
               {/* اسم الدواء */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  اسم الدواء (Drug Name) *
+                  {tr('اسم الدواء (Drug Name) *', 'Drug Name *')}
                 </label>
                 <input
                   type="text"
                   required
                   value={modalForm.name}
                   onChange={(e) => setModalForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="مثال: Augmentin, Cataflam, Otrivin..."
+                  placeholder={tr('مثال: Augmentin, Cataflam, Otrivin...', 'e.g. Augmentin, Cataflam, Otrivin...')}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold text-sm text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:bg-white"
                 />
               </div>
@@ -1149,7 +1250,7 @@ export function DrugsManagementView() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-bold text-slate-700">
-                      الشكل الدوائي (Form)
+                      {tr('الشكل الدوائي (Form)', 'Dosage Form')}
                     </label>
                     <button
                       type="button"
@@ -1157,7 +1258,7 @@ export function DrugsManagementView() {
                       className="text-[11px] font-bold text-[#0B7B5E] hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
-                      <span>إضافة شكل جديد</span>
+                      <span>{tr('إضافة شكل جديد', 'Add new form')}</span>
                     </button>
                   </div>
                   <select
@@ -1185,13 +1286,13 @@ export function DrugsManagementView() {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    التركيز (Concentration)
+                    {tr('التركيز (Concentration)', 'Strength / Concentration')}
                   </label>
                   <input
                     type="text"
                     value={modalForm.concentration}
                     onChange={(e) => setModalForm((prev) => ({ ...prev, concentration: e.target.value }))}
-                    placeholder="مثال: 500mg, 1gm, 0.1%"
+                    placeholder={tr('مثال: 500mg, 1gm, 0.1%', 'e.g. 500mg, 1gm, 0.1%')}
                     className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                   />
                 </div>
@@ -1200,7 +1301,10 @@ export function DrugsManagementView() {
               {/* حقل اختصار سريع للتعبئة الفورية */}
               <div className="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-1.5">
                 <span className="text-[11px] font-black text-[#074C3A] block">
-                  ⚡ تعبئة سريعة عبر الاختصار (مثال: 1/3/5/-30 أو 1/1/7/* أو 1/1/10/~ ثم اضغط تطبيق):
+                  {tr(
+                    '⚡ تعبئة سريعة عبر الاختصار (مثال: 1/3/5/-30 أو 1/1/7/* أو 1/1/10/~ ثم اضغط تطبيق):',
+                    '⚡ Quick fill via shortcut (e.g. 1/3/5/-30, 1/1/7/*, or 1/1/10/~ then click Apply):'
+                  )}
                 </span>
                 <div className="flex items-center gap-2">
                   <input
@@ -1213,7 +1317,7 @@ export function DrugsManagementView() {
                         handleShortcutEnter();
                       }
                     }}
-                    placeholder="1/3/5/-30 أو 1/1/7/*"
+                    placeholder={tr('1/3/5/-30 أو 1/1/7/*', '1/3/5/-30 or 1/1/7/*')}
                     className="flex-1 h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-mono text-xs font-bold text-[#074C3A] focus:outline-none focus:ring-1 focus:ring-[#0B7B5E]"
                   />
                   <button
@@ -1221,7 +1325,7 @@ export function DrugsManagementView() {
                     onClick={handleShortcutEnter}
                     className="px-3 h-8 rounded-lg bg-[#0B7B5E] text-white font-bold text-xs hover:bg-[#09634C] transition-colors cursor-pointer shrink-0"
                   >
-                    تطبيق الاختصار
+                    {tr('تطبيق الاختصار', 'Apply')}
                   </button>
                 </div>
               </div>
@@ -1230,39 +1334,39 @@ export function DrugsManagementView() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    الجرعة الافتراضية
+                    {tr('الجرعة الافتراضية', 'Default Dose')}
                   </label>
                   <input
                     type="text"
                     value={modalForm.dose}
                     onChange={(e) => setModalForm((prev) => ({ ...prev, dose: e.target.value }))}
-                    placeholder="قرص واحد، 5 سم..."
+                    placeholder={tr('قرص واحد، 5 سم...', '1 tablet, 5 ml...')}
                     className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    التكرار الافتراضي
+                    {tr('التكرار الافتراضي', 'Default Frequency')}
                   </label>
                   <input
                     type="text"
                     value={modalForm.frequency}
                     onChange={(e) => setModalForm((prev) => ({ ...prev, frequency: e.target.value }))}
-                    placeholder="مرتين في اليوم..."
+                    placeholder={tr('مرتين في اليوم...', 'Twice daily...')}
                     className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    المدة الافتراضية
+                    {tr('المدة الافتراضية', 'Default Duration')}
                   </label>
                   <input
                     type="text"
                     value={modalForm.duration}
                     onChange={(e) => setModalForm((prev) => ({ ...prev, duration: e.target.value }))}
-                    placeholder="لمدة 5 أيام..."
+                    placeholder={tr('لمدة 5 أيام...', 'For 5 days...')}
                     className="w-full h-9 px-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:outline-none focus:border-[#0B7B5E]"
                   />
                 </div>
@@ -1271,13 +1375,16 @@ export function DrugsManagementView() {
               {/* التعليمات والإرشادات */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  إرشادات الاستخدام الافتراضية (Instructions)
+                  {tr('إرشادات الاستخدام الافتراضية (Instructions)', 'Default Instructions')}
                 </label>
                 <input
                   type="text"
                   value={modalForm.instructions}
                   onChange={(e) => setModalForm((prev) => ({ ...prev, instructions: e.target.value }))}
-                  placeholder="قبل الأكل بنصف ساعة، بعد الأكل مباشرة..."
+                  placeholder={tr(
+                    'قبل الأكل بنصف ساعة، بعد الأكل مباشرة...',
+                    '30 mins before meals, after meals...'
+                  )}
                   className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
@@ -1289,14 +1396,18 @@ export function DrugsManagementView() {
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
-                  إلغاء
+                  {tr('إلغاء', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
                   className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-[#0B7B5E] hover:bg-[#09634C] transition-all shadow-xs cursor-pointer disabled:opacity-60"
                 >
-                  {isSaving ? 'جاري الحفظ...' : editingDrug ? 'حفظ التعديلات' : 'إضافة لقاعدة البيانات'}
+                  {isSaving
+                    ? tr('جاري الحفظ...', 'Saving...')
+                    : editingDrug
+                    ? tr('حفظ التعديلات', 'Save Changes')
+                    : tr('إضافة لقاعدة البيانات', 'Add Medication')}
                 </button>
               </div>
             </form>
@@ -1305,7 +1416,10 @@ export function DrugsManagementView() {
       )}
       {/* 4. نافذة منبثقة لإضافة شكل / نوع دوائي مخصص جديد */}
       {isAddFormModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-50" dir="rtl">
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-50"
+          dir={dir}
+        >
           <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
@@ -1313,7 +1427,9 @@ export function DrugsManagementView() {
                   {editingForm ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4 stroke-[3]" />}
                 </div>
                 <h3 className="font-black text-base text-[#074C3A]">
-                  {editingForm ? `تعديل الشكل الدوائي: ${editingForm.name}` : 'إضافة شكل أو نوع دوائي جديد'}
+                  {editingForm
+                    ? tr(`تعديل الشكل الدوائي: ${editingForm.name}`, `Edit Dosage Form: ${editingForm.name}`)
+                    : tr('إضافة شكل أو نوع دوائي جديد', 'Add New Dosage Form')}
                 </h3>
               </div>
               <button
@@ -1330,48 +1446,57 @@ export function DrugsManagementView() {
 
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
               {editingForm
-                ? 'يمكنك تعديل الاسم أو الترجمة العربية أو الجرعة الافتراضية لهذا النوع ليظهر محدّثاً فوراً في جميع الروشتات.'
-                : 'يمكنك هنا إضافة أشكال أو مستحضرات جديدة غير مدرجة في القائمة (مثل جل أنف، مضمضة، غسول، بخاخ فم، أمبولات...) لتصبح متاحة فوراً في الروشتات وقائمة الأدوية.'}
+                ? tr(
+                    'يمكنك تعديل الاسم أو الترجمة العربية أو الجرعة الافتراضية لهذا النوع ليظهر محدّثاً فوراً في جميع الروشتات.',
+                    'Edit the English name, Arabic translation, or default dose for this form across all prescriptions.'
+                  )
+                : tr(
+                    'يمكنك هنا إضافة أشكال أو مستحضرات جديدة غير مدرجة في القائمة (مثل جل أنف، مضمضة، غسول، بخاخ فم، أمبولات...) لتصبح متاحة فوراً في الروشتات وقائمة الأدوية.',
+                    'Add custom dosage forms not yet listed (e.g. Nasal Gel, Mouthwash, Throat Spray) so they become available immediately in prescriptions and the drug catalog.'
+                  )}
             </p>
 
             <form onSubmit={handleSaveCustomForm} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  اسم الشكل بالإنجليزية (English Form Name) *
+                  {tr('اسم الشكل بالإنجليزية (English Form Name) *', 'English Form Name *')}
                 </label>
                 <input
                   type="text"
                   required
                   value={newFormInput.name}
                   onChange={(e) => setNewFormInput((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="مثال: Nasal Gel, Mouthwash, Throat Spray..."
+                  placeholder={tr('مثال: Nasal Gel, Mouthwash, Throat Spray...', 'e.g. Nasal Gel, Mouthwash, Throat Spray...')}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold text-xs text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:bg-white"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  اسم الشكل بالعربية (Arabic Form Name) *
+                  {tr('اسم الشكل بالعربية (Arabic Form Name) *', 'Arabic Form Name *')}
                 </label>
                 <input
                   type="text"
                   required
                   value={newFormInput.nameAr}
                   onChange={(e) => setNewFormInput((prev) => ({ ...prev, nameAr: e.target.value }))}
-                  placeholder="مثال: جل أنف، مضمضة وغسول فم، بخاخ للحلق..."
+                  placeholder={tr('مثال: جل أنف، مضمضة وغسول فم، بخاخ للحلق...', 'e.g. جل أنف، مضمضة وغسول فم، بخاخ للحلق...')}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold text-xs text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:bg-white"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  الجرعة الافتراضية المقترحة (اختياري)
+                  {tr('الجرعة الافتراضية المقترحة (اختياري)', 'Suggested Default Dose (Optional)')}
                 </label>
                 <input
                   type="text"
                   value={newFormInput.defaultDose}
                   onChange={(e) => setNewFormInput((prev) => ({ ...prev, defaultDose: e.target.value }))}
-                  placeholder="مثال: دهان جل موضعي داخل الأنف، مضمضة 15 مل..."
+                  placeholder={tr(
+                    'مثال: دهان جل موضعي داخل الأنف، مضمضة 15 مل...',
+                    'e.g. Apply thin layer inside nose, gargle 15 ml...'
+                  )}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-medium focus:outline-none focus:border-[#0B7B5E]"
                 />
               </div>
@@ -1385,14 +1510,18 @@ export function DrugsManagementView() {
                   }}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
-                  إلغاء
+                  {tr('إلغاء', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingForm}
                   className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-[#0B7B5E] hover:bg-[#09634C] transition-all shadow-xs cursor-pointer disabled:opacity-60"
                 >
-                  {isSavingForm ? 'جاري الحفظ...' : editingForm ? 'حفظ التعديلات' : 'حفظ وإضافة للقائمة'}
+                  {isSavingForm
+                    ? tr('جاري الحفظ...', 'Saving...')
+                    : editingForm
+                    ? tr('حفظ التعديلات', 'Save Changes')
+                    : tr('حفظ وإضافة للقائمة', 'Save & Add to List')}
                 </button>
               </div>
             </form>

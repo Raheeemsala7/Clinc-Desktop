@@ -23,6 +23,8 @@ import {
 import { DaySlotItem, DaySlotAppointment, WeekAppointmentItem } from '../types/calendar';
 import { TodayQueueItem } from '../apis/appointment.api';
 import { openInNewWindow } from '@/shared/utils/open-window';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { formatTime12h, getAppointmentTypeLabel } from '../constants/booking.constant';
 
 export interface CalendarDayGridViewProps {
   date: string;
@@ -64,48 +66,6 @@ const HOURS = [
 
 const INTERVAL_MINUTES = ['00', '15', '30', '45'];
 
-function formatTime12h(time24?: string): string {
-  if (!time24) return '--:--';
-  const parts = time24.split(':');
-  if (parts.length < 2) return time24;
-  let hour = parseInt(parts[0], 10);
-  const minute = parts[1].padStart(2, '0');
-  const period = hour >= 12 ? 'م' : 'ص';
-  hour = hour % 12 || 12;
-  return `${hour.toString().padStart(2, '0')}:${minute} ${period}`;
-}
-
-function getTypeLabel(type?: string): string {
-  switch (type) {
-    case 'FOLLOW_UP':
-      return 'إعادة';
-    case 'OPERATION_FOLLOWUP':
-      return 'متابعة عملية';
-    case 'ENDOSCOPY':
-      return 'منظار';
-    case 'SURGERY':
-    case 'POST_OPERATIVE':
-      return 'تدخل جراحي';
-    case 'TEST_RESULTS_REVIEW':
-      return 'مراجعة فحوصات';
-    case 'CONSULTATION':
-      return 'استشارة';
-    case 'LAB_TESTS_IMAGING':
-      return 'منظار';
-    default:
-      return 'كشف';
-  }
-}
-
-function formatDoctorName(name?: string): string {
-  if (!name || !name.trim()) return 'د. إسلام عبدالله';
-  const clean = name.trim();
-  if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
-    return clean;
-  }
-  return `د. ${clean}`;
-}
-
 export function CalendarDayGridView({
   date,
   dayName,
@@ -124,6 +84,7 @@ export function CalendarDayGridView({
   isFinishingExam,
   finishingExamId,
 }: CalendarDayGridViewProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const router = useRouter();
 
   // نمط العرض: شبكة مربعات مرنة vs جدول تفصيلي بالساعات
@@ -137,14 +98,12 @@ export function CalendarDayGridView({
   const dayInfo = useMemo(() => {
     try {
       const d = new Date(date + 'T12:00:00Z');
-      const arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-      const arabicMonths = [
-        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-      ];
-      const computedDayName = dayName || arabicDays[d.getUTCDay()];
+      const localeCode = isAr ? 'ar-EG' : 'en-US';
+      const computedDayName = isAr
+        ? dayName || d.toLocaleDateString(localeCode, { weekday: 'long', timeZone: 'UTC' })
+        : d.toLocaleDateString(localeCode, { weekday: 'long', timeZone: 'UTC' });
       const computedDayNumber = dayNumber || d.getUTCDate();
-      const monthName = arabicMonths[d.getUTCMonth()];
+      const monthName = d.toLocaleDateString(localeCode, { month: 'long', timeZone: 'UTC' });
       const year = d.getUTCFullYear();
 
       const todayIso = new Date().toLocaleDateString('en-CA');
@@ -160,7 +119,7 @@ export function CalendarDayGridView({
       };
     } catch {
       return {
-        dayName: dayName || 'اليوم',
+        dayName: (isAr ? dayName : undefined) || tr('اليوم', 'Today'),
         dayNumber: dayNumber || 1,
         monthName: '',
         year: 2026,
@@ -168,11 +127,12 @@ export function CalendarDayGridView({
         isToday: Boolean(initialIsToday),
       };
     }
-  }, [date, dayName, dayNumber, initialIsToday]);
+  }, [date, dayName, dayNumber, initialIsToday, isAr, tr]);
 
   // تجميع المواعيد لهذا اليوم من slots و appointments و queueItems
   const dayAppointments = useMemo(() => {
     const map = new Map<string, any>();
+    const fallbackPatientName = tr('مريض مسجل', 'Registered Patient');
 
     // 1. من slots
     slots.forEach((s) => {
@@ -183,7 +143,7 @@ export function CalendarDayGridView({
             ...a,
             id: a.id,
             patientId: a.patientId || a.patient?.id || a.patient?._id || '',
-            patientName: a.patientName || a.patient?.fullName || 'مريض مسجل',
+            patientName: a.patientName || a.patient?.fullName || fallbackPatientName,
             patientPhone: a.patientPhone || a.patient?.phone || '',
             startTime: a.startTime || s.time,
             type: a.type,
@@ -211,7 +171,7 @@ export function CalendarDayGridView({
           ...a,
           id: a.id,
           patientId: a.patientId || a.patient?.id || a.patient?._id || '',
-          patientName: a.patientName || a.patient?.fullName || 'مريض مسجل',
+          patientName: a.patientName || a.patient?.fullName || fallbackPatientName,
           startTime: a.startTime,
           type: a.type,
           status: a.status,
@@ -236,7 +196,7 @@ export function CalendarDayGridView({
           ...q,
           id: q.id,
           patientId: q.patientId || q.patient?.id || q.patient?._id || '',
-          patientName: q.patientName || q.patient?.fullName || 'مريض مسجل',
+          patientName: q.patientName || q.patient?.fullName || fallbackPatientName,
           patientPhone: q.patientPhone || q.patient?.phone || '',
           startTime: q.startTime || '09:00',
           type: q.type,
@@ -256,7 +216,7 @@ export function CalendarDayGridView({
     });
 
     return Array.from(map.values());
-  }, [slots, appointments, queueItems, date]);
+  }, [slots, appointments, queueItems, date, tr]);
 
   // خريطة لتسريع البحث عن المواعيد في وقت محدد
   const apptsByExactTime = useMemo(() => {
@@ -421,9 +381,9 @@ export function CalendarDayGridView({
       return (
         <span
           className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-900 border border-purple-200 text-[9px] font-black shrink-0"
-          title="المريض معفى من الرسوم (حالة خاصة / مجاني)"
+          title={tr('المريض معفى من الرسوم (حالة خاصة / مجاني)', 'Patient is fee-exempt (special case / free)')}
         >
-          <span>🟣 مجاني</span>
+          <span>{tr('🟣 مجاني', '🟣 Free')}</span>
         </span>
       );
     }
@@ -432,9 +392,17 @@ export function CalendarDayGridView({
       return (
         <span
           className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-950 border border-amber-300 text-[9px] font-black shrink-0"
-          title={`معمول له خصم: ${discount} ج.م | مدفوع: ${paidAmount} ج.م | متبقي: ${remainingAmount} ج.م`}
+          title={tr(
+            `معمول له خصم: ${discount} ج.م | مدفوع: ${paidAmount} ج.م | متبقي: ${remainingAmount} ج.م`,
+            `Discount: ${discount} EGP | Paid: ${paidAmount} EGP | Remaining: ${remainingAmount} EGP`
+          )}
         >
-          <span>🟡 {discount > 0 ? `خصم (${discount})` : 'دفع جزئي'}</span>
+          <span>
+            🟡{' '}
+            {discount > 0
+              ? tr(`خصم (${discount})`, `Discount (${discount})`)
+              : tr('دفع جزئي', 'Partial')}
+          </span>
         </span>
       );
     }
@@ -443,9 +411,9 @@ export function CalendarDayGridView({
       return (
         <span
           className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300 text-[9px] font-black shrink-0"
-          title={`مسدد بالكامل (${paidAmount} ج.م)`}
+          title={tr(`مسدد بالكامل (${paidAmount} ج.م)`, `Paid in full (${paidAmount} EGP)`)}
         >
-          <span>🟢 دافع كامل</span>
+          <span>{tr('🟢 دافع كامل', '🟢 Paid')}</span>
         </span>
       );
     }
@@ -454,9 +422,17 @@ export function CalendarDayGridView({
       return (
         <span
           className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-900 border border-rose-300 text-[9px] font-black shrink-0"
-          title={`متبقي عليه: ${remainingAmount || totalAmount} ج.م`}
+          title={tr(
+            `متبقي عليه: ${remainingAmount || totalAmount} ج.م`,
+            `Remaining: ${remainingAmount || totalAmount} EGP`
+          )}
         >
-          <span>🔴 متبقي ({remainingAmount || totalAmount})</span>
+          <span>
+            {tr(
+              `🔴 متبقي (${remainingAmount || totalAmount})`,
+              `🔴 Due (${remainingAmount || totalAmount})`
+            )}
+          </span>
         </span>
       );
     }
@@ -465,7 +441,7 @@ export function CalendarDayGridView({
   };
 
   return (
-    <div className="space-y-3.5 select-none" dir="rtl">
+    <div className="space-y-3.5 select-none" dir={dir}>
       {/* ================== الشريط العلوي الهادئ والمريح للعين ================== */}
       <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/80 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* معلومات اليوم وتنبيه بداية الساعات من الوقت الحالي */}
@@ -476,7 +452,7 @@ export function CalendarDayGridView({
             </span>
             {dayInfo.isToday && (
               <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#074C3A] text-[11px] font-black border border-emerald-300">
-                اليوم
+                {tr('اليوم', 'Today')}
               </span>
             )}
           </div>
@@ -487,17 +463,22 @@ export function CalendarDayGridView({
               type="button"
               onClick={() => setShowPastHours(!showPastHours)}
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all border bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 cursor-pointer shadow-2xs"
-              title="الضغط لعرض أو إخفاء الساعات الصباحية السابقة"
+              title={tr('الضغط لعرض أو إخفاء الساعات الصباحية السابقة', 'Click to show or hide earlier morning hours')}
             >
               {showPastHours ? (
                 <>
                   <EyeOff className="w-3.5 h-3.5 text-slate-500" />
-                  <span>إخفاء الساعات السابقة</span>
+                  <span>{tr('إخفاء الساعات السابقة', 'Hide earlier hours')}</span>
                 </>
               ) : (
                 <>
                   <Eye className="w-3.5 h-3.5 text-[#0B7B5E]" />
-                  <span>الساعات السابقة مخفية ({hiddenPastSlotsCount} فترة)</span>
+                  <span>
+                    {tr(
+                      `الساعات السابقة مخفية (${hiddenPastSlotsCount} فترة)`,
+                      `Earlier hours hidden (${hiddenPastSlotsCount} slots)`
+                    )}
+                  </span>
                 </>
               )}
             </button>
@@ -506,7 +487,12 @@ export function CalendarDayGridView({
           {dayInfo.isToday && !showPastHours && (
             <span className="text-xs font-bold text-[#0B7B5E] flex items-center gap-1 bg-[#E3F5EE]/70 px-2.5 py-1 rounded-xl border border-[#D0E5DC]">
               <Clock className="w-3.5 h-3.5" />
-              <span>يبدأ من الساعة الحالية ({formatTime12h(currentHourStr)})</span>
+              <span>
+                {tr(
+                  `يبدأ من الساعة الحالية (${formatTime12h(currentHourStr, isAr)})`,
+                  `Starts from current hour (${formatTime12h(currentHourStr, isAr)})`
+                )}
+              </span>
             </span>
           )}
         </div>
@@ -524,7 +510,7 @@ export function CalendarDayGridView({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              الكل ({stats.totalBooked})
+              {tr(`الكل (${stats.totalBooked})`, `All (${stats.totalBooked})`)}
             </button>
             <button
               type="button"
@@ -535,7 +521,7 @@ export function CalendarDayGridView({
                   : 'text-amber-800 hover:text-amber-950'
               }`}
             >
-              انتظار ({stats.waiting})
+              {tr(`انتظار (${stats.waiting})`, `Waiting (${stats.waiting})`)}
             </button>
             <button
               type="button"
@@ -546,7 +532,7 @@ export function CalendarDayGridView({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              محجوزة ({stats.totalBooked})
+              {tr(`محجوزة (${stats.totalBooked})`, `Booked (${stats.totalBooked})`)}
             </button>
             <button
               type="button"
@@ -557,7 +543,7 @@ export function CalendarDayGridView({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              متاحة
+              {tr('متاحة', 'Available')}
             </button>
           </div>
 
@@ -571,10 +557,10 @@ export function CalendarDayGridView({
                   ? 'bg-[#074C3A] text-white shadow-xs font-black'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="شبكة المربعات"
+              title={tr('شبكة المربعات', 'Grid view')}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span>مربعات</span>
+              <span>{tr('مربعات', 'Grid')}</span>
             </button>
             <button
               type="button"
@@ -584,10 +570,10 @@ export function CalendarDayGridView({
                   ? 'bg-[#074C3A] text-white shadow-xs font-black'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="جدول الساعات التفصيلي"
+              title={tr('جدول الساعات التفصيلي', 'Detailed hourly table')}
             >
               <TableIcon className="w-3.5 h-3.5" />
-              <span>جدول</span>
+              <span>{tr('جدول', 'Table')}</span>
             </button>
           </div>
         </div>
@@ -599,7 +585,7 @@ export function CalendarDayGridView({
         <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs">
           {visibleSlotBoxes.length === 0 ? (
             <div className="text-center py-12 text-slate-400 font-bold text-xs">
-              لا توجد فترات مطابقة للفلتر المحدد
+              {tr('لا توجد فترات مطابقة للفلتر المحدد', 'No time slots match the selected filter')}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
@@ -623,14 +609,14 @@ export function CalendarDayGridView({
 
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-mono font-bold text-slate-600 group-hover:text-[#074C3A]">
-                          {formatTime12h(time)}
+                          {formatTime12h(time, isAr)}
                         </span>
                         {isCurrentHour ? (
                           <span className="text-[10px] font-black text-[#0B7B5E] bg-emerald-100 px-1.5 py-0.2 rounded-md">
-                            الآن 🔴
+                            {tr('الآن 🔴', 'Now 🔴')}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-slate-400">متاح</span>
+                          <span className="text-[10px] font-bold text-slate-400">{tr('متاح', 'Available')}</span>
                         )}
                       </div>
 
@@ -638,10 +624,10 @@ export function CalendarDayGridView({
                         {!isDoctorView ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0B7B5E] opacity-70 group-hover:opacity-100 transition-opacity">
                             <Plus className="w-3 h-3 stroke-[3]" />
-                            <span>حجز</span>
+                            <span>{tr('حجز', 'Book')}</span>
                           </span>
                         ) : (
-                          <span className="text-[11px] text-slate-300 font-bold">— فارغ —</span>
+                          <span className="text-[11px] text-slate-300 font-bold">{tr('— فارغ —', '— Empty —')}</span>
                         )}
                       </div>
 
@@ -674,21 +660,21 @@ export function CalendarDayGridView({
                   >
                     {/* وسم الوقت الحالي */}
                     {isCurrentHour && (
-                      <div className="absolute -top-1.5 right-3 bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-2xs">
-                        الآن 🔴
+                      <div className="absolute -top-1.5 start-3 bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-2xs">
+                        {tr('الآن 🔴', 'Now 🔴')}
                       </div>
                     )}
 
                     {/* تنبيه إذا كانت الحالة السابقة لا تزال في الانتظار */}
                     {isPast && hasWaitingPatient && (
-                      <div className="absolute -top-1.5 left-2 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-2xs">
-                        ⚠️ فترة سابقة
+                      <div className="absolute -top-1.5 end-2 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-2xs">
+                        {tr('⚠️ فترة سابقة', '⚠️ Past slot')}
                       </div>
                     )}
 
                     {/* السطر الأول: الوقت ورقم الانتظار ونوع الكشف */}
                     <div className="flex items-center justify-between gap-1 text-[11px] mt-0.5">
-                      <span className="font-mono font-black">{formatTime12h(time)}</span>
+                      <span className="font-mono font-black">{formatTime12h(time, isAr)}</span>
                       <div className="flex items-center gap-1">
                         {appointment?.queueNumber && (
                           <span className="px-1.5 py-0.2 rounded-md bg-white font-mono font-black text-[10px] shadow-2xs">
@@ -696,7 +682,7 @@ export function CalendarDayGridView({
                           </span>
                         )}
                         <span className="px-1.5 py-0.2 rounded-md bg-white/90 font-black text-[10px] shadow-2xs">
-                          {getTypeLabel(appointment?.type)}
+                          {getAppointmentTypeLabel(appointment?.type, isAr)}
                         </span>
                       </div>
                     </div>
@@ -716,10 +702,10 @@ export function CalendarDayGridView({
                             if (url) openInNewWindow(url);
                           }}
                           className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-white/90 hover:bg-white text-slate-700 hover:text-[#074C3A] text-[9px] font-bold border border-slate-200 transition-all shadow-2xs shrink-0"
-                          title="عرض ملف المريض والزيارات السابقة 👤"
+                          title={tr('عرض ملف المريض والزيارات السابقة 👤', 'View patient file & visit history 👤')}
                         >
                           <User className="w-2.5 h-2.5 text-slate-500" />
-                          <span>الملف</span>
+                          <span>{tr('الملف', 'File')}</span>
                         </Link>
                       )}
                     </div>
@@ -727,11 +713,11 @@ export function CalendarDayGridView({
                     {/* السطر الثاني: اسم المريض بخط عريض وواضح */}
                     <div className="my-1.5">
                       <div className="font-black text-xs truncate" title={appointment?.patientName}>
-                        {appointment?.patientName || 'مريض مسجل'}
+                        {appointment?.patientName || tr('مريض مسجل', 'Registered Patient')}
                       </div>
                       {appointments.length > 1 && (
                         <span className="text-[10px] font-bold text-slate-500">
-                          +{appointments.length - 1} موعد إضافي
+                          {tr(`+${appointments.length - 1} موعد إضافي`, `+${appointments.length - 1} more`)}
                         </span>
                       )}
                     </div>
@@ -750,12 +736,12 @@ export function CalendarDayGridView({
                         />
                         <span className="truncate">
                           {isInProgress
-                            ? 'جاري الكشف'
+                            ? tr('جاري الكشف', 'In Exam')
                             : isWaiting
-                            ? 'في الانتظار'
+                            ? tr('في الانتظار', 'Waiting')
                             : isCompleted
-                            ? 'مكتمل'
-                            : 'محجوز'}
+                            ? tr('مكتمل', 'Completed')
+                            : tr('محجوز', 'Booked')}
                         </span>
                       </div>
 
@@ -768,10 +754,10 @@ export function CalendarDayGridView({
                                 type="button"
                                 onClick={(e) => handleAdmitAndOpenExam(e, appointment?.id)}
                                 className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-[10px] transition-all shadow-2xs cursor-pointer flex items-center gap-0.5 shrink-0"
-                                title="إدخال المريض وفتح استمارة الكشف فوراً 🚪🩺"
+                                title={tr('إدخال المريض وفتح استمارة الكشف فوراً 🚪🩺', 'Admit patient & open exam form 🚪🩺')}
                               >
                                 <LogIn className="w-2.5 h-2.5" />
-                                <span>دخول</span>
+                                <span>{tr('دخول', 'Admit')}</span>
                               </button>
                             )}
 
@@ -787,10 +773,16 @@ export function CalendarDayGridView({
                                 }
                               }}
                               className="px-2 py-0.5 rounded-lg bg-[#074C3A] hover:bg-[#0B7B5E] text-white font-black text-[10px] transition-all shadow-2xs cursor-pointer flex items-center gap-0.5 shrink-0"
-                              title="فتح استمارة الكشف والروشتة 🩺"
+                              title={tr('فتح استمارة الكشف والروشتة 🩺', 'Open examination & prescription 🩺')}
                             >
                               <Stethoscope className="w-2.5 h-2.5" />
-                              <span>{isInProgress ? 'كشف' : isCompleted ? 'روشتة' : 'فحص'}</span>
+                              <span>
+                                {isInProgress
+                                  ? tr('كشف', 'Exam')
+                                  : isCompleted
+                                  ? tr('روشتة', 'Rx')
+                                  : tr('فحص', 'Check')}
+                              </span>
                             </Link>
                           </>
                         ) : (
@@ -801,7 +793,7 @@ export function CalendarDayGridView({
                             onClick={(e) => e.stopPropagation()}
                             className="px-1.5 py-0.5 rounded-md bg-white/80 hover:bg-white text-slate-700 font-bold text-[10px] transition-all cursor-pointer"
                           >
-                            تفاصيل
+                            {tr('تفاصيل', 'Details')}
                           </Link>
                         )}
                       </div>
@@ -819,15 +811,15 @@ export function CalendarDayGridView({
             <div className="min-w-[760px]">
               {/* ترويسة الأعمدة */}
               <div className="grid grid-cols-5 border-b border-slate-200 text-center text-xs font-black bg-slate-50/80">
-                <div className="py-3 px-2 border-l border-slate-200 text-slate-700">
-                  الساعة / الفترة
+                <div className="py-3 px-2 border-e border-slate-200 text-slate-700">
+                  {tr('الساعة / الفترة', 'Hour / Slot')}
                 </div>
                 {INTERVAL_MINUTES.map((min) => (
                   <div
                     key={min}
-                    className="py-3 px-2 border-l border-slate-200 text-slate-700 font-mono"
+                    className="py-3 px-2 border-e border-slate-200 text-slate-700 font-mono"
                   >
-                    :{min} دقيقة
+                    :{min} {tr('دقيقة', 'min')}
                   </div>
                 ))}
               </div>
@@ -846,19 +838,19 @@ export function CalendarDayGridView({
                       }`}
                     >
                       {/* عمود تسمية الساعة */}
-                      <div className="p-2 border-l border-slate-100 flex flex-col items-center justify-center font-mono text-xs font-black text-slate-700 bg-slate-50/30">
+                      <div className="p-2 border-e border-slate-100 flex flex-col items-center justify-center font-mono text-xs font-black text-slate-700 bg-slate-50/30">
                         <div className="flex items-center gap-1">
-                          <span>{formatTime12h(hour)}</span>
+                          <span>{formatTime12h(hour, isAr)}</span>
                           {isCurrentHourRow && (
                             <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
                           )}
                         </div>
                         <span className="text-[10px] text-slate-400 font-sans mt-0.5">
                           {hourNumber < 12
-                            ? 'صباحاً'
+                            ? tr('صباحاً', 'AM')
                             : hourNumber < 17
-                            ? 'ظهراً'
-                            : 'مساءً'}
+                            ? tr('ظهراً', 'Afternoon')
+                            : tr('مساءً', 'Evening')}
                         </span>
                       </div>
 
@@ -874,7 +866,7 @@ export function CalendarDayGridView({
                             <div
                               key={cellTime}
                               onClick={() => handleEmptySlotClick(cellTime)}
-                              className={`p-1.5 border-l border-slate-100 flex flex-col justify-center items-center text-center transition-colors ${
+                              className={`p-1.5 border-e border-slate-100 flex flex-col justify-center items-center text-center transition-colors ${
                                 !isDoctorView
                                   ? 'hover:bg-emerald-50/50 cursor-pointer group/cell'
                                   : 'cursor-default'
@@ -885,7 +877,7 @@ export function CalendarDayGridView({
                               </span>
                               {!isDoctorView && (
                                 <span className="text-[10px] text-slate-300 group-hover/cell:text-[#0B7B5E] font-bold">
-                                  + متاح
+                                  {tr('+ متاح', '+ Open')}
                                 </span>
                               )}
                             </div>
@@ -906,7 +898,7 @@ export function CalendarDayGridView({
                         return (
                           <div
                             key={cellTime}
-                            className="p-1.5 border-l border-slate-100 flex items-center justify-center"
+                            className="p-1.5 border-e border-slate-100 flex items-center justify-center"
                           >
                             <Link
                               href={
@@ -927,15 +919,15 @@ export function CalendarDayGridView({
                               }}
                               title={
                                 isDoctorView
-                                  ? 'اضغط لفتح استمارة الكشف والروشتة 🩺'
-                                  : 'عرض تفاصيل الموعد'
+                                  ? tr('اضغط لفتح استمارة الكشف والروشتة 🩺', 'Click to open examination & prescription 🩺')
+                                  : tr('عرض تفاصيل الموعد', 'View appointment details')
                               }
                               className={`w-full h-full p-2 rounded-xl border text-[11px] font-bold shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between ${cellStyle}`}
                             >
                               <div className="flex items-center justify-between text-[10px] font-mono font-black">
                                 <span>{cellTime}</span>
                                 <span className="px-1 py-0.2 rounded bg-white/80 font-black">
-                                  {getTypeLabel(primaryAppt.type)}
+                                  {getAppointmentTypeLabel(primaryAppt.type, isAr)}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between gap-1 mt-0.5">
@@ -945,7 +937,14 @@ export function CalendarDayGridView({
                                 {renderFinancialBadge(primaryAppt)}
                               </div>
                               <div className="text-[10px] text-slate-600 font-bold truncate mt-0.5 flex items-center justify-between">
-                                <span>{primaryAppt.queueNumber ? `#${primaryAppt.queueNumber} • ` : ''}{isWaiting ? 'انتظار' : isCompleted ? 'مكتمل' : 'محجوز'}</span>
+                                <span>
+                                  {primaryAppt.queueNumber ? `#${primaryAppt.queueNumber} • ` : ''}
+                                  {isWaiting
+                                    ? tr('انتظار', 'Waiting')
+                                    : isCompleted
+                                    ? tr('مكتمل', 'Completed')
+                                    : tr('محجوز', 'Booked')}
+                                </span>
                                 {primaryAppt.patientId && (
                                   <span
                                     onClick={(e) => {
@@ -956,7 +955,7 @@ export function CalendarDayGridView({
                                     }}
                                     className="hover:underline text-[9px] text-[#074C3A] cursor-pointer"
                                   >
-                                    👤 الملف
+                                    {tr('👤 الملف', '👤 File')}
                                   </span>
                                 )}
                               </div>

@@ -2,11 +2,12 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useTranslations, useLocale } from 'next-intl';
-import { SERVICES_LIST, getWhatsAppUrl } from '../constants';
+import { useTranslations } from 'next-intl';
+import { getServicesList, getWhatsAppUrl } from '../constants';
 import { ServiceItem } from '../types';
 import { BrandLogo } from './brand-logo';
 import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { cn } from 'cn';
 
 /**
@@ -14,11 +15,11 @@ import { cn } from 'cn';
  */
 export const ServicesSection = () => {
   const t = useTranslations('Services');
-  const locale = useLocale();
-  const isArabic = locale === 'ar';
+  const { locale, isAr, dir, tr } = useAppLocale();
+  const services = getServicesList(isAr);
 
   return (
-    <section id="services" className="py-16 sm:py-20 bg-[#F8FAFC]">
+    <section id="services" dir={dir} className="py-16 sm:py-20 bg-[#F8FAFC]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* رأس القسم مع تأثير ظهور ناعم وسريع */}
         <motion.div
@@ -47,18 +48,27 @@ export const ServicesSection = () => {
 
         {/* شبكة البطاقات (9 خدمات) مع أنيميشن Stagger سريع */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {SERVICES_LIST.map((service, index) => (
-            <ServiceCard
-              key={service.id}
-              service={service}
-              index={index}
-              buttonText={t('bookConsultation')}
-              title={t(`items.${service.id}.title`)}
-              description={t(`items.${service.id}.description`)}
-              locale={locale}
-              isArabic={isArabic}
-            />
-          ))}
+          {services.map((service, index) => {
+            const title = t(`items.${service.id}.title`);
+            const description = t(`items.${service.id}.description`);
+            const consultationMsg = tr(
+              `مرحباً د. إسلام، أود حجز استشارة بخصوص: ${title}`,
+              `Hello Dr. Eslam, I would like to book a consultation regarding: ${title}`
+            );
+
+            return (
+              <ServiceCard
+                key={service.id}
+                service={service}
+                index={index}
+                buttonText={t('bookConsultation')}
+                title={title}
+                description={description}
+                whatsappHref={getWhatsAppUrl(consultationMsg, locale)}
+                isAr={isAr}
+              />
+            );
+          })}
         </div>
       </div>
     </section>
@@ -71,8 +81,8 @@ interface ServiceCardProps {
   buttonText: string;
   title: string;
   description: string;
-  locale: string;
-  isArabic: boolean;
+  whatsappHref: string;
+  isAr: boolean;
 }
 
 /**
@@ -84,8 +94,8 @@ const ServiceCard = ({
   buttonText,
   title,
   description,
-  locale,
-  isArabic,
+  whatsappHref,
+  isAr,
 }: ServiceCardProps) => {
   const isNavy = service.theme === 'navy';
 
@@ -99,12 +109,6 @@ const ServiceCard = ({
     service.linkColor === 'yellow'
       ? 'text-[#F5B800] group-hover:text-amber-300'
       : 'text-[#0B7B5E] group-hover:text-[#0B7B5E]';
-
-  const consultationMsg = isArabic
-    ? `مرحباً د. إسلام، أود حجز استشارة بخصوص: ${title}`
-    : `Hello Dr. Eslam, I would like to book a consultation regarding: ${title}`;
-
-  const whatsappHref = getWhatsAppUrl(consultationMsg, locale);
 
   return (
     <motion.div
@@ -169,10 +173,10 @@ const ServiceCard = ({
             aria-hidden="true"
             className={cn(
               'transition-transform duration-200',
-              isArabic ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'
+              isAr ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'
             )}
           >
-            {isArabic ? '←' : '→'}
+            {isAr ? '←' : '→'}
           </span>
         </a>
       </div>

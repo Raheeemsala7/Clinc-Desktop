@@ -2,42 +2,60 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export const HowItWorksSection = () => {
+  const { dir, tr } = useAppLocale();
+
   const steps = [
     {
       num: '1',
-      title: 'الحجز',
-      description: 'حجز المريض وتسجيل بياناته ودوره في طابور العيادة.',
+      title: tr('الحجز', 'Booking'),
+      description: tr(
+        'حجز المريض وتسجيل بياناته ودوره في طابور العيادة.',
+        'Book the patient, register their details, and assign their place in the clinic queue.'
+      ),
     },
     {
       num: '2',
-      title: 'الانتظار',
-      description: 'يتابع الاستقبال الطابور ويدخل المريض في دوره المحدد بدقة.',
+      title: tr('الانتظار', 'Waiting'),
+      description: tr(
+        'يتابع الاستقبال الطابور ويدخل المريض في دوره المحدد بدقة.',
+        'Reception monitors the live queue and sends the patient in right on turn.'
+      ),
     },
     {
       num: '3',
-      title: 'الكشف',
-      description: 'يفحص الطبيب الحالة، يطّلع على السجل، ويكتب الإجراء والروشتة.',
+      title: tr('الكشف', 'Examination'),
+      description: tr(
+        'يفحص الطبيب الحالة، يطّلع على السجل، ويكتب الإجراء والروشتة.',
+        'The doctor examines the patient, reviews their medical history, and writes the notes and prescription.'
+      ),
     },
     {
       num: '4',
-      title: 'الإنهاء',
-      description: 'يغادر المريض العيادة ومعه الروشتة المطبوعة في ثوانٍ معدودة.',
+      title: tr('الإنهاء', 'Completion'),
+      description: tr(
+        'يغادر المريض العيادة ومعه الروشتة المطبوعة في ثوانٍ معدودة.',
+        'The patient leaves the clinic with a cleanly printed prescription in just seconds.'
+      ),
     },
   ];
 
   return (
-    <section id="how-it-works" className="py-14 lg:py-20 select-none" dir="rtl">
+    <section id="how-it-works" className="py-14 lg:py-20 select-none" dir={dir}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* عنوان القسم */}
         <div className="text-center space-y-3 mb-14">
           <span className="inline-block px-3.5 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold border border-[#D0E5DC]">
-            كيف نعمل
+            {tr('كيف نعمل', 'How It Works')}
           </span>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-black text-[#0B241D]">
-            من دخول المريض حتى خروجه، في أربع خطوات
+            {tr(
+              'من دخول المريض حتى خروجه، في أربع خطوات',
+              'From Patient Check-in to Check-out in Four Steps'
+            )}
           </h2>
         </div>
 

@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { cn } from '@/lib/utils';
 import { Navbar } from './navbar';
 import { HeroSection } from './hero-section';
 import { ComparisonSection } from './comparison-section';
@@ -12,6 +14,7 @@ import { CtaSection } from './cta-section';
 import { Footer } from './footer';
 
 export const HomePageClient = () => {
+  const { isAr, dir } = useAppLocale();
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -20,10 +23,16 @@ export const HomePageClient = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FBF9] text-[#0B241D] selection:bg-[#45DBA5]/30 selection:text-[#0B7B5E] relative font-sans">
+    <div
+      dir={dir}
+      className="min-h-screen flex flex-col bg-[#F8FBF9] text-[#0B241D] selection:bg-[#45DBA5]/30 selection:text-[#0B7B5E] relative font-sans"
+    >
       {/* شريط تقدم التمرير الزمردي الأنيق */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0B7B5E] via-[#45DBA5] to-[#0B7B5E] origin-left z-50 pointer-events-none"
+        className={cn(
+          'fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0B7B5E] via-[#45DBA5] to-[#0B7B5E] z-50 pointer-events-none',
+          isAr ? 'origin-right' : 'origin-left'
+        )}
         style={{ scaleX }}
       />
 

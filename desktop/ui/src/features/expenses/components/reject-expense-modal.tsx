@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { useRejectExpenseMutation } from '../hooks/expenses.hook';
 import { ExpenseItem } from '../types/expenses';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface RejectExpenseModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface RejectExpenseModalProps {
 }
 
 export function RejectExpenseModal({ isOpen, onClose, expense }: RejectExpenseModalProps) {
+  const { dir, tr } = useAppLocale();
   const [reason, setReason] = useState('');
   const rejectMutation = useRejectExpenseMutation();
 
@@ -31,7 +33,10 @@ export function RejectExpenseModal({ isOpen, onClose, expense }: RejectExpenseMo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200"
+      dir={dir}
+    >
       <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
@@ -40,10 +45,11 @@ export function RejectExpenseModal({ isOpen, onClose, expense }: RejectExpenseMo
             </div>
             <div>
               <h3 className="text-base font-black text-[#074C3A]">
-                رفض المصروف
+                {tr('رفض المصروف', 'Reject Expense')}
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                مبلغ: {expense.amount} ج.م - {expense.category?.name || 'مصروف'}
+                {tr('مبلغ:', 'Amount:')} {expense.amount} {tr('ج.م', 'EGP')} -{' '}
+                {expense.category?.name || tr('مصروف', 'Expense')}
               </p>
             </div>
           </div>
@@ -59,13 +65,16 @@ export function RejectExpenseModal({ isOpen, onClose, expense }: RejectExpenseMo
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-2">
-              سبب الرفض (اختياري)
+              {tr('سبب الرفض (اختياري)', 'Rejection Reason (Optional)')}
             </label>
             <textarea
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="اكتب سبب رفض اعتماد هذا المصروف..."
+              placeholder={tr(
+                'اكتب سبب رفض اعتماد هذا المصروف...',
+                'Write the reason for rejecting this expense...'
+              )}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-500 text-sm font-medium transition-all resize-none"
             />
           </div>
@@ -79,10 +88,10 @@ export function RejectExpenseModal({ isOpen, onClose, expense }: RejectExpenseMo
               {rejectMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>جاري الرفض...</span>
+                  <span>{tr('جاري الرفض...', 'Rejecting...')}</span>
                 </>
               ) : (
-                <span>تأكيد الرفض</span>
+                <span>{tr('تأكيد الرفض', 'Confirm Rejection')}</span>
               )}
             </button>
             <button
@@ -91,7 +100,7 @@ export function RejectExpenseModal({ isOpen, onClose, expense }: RejectExpenseMo
               disabled={rejectMutation.isPending}
               className="py-3 px-5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm transition-all cursor-pointer"
             >
-              إلغاء
+              {tr('إلغاء', 'Cancel')}
             </button>
           </div>
         </form>
@@ -99,4 +108,3 @@ export function RejectExpenseModal({ isOpen, onClose, expense }: RejectExpenseMo
     </div>
   );
 }
-

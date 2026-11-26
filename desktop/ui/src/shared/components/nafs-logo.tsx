@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface NafsLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -15,10 +16,7 @@ interface NafsLogoProps {
 }
 
 /**
- * أيقونة وشعار نَفَس الرسمي:
- * - شكل المربع المنحني الزمردي (#0B7B5E)
- * - الابتسامة / حرف النون بالأبيض الناصع
- * - النقطة باللون الأخضر النعناعي (#45DBA5)
+ * أيقونة وشعار ميدورا (Medora) الرسمي
  */
 export const NafsIcon = ({
   className,
@@ -31,29 +29,22 @@ export const NafsIcon = ({
     <div
       style={{ width: size, height: size }}
       className={cn(
-        'relative rounded-2xl bg-[#0B7B5E] flex items-center justify-center shrink-0 shadow-xs overflow-hidden select-none',
+        'relative rounded-2xl flex items-center justify-center shrink-0 shadow-xs overflow-hidden select-none',
         className
       )}
     >
-      <svg
-        viewBox="0 0 100 100"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-[78%] h-[78%]"
-      >
-        {/* النقطة النعناعية في الأعلى */}
-        <circle cx="50" cy="30" r="13" fill="#45DBA5" />
-        {/* ابتسامة النون البيضاء المنحنية الأطراف */}
-        <path
-          d="M23 48C23 64 35 74 50 74C65 74 77 64 77 48"
-          stroke="white"
-          strokeWidth="11"
-          strokeLinecap="round"
-        />
-      </svg>
+      <img
+        src="/app-icon.png"
+        alt="Medora"
+        width={size}
+        height={size}
+        className="w-full h-full object-cover"
+      />
     </div>
   );
 };
+
+export const MedoraIcon = NafsIcon;
 
 export const NafsLogo = ({
   size = 'md',
@@ -63,6 +54,7 @@ export const NafsLogo = ({
   href,
   className,
 }: NafsLogoProps) => {
+  const { tr } = useAppLocale();
   const iconSizes = {
     sm: 28,
     md: 36,
@@ -97,7 +89,7 @@ export const NafsLogo = ({
                   : 'text-[#0B241D] dark:text-[#ECF8F3]'
               )}
             >
-              نَفَس
+              {tr('ميدورا', 'Medora')}
             </span>
           </div>
           {showSubtitle && (
@@ -109,7 +101,7 @@ export const NafsLogo = ({
                   : 'text-[#4A635B] dark:text-[#A2C2B6]'
               )}
             >
-              منظومة إدارة العيادات
+              {tr('Medora · منظومة إدارة العيادات', 'Medora · Clinic Management')}
             </span>
           )}
         </div>
@@ -127,4 +119,6 @@ export const NafsLogo = ({
 
   return content;
 };
+
+export const MedoraLogo = NafsLogo;
 

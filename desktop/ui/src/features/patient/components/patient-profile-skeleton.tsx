@@ -1,8 +1,13 @@
+'use client';
+
 import React from 'react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export function PatientProfileSkeleton() {
+  const { dir } = useAppLocale();
+
   return (
-    <div className="space-y-6 select-none animate-pulse" dir="rtl">
+    <div className="space-y-6 select-none animate-pulse" dir={dir}>
       {/* 1. الشريط العلوي */}
       <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">

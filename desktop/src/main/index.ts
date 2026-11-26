@@ -297,7 +297,7 @@ function buildMenu() {
             const lic = LicenseManager.checkInstalledLicense();
             dialog.showMessageBox({
               type: lic.valid ? 'info' : 'warning',
-              title: 'ترخيص منظومة نَفَس',
+              title: 'ترخيص منظومة ميدورا (Medora)',
               message: `كود بصمة هذا الجهاز (Machine ID):\n${hwid}\n\nحالة الترخيص: ${lic.valid ? 'مرخص ومفعل قانونياً بنجاح ✅' : 'غير مرخص ⚠️'}\nالمالك: ${lic.info?.clientName || 'غير مسجل'}\nالفئة: ${lic.info?.tier || '—'}`,
             });
           },
@@ -438,7 +438,7 @@ async function createWindow() {
     height: 850,
     minWidth: 1024,
     minHeight: 700,
-    title: 'نظام نَفَس · إدارة العيادات',
+    title: 'ميدورا (Medora) · إدارة العيادات',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     backgroundColor: '#074C3A',
     show: true,
@@ -462,7 +462,7 @@ async function createWindow() {
     <html lang="ar" dir="rtl">
     <head>
       <meta charset="UTF-8">
-      <title>جاري تشغيل نظام نَفَس...</title>
+      <title>جاري تشغيل نظام ميدورا...</title>
       <style>
         body {
           margin: 0; padding: 0; display: flex; align-items: center; justify-content: center;
@@ -483,7 +483,7 @@ async function createWindow() {
     <body>
       <div class="container">
         <div class="spinner"></div>
-        <h2>نظام نَفَس لإدارة العيادات</h2>
+        <h2>نظام ميدورا (Medora) لإدارة العيادات</h2>
         <p>جاري تشغيل الخدمات وقاعدة البيانات...</p>
       </div>
     </body>
@@ -568,7 +568,7 @@ ipcMain.handle('app:open-new-window', async (_event, urlOrPath: string) => {
     height: 900,
     minWidth: 1000,
     minHeight: 700,
-    title: 'نظام نَفَس · الكشف الطبي وملف المريض',
+    title: 'ميدورا (Medora) · الكشف الطبي وملف المريض',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     backgroundColor: '#F8FBF9',
     autoHideMenuBar: true,

@@ -2,9 +2,11 @@
 
 import React from 'react';
 import { useClinicRealtime } from '../hooks/use-clinic-realtime';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export function RealtimeStatusBadge() {
   const { status } = useClinicRealtime();
+  const { tr } = useAppLocale();
 
   return (
     <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 select-none">
@@ -19,10 +21,10 @@ export function RealtimeStatusBadge() {
       />
       <span className="text-slate-600 dark:text-slate-300">
         {status === 'connected'
-          ? 'متصل لحظياً'
+          ? tr('متصل لحظياً', 'Live Connected')
           : status === 'connecting'
-          ? 'جارٍ الاتصال...'
-          : 'غير متصل بالخادم'}
+          ? tr('جارٍ الاتصال...', 'Connecting...')
+          : tr('غير متصل بالخادم', 'Offline')}
       </span>
     </div>
   );

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { PaymentsSummary } from '../types/payments';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface PaymentsSummaryCardsProps {
   summary: PaymentsSummary;
@@ -11,6 +12,7 @@ interface PaymentsSummaryCardsProps {
 
 export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
   const t = useTranslations('Payments');
+  const { dir } = useAppLocale();
 
   const formatMoney = (val: number) => {
     return Number(val || 0).toLocaleString('en-US', {
@@ -20,8 +22,11 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4.5 select-none">
-      {/* 1. إجمالي التحصيل اليوم (البطاقة الكحلية الرئيسية في اليمين) */}
+    <div
+      className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4.5 select-none"
+      dir={dir}
+    >
+      {/* 1. إجمالي التحصيل اليوم (البطاقة الكحلية الرئيسية) */}
       <div className="bg-[#074C3A] text-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-800/20 relative overflow-hidden flex flex-col justify-between min-h-[120px] transition-all hover:shadow-md">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs sm:text-sm font-bold text-slate-200">
@@ -42,7 +47,7 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
         </div>
       </div>
 
-      {/* 2. عربون وحجوزات جزئية (البطاقة الصفراء/الكريمية في الوسط) */}
+      {/* 2. عربون وحجوزات جزئية (البطاقة الصفراء/الكريمية) */}
       <div className="bg-[#FEFCE8] text-[#074C3A] rounded-3xl p-5 sm:p-6 shadow-xs border border-[#FEF08A] relative overflow-hidden flex flex-col justify-between min-h-[120px] transition-all hover:shadow-md">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs sm:text-sm font-bold text-slate-700">
@@ -63,7 +68,7 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
         </div>
       </div>
 
-      {/* 3. مبالغ متبقية للتحصيل (البطاقة الزرقاء الفاتحة في اليسار) */}
+      {/* 3. مبالغ متبقية للتحصيل (البطاقة الزرقاء الفاتحة) */}
       <div className="bg-[#F0F7FF] text-[#074C3A] rounded-3xl p-5 sm:p-6 shadow-xs border border-[#D0E5DC] relative overflow-hidden flex flex-col justify-between min-h-[120px] transition-all hover:shadow-md">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs sm:text-sm font-bold text-slate-700">

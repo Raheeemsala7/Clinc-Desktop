@@ -71,9 +71,13 @@ export function useClinicRealtime() {
         socket.on('queue:next_patient', (payload: any) => {
           handleRefresh();
           if (payload?.patientName) {
-            toast.info(`المريض التالي: ${payload.patientName} (رقم ${payload.queueNumber})`, {
-              duration: 5000,
-            });
+            const isAr = typeof document !== 'undefined' ? document.documentElement.lang === 'ar' : true;
+            toast.info(
+              isAr
+                ? `المريض التالي: ${payload.patientName} (رقم ${payload.queueNumber})`
+                : `Next patient: ${payload.patientName} (#${payload.queueNumber})`,
+              { duration: 5000 }
+            );
           }
         });
 
@@ -95,7 +99,12 @@ export function useClinicRealtime() {
         socket.on('appointment:status_changed', (payload: any) => {
           handleRefresh();
           if (payload?.status === 'IN_PROGRESS') {
-            toast.info('تم إدخال مريض جديد لغرفة الكشف 🚪');
+            const isAr = typeof document !== 'undefined' ? document.documentElement.lang === 'ar' : true;
+            toast.info(
+              isAr
+                ? 'تم إدخال مريض جديد لغرفة الكشف 🚪'
+                : 'A patient has entered the examination room 🚪'
+            );
           }
         });
 

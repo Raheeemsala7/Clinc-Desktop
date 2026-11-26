@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, Tag, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
 import { ExpenseFilterTab, ExpenseCategory } from '../types/expenses';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface ExpensesFiltersBarProps {
   currentTab: ExpenseFilterTab;
@@ -36,6 +37,7 @@ export function ExpensesFiltersBar({
   counts,
 }: ExpensesFiltersBarProps) {
   const t = useTranslations('Expenses');
+  const { isAr, dir, tr } = useAppLocale();
 
   const tabs: { id: ExpenseFilterTab; label: string; count: number }[] = [
     { id: 'all', label: t('all'), count: counts.all },
@@ -54,11 +56,11 @@ export function ExpensesFiltersBar({
     try {
       const [y, m] = selectedMonth.split('-').map(Number);
       const d = new Date(Date.UTC(y, m - 1, 1));
-      return d.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
+      return d.toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' });
     } catch {
       return selectedMonth;
     }
-  }, [selectedMonth, t]);
+  }, [selectedMonth, t, isAr]);
 
   const handlePrevMonth = () => {
     const base = selectedMonth || currentMonthStr;
@@ -79,7 +81,7 @@ export function ExpensesFiltersBar({
   };
 
   return (
-    <div className="space-y-3.5 select-none">
+    <div className="space-y-3.5 select-none" dir={dir}>
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         {/* 1. التبويبات الفئوية لحالة المصروف */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
@@ -114,33 +116,33 @@ export function ExpensesFiltersBar({
           <div className="flex items-center bg-white border border-slate-200 rounded-2xl p-1 shadow-2xs">
             <button
               type="button"
-              onClick={handleNextMonth}
-              title="Next Month"
+              onClick={isAr ? handleNextMonth : handlePrevMonth}
+              title={isAr ? tr('الشهر التالي', 'Next Month') : tr('الشهر السابق', 'Previous Month')}
               className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors cursor-pointer"
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              {isAr ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
             </button>
 
             <div className="relative flex items-center px-2">
-              <Calendar className="w-3.5 h-3.5 text-[#0B7B5E] ml-1.5 shrink-0 pointer-events-none" />
+              <Calendar className="w-3.5 h-3.5 text-[#0B7B5E] me-1.5 shrink-0 pointer-events-none" />
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => onMonthChange(e.target.value)}
                 className="text-xs font-bold text-[#074C3A] bg-transparent focus:outline-none cursor-pointer font-sans"
               />
-              <span className="text-[11px] font-bold text-slate-500 mr-2 hidden sm:inline whitespace-nowrap">
+              <span className="text-[11px] font-bold text-slate-500 ms-2 hidden sm:inline whitespace-nowrap">
                 ({formattedMonthLabel})
               </span>
             </div>
 
             <button
               type="button"
-              onClick={handlePrevMonth}
-              title="Previous Month"
+              onClick={isAr ? handlePrevMonth : handleNextMonth}
+              title={isAr ? tr('الشهر السابق', 'Previous Month') : tr('الشهر التالي', 'Next Month')}
               className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors cursor-pointer"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              {isAr ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
             </button>
           </div>
 
@@ -172,7 +174,7 @@ export function ExpensesFiltersBar({
           <select
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="w-full pl-3 pr-8 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:border-[#0B7B5E] cursor-pointer appearance-none shadow-2xs"
+            className="w-full pe-3 ps-8 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:border-[#0B7B5E] cursor-pointer appearance-none shadow-2xs"
           >
             <option value="">{t('allCategories')}</option>
             {categories.map((c) => (
@@ -181,7 +183,7 @@ export function ExpensesFiltersBar({
               </option>
             ))}
           </select>
-          <Tag className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Tag className="w-3.5 h-3.5 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* حقل البحث بالوصف أو التصنيف */}
@@ -191,9 +193,9 @@ export function ExpensesFiltersBar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="w-full pl-3 pr-9 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] shadow-2xs"
+            className="w-full pe-3 ps-9 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] shadow-2xs"
           />
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
       </div>
     </div>

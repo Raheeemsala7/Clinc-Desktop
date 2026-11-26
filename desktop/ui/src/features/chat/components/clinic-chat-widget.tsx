@@ -24,6 +24,7 @@ import {
   ChatMessageItem,
 } from '../apis/chat.action';
 import { NafsIcon } from '@/shared/components/nafs-logo';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 // ─── Web Audio API Notification Sound (خفيف وسلس ونقي بدون ملفات خارجية) ─────────
 function playClinicChime() {
@@ -70,10 +71,11 @@ function playClinicChime() {
 }
 
 export function ClinicChatWidget() {
+  const { isAr, dir, tr } = useAppLocale();
   const { data: session } = useSession();
   const currentUserRole = (session?.user as any)?.role || 'DOCTOR';
   const currentUserId = (session?.user as any)?.id || '';
-  const currentUserName = session?.user?.name || 'مستخدم';
+  const currentUserName = session?.user?.name || tr('مستخدم', 'User');
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
@@ -118,21 +120,37 @@ export function ClinicChatWidget() {
   }, []);
 
   // قوالب الرسائل السريعة
-  const doctorQuickTemplates = [
-    'أرسل المريض القادم 🩺',
-    'محتاج ملف المريض 📋',
-    'سأنتهي من الكشف بعد دقيقتين ⏱️',
-    'استراحة 5 دقائق ☕',
-    'يرجى تسوية حساب المريض 💳',
-  ];
+  const doctorQuickTemplates = isAr
+    ? [
+        'أرسل المريض القادم 🩺',
+        'محتاج ملف المريض 📋',
+        'سأنتهي من الكشف بعد دقيقتين ⏱️',
+        'استراحة 5 دقائق ☕',
+        'يرجى تسوية حساب المريض 💳',
+      ]
+    : [
+        'Send the next patient 🩺',
+        'Need the patient file 📋',
+        'Finishing exam in 2 minutes ⏱️',
+        'Taking a 5-min break ☕',
+        'Please settle patient billing 💳',
+      ];
 
-  const receptionQuickTemplates = [
-    'المريض القادم في الانتظار 👤',
-    'مريض استشارة مستعجل ⚠️',
-    'المريض جاهز للكشف ✅',
-    'تم تسجيل مريض جديد 📝',
-    'يرجى التأكيد على إنهاء الكشف 🔍',
-  ];
+  const receptionQuickTemplates = isAr
+    ? [
+        'المريض القادم في الانتظار 👤',
+        'مريض استشارة مستعجل ⚠️',
+        'المريض جاهز للكشف ✅',
+        'تم تسجيل مريض جديد 📝',
+        'يرجى التأكيد على إنهاء الكشف 🔍',
+      ]
+    : [
+        'Next patient is waiting 👤',
+        'Urgent consultation waiting ⚠️',
+        'Patient ready for exam ✅',
+        'New patient registered 📝',
+        'Please confirm exam completion 🔍',
+      ];
 
   const quickTemplates =
     currentUserRole === 'DOCTOR' ? doctorQuickTemplates : receptionQuickTemplates;
@@ -224,10 +242,13 @@ export function ClinicChatWidget() {
             // إشعار سطح المكتب إن كانت النافذة مصغرة
             if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
               try {
-                const notif = new Notification(`نَفَس · رسالة جديدة من ${newMsg.senderName}`, {
-                  body: newMsg.message,
-                  icon: '/app-icon.png',
-                });
+                const notif = new Notification(
+                  tr(`ميدورا · رسالة جديدة من ${newMsg.senderName}`, `Medora · New message from ${newMsg.senderName}`),
+                  {
+                    body: newMsg.message,
+                    icon: '/app-icon.png',
+                  }
+                );
                 notif.onclick = () => {
                   window.focus();
                   setIsOpen(true);
@@ -238,13 +259,19 @@ export function ClinicChatWidget() {
             // زيادة عداد غير المقروء وتوست تفاعلي إذا كانت النافذة مغلقة
             if (!isOpen) {
               setUnreadCount((c) => c + 1);
-              toast.info(`رسالة جديدة من ${newMsg.senderName}: "${newMsg.message.slice(0, 35)}..."`, {
-                action: {
-                  label: 'عرض المحادثة',
-                  onClick: () => setIsOpen(true),
-                },
-                duration: 5000,
-              });
+              toast.info(
+                tr(
+                  `رسالة جديدة من ${newMsg.senderName}: "${newMsg.message.slice(0, 35)}..."`,
+                  `New message from ${newMsg.senderName}: "${newMsg.message.slice(0, 35)}..."`
+                ),
+                {
+                  action: {
+                    label: tr('عرض المحادثة', 'Open Chat'),
+                    onClick: () => setIsOpen(true),
+                  },
+                  duration: 5000,
+                }
+              );
             }
           }
         });
@@ -294,7 +321,7 @@ export function ClinicChatWidget() {
   const formatMessageTime = (dateStr?: string) => {
     if (!dateStr) return '';
     try {
-      return new Date(dateStr).toLocaleTimeString('ar-EG', {
+      return new Date(dateStr).toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', {
         hour: '2-digit',
         minute: '2-digit',
       });
@@ -304,24 +331,29 @@ export function ClinicChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-5 left-5 z-50 select-none print:hidden" dir="rtl">
+    <div
+      className={`fixed bottom-5 ${isAr ? 'left-5' : 'right-5'} z-50 select-none print:hidden`}
+      dir={dir}
+    >
       {/* نافذة الشات المفتوحة */}
       {isOpen ? (
         <div className="bg-white rounded-3xl shadow-2xl border border-[#D0E5DC] w-[360px] sm:w-[410px] h-[530px] flex flex-col overflow-hidden animate-in fade-in-50 slide-in-from-bottom-6">
-          {/* 1. ترويسة الشات بتصميم نَفَس الزمردي */}
+          {/* 1. ترويسة الشات بتصميم ميدورا الزمردي */}
           <div className="bg-gradient-to-r from-[#074C3A] to-[#0B7B5E] text-white p-3.5 flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-2.5">
               <NafsIcon size={34} />
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-heading font-black text-sm text-white">محادثة العيادة الفورية</h3>
+                  <h3 className="font-heading font-black text-sm text-white">
+                    {tr('محادثة العيادة الفورية', 'Live Clinic Chat')}
+                  </h3>
                   <span className="flex items-center gap-1 text-[10px] font-bold text-[#45DBA5] bg-[#074C3A]/70 px-1.5 py-0.5 rounded-full border border-[#45DBA5]/30">
                     <Circle className="w-1.5 h-1.5 fill-[#45DBA5] animate-pulse" />
-                    <span>{isConnected ? 'متصل فورياً' : 'تزامن نشط'}</span>
+                    <span>{isConnected ? tr('متصل فورياً', 'Live') : tr('تزامن نشط', 'Synced')}</span>
                   </span>
                 </div>
                 <p className="text-[11px] text-emerald-100 font-medium">
-                  تواصل مباشر بين الطبيب ومكتب الاستقبال
+                  {tr('تواصل مباشر بين الطبيب ومكتب الاستقبال', 'Direct doctor & reception desk communication')}
                 </p>
               </div>
             </div>
@@ -336,7 +368,11 @@ export function ClinicChatWidget() {
                     ? 'text-emerald-200 hover:text-white hover:bg-white/10'
                     : 'text-rose-300 hover:text-rose-100 hover:bg-rose-500/20'
                 }`}
-                title={soundEnabled ? 'تنبيهات الصوت مفعلة (اضغط للكتم)' : 'الصوت مكتوم (اضغط للتفعيل)'}
+                title={
+                  soundEnabled
+                    ? tr('تنبيهات الصوت مفعلة (اضغط للكتم)', 'Sound alerts on (click to mute)')
+                    : tr('الصوت مكتوم (اضغط للتفعيل)', 'Sound muted (click to unmute)')
+                }
               >
                 {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               </button>
@@ -346,7 +382,7 @@ export function ClinicChatWidget() {
                 type="button"
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 rounded-xl hover:bg-white/10 text-emerald-100 hover:text-white transition-colors cursor-pointer"
-                title="تصغير المحادثة"
+                title={tr('تصغير المحادثة', 'Minimize chat')}
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -357,7 +393,7 @@ export function ClinicChatWidget() {
           <div className="bg-[#F8FBF9] border-b border-[#D0E5DC] px-3 py-2 space-y-1">
             <div className="flex items-center gap-1 text-[10px] font-bold text-[#4A635B]">
               <Sparkles className="w-3 h-3 text-[#CB902B]" />
-              <span>رسائل سريعة بنقرة واحدة:</span>
+              <span>{tr('رسائل سريعة بنقرة واحدة:', 'One-click quick replies:')}</span>
             </div>
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {quickTemplates.map((tmpl, idx) => (
@@ -380,9 +416,14 @@ export function ClinicChatWidget() {
                 <div className="w-12 h-12 rounded-2xl bg-[#E3F5EE] flex items-center justify-center text-[#0B7B5E]">
                   <MessageSquare className="w-6 h-6" />
                 </div>
-                <p className="text-xs font-black text-[#0B241D]">لا توجد رسائل سابقة</p>
+                <p className="text-xs font-black text-[#0B241D]">
+                  {tr('لا توجد رسائل سابقة', 'No previous messages')}
+                </p>
                 <p className="text-[11px] text-[#4A635B]">
-                  ابدأ التواصل الفوري بين الطبيب والاستقبال لتنسيق دخول المرضى.
+                  {tr(
+                    'ابدأ التواصل الفوري بين الطبيب والاستقبال لتنسيق دخول المرضى.',
+                    'Start instant messaging between doctor and reception to coordinate patient flow.'
+                  )}
                 </p>
               </div>
             ) : (
@@ -400,17 +441,17 @@ export function ClinicChatWidget() {
                       {isDoctor ? (
                         <span className="flex items-center gap-0.5 text-[#0B7B5E]">
                           <Stethoscope className="w-3 h-3" />
-                          <span>{msg.senderName} (طبيب)</span>
+                          <span>{msg.senderName} ({tr('طبيب', 'Doctor')})</span>
                         </span>
                       ) : isAdmin ? (
                         <span className="flex items-center gap-0.5 text-[#074C3A]">
                           <Shield className="w-3 h-3" />
-                          <span>{msg.senderName} (إدارة)</span>
+                          <span>{msg.senderName} ({tr('إدارة', 'Admin')})</span>
                         </span>
                       ) : (
                         <span className="flex items-center gap-0.5 text-[#0B7490]">
                           <KeyRound className="w-3 h-3" />
-                          <span>{msg.senderName} (استقبال)</span>
+                          <span>{msg.senderName} ({tr('استقبال', 'Reception')})</span>
                         </span>
                       )}
                       <span>·</span>
@@ -420,10 +461,10 @@ export function ClinicChatWidget() {
                     <div
                       className={`max-w-[85%] p-3 rounded-2xl text-xs font-bold leading-relaxed shadow-2xs ${
                         isMe
-                          ? 'bg-[#0B7B5E] text-white rounded-br-xs'
+                          ? 'bg-[#0B7B5E] text-white rounded-es-xs'
                           : isDoctor
-                          ? 'bg-[#E3F5EE] text-[#0B241D] border border-[#D0E5DC] rounded-bl-xs'
-                          : 'bg-white text-[#0B241D] border border-[#D0E5DC] rounded-bl-xs'
+                          ? 'bg-[#E3F5EE] text-[#0B241D] border border-[#D0E5DC] rounded-ee-xs'
+                          : 'bg-white text-[#0B241D] border border-[#D0E5DC] rounded-ee-xs'
                       }`}
                     >
                       {msg.message}
@@ -447,7 +488,7 @@ export function ClinicChatWidget() {
                   handleSend();
                 }
               }}
-              placeholder="اكتب رسالة للاستقبال أو الطبيب..."
+              placeholder={tr('اكتب رسالة للاستقبال أو الطبيب...', 'Write a message to reception or doctor...')}
               className="flex-1 h-10 px-3.5 rounded-2xl border border-[#D0E5DC] bg-[#F8FBF9] text-xs font-bold text-[#0B241D] placeholder:text-[#8D9D97] focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all"
             />
             <button
@@ -455,9 +496,9 @@ export function ClinicChatWidget() {
               onClick={() => handleSend()}
               disabled={!inputValue.trim() || isSending}
               className="w-10 h-10 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white flex items-center justify-center transition-all shadow-xs cursor-pointer disabled:opacity-40"
-              title="إرسال"
+              title={tr('إرسال', 'Send')}
             >
-              <Send className="w-4 h-4 -scale-x-100" />
+              <Send className={`w-4 h-4 ${isAr ? '-scale-x-100' : ''}`} />
             </button>
           </div>
         </div>
@@ -474,13 +515,13 @@ export function ClinicChatWidget() {
           <div className="relative">
             <MessageSquare className="w-5 h-5 text-emerald-100 group-hover:scale-110 transition-transform" />
             {unreadCount > 0 && (
-              <span className="absolute -top-2.5 -right-2.5 min-w-[20px] h-5 px-1 rounded-full bg-[#C0282E] text-white font-black text-[10px] flex items-center justify-center border-2 border-white shadow-md animate-bounce">
+              <span className="absolute -top-2.5 -end-2.5 min-w-[20px] h-5 px-1 rounded-full bg-[#C0282E] text-white font-black text-[10px] flex items-center justify-center border-2 border-white shadow-md animate-bounce">
                 {unreadCount > 9 ? '+9' : unreadCount}
               </span>
             )}
           </div>
           <span className="font-heading font-black text-xs">
-            محادثة العيادة {unreadCount > 0 ? `(${unreadCount})` : ''}
+            {tr('محادثة العيادة', 'Clinic Chat')} {unreadCount > 0 ? `(${unreadCount})` : ''}
           </span>
           <span className="w-2 h-2 rounded-full bg-[#45DBA5] animate-pulse" />
         </button>

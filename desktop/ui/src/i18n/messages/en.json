@@ -183,13 +183,13 @@
       "passwordPlaceholder": "••••••••",
       "submitBtn": "Login",
       "submitting": "Signing in...",
-      "brandTitle": "ENT Clinic",
-      "heroTitleLine1": "Clinic Management",
-      "heroTitleLine2": "System",
+      "brandTitle": "Medora",
+      "heroTitleLine1": "Medora Clinic",
+      "heroTitleLine2": "Management System",
       "heroDesc": "Dr. Eslam Abdallah Kareema — Manage appointments, patients, and payments in one place.",
       "switchLang": "العربية",
       "backToHome": "Back to Home",
-      "footerCopyright": "Clinic Management System © Dr. Eslam Kareema — All rights reserved",
+      "footerCopyright": "Medora Clinic Management System © Dr. Eslam Kareema — All rights reserved",
       "heroAria": "Clinic System Information",
       "formAria": "Sign In",
       "validationRequired": "Please enter both username and password",
@@ -203,7 +203,7 @@
     }
   },
   "Dashboard": {
-    "systemTitle": "Clinic Management System",
+    "systemTitle": "Medora · Clinic Management",
     "version": "v1.0",
     "notifications": "Notifications",
     "notificationMenu": {

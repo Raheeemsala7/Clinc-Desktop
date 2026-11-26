@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Calendar, CreditCard, Clock, CheckCheck, Bell } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { cn } from '@/lib/utils';
 
 interface NotificationItem {
@@ -42,6 +43,7 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
 ];
 
 export function DashboardNotifications() {
+  const { dir } = useAppLocale();
   const t = useTranslations('Dashboard.notificationMenu');
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
@@ -123,7 +125,7 @@ export function DashboardNotifications() {
 
         {/* شارة عدد الإشعارات غير المقروءة */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white shadow-xs">
+          <span className="absolute -top-1 -end-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white shadow-xs">
             {unreadCount}
           </span>
         )}
@@ -131,7 +133,10 @@ export function DashboardNotifications() {
 
       {/* القائمة المنبثقة لعرض الإشعارات */}
       {open && (
-        <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto top-16 sm:top-full sm:mt-2 sm:ltr:right-0 sm:rtl:left-0 w-auto sm:w-88 bg-white rounded-2xl shadow-xl border border-slate-200/80 z-50 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
+        <div
+          dir={dir}
+          className="fixed sm:absolute inset-x-4 sm:inset-x-auto top-16 sm:top-full sm:mt-2 sm:end-0 w-auto sm:w-88 bg-white rounded-2xl shadow-xl border border-slate-200/80 z-50 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150"
+        >
           {/* رأس القائمة */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/70">
             <div className="flex items-center gap-2">

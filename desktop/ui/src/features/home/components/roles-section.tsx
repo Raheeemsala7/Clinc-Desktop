@@ -3,40 +3,55 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { KeyRound, Stethoscope, Shield } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export const RolesSection = () => {
+  const { dir, tr } = useAppLocale();
+
   const roles = [
     {
       icon: KeyRound,
-      title: 'الاستقبال',
-      description: 'إدارة الحجوزات، ومتابعة الطابور الحي، وإدخال المرضى حسب الدور، وتسجيل المدفوعات اليومية والإغلاق.',
+      title: tr('الاستقبال', 'Reception'),
+      description: tr(
+        'إدارة الحجوزات، ومتابعة الطابور الحي، وإدخال المرضى حسب الدور، وتسجيل المدفوعات اليومية والإغلاق.',
+        'Manage bookings, monitor the live queue, call patients in order, and record daily payments and shift closing.'
+      ),
       accent: 'border-emerald-300',
     },
     {
       icon: Stethoscope,
-      title: 'الطبيب',
-      description: 'فتح ملف المريض بضغطة واحدة، كتابة الروشتة وإدارتها وطباعتها، وإضافة الفحوصات والتشخيص والرسم على الصور.',
+      title: tr('الطبيب', 'Doctor'),
+      description: tr(
+        'فتح ملف المريض بضغطة واحدة، كتابة الروشتة وإدارتها وطباعتها، وإضافة الفحوصات والتشخيص والرسم على الصور.',
+        'Open patient records in one click, write, manage, and print prescriptions, and record exams, diagnoses, and image annotations.'
+      ),
       accent: 'border-[#0B7B5E]',
     },
     {
       icon: Shield,
-      title: 'المدير',
-      description: 'رؤية كل تفاصيل العيادة، وإدارة حسابات المستخدمين والصلاحيات، ومتابعة الإيرادات والمصروفات والأرشفة.',
+      title: tr('المدير', 'Admin'),
+      description: tr(
+        'رؤية كل تفاصيل العيادة، وإدارة حسابات المستخدمين والصلاحيات، ومتابعة الإيرادات والمصروفات والأرشفة.',
+        'Full visibility across the clinic, managing user accounts and permissions, and tracking revenue, expenses, and archives.'
+      ),
       accent: 'border-[#074C3A]',
     },
   ];
 
   return (
-    <section id="roles" className="py-14 lg:py-20 bg-[#F8FBF9] select-none" dir="rtl">
+    <section id="roles" className="py-14 lg:py-20 bg-[#F8FBF9] select-none" dir={dir}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* عنوان القسم */}
         <div className="text-center space-y-3 mb-12">
           <span className="inline-block px-3.5 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold border border-[#D0E5DC]">
-            الأدوار
+            {tr('الأدوار', 'Roles')}
           </span>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-black text-[#0B241D]">
-            لكل فرد في الفريق شاشته وصلاحياته
+            {tr(
+              'لكل فرد في الفريق شاشته وصلاحياته',
+              'Every Team Member Gets Their Own Screen & Permissions'
+            )}
           </h2>
         </div>
 

@@ -11,6 +11,7 @@ import { PaymentCardItem } from './payment-card-item';
 import { PayRemainingModal } from './pay-remaining-modal';
 import { Loader2, Receipt, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * دالة مساعدة للحصول على تاريخ اليوم بصيغة YYYY-MM-DD
@@ -25,6 +26,7 @@ function getTodayIsoDate(): string {
 
 export function PaymentsView() {
   const t = useTranslations('Payments');
+  const { isAr, dir, tr } = useAppLocale();
   const [selectedDate, setSelectedDate] = useState<string>(getTodayIsoDate);
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all');
   const [currentTab, setCurrentTab] = useState<PaymentFilterTab>('all');
@@ -70,7 +72,10 @@ export function PaymentsView() {
     const remainingCount = Array.from(apptMap.values()).filter((rem) => rem > 0).length;
     const depositCount = activeDeposits.length;
     const paidCount = recorded.filter(
-      (p) => p.paymentType === 'FULL' || p.paymentType === 'REMAINING' || (p.appointment?.remainingAmount === 0)
+      (p) =>
+        p.paymentType === 'FULL' ||
+        p.paymentType === 'REMAINING' ||
+        p.appointment?.remainingAmount === 0
     ).length;
 
     return {
@@ -127,40 +132,46 @@ export function PaymentsView() {
   // 3. تصدير كشف المدفوعات بصيغة CSV تدعم اللغة العربية
   const handleExportCsv = () => {
     if (filteredPayments.length === 0) {
-      toast.warning('لا توجد مدفوعات لتصديرها في هذا اليوم');
+      toast.warning(
+        tr('لا توجد مدفوعات لتصديرها في هذا اليوم', 'No payments to export for this date')
+      );
       return;
     }
 
     const headers = [
-      'رقم الإيصال',
-      'المريض',
-      'الهاتف',
-      'المبلغ المسدد',
-      'إجمالي الكشف',
-      'المتبقي',
-      'نوع الدفعة',
-      'طريقة الدفع',
-      'الطبيب',
-      'وقت العملية',
-      'المحصل',
-      'الملاحظات',
+      tr('رقم الإيصال', 'Receipt ID'),
+      tr('المريض', 'Patient'),
+      tr('الهاتف', 'Phone'),
+      tr('المبلغ المسدد', 'Amount Paid'),
+      tr('إجمالي الكشف', 'Total Fee'),
+      tr('المتبقي', 'Remaining'),
+      tr('نوع الدفعة', 'Payment Type'),
+      tr('طريقة الدفع', 'Method'),
+      tr('الطبيب', 'Doctor'),
+      tr('وقت العملية', 'Time'),
+      tr('المحصل', 'Collector'),
+      tr('الملاحظات', 'Notes'),
     ];
 
     const rows = filteredPayments.map((p) => [
       p.id,
-      p.patient?.fullName || 'غير مسجل',
+      p.patient?.fullName || tr('غير مسجل', 'Unregistered'),
       p.patient?.phone || '',
       p.amount,
       p.appointment?.totalAmount ?? p.amount,
       p.appointment?.remainingAmount ?? 0,
       p.paymentType === 'DEPOSIT'
-        ? 'عربون'
+        ? tr('عربون', 'Deposit')
         : p.paymentType === 'REMAINING'
-        ? 'سداد متبقي'
-        : 'سداد كامل',
-      p.method === 'CARD' ? 'فيزا' : p.method === 'WALLET' ? 'محفظة' : 'نقدي',
+        ? tr('سداد متبقي', 'Remaining Payment')
+        : tr('سداد كامل', 'Full Payment'),
+      p.method === 'CARD'
+        ? tr('فيزا', 'Card')
+        : p.method === 'WALLET'
+        ? tr('محفظة', 'Wallet')
+        : tr('نقدي', 'Cash'),
       p.doctor?.name || '',
-      new Date(p.createdAt).toLocaleTimeString('ar-EG'),
+      new Date(p.createdAt).toLocaleTimeString(isAr ? 'ar-EG' : 'en-US'),
       p.receivedBy?.name || '',
       `"${(p.notes || '').replace(/"/g, '""')}"`,
     ]);
@@ -171,28 +182,31 @@ export function PaymentsView() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `كشف_مدفوعات_${selectedDate}.csv`);
+    link.setAttribute('download', `${tr('كشف_مدفوعات', 'payments_ledger')}_${selectedDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success('تم تصدير كشف المدفوعات بنجاح');
+    toast.success(tr('تم تصدير كشف المدفوعات بنجاح', 'Payments ledger exported successfully'));
   };
 
   // 4. طباعة إيصال دفع مفرد
   const handlePrintReceipt = (payment: PaymentItem) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast.error('يرجى السماح بالنوافذ المنبثقة لطباعة الإيصال');
+      toast.error(
+        tr('يرجى السماح بالنوافذ المنبثقة لطباعة الإيصال', 'Please allow pop-ups to print the receipt')
+      );
       return;
     }
 
+    const currency = tr('ج.م', 'EGP');
     const htmlContent = `
       <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
+      <html dir="${dir}" lang="${isAr ? 'ar' : 'en'}">
         <head>
           <meta charset="utf-8">
-          <title>إيصال سداد - ${payment.patient?.fullName || ''}</title>
+          <title>${tr('إيصال سداد', 'Payment Receipt')} - ${payment.patient?.fullName || ''}</title>
           <style>
             body { font-family: system-ui, -apple-system, sans-serif; padding: 24px; color: #074C3A; }
             .header { text-align: center; border-bottom: 2px dashed #CBD5E1; padding-bottom: 16px; margin-bottom: 20px; }
@@ -206,29 +220,29 @@ export function PaymentsView() {
         </head>
         <body>
           <div class="header">
-            <div class="clinic-name">عيادة د. إسلام عبدالله كريمة</div>
-            <div class="title">إيصال سداد رسوم طبية</div>
+            <div class="clinic-name">${tr('عيادة د. إسلام عبدالله كريمة', 'Dr. Eslam Abdallah Kareema Clinic')}</div>
+            <div class="title">${tr('إيصال سداد رسوم طبية', 'Medical Fee Payment Receipt')}</div>
           </div>
           <div class="details">
-            <div><strong>اسم المريض:</strong> ${payment.patient?.fullName || 'غير مسجل'}</div>
-            <div><strong>الهاتف:</strong> ${payment.patient?.phone || '-'}</div>
-            <div><strong>الطبيب المعالج:</strong> ${payment.doctor?.name || 'د. إسلام'}</div>
-            <div><strong>نوع الحجز:</strong> ${payment.appointment?.type || 'كشف'}</div>
-            <div><strong>طريقة الدفع:</strong> ${payment.method}</div>
-            <div><strong>تاريخ وتوقيت العملية:</strong> ${new Date(payment.createdAt).toLocaleString('ar-EG')}</div>
-            <div><strong>المحصل:</strong> ${payment.receivedBy?.name || '-'}</div>
+            <div><strong>${tr('اسم المريض:', 'Patient Name:')}</strong> ${payment.patient?.fullName || tr('غير مسجل', 'Unregistered')}</div>
+            <div><strong>${tr('الهاتف:', 'Phone:')}</strong> <span dir="ltr">${payment.patient?.phone || '-'}</span></div>
+            <div><strong>${tr('الطبيب المعالج:', 'Doctor:')}</strong> ${payment.doctor?.name || tr('د. إسلام', 'Dr. Eslam')}</div>
+            <div><strong>${tr('نوع الحجز:', 'Booking Type:')}</strong> ${payment.appointment?.type || tr('كشف', 'Examination')}</div>
+            <div><strong>${tr('طريقة الدفع:', 'Payment Method:')}</strong> ${payment.method}</div>
+            <div><strong>${tr('تاريخ وتوقيت العملية:', 'Date & Time:')}</strong> ${new Date(payment.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US')}</div>
+            <div><strong>${tr('المحصل:', 'Collector:')}</strong> ${payment.receivedBy?.name || '-'}</div>
           </div>
           <div class="amount-box">
-            <div style="font-size: 13px; color: #64748B;">المبلغ المسدد في هذا الإيصال</div>
-            <div class="amount">${payment.amount} ج.م</div>
+            <div style="font-size: 13px; color: #64748B;">${tr('المبلغ المسدد في هذا الإيصال', 'Paid in this Receipt')}</div>
+            <div class="amount">${payment.amount} ${currency}</div>
             ${
               (payment.appointment?.remainingAmount ?? 0) > 0
-                ? `<div style="color: #D97706; font-size: 13px; margin-top: 6px;">المتبقي بعد هذا الإيصال: ${payment.appointment?.remainingAmount} ج.م</div>`
-                : '<div style="color: #16A34A; font-size: 13px; margin-top: 6px;">تم سداد كامل الحساب ✓</div>'
+                ? `<div style="color: #D97706; font-size: 13px; margin-top: 6px;">${tr('المتبقي بعد هذا الإيصال:', 'Remaining after this receipt:')} ${payment.appointment?.remainingAmount} ${currency}</div>`
+                : `<div style="color: #16A34A; font-size: 13px; margin-top: 6px;">${tr('تم سداد كامل الحساب ✓', 'Balance paid in full ✓')}</div>`
             }
           </div>
           <div class="footer">
-            شكراً لزيارتكم ونتمنى لكم دوام الصحة والعافية
+            ${tr('شكراً لزيارتكم ونتمنى لكم دوام الصحة والعافية', 'Thank you for your visit. We wish you good health and wellness.')}
           </div>
           <script>
             window.onload = function() { window.print(); }
@@ -242,7 +256,7 @@ export function PaymentsView() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in-50 duration-200">
+    <div className="space-y-6 animate-in fade-in-50 duration-200" dir={dir}>
       {/* 1. رأس الصفحة: العنوان والوصف والتاريخ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -293,22 +307,26 @@ export function PaymentsView() {
           /* حالة التحميل */
           <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 text-[#0B7B5E] animate-spin" />
-            <p className="text-sm font-bold text-[#074C3A]">جاري تحميل سجل المدفوعات...</p>
-            <p className="text-xs text-slate-400">يرجى الانتظار لحظات</p>
+            <p className="text-sm font-bold text-[#074C3A]">
+              {tr('جاري تحميل سجل المدفوعات...', 'Loading payments ledger...')}
+            </p>
+            <p className="text-xs text-slate-400">
+              {tr('يرجى الانتظار لحظات', 'Please wait a moment')}
+            </p>
           </div>
         ) : error ? (
           /* حالة الخطأ */
           <div className="bg-rose-50 border border-rose-200 rounded-3xl p-8 text-center flex flex-col items-center justify-center gap-3">
             <AlertCircle className="w-8 h-8 text-rose-500" />
             <p className="text-sm font-bold text-rose-800">
-              {(error as any)?.message || 'فشل جلب سجل المدفوعات'}
+              {(error as any)?.message || tr('فشل جلب سجل المدفوعات', 'Failed to fetch payments ledger')}
             </p>
             <button
               type="button"
               onClick={() => refetch()}
               className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition-colors cursor-pointer"
             >
-              إعادة المحاولة
+              {tr('إعادة المحاولة', 'Retry')}
             </button>
           </div>
         ) : filteredPayments.length === 0 ? (
@@ -318,12 +336,20 @@ export function PaymentsView() {
               <Receipt className="w-7 h-7" />
             </div>
             <h4 className="text-base font-black text-[#074C3A]">
-              {searchQuery ? 'لا توجد نتائج تطابق بحثك' : 'لا توجد مدفوعات مسجلة لهذا اليوم'}
+              {searchQuery
+                ? tr('لا توجد نتائج تطابق بحثك', 'No results match your search')
+                : tr('لا توجد مدفوعات مسجلة لهذا اليوم', 'No payments recorded for this day')}
             </h4>
             <p className="text-xs text-slate-400 max-w-sm">
               {searchQuery
-                ? 'جرب البحث بكلمة أخرى أو تغيير معايير الفلترة'
-                : 'سيتم ظهور جميع المبالغ المحصلة وعربون الحجوزات تلقائياً هنا فور إتمامها'}
+                ? tr(
+                    'جرب البحث بكلمة أخرى أو تغيير معايير الفلترة',
+                    'Try searching with another term or changing the filters'
+                  )
+                : tr(
+                    'سيتم ظهور جميع المبالغ المحصلة وعربون الحجوزات تلقائياً هنا فور إتمامها',
+                    'All collected amounts and booking deposits will appear here automatically'
+                  )}
             </p>
           </div>
         ) : (
@@ -345,7 +371,7 @@ export function PaymentsView() {
           isOpen={Boolean(selectedPaymentForPay)}
           onClose={() => setSelectedPaymentForPay(null)}
           appointmentId={selectedPaymentForPay.appointment.id}
-          patientName={selectedPaymentForPay.patient?.fullName || 'المريض'}
+          patientName={selectedPaymentForPay.patient?.fullName || tr('المريض', 'Patient')}
           totalAmount={selectedPaymentForPay.appointment.totalAmount}
           paidAmount={selectedPaymentForPay.appointment.paidAmount}
           remainingAmount={selectedPaymentForPay.appointment.remainingAmount}
@@ -354,4 +380,3 @@ export function PaymentsView() {
     </div>
   );
 }
-

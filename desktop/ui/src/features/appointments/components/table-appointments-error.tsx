@@ -4,6 +4,7 @@ import React, { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export interface TableAppointmentsErrorProps {
   error?: Error;
@@ -15,6 +16,7 @@ export interface TableAppointmentsErrorProps {
  * يُستخدم مع ErrorBoundary ويوفر زر إعادة المحاولة وتحديث البيانات
  */
 export function TableAppointmentsError({ error, reset }: TableAppointmentsErrorProps) {
+  const { dir, tr } = useAppLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const t = useTranslations('Dashboard.receptionist.table');
@@ -29,7 +31,7 @@ export function TableAppointmentsError({ error, reset }: TableAppointmentsErrorP
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-rose-100 shadow-xs p-8 text-center">
+    <div dir={dir} className="bg-white rounded-2xl border border-rose-100 shadow-xs p-8 text-center">
       <div className="max-w-md mx-auto flex flex-col items-center">
         {/* أيقونة التنبيه */}
         <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200/60 flex items-center justify-center text-rose-500 mb-4 shadow-xs">
@@ -54,7 +56,7 @@ export function TableAppointmentsError({ error, reset }: TableAppointmentsErrorP
           className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-60 text-white font-bold text-sm shadow-sm transition-all cursor-pointer"
         >
           <RotateCcw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />
-          <span>{isPending ? 'جاري التحديث...' : t('retry')}</span>
+          <span>{isPending ? tr('جاري التحديث...', 'Refreshing...') : t('retry')}</span>
         </button>
       </div>
     </div>

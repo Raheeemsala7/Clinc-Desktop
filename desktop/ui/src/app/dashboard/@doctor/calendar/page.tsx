@@ -5,11 +5,18 @@ import { AppointmentsCalendarServer } from '@/features/appointments/components/a
 import { AppointmentsCalendarSkeleton } from '@/features/appointments/components/appointments-calendar-skeleton';
 import { AppointmentsCalendarError } from '@/features/appointments/components/appointments-calendar-error';
 import { CalendarViewMode } from '@/features/appointments/types/calendar';
+import { getServerLocaleInfo } from '@/i18n/server-locale';
 
-export const metadata: Metadata = {
-  title: 'تقويم مواعيدي | العيادة',
-  description: 'عرض الفترات الزمنية الشاغرة والمحجوزة الخاصة بالطبيب',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { tr } = await getServerLocaleInfo();
+  return {
+    title: tr('تقويم مواعيدي | العيادة', 'My Schedule Calendar | Clinic'),
+    description: tr(
+      'عرض الفترات الزمنية الشاغرة والمحجوزة الخاصة بالطبيب',
+      "View doctor's available and booked appointment time slots"
+    ),
+  };
+}
 
 interface DoctorCalendarPageProps {
   searchParams: Promise<{
@@ -19,18 +26,23 @@ interface DoctorCalendarPageProps {
   }>;
 }
 
-export default function DoctorCalendarPage({
+export default async function DoctorCalendarPage({
   searchParams,
 }: DoctorCalendarPageProps) {
+  const { dir, tr } = await getServerLocaleInfo();
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6" dir="rtl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6" dir={dir}>
       {/* ترويسة صفحة جدول مواعيد الطبيب */}
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight">
-          تقويم المواعيد والحجوزات
+          {tr('تقويم المواعيد والحجوزات', 'Appointments & Bookings Calendar')}
         </h1>
         <p className="text-xs sm:text-sm font-bold text-slate-400">
-          جدول مواعيدك الخاصة والفترات الزمنية المتاحة للكشوفات والمراجعات
+          {tr(
+            'جدول مواعيدك الخاصة والفترات الزمنية المتاحة للكشوفات والمراجعات',
+            'Your appointment schedule and available time slots for examinations and follow-ups'
+          )}
         </p>
       </div>
 
@@ -43,4 +55,3 @@ export default function DoctorCalendarPage({
     </div>
   );
 }
-

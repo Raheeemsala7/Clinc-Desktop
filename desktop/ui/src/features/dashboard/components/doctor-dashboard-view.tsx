@@ -22,6 +22,7 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { openInNewWindow } from '@/shared/utils/open-window';
 import { TodayQueueItem } from '@/features/appointments/apis/appointment.api';
 import { AppointmentsCalendarData } from '@/features/appointments/types/calendar';
@@ -43,41 +44,43 @@ export interface DoctorDashboardViewProps {
   selectedDate?: string;
 }
 
+type TranslateFn = (ar: string, en: string) => string;
+
 /**
  * دالة مساعدة لتنسيق مدة الانتظار بالاستقبال بصيغة مقروءة وواضحة للطبيب
  */
-function formatWaitingTime(mins?: number | null) {
-  if (mins === null || mins === undefined) return 'في الاستقبال حالياً';
-  if (mins <= 1) return 'وصل للتو (أقل من دقيقة)';
-  if (mins < 60) return `في الاستقبال منذ ${mins} دقيقة`;
+function formatWaitingTime(mins: number | null | undefined, tr: TranslateFn) {
+  if (mins === null || mins === undefined) return tr('في الاستقبال حالياً', 'Currently at reception');
+  if (mins <= 1) return tr('وصل للتو (أقل من دقيقة)', 'Just arrived (< 1 min)');
+  if (mins < 60) return tr(`في الاستقبال منذ ${mins} دقيقة`, `Waiting for ${mins} mins`);
   const hours = Math.floor(mins / 60);
   const remMinutes = mins % 60;
   return remMinutes > 0
-    ? `في الاستقبال منذ ${hours} س و ${remMinutes} د`
-    : `في الاستقبال منذ ${hours} ساعة`;
+    ? tr(`في الاستقبال منذ ${hours} س و ${remMinutes} د`, `Waiting for ${hours}h ${remMinutes}m`)
+    : tr(`في الاستقبال منذ ${hours} ساعة`, `Waiting for ${hours}h`);
 }
 
-function getAppointmentTypeLabel(type?: string) {
+function getAppointmentTypeLabel(type: string | undefined, tr: TranslateFn) {
   switch (type) {
     case 'EXAMINATION':
-      return 'كشف';
+      return tr('كشف', 'Examination');
     case 'FOLLOW_UP':
-      return 'إعادة';
+      return tr('إعادة', 'Follow-up');
     case 'OPERATION_FOLLOWUP':
-      return 'متابعة عملية';
+      return tr('متابعة عملية', 'Post-Op Follow-up');
     case 'ENDOSCOPY':
-      return 'منظار';
+      return tr('منظار', 'Endoscopy');
     case 'SURGERY':
     case 'POST_OPERATIVE':
-      return 'تدخل جراحي';
+      return tr('تدخل جراحي', 'Surgery');
     case 'CONSULTATION':
-      return 'استشارة';
+      return tr('استشارة', 'Consultation');
     case 'TEST_RESULTS_REVIEW':
-      return 'مراجعة فحوصات';
+      return tr('مراجعة فحوصات', 'Test Review');
     case 'LAB_TESTS_IMAGING':
-      return 'منظار';
+      return tr('منظار', 'Endoscopy');
     default:
-      return type || 'كشف';
+      return type || tr('كشف', 'Examination');
   }
 }
 
@@ -91,6 +94,7 @@ export const DoctorDashboardView = ({
   initialView = 'queue',
   selectedDate,
 }: DoctorDashboardViewProps) => {
+  const { dir, tr } = useAppLocale();
   const t = useTranslations('Dashboard.doctor');
   const tDoctorStatus = useTranslations('Dashboard.doctorStatus');
 
@@ -225,7 +229,7 @@ export const DoctorDashboardView = ({
   }, [queue, activeTab, waitingPatients, inProgressPatients, pastPatients, completedPatients, searchQuery]);
 
   return (
-    <div className="space-y-4 select-none" dir="rtl">
+    <div className="space-y-4 select-none" dir={dir}>
       {/* 1. رأس الصفحة الموحد والمريح للعين (Clean & Zen Header) */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
         {/* عنوان الشاشة والتاريخ */}
@@ -235,15 +239,28 @@ export const DoctorDashboardView = ({
           </div>
           <div className="text-start">
             <h2 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight flex items-center gap-2">
-              <span>{dashboardView === 'calendar' && calendarDisplayMode === 'day-grid' ? 'جدول كشوفات اليوم' : t('title')}</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold border border-[#D0E5DC]">
+              <span>
+                {dashboardView === 'calendar' && calendarDisplayMode === 'day-grid'
+                  ? tr('جدول كشوفات اليوم', "Today's Schedule")
+                  : t('title')}
+              </span>
+              <span
+                dir="ltr"
+                className="text-xs px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold border border-[#D0E5DC]"
+              >
                 {currentDate}
               </span>
             </h2>
             <p className="text-xs text-slate-400 font-bold mt-0.5">
               {dashboardView === 'calendar' && calendarDisplayMode === 'day-grid'
-                ? 'مواعيد وكشوفات اليوم مقسمة بالساعة — تبدأ تلقائياً من الساعة الحالية'
-                : 'متابعة قائمة المرضى اليوم، فحص الحالات، والاطلاع على جدول مواعيد اليوم'}
+                ? tr(
+                    'مواعيد وكشوفات اليوم مقسمة بالساعة — تبدأ تلقائياً من الساعة الحالية',
+                    "Today's hourly appointments — starting automatically from the current hour"
+                  )
+                : tr(
+                    'متابعة قائمة المرضى اليوم، فحص الحالات، والاطلاع على جدول مواعيد اليوم',
+                    "Monitor today's patient queue, examine cases, and view today's schedule"
+                  )}
             </p>
           </div>
         </div>
@@ -266,7 +283,7 @@ export const DoctorDashboardView = ({
               )}
             >
               <LayoutGrid className="w-4 h-4 text-[#0B7B5E]" />
-              <span>مربعات اليوم ▦</span>
+              <span>{tr('مربعات اليوم ▦', 'Day Grid ▦')}</span>
               {waitingCount > 0 && (
                 <span className="bg-amber-500 text-white px-2 py-0.2 rounded-full text-[10px] font-mono font-black">
                   {waitingCount}
@@ -285,7 +302,7 @@ export const DoctorDashboardView = ({
               )}
             >
               <ListOrdered className="w-4 h-4 text-[#0B7B5E]" />
-              <span>قائمة المرضى ({totalCount})</span>
+              <span>{tr(`قائمة المرضى (${totalCount})`, `Patient Queue (${totalCount})`)}</span>
             </button>
 
             <button
@@ -302,7 +319,7 @@ export const DoctorDashboardView = ({
               )}
             >
               <CalendarDays className="w-4 h-4 text-[#0B7B5E]" />
-              <span>الأسبوع 🗓️</span>
+              <span>{tr('الأسبوع 🗓️', 'Week 🗓️')}</span>
             </button>
           </div>
 
@@ -317,10 +334,10 @@ export const DoctorDashboardView = ({
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                 : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
             )}
-            title="الضغط للتبديل بين متاح وأخذ استراحة"
+            title={tr('الضغط للتبديل بين متاح وأخذ استراحة', 'Click to toggle between Available and On Break')}
           >
             <span className={cn('w-2 h-2 rounded-full', isAvailable ? 'bg-emerald-600' : 'bg-amber-500')} />
-            <span>{isAvailable ? 'طبيب متاح' : 'في استراحة'}</span>
+            <span>{isAvailable ? tr('طبيب متاح', 'Available') : tr('في استراحة', 'On Break')}</span>
           </button>
 
           {/* زر التحديث السريع */}
@@ -329,7 +346,7 @@ export const DoctorDashboardView = ({
             onClick={handleRefresh}
             disabled={isManualRefreshing}
             className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-95 transition-all shadow-2xs flex items-center justify-center cursor-pointer text-slate-600 disabled:opacity-60"
-            title="تحديث البيانات"
+            title={tr('تحديث البيانات', 'Refresh Data')}
           >
             <RefreshCw
               className={cn(
@@ -350,10 +367,16 @@ export const DoctorDashboardView = ({
             </div>
             <div>
               <h4 className="font-black text-amber-950 text-sm">
-                تنبيه: يوجد {pastCount} كشوفات سابقة غير مكتملة من أيام ماضية
+                {tr(
+                  `تنبيه: يوجد ${pastCount} كشوفات سابقة غير مكتملة من أيام ماضية`,
+                  `Alert: ${pastCount} unfinished appointments from previous days`
+                )}
               </h4>
               <p className="text-xs text-amber-800 mt-0.5 font-medium">
-                هذه الحالات سُجلت بتواريخ سابقة ولم يتم إنهاء كشفها، وتم إدراجها هنا لمتابعتها وإتمامها مع المرضى.
+                {tr(
+                  'هذه الحالات سُجلت بتواريخ سابقة ولم يتم إنهاء كشفها، وتم إدراجها هنا لمتابعتها وإتمامها مع المرضى.',
+                  'These cases were scheduled on earlier dates and have not been completed yet; they are listed here for follow-up.'
+                )}
               </p>
             </div>
           </div>
@@ -370,7 +393,7 @@ export const DoctorDashboardView = ({
                 : 'bg-amber-600 hover:bg-amber-700 text-white'
             )}
           >
-            عرض الحجوزات السابقة ({pastCount})
+            {tr(`عرض الحجوزات السابقة (${pastCount})`, `View Past Bookings (${pastCount})`)}
           </button>
         </div>
       )}
@@ -461,7 +484,9 @@ export const DoctorDashboardView = ({
           isCalendarLoading ? (
             <div className="bg-white rounded-3xl p-16 border border-slate-100 text-center shadow-xs">
               <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
-              <p className="text-xs font-bold text-slate-400">جاري تحميل جدول مواعيد اليوم...</p>
+              <p className="text-xs font-bold text-slate-400">
+                {tr('جاري تحميل جدول مواعيد اليوم...', "Loading today's appointment schedule...")}
+              </p>
             </div>
           ) : (
             <CalendarDayGridView
@@ -490,13 +515,19 @@ export const DoctorDashboardView = ({
                 </div>
                 <div className="text-start">
                   <h3 className="font-black text-base text-[#074C3A] flex items-center gap-2">
-                    <span>تقويم المواعيد بالساعات</span>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold">
+                    <span>{tr('تقويم المواعيد بالساعات', 'Hourly Appointments Calendar')}</span>
+                    <span
+                      dir="ltr"
+                      className="text-xs px-2.5 py-0.5 rounded-full bg-[#E3F5EE] text-[#0B7B5E] font-mono font-bold"
+                    >
                       {currentDate}
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5 font-bold">
-                    استعراض المواعيد الأسبوعية بالساعات مع ألوان مميزة لكل حالة
+                    {tr(
+                      'استعراض المواعيد الأسبوعية بالساعات مع ألوان مميزة لكل حالة',
+                      'View weekly hourly appointments with color-coded statuses'
+                    )}
                   </p>
                 </div>
               </div>
@@ -508,21 +539,21 @@ export const DoctorDashboardView = ({
                   onClick={() => handleShiftDate(-7)}
                   className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
                 >
-                  الأسبوع السابق →
+                  {tr('الأسبوع السابق →', '← Previous Week')}
                 </button>
                 <button
                   type="button"
                   onClick={handleResetToToday}
                   className="px-4 py-2 rounded-xl bg-[#E3F5EE] hover:bg-[#E3F5EE] text-[#0B7B5E] text-xs font-black transition-all shadow-2xs cursor-pointer border border-[#D0E5DC]/60"
                 >
-                  اليوم
+                  {tr('اليوم', 'Today')}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleShiftDate(7)}
                   className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
                 >
-                  ← الأسبوع التالي
+                  {tr('← الأسبوع التالي', 'Next Week →')}
                 </button>
               </div>
             </div>
@@ -530,7 +561,9 @@ export const DoctorDashboardView = ({
             {isCalendarLoading ? (
               <div className="bg-white rounded-3xl p-16 border border-slate-100 text-center shadow-xs">
                 <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
-                <p className="text-xs font-bold text-slate-400">جاري تحميل جدول المواعيد بالساعات...</p>
+                <p className="text-xs font-bold text-slate-400">
+                  {tr('جاري تحميل جدول المواعيد بالساعات...', 'Loading hourly appointment schedule...')}
+                </p>
               </div>
             ) : calendarDisplayMode === 'grid' ? (
               <CalendarWeekGridView
@@ -570,7 +603,7 @@ export const DoctorDashboardView = ({
                     <div className="flex items-center gap-2.5 flex-wrap">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow-2xs">
                         <span className="w-2 h-2 rounded-full bg-white" />
-                        <span>كشف جاري الآن في الغرفة 🩺</span>
+                        <span>{tr('كشف جاري الآن في الغرفة 🩺', 'Exam in Progress 🩺')}</span>
                       </span>
 
                       <h3 className="text-lg sm:text-xl font-black text-[#074C3A]">
@@ -579,7 +612,7 @@ export const DoctorDashboardView = ({
 
                       {inProgressPatient.isPastAppointment && (
                         <span className="text-[11px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md border border-amber-200">
-                          حجز سابق ({inProgressPatient.clinicDate})
+                          {tr(`حجز سابق (${inProgressPatient.clinicDate})`, `Past Booking (${inProgressPatient.clinicDate})`)}
                         </span>
                       )}
                     </div>
@@ -590,15 +623,17 @@ export const DoctorDashboardView = ({
                         {inProgressPatient.patientPhone || '—'}
                       </span>
                       {inProgressPatient.patientAge && (
-                        <span>• {inProgressPatient.patientAge} سنة</span>
+                        <span>• {inProgressPatient.patientAge} {tr('سنة', 'yrs')}</span>
                       )}
-                      <span>• {getAppointmentTypeLabel(inProgressPatient.type)}</span>
+                      <span>• {getAppointmentTypeLabel(inProgressPatient.type, tr)}</span>
                       <span className="inline-flex items-center gap-1 text-[#0B7B5E] font-bold">
                         <Clock className="w-3.5 h-3.5" />
-                        {formatWaitingTime(inProgressPatient.waitingMinutes)}
+                        {formatWaitingTime(inProgressPatient.waitingMinutes, tr)}
                       </span>
                       <span className={cn('font-bold', inProgressPatient.remainingAmount > 0 ? 'text-amber-600' : 'text-emerald-600')}>
-                        • {inProgressPatient.remainingAmount > 0 ? `متبقي ${inProgressPatient.remainingAmount} ج.م` : 'مدفوع بالكامل'}
+                        • {inProgressPatient.remainingAmount > 0
+                          ? tr(`متبقي ${inProgressPatient.remainingAmount} ج.م`, `Remaining ${inProgressPatient.remainingAmount} EGP`)
+                          : tr('مدفوع بالكامل', 'Paid in full')}
                       </span>
                     </div>
                   </div>
@@ -617,7 +652,7 @@ export const DoctorDashboardView = ({
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer whitespace-nowrap"
                   >
                     <Stethoscope className="w-4 h-4 stroke-[2.2]" />
-                    <span>فحص المريض والروشتة (Rx)</span>
+                    <span>{tr('فحص المريض والروشتة (Rx)', 'Examine & Rx')}</span>
                   </Link>
 
                   <button
@@ -629,8 +664,8 @@ export const DoctorDashboardView = ({
                     <CheckCircle2 className="w-4 h-4 stroke-[2.2]" />
                     <span>
                       {finishExamMutation.isPending && finishExamMutation.variables === inProgressPatient.id
-                        ? 'جاري الإنهاء...'
-                        : 'إنهاء الكشف وتسليم للاستقبال ✓'}
+                        ? tr('جاري الإنهاء...', 'Finishing...')
+                        : tr('إنهاء الكشف وتسليم للاستقبال ✓', 'Finish Exam & Send to Reception ✓')}
                     </span>
                   </button>
 
@@ -638,7 +673,7 @@ export const DoctorDashboardView = ({
                     href={`/dashboard/view-patients/${inProgressPatient.patientId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="فتح الملف الطبي للمريض"
+                    title={tr('فتح الملف الطبي للمريض', 'Open patient medical file')}
                     className="w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors shadow-2xs"
                   >
                     <FileText className="w-4 h-4 text-[#0B7B5E]" />
@@ -658,14 +693,14 @@ export const DoctorDashboardView = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
-                      الدور التالي جاهز في الانتظار 🚪
+                      {tr('الدور التالي جاهز في الانتظار 🚪', 'Next in Queue Ready 🚪')}
                     </span>
                   </div>
                   <h3 className="text-base sm:text-lg font-black text-[#074C3A] mt-0.5">
                     {waitingPatients[0].patientName}
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    {getAppointmentTypeLabel(waitingPatients[0].type)} • {formatWaitingTime(waitingPatients[0].waitingMinutes)}
+                    {getAppointmentTypeLabel(waitingPatients[0].type, tr)} • {formatWaitingTime(waitingPatients[0].waitingMinutes, tr)}
                   </p>
                 </div>
               </div>
@@ -680,8 +715,8 @@ export const DoctorDashboardView = ({
                   <LogIn className={`w-4 h-4 ${admitMutation.isPending ? 'animate-spin' : ''}`} />
                   <span>
                     {admitMutation.isPending && admitMutation.variables === waitingPatients[0].id
-                      ? 'جاري الإدخال...'
-                      : 'إدخال المريض للعيادة 🚪'}
+                      ? tr('جاري الإدخال...', 'Admitting...')
+                      : tr('إدخال المريض للعيادة 🚪', 'Admit Patient 🚪')}
                   </span>
                 </button>
                 <Link
@@ -691,7 +726,7 @@ export const DoctorDashboardView = ({
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs whitespace-nowrap"
                 >
                   <Stethoscope className="w-4 h-4 text-[#0B7B5E]" />
-                  <span>فتح الكشف مباشرة</span>
+                  <span>{tr('فتح الكشف مباشرة', 'Open Exam Directly')}</span>
                 </Link>
               </div>
             </div>
@@ -713,7 +748,7 @@ export const DoctorDashboardView = ({
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
-                  جميع المرضى ({totalCount})
+                  {tr(`جميع المرضى (${totalCount})`, `All Patients (${totalCount})`)}
                 </button>
 
                 <button
@@ -726,7 +761,7 @@ export const DoctorDashboardView = ({
                       : 'text-amber-700 hover:bg-amber-100/60'
                   )}
                 >
-                  <span>في الانتظار</span>
+                  <span>{tr('في الانتظار', 'Waiting')}</span>
                   <span className={cn('px-2 py-0.2 rounded-full text-xs font-mono font-bold', activeTab === 'waiting' ? 'bg-white text-amber-600' : 'bg-amber-200 text-amber-900')}>
                     {waitingCount}
                   </span>
@@ -744,7 +779,7 @@ export const DoctorDashboardView = ({
                     )}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>كشف جاري ({inProgressCount})</span>
+                    <span>{tr(`كشف جاري (${inProgressCount})`, `In Progress (${inProgressCount})`)}</span>
                   </button>
                 )}
 
@@ -758,7 +793,7 @@ export const DoctorDashboardView = ({
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
-                  تم الكشف ({completedCount})
+                  {tr(`تم الكشف (${completedCount})`, `Completed (${completedCount})`)}
                 </button>
 
                 {pastCount > 0 && (
@@ -772,7 +807,7 @@ export const DoctorDashboardView = ({
                         : 'text-amber-800 bg-amber-50 hover:bg-amber-100'
                     )}
                   >
-                    <span>سابقة معلقة</span>
+                    <span>{tr('سابقة معلقة', 'Pending Past')}</span>
                     <span className="bg-amber-200 text-amber-900 px-2 py-0.2 rounded-full text-xs font-mono font-bold">
                       {pastCount}
                     </span>
@@ -782,13 +817,13 @@ export const DoctorDashboardView = ({
 
               {/* حقل البحث السريع بالاسم أو التليفون */}
               <div className="relative min-w-[240px] sm:min-w-[280px]">
-                <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Search className="w-4 h-4 text-slate-400 absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ابحث بالاسم أو رقم الهاتف..."
-                  className="w-full pr-10 pl-4 py-2 rounded-xl border border-slate-200 bg-slate-50/70 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B7B5E]/20/20 focus:border-[#0B7B5E] transition-all"
+                  placeholder={tr('ابحث بالاسم أو رقم الهاتف...', 'Search by name or phone...')}
+                  className="w-full ps-10 pe-4 py-2 rounded-xl border border-slate-200 bg-slate-50/70 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B7B5E]/20 focus:border-[#0B7B5E] transition-all"
                 />
               </div>
             </div>
@@ -800,8 +835,12 @@ export const DoctorDashboardView = ({
                   <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
                     <CheckCircle2 className="w-7 h-7 text-emerald-500" />
                   </div>
-                  <p className="font-bold text-slate-600 text-base">لا يوجد مرضى مطابقون في هذه القائمة حالياً</p>
-                  <p className="text-xs text-slate-400">يمكنك تغيير فلتر التصفية أو البحث باسم آخر</p>
+                  <p className="font-bold text-slate-600 text-base">
+                    {tr('لا يوجد مرضى مطابقون في هذه القائمة حالياً', 'No matching patients in this list')}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {tr('يمكنك تغيير فلتر التصفية أو البحث باسم آخر', 'Try changing the filter or searching another name')}
+                  </p>
                 </div>
               ) : (
                 filteredPatients.map((patient) => {
@@ -856,7 +895,10 @@ export const DoctorDashboardView = ({
                             </h4>
 
                             {(patient.fileNumber || patient.patientFileNumber) && (
-                              <span className="px-1.5 py-0.5 rounded-md bg-emerald-100/90 text-emerald-800 text-[11px] font-mono font-black border border-emerald-300/60 shadow-2xs">
+                              <span
+                                dir="ltr"
+                                className="px-1.5 py-0.5 rounded-md bg-emerald-100/90 text-emerald-800 text-[11px] font-mono font-black border border-emerald-300/60 shadow-2xs"
+                              >
                                 #{patient.fileNumber || patient.patientFileNumber}
                               </span>
                             )}
@@ -864,40 +906,40 @@ export const DoctorDashboardView = ({
                             {isInProgress && (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-600 text-white shadow-2xs">
                                 <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                                <span>كشف جاري الآن</span>
+                                <span>{tr('كشف جاري الآن', 'Exam in Progress')}</span>
                               </span>
                             )}
 
                             {isWaiting && (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
                                 <Clock className="w-3 h-3 text-amber-700" />
-                                <span>في الانتظار</span>
+                                <span>{tr('في الانتظار', 'Waiting')}</span>
                               </span>
                             )}
 
                             {isBooked && (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E3F5EE] text-[#074C3A] border border-[#D0E5DC]">
-                                <span>حجز مسبق</span>
+                                <span>{tr('حجز مسبق', 'Booked')}</span>
                               </span>
                             )}
 
                             {isPendingCheckout && (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                                <span>بانتظار المحاسبة</span>
+                                <span>{tr('بانتظار المحاسبة', 'Pending Checkout')}</span>
                               </span>
                             )}
 
                             {isCompleted && (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700">
                                 <Check className="w-3 h-3" />
-                                <span>تم الكشف</span>
+                                <span>{tr('تم الكشف', 'Completed')}</span>
                               </span>
                             )}
 
                             {patient.isPastAppointment && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
                                 <Calendar className="w-3 h-3 text-amber-700" />
-                                <span>حجز سابق ({patient.clinicDate})</span>
+                                <span>{tr(`حجز سابق (${patient.clinicDate})`, `Past Booking (${patient.clinicDate})`)}</span>
                               </span>
                             )}
                           </div>
@@ -907,17 +949,17 @@ export const DoctorDashboardView = ({
                               {patient.patientPhone || '—'}
                             </span>
                             {patient.patientAge && (
-                              <span>• {patient.patientAge} سنة</span>
+                              <span>• {patient.patientAge} {tr('سنة', 'yrs')}</span>
                             )}
                             {patient.patientGender && (
-                              <span>• {patient.patientGender === 'MALE' ? 'ذكر' : 'أنثى'}</span>
+                              <span>• {patient.patientGender === 'MALE' ? tr('ذكر', 'Male') : tr('أنثى', 'Female')}</span>
                             )}
                             <span className="px-2.5 py-0.5 rounded-md bg-[#E3F5EE] text-[#0B7B5E] font-black text-xs opacity-100 shadow-2xs border border-[#D0E5DC]">
-                              {getAppointmentTypeLabel(patient.type)}
+                              {getAppointmentTypeLabel(patient.type, tr)}
                             </span>
                             <span className="inline-flex items-center gap-1 text-slate-600">
                               <Clock className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{formatWaitingTime(patient.waitingMinutes)}</span>
+                              <span>{formatWaitingTime(patient.waitingMinutes, tr)}</span>
                             </span>
                             <span
                               className={cn(
@@ -927,7 +969,9 @@ export const DoctorDashboardView = ({
                                   : 'bg-emerald-100/70 text-emerald-800'
                               )}
                             >
-                              {patient.remainingAmount > 0 ? `متبقي ${patient.remainingAmount} ج.م` : 'مدفوع'}
+                              {patient.remainingAmount > 0
+                                ? tr(`متبقي ${patient.remainingAmount} ج.م`, `Remaining ${patient.remainingAmount} EGP`)
+                                : tr('مدفوع', 'Paid')}
                             </span>
                           </div>
                         </div>
@@ -947,7 +991,7 @@ export const DoctorDashboardView = ({
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
                         >
                           <Stethoscope className="w-4 h-4 stroke-[2.2]" />
-                          <span>كشف وروشتة 📋</span>
+                          <span>{tr('كشف وروشتة 📋', 'Exam & Rx 📋')}</span>
                         </Link>
 
                         {/* زر إدخال للكشف إذا كان المريض في الانتظار */}
@@ -961,8 +1005,8 @@ export const DoctorDashboardView = ({
                             <LogIn className="w-4 h-4 stroke-[2.2]" />
                             <span>
                               {admitMutation.isPending && admitMutation.variables === patient.id
-                                ? 'جاري الإدخال...'
-                                : 'إدخال للكشف 🚪'}
+                                ? tr('جاري الإدخال...', 'Admitting...')
+                                : tr('إدخال للكشف 🚪', 'Admit to Exam 🚪')}
                             </span>
                           </button>
                         )}
@@ -978,8 +1022,8 @@ export const DoctorDashboardView = ({
                             <CheckCircle2 className="w-4 h-4" />
                             <span>
                               {finishExamMutation.isPending && finishExamMutation.variables === patient.id
-                                ? 'جاري الإنهاء...'
-                                : 'إنهاء الكشف ✓'}
+                                ? tr('جاري الإنهاء...', 'Finishing...')
+                                : tr('إنهاء الكشف ✓', 'Finish Exam ✓')}
                             </span>
                           </button>
                         )}
@@ -987,7 +1031,7 @@ export const DoctorDashboardView = ({
                         {/* زر فتح الملف الطبي للمريض */}
                         <Link
                           href={`/dashboard/view-patients/${patient.patientId}`}
-                          title="فتح الملف الطبي للمريض"
+                          title={tr('فتح الملف الطبي للمريض', 'Open patient medical file')}
                           className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors shadow-2xs"
                         >
                           <FileText className="w-4 h-4 text-[#0B7B5E]" />
@@ -1001,9 +1045,12 @@ export const DoctorDashboardView = ({
 
             {/* ذيل بطاقة القائمة */}
             <div className="mt-5 pt-4 border-t border-slate-100 text-xs text-slate-400 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <span>تحديث تلقائي مستمر لقائمة الانتظار كل 10 ثوانٍ</span>
+              <span>{tr('تحديث تلقائي مستمر لقائمة الانتظار كل 10 ثوانٍ', 'Queue auto-refreshes every 10 seconds')}</span>
               <span className="font-bold text-slate-600">
-                إجمالي المعروض: {filteredPatients.length} من {totalCount} مريض
+                {tr(
+                  `إجمالي المعروض: ${filteredPatients.length} من ${totalCount} مريض`,
+                  `Showing ${filteredPatients.length} of ${totalCount} patients`
+                )}
               </span>
             </div>
           </div>

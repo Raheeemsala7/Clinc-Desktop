@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { Users, AlertTriangle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Users, AlertTriangle } from 'lucide-react';
+import { getServerLocaleInfo } from '@/i18n/server-locale';
 import { getPatientsListApi, GetPatientsParams } from '../apis/patient.api';
 import { TablePatientsRowActions } from './table-patients-row-actions';
 
@@ -28,16 +29,17 @@ function formatDate(dateStr?: string | null): string {
 /**
  * دالة استخراج أول حرف من اسم المريض للأيقونة الدائرية
  */
-function getFirstLetter(name: string): string {
-  if (!name) return 'م';
+function getFirstLetter(name: string, fallback: string): string {
+  if (!name) return fallback;
   const clean = name.trim();
-  return clean.charAt(0);
+  return clean.charAt(0) || fallback;
 }
 
 /**
  * جدول عرض المرضى لشاشة الاستقبال (Server Component)
  */
 export async function TablePatientsReception({ searchParams }: TablePatientsReceptionProps = {}) {
+  const { dir, tr } = await getServerLocaleInfo();
   const resolvedParams = searchParams ? await Promise.resolve(searchParams) : {};
   const page = Number(resolvedParams.page || 1);
   const pageSize = 10;
@@ -66,20 +68,26 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
   // في حالة عدم وجود مرضى
   if (patients.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-12 text-center">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-12 text-center" dir={dir}>
         <div className="max-w-md mx-auto flex flex-col items-center">
           <div className="w-16 h-16 rounded-2xl bg-[#E3F5EE] border border-[#D0E5DC] flex items-center justify-center text-[#0B7B5E] mb-4 shadow-2xs">
             <Users className="w-8 h-8 stroke-[1.8]" />
           </div>
           <h3 className="text-lg font-black text-[#074C3A] mb-2">
             {resolvedParams.q || resolvedParams.filter
-              ? 'لا توجد نتائج مطابقة لبحثك'
-              : 'لا يوجد مرضى مسجلون حتى الآن'}
+              ? tr('لا توجد نتائج مطابقة لبحثك', 'No matching results found')
+              : tr('لا يوجد مرضى مسجلون حتى الآن', 'No registered patients yet')}
           </h3>
           <p className="text-sm text-slate-400 mb-6 leading-relaxed">
             {resolvedParams.q || resolvedParams.filter
-              ? 'يرجى تجربة البحث بكلمة أخرى أو إلغاء الفلتر المحدد'
-              : 'قم بالضغط على زر "مريض جديد" للبدء في فتح سجل طبي لمريض جديد في العيادة'}
+              ? tr(
+                  'يرجى تجربة البحث بكلمة أخرى أو إلغاء الفلتر المحدد',
+                  'Please try searching with another term or clear the active filter'
+                )
+              : tr(
+                  'قم بالضغط على زر "مريض جديد" للبدء في فتح سجل طبي لمريض جديد في العيادة',
+                  'Click "Add New Patient" to create a medical record for a new clinic patient'
+                )}
           </p>
         </div>
       </div>
@@ -99,16 +107,16 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden select-none">
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden select-none" dir={dir}>
       <div className="overflow-x-auto">
         <table className="w-full text-start border-collapse text-sm">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400 font-bold text-xs">
-              <th className="py-4 px-6 text-start">المريض</th>
-              <th className="py-4 px-6 text-start">التصنيف</th>
-              <th className="py-4 px-6 text-center">آخر زيارة</th>
-              <th className="py-4 px-6 text-center">الزيارات</th>
-              <th className="py-4 px-6 text-end">إجراءات</th>
+              <th className="py-4 px-6 text-start">{tr('المريض', 'Patient')}</th>
+              <th className="py-4 px-6 text-start">{tr('التصنيف', 'Category')}</th>
+              <th className="py-4 px-6 text-center">{tr('آخر زيارة', 'Last Visit')}</th>
+              <th className="py-4 px-6 text-center">{tr('الزيارات', 'Visits')}</th>
+              <th className="py-4 px-6 text-end">{tr('إجراءات', 'Actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 font-medium">
@@ -126,16 +134,16 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
                   <td className="py-4 px-6 text-start">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-[#074C3A] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
-                        {getFirstLetter(patient.fullName)}
+                        {getFirstLetter(patient.fullName, tr('م', 'P'))}
                       </div>
                       <div className="space-y-0.5">
                         <h4 className="font-black text-[#074C3A] text-sm group-hover:text-[#0B7B5E] transition-colors">
                           {patient.fullName}
                         </h4>
-                        <div className="text-xs text-slate-400 font-sans flex items-center gap-1.5 dir-ltr justify-end">
-                          <span>{patient.age ? `${patient.age} سنة` : ''}</span>
+                        <div className="text-xs text-slate-400 font-sans flex items-center gap-1.5 justify-start">
+                          <span>{patient.age ? tr(`${patient.age} سنة`, `${patient.age} yrs`) : ''}</span>
                           {patient.phone && <span>·</span>}
-                          <span>{patient.phone || ''}</span>
+                          <span dir="ltr">{patient.phone || ''}</span>
                         </div>
                       </div>
                     </div>
@@ -152,14 +160,14 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
                             : 'bg-pink-50 text-pink-700'
                         }`}
                       >
-                        {isMale ? 'ذكر' : 'أنثى'}
+                        {isMale ? tr('ذكر', 'Male') : tr('أنثى', 'Female')}
                       </span>
 
                       {/* شارة المرض المزمن */}
                       {hasChronic && (
                         <span className="px-2.5 py-0.5 rounded-lg bg-[#FEFCE8] text-[#B45309] border border-[#FEF08A] text-xs font-bold flex items-center gap-1 shadow-2xs">
                           <AlertTriangle className="w-3 h-3 text-[#D97706]" />
-                          <span>مرض مزمن</span>
+                          <span>{tr('مرض مزمن', 'Chronic Condition')}</span>
                         </span>
                       )}
                     </div>
@@ -167,7 +175,7 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
 
                   {/* 3. عمود تاريخ آخر زيارة */}
                   <td className="py-4 px-6 text-center text-xs text-slate-500 font-mono">
-                    {formatDate(patient.lastVisitDate)}
+                    <span dir="ltr">{formatDate(patient.lastVisitDate)}</span>
                   </td>
 
                   {/* 4. عمود عدد الزيارات */}
@@ -192,7 +200,7 @@ export async function TablePatientsReception({ searchParams }: TablePatientsRece
       <div className="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 font-bold bg-white">
         {/* عدد السجلات */}
         <div className="text-start">
-          عرض {startItem}–{endItem} من [{total}]
+          {tr(`عرض ${startItem}–${endItem} من [${total}]`, `Showing ${startItem}–${endItem} of ${total}`)}
         </div>
 
         {/* أزرار الصفحات */}

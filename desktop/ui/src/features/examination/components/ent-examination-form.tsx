@@ -19,6 +19,7 @@ import {
   LogIn,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { EntExaminationData } from '../types/ent-examination.types';
 import { EntPaperSheet } from './ent-paper-sheet';
 import { PrescriptionView, PrintablePrescriptionSlip } from './prescription-view';
@@ -42,6 +43,7 @@ export function EntExaminationForm({
   doctor,
   visit,
 }: EntExaminationFormProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedTab = searchParams?.get('tab');
@@ -184,13 +186,18 @@ export function EntExaminationForm({
       lastSyncedFileNoRef.current = incoming;
       setLivePatientFileNumber(incoming);
       setExamData((prev) => (prev.fileNo === incoming ? prev : { ...prev, fileNo: incoming }));
-      toast.info(`تم تحديث كود المريض إلى #${incoming}`);
+      toast.info(
+        tr(
+          `تم تحديث كود المريض إلى #${incoming}`,
+          `Patient file # updated to #${incoming}`
+        )
+      );
       router.refresh();
     };
 
     window.addEventListener('clinic:patient-updated', onPatientUpdated);
     return () => window.removeEventListener('clinic:patient-updated', onPatientUpdated);
-  }, [patient?.id, (patient as any)?._id, router]);
+  }, [patient?.id, (patient as any)?._id, router, tr]);
 
   // حفظ كود المريض فوراً في ملف المريض عند تعديل حقل File NO في استمارة الكشف وبث التحديث للجميع
   const handleFileNoCommit = async (rawValue: string) => {
@@ -213,19 +220,29 @@ export function EntExaminationForm({
     try {
       const res = await updatePatientAction(patientId, { fileNumber: nextCode });
       if (res.status) {
-        toast.success(`تم تحديث كود المريض إلى #${nextCode}`);
+        toast.success(
+          tr(
+            `تم تحديث كود المريض إلى #${nextCode}`,
+            `Patient file # updated to #${nextCode}`
+          )
+        );
         router.refresh();
       } else {
         lastSyncedFileNoRef.current = prevSynced;
         setLivePatientFileNumber(prevSynced);
         setExamData((prev) => ({ ...prev, fileNo: prevSynced }));
-        toast.error(res.message || 'تعذر تحديث كود المريض');
+        toast.error(res.message || tr('تعذر تحديث كود المريض', 'Failed to update patient file #'));
       }
     } catch {
       lastSyncedFileNoRef.current = prevSynced;
       setLivePatientFileNumber(prevSynced);
       setExamData((prev) => ({ ...prev, fileNo: prevSynced }));
-      toast.error('تعذر الاتصال بالخادم لتحديث كود المريض');
+      toast.error(
+        tr(
+          'تعذر الاتصال بالخادم لتحديث كود المريض',
+          'Could not connect to server to update patient file #'
+        )
+      );
     }
   };
 
@@ -237,14 +254,16 @@ export function EntExaminationForm({
     try {
       const res = await admitAppointmentAction(targetApptId);
       if (res.status) {
-        toast.success('تم إدخال المريض وبدء الكشف بنجاح 🚪');
+        toast.success(
+          tr('تم إدخال المريض وبدء الكشف بنجاح 🚪', 'Patient admitted and examination started 🚪')
+        );
         setCurrentStatus('IN_PROGRESS');
         router.refresh();
       } else {
-        toast.error(res.message || 'فشل إدخال المريض');
+        toast.error(res.message || tr('فشل إدخال المريض', 'Failed to admit patient'));
       }
     } catch {
-      toast.error('حدث خطأ أثناء إدخال المريض');
+      toast.error(tr('حدث خطأ أثناء إدخال المريض', 'An error occurred while admitting patient'));
     } finally {
       setIsAdmitting(false);
     }
@@ -255,7 +274,7 @@ export function EntExaminationForm({
     const targetApptId = appointment?.id || appointment?._id || '';
     const targetVisitId = visit?.id || visit?._id || '';
     if (!targetApptId) {
-      if (showToast) toast.error('تعذر تحديد رقم الموعد');
+      if (showToast) toast.error(tr('تعذر تحديد رقم الموعد', 'Unable to identify appointment ID'));
       return false;
     }
 
@@ -268,21 +287,26 @@ export function EntExaminationForm({
         examData
       );
       if (res.status) {
-        if (showToast) toast.success('تم حفظ التعديلات بنجاح');
+        if (showToast) toast.success(tr('تم حفظ التعديلات بنجاح', 'Changes saved successfully'));
         const savedCode = String(examData.fileNo || '').trim();
         if (savedCode) {
           lastSyncedFileNoRef.current = savedCode;
           setLivePatientFileNumber(savedCode);
         }
         setVersion((v) => v + 1);
-        setLastSavedTime(new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }));
+        setLastSavedTime(
+          new Date().toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        );
         return true;
       } else {
-        if (showToast) toast.error(res.message || 'فشل حفظ الكشف');
+        if (showToast) toast.error(res.message || tr('فشل حفظ الكشف', 'Failed to save examination'));
         return false;
       }
-    } catch (e: any) {
-      if (showToast) toast.error('حدث خطأ أثناء الحفظ');
+    } catch {
+      if (showToast) toast.error(tr('حدث خطأ أثناء الحفظ', 'An error occurred while saving'));
       return false;
     } finally {
       setIsSaving(false);
@@ -293,20 +317,32 @@ export function EntExaminationForm({
   const handleProceedToPrescription = async () => {
     await handleSave(false);
     setActiveTab('prescription');
-    toast.success('تم حفظ الكشف، يمكنك الآن كتابة الروشتة والأدوية');
+    toast.success(
+      tr(
+        'تم حفظ الكشف، يمكنك الآن كتابة الروشتة والأدوية',
+        'Examination saved; you can now write the prescription'
+      )
+    );
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // إنهاء الكشف وتسليم للاستقبال
   const handleFinish = async () => {
-    if (!confirm('هل أنت متأكد من إنهاء الكشف وتسليم المريض للاستقبال؟ لن تتمكن من تعديل الحالة لاحقاً.')) {
+    if (
+      !confirm(
+        tr(
+          'هل أنت متأكد من إنهاء الكشف وتسليم المريض للاستقبال؟ لن تتمكن من تعديل الحالة لاحقاً.',
+          'Are you sure you want to finish the examination and send the patient to reception? You will not be able to edit this case later.'
+        )
+      )
+    ) {
       return;
     }
 
     const targetApptId = appointment?.id || appointment?._id || '';
     const targetVisitId = visit?.id || visit?._id || '';
     if (!targetApptId) {
-      toast.error('تعذر تحديد رقم الموعد');
+      toast.error(tr('تعذر تحديد رقم الموعد', 'Unable to identify appointment ID'));
       return;
     }
 
@@ -319,14 +355,19 @@ export function EntExaminationForm({
         examData
       );
       if (res.status) {
-        toast.success('تم إنهاء الكشف بنجاح ونقل المريض للاستقبال لتسوية الحساب');
+        toast.success(
+          tr(
+            'تم إنهاء الكشف بنجاح ونقل المريض للاستقبال لتسوية الحساب',
+            'Examination completed and patient transferred to reception for checkout'
+          )
+        );
         router.push('/dashboard');
         router.refresh();
       } else {
-        toast.error(res.message || 'فشل اعتماد الكشف');
+        toast.error(res.message || tr('فشل اعتماد الكشف', 'Failed to finalize examination'));
       }
-    } catch (e: any) {
-      toast.error('حدث خطأ أثناء إنهاء الكشف');
+    } catch {
+      toast.error(tr('حدث خطأ أثناء إنهاء الكشف', 'An error occurred while finishing examination'));
     } finally {
       setIsFinishing(false);
     }
@@ -360,20 +401,24 @@ export function EntExaminationForm({
   };
 
   return (
-    <div className="space-y-6 pb-28 max-w-5xl mx-auto print:p-0 print:m-0 print:max-w-none">
+    <div dir={dir} className="space-y-6 pb-28 max-w-5xl mx-auto print:p-0 print:m-0 print:max-w-none">
       {/* ============================================================== */}
       {/* 1. الشريط العلوي الموحّد والمبسّط (يُخفى تماماً عند الطباعة)       */}
       {/* ============================================================== */}
       <div className="bg-white px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-2xl border border-slate-200/90 shadow-2xs print:hidden flex flex-col md:flex-row md:items-center justify-between gap-3">
-        {/* الجانب الأيمن: زر العودة + بيانات المريض + حالة الحفظ */}
+        {/* جانب البداية: زر العودة + بيانات المريض + حالة الحفظ */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs"
-            title="العودة لشاشة الطبيب"
+            title={tr('العودة لشاشة الطبيب', 'Back to Doctor Dashboard')}
           >
-            <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">شاشة الطبيب</span>
+            {isAr ? (
+              <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
+            ) : (
+              <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
+            )}
+            <span className="hidden sm:inline">{tr('شاشة الطبيب', 'Doctor Dashboard')}</span>
           </Link>
 
           <div className="h-4 w-px bg-slate-200 hidden sm:block" />
@@ -381,10 +426,14 @@ export function EntExaminationForm({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-sm sm:text-base font-black text-[#074C3A]">
-              {patient?.fullName || 'مريض غير محدد'}
+              {patient?.fullName || tr('مريض غير محدد', 'Unnamed Patient')}
             </span>
             <span className="text-xs text-slate-500 font-bold">
-              ({patient?.age ? `${patient.age} سنة` : 'عمر غير محدد'})
+              (
+              {patient?.age
+                ? tr(`${patient.age} سنة`, `${patient.age} yrs`)
+                : tr('عمر غير محدد', 'Age N/A')}
+              )
             </span>
             {(effectivePatient?.fileNumber || examData.fileNo) && (
               <span className="text-[11px] font-mono font-black text-[#0B7B5E] bg-[#E3F5EE] border border-[#CBE7DB] px-2 py-0.5 rounded-full">
@@ -393,7 +442,7 @@ export function EntExaminationForm({
             )}
             {lastSavedTime && (
               <span className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold hidden lg:inline-block">
-                تم الحفظ {lastSavedTime}
+                {tr(`تم الحفظ ${lastSavedTime}`, `Saved ${lastSavedTime}`)}
               </span>
             )}
           </div>
@@ -411,7 +460,7 @@ export function EntExaminationForm({
             }`}
           >
             <Stethoscope className={`w-3.5 h-3.5 ${activeTab === 'exam' ? 'text-[#0B7B5E]' : 'text-slate-400'}`} />
-            <span>1. استمارة الكشف الطبي</span>
+            <span>{tr('1. استمارة الكشف الطبي', '1. Examination Form')}</span>
           </button>
 
           <button
@@ -424,7 +473,7 @@ export function EntExaminationForm({
             }`}
           >
             <Pill className={`w-3.5 h-3.5 ${activeTab === 'prescription' ? 'text-[#0B7B5E]' : 'text-slate-400'}`} />
-            <span>2. الروشتة (Rx)</span>
+            <span>{tr('2. الروشتة (Rx)', '2. Prescription (Rx)')}</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold ${
               (examData.prescriptionItems?.length || 0) > 0
                 ? 'bg-[#E3F5EE] text-[#0B7B5E]'
@@ -435,7 +484,7 @@ export function EntExaminationForm({
           </button>
         </div>
 
-        {/* الجانب الأيسر: أزرار العمليات السريعة */}
+        {/* جانب النهاية: أزرار العمليات السريعة */}
         <div className="flex items-center gap-1.5 flex-wrap self-end md:self-auto">
           {(currentStatus === 'WAITING' || currentStatus === 'BOOKED') && (
             <button
@@ -445,7 +494,9 @@ export function EntExaminationForm({
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black transition-all shadow-2xs cursor-pointer disabled:opacity-60"
             >
               <LogIn className={`w-3.5 h-3.5 ${isAdmitting ? 'animate-spin' : ''}`} />
-              <span>{isAdmitting ? 'إدخال...' : 'إدخال للكشف 🚪'}</span>
+              <span>
+                {isAdmitting ? tr('إدخال...', 'Admitting...') : tr('إدخال للكشف 🚪', 'Admit Patient 🚪')}
+              </span>
             </button>
           )}
 
@@ -454,10 +505,12 @@ export function EntExaminationForm({
             onClick={() => handleSave(true)}
             disabled={isSaving}
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
-            title="حفظ التعديلات (Alt+S)"
+            title={tr('حفظ التعديلات (Alt+S)', 'Save changes (Alt+S)')}
           >
             <Save className="w-3.5 h-3.5 text-slate-600" />
-            <span className="hidden sm:inline">{isSaving ? 'حفظ...' : 'حفظ'}</span>
+            <span className="hidden sm:inline">
+              {isSaving ? tr('حفظ...', 'Saving...') : tr('حفظ', 'Save')}
+            </span>
           </button>
 
           <button
@@ -468,10 +521,10 @@ export function EntExaminationForm({
                 : () => setExternalRxPrintReq((prev) => ({ seq: (prev?.seq || 0) + 1, mode: 'plain' }))
             }
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-            title="طباعة (Alt+P)"
+            title={tr('طباعة (Alt+P)', 'Print (Alt+P)')}
           >
             <Printer className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">طباعة</span>
+            <span className="hidden sm:inline">{tr('طباعة', 'Print')}</span>
           </button>
 
           <button
@@ -481,25 +534,31 @@ export function EntExaminationForm({
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer disabled:opacity-60"
           >
             <CheckCircle2 className={`w-3.5 h-3.5 ${isFinishing ? 'animate-spin' : ''}`} />
-            <span>إنهاء الكشف ✓</span>
+            <span>{tr('إنهاء الكشف ✓', 'Finish Exam ✓')}</span>
           </button>
         </div>
       </div>
 
-      {/* 🚀 أيقونة ثابتة على يمين الشاشة للانتقال للروشتة تظهر فقط أثناء تفحص شيت الكشف */}
+      {/* 🚀 أيقونة ثابتة على حافة الشريط الجانبي للانتقال للروشتة تظهر فقط أثناء تفحص شيت الكشف */}
       {activeTab === 'exam' && (
         <aside
-          aria-label="الانتقال السريع للروشتة"
-          className="fixed right-3 sm:right-4 md:right-[calc(var(--sidebar-width,16rem)+1rem)] top-1/2 -translate-y-1/2 z-40 print:hidden flex flex-col items-center"
+          aria-label={tr('الانتقال السريع للروشتة', 'Quick jump to prescription')}
+          className={`fixed ${
+            isAr
+              ? 'right-3 sm:right-4 md:right-[calc(var(--sidebar-width,16rem)+1rem)]'
+              : 'left-3 sm:left-4 md:left-[calc(var(--sidebar-width,16rem)+1rem)]'
+          } top-1/2 -translate-y-1/2 z-40 print:hidden flex flex-col items-center`}
         >
           <button
             type="button"
             onClick={handleProceedToPrescription}
-            title="انتقال فوري لكتابة الروشتة (Alt+R)"
+            title={tr('انتقال فوري لكتابة الروشتة (Alt+R)', 'Jump to Prescription (Alt+R)')}
             className="group relative flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl bg-[#074C3A] hover:bg-[#0B7B5E] active:scale-95 text-white shadow-xl hover:shadow-2xl transition-all cursor-pointer border-2 border-white/90 ring-2 ring-emerald-500/20"
           >
             <Pill className="w-6 h-6 stroke-[2.2] text-[#45DBA5] animate-pulse" />
-            <span className="text-[11px] font-black whitespace-nowrap">الروشتة 💊</span>
+            <span className="text-[11px] font-black whitespace-nowrap">
+              {tr('الروشتة 💊', 'Rx 💊')}
+            </span>
             {(examData.prescriptionItems?.length || 0) > 0 && (
               <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-white font-mono font-black">
                 {examData.prescriptionItems?.length}
@@ -537,7 +596,7 @@ export function EntExaminationForm({
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
             >
               <Printer className="w-4 h-4 text-slate-500" />
-              <span>طباعة شيت الكشف (طبق الأصل)</span>
+              <span>{tr('طباعة شيت الكشف (طبق الأصل)', 'Print Examination Sheet')}</span>
             </button>
 
             <button
@@ -547,7 +606,7 @@ export function EntExaminationForm({
               className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
             >
               <Save className="w-4 h-4 text-slate-600" />
-              <span>{isSaving ? 'جاري الحفظ...' : 'حفظ مسودة الكشف'}</span>
+              <span>{isSaving ? tr('جاري الحفظ...', 'Saving...') : tr('حفظ مسودة الكشف', 'Save Draft')}</span>
             </button>
           </div>
 
@@ -560,7 +619,11 @@ export function EntExaminationForm({
               className="inline-flex items-center gap-1.5 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-60"
             >
               <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-              <span>{isFinishing ? 'جاري الإنهاء...' : 'إنهاء الكشف وتسليم للاستقبال ✓'}</span>
+              <span>
+                {isFinishing
+                  ? tr('جاري الإنهاء...', 'Finishing...')
+                  : tr('إنهاء الكشف وتسليم للاستقبال ✓', 'Finish & Send to Reception ✓')}
+              </span>
             </button>
 
             <button
@@ -568,8 +631,8 @@ export function EntExaminationForm({
               onClick={handleProceedToPrescription}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black shadow-md transition-all cursor-pointer"
             >
-              <span>حفظ ومتابعة إلى كتابة الروشتة (Rx)</span>
-              <ArrowLeft className="w-4 h-4" />
+              <span>{tr('حفظ ومتابعة إلى كتابة الروشتة (Rx)', 'Save & Continue to Prescription (Rx)')}</span>
+              {isAr ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
             </button>
           </div>
         </div>

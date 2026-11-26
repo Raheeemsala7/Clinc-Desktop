@@ -14,6 +14,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { TableAppointmentsRowActions } from './table-appointments-row-actions';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { formatDoctorName, getAppointmentTypeLabel } from '../constants/booking.constant';
 
 export interface TodayWaitingPatient {
   id: string;
@@ -68,6 +70,7 @@ export function ReceptionQueueSearchTable({
   doctorId,
   translations: t,
 }: ReceptionQueueSearchTableProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearchingExternal, setIsSearchingExternal] = useState(false);
@@ -172,7 +175,7 @@ export function ReceptionQueueSearchTable({
   }, [searchTerm, initialPatients]);
 
   return (
-    <div className="space-y-4 select-none" dir="rtl">
+    <div className="space-y-4 select-none" dir={dir}>
       {/* 📑 تبويبات التبديل: شاشة العرض الموحدة (الكل)، صالة الانتظار، والمكتملين */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2 flex-wrap">
         <button
@@ -184,7 +187,7 @@ export function ReceptionQueueSearchTable({
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          <span>شاشة عرض اليوم الكاملة (الكل)</span>
+          <span>{tr('شاشة عرض اليوم الكاملة (الكل)', "All Today's Queue")}</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
               activeTab === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
@@ -203,7 +206,7 @@ export function ReceptionQueueSearchTable({
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          <span>صالة الانتظار النشطة</span>
+          <span>{tr('صالة الانتظار النشطة', 'Active Waiting Room')}</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
               activeTab === 'WAITING' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
@@ -222,7 +225,7 @@ export function ReceptionQueueSearchTable({
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          <span>المكتملين والمغادرين</span>
+          <span>{tr('المكتملين والمغادرين', 'Completed & Departed')}</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
               activeTab === 'COMPLETED' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
@@ -237,20 +240,26 @@ export function ReceptionQueueSearchTable({
       <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* حقل البحث السريع */}
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute start-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={
               activeTab === 'WAITING'
-                ? 'بحث في صالة الانتظار أو المرضى المكتملين بالاسم أو الهاتف...'
-                : 'بحث في المرضى المكتملين والمغادرين اليوم...'
+                ? tr(
+                    'بحث في صالة الانتظار أو المرضى المكتملين بالاسم أو الهاتف...',
+                    'Search waiting room or completed patients by name or phone...'
+                  )
+                : tr(
+                    'بحث في المرضى المكتملين والمغادرين اليوم...',
+                    "Search today's completed & departed patients..."
+                  )
             }
-            className="w-full h-10 pr-10 pl-4 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all shadow-2xs"
+            className="w-full h-10 ps-10 pe-4 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:bg-white transition-all shadow-2xs"
           />
           {isSearchingExternal && (
-            <Loader2 className="w-4 h-4 text-[#0B7B5E] animate-spin absolute left-3 top-1/2 -translate-y-1/2" />
+            <Loader2 className="w-4 h-4 text-[#0B7B5E] animate-spin absolute end-3 top-1/2 -translate-y-1/2" />
           )}
         </div>
 
@@ -259,22 +268,25 @@ export function ReceptionQueueSearchTable({
           <span className="px-3 py-1 rounded-xl bg-slate-100 text-slate-700">
             {activeTab === 'WAITING' ? (
               <>
-                المعروض بالانتظار: <strong className="text-[#074C3A] font-black">{visiblePatients.length}</strong> (حد أقصى 10)
+                {tr('المعروض بالانتظار:', 'Showing in waiting:')}{' '}
+                <strong className="text-[#074C3A] font-black">{visiblePatients.length}</strong>{' '}
+                {tr('(حد أقصى 10)', '(max 10)')}
               </>
             ) : (
               <>
-                إجمالي المكتملين اليوم: <strong className="text-[#074C3A] font-black">{visiblePatients.length}</strong>
+                {tr('إجمالي المكتملين اليوم:', 'Total shown today:')}{' '}
+                <strong className="text-[#074C3A] font-black">{visiblePatients.length}</strong>
               </>
             )}
           </span>
           {activeTab === 'WAITING' && waitingList.length > 10 && (
             <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
-              إجمالي الانتظار: {waitingList.length}
+              {tr(`إجمالي الانتظار: ${waitingList.length}`, `Total waiting: ${waitingList.length}`)}
             </span>
           )}
           <span className="flex items-center gap-1 text-slate-400">
             <Calendar className="w-3.5 h-3.5" />
-            <span>اليوم</span>
+            <span>{tr('اليوم', 'Today')}</span>
           </span>
         </div>
       </div>
@@ -285,10 +297,18 @@ export function ReceptionQueueSearchTable({
           <div className="flex items-center justify-between text-xs font-black text-rose-950">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
-              <span>مرضى اليوم المكتملين المطابقين للبحث (يمكنك استرجاع الفلوس مباشرة هنا):</span>
+              <span>
+                {tr(
+                  'مرضى اليوم المكتملين المطابقين للبحث (يمكنك استرجاع الفلوس مباشرة هنا):',
+                  'Matching completed patients from today (you can issue a refund directly here):'
+                )}
+              </span>
             </span>
             <span className="text-[11px] font-bold text-rose-700">
-              {matchedCompletedPatients.length} مريض انتهى كشفه
+              {tr(
+                `${matchedCompletedPatients.length} مريض انتهى كشفه`,
+                `${matchedCompletedPatients.length} completed`
+              )}
             </span>
           </div>
 
@@ -302,17 +322,19 @@ export function ReceptionQueueSearchTable({
                   <div className="flex items-center justify-between">
                     <h4 className="font-black text-sm text-[#074C3A]">{p.patientName}</h4>
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      مدفوع: {p.paidAmount || 0} ج.م
+                      {tr(`مدفوع: ${p.paidAmount || 0} ج.م`, `Paid: ${p.paidAmount || 0} EGP`)}
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
-                    <span>{p.patientPhone || 'بدون هاتف'}</span>
-                    <span>• {p.doctorName || 'د. إسلام عبدالله'}</span>
+                    <span dir="ltr">{p.patientPhone || tr('بدون هاتف', 'No phone')}</span>
+                    <span>• {formatDoctorName(p.doctorName, isAr)}</span>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-medium">تم الكشف والمغادرة</span>
+                  <span className="text-[11px] text-slate-400 font-medium">
+                    {tr('تم الكشف والمغادرة', 'Examined & departed')}
+                  </span>
                   <TableAppointmentsRowActions
                     appointmentId={p.id}
                     patientName={p.patientName}
@@ -338,10 +360,15 @@ export function ReceptionQueueSearchTable({
           <div className="flex items-center justify-between text-xs font-black text-[#074C3A]">
             <span className="flex items-center gap-1.5">
               <UserPlus className="w-4 h-4 text-[#0B7B5E]" />
-              <span>نتائج البحث في سجل مرضى العيادة (غير مسجلين في انتظار اليوم):</span>
+              <span>
+                {tr(
+                  'نتائج البحث في سجل مرضى العيادة (غير مسجلين في انتظار اليوم):',
+                  "Clinic patient registry results (not in today's queue):"
+                )}
+              </span>
             </span>
             <span className="text-[11px] font-bold text-emerald-700">
-              {searchResults.length} مريض
+              {tr(`${searchResults.length} مريض`, `${searchResults.length} patients`)}
             </span>
           </div>
 
@@ -356,9 +383,11 @@ export function ReceptionQueueSearchTable({
                     {p.fullName || p.name}
                   </h4>
                   <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                    <span>{p.phone || 'بدون هاتف'}</span>
-                    {p.fileNumber && <span>• ملف #{p.fileNumber}</span>}
-                    {p.age && <span>• {p.age} سنة</span>}
+                    <span dir="ltr">{p.phone || tr('بدون هاتف', 'No phone')}</span>
+                    {p.fileNumber && (
+                      <span>{tr(`• ملف #${p.fileNumber}`, `• File #${p.fileNumber}`)}</span>
+                    )}
+                    {p.age && <span>{tr(`• ${p.age} سنة`, `• ${p.age} yrs`)}</span>}
                   </div>
                 </div>
 
@@ -368,13 +397,13 @@ export function ReceptionQueueSearchTable({
                     className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-bold transition-all shadow-2xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>تسجيل كشف اليوم</span>
+                    <span>{tr('تسجيل كشف اليوم', 'Register Visit Today')}</span>
                   </Link>
 
                   <Link
                     href={`/dashboard/patients/${p.id}`}
                     className="inline-flex items-center justify-center p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold transition-all"
-                    title="فتح الملف الطبي للمريض"
+                    title={tr('فتح الملف الطبي للمريض', 'Open patient medical file')}
                   >
                     <FileText className="w-3.5 h-3.5" />
                   </Link>
@@ -391,14 +420,17 @@ export function ReceptionQueueSearchTable({
           <div className="p-10 text-center space-y-2">
             <p className="text-sm font-bold text-slate-600">
               {searchTerm
-                ? 'لا توجد نتائج مطابقة في قائمة اليوم'
+                ? tr('لا توجد نتائج مطابقة في قائمة اليوم', "No matching results in today's list")
                 : activeTab === 'COMPLETED'
-                ? 'لا يوجد مرضى أتموا الكشف وغادروا حتى الآن اليوم'
-                : 'لا يوجد مرضى في قائمة الانتظار حالياً'}
+                ? tr('لا يوجد مرضى أتموا الكشف وغادروا حتى الآن اليوم', 'No patients have completed their visit yet today')
+                : tr('لا يوجد مرضى في قائمة الانتظار حالياً', 'No patients currently in the waiting queue')}
             </p>
             {searchTerm && searchResults.length === 0 && (
               <p className="text-xs text-slate-400">
-                يمكنك الضغط على زر &quot;حجز جديد&quot; لتسجيل مريض جديد غير مسجل مسبقاً.
+                {tr(
+                  'يمكنك الضغط على زر "حجز جديد" لتسجيل مريض جديد غير مسجل مسبقاً.',
+                  'You can click "New Booking" to register a new patient.'
+                )}
               </p>
             )}
           </div>
@@ -426,11 +458,11 @@ export function ReceptionQueueSearchTable({
                       key={patient.id}
                       className={`transition-all ${
                         patient.status === 'COMPLETED'
-                          ? 'bg-slate-50/60 opacity-60 hover:opacity-95 border-r-4 border-r-slate-300'
+                          ? 'bg-slate-50/60 opacity-60 hover:opacity-95 border-s-4 border-s-slate-300'
                           : patient.status === 'PENDING_CHECKOUT'
-                          ? 'bg-amber-50/50 hover:bg-amber-50/80 border-r-4 border-r-amber-500'
+                          ? 'bg-amber-50/50 hover:bg-amber-50/80 border-s-4 border-s-amber-500'
                           : patient.status === 'IN_PROGRESS'
-                          ? 'bg-emerald-50/30 hover:bg-emerald-50/60 border-r-4 border-r-emerald-500'
+                          ? 'bg-emerald-50/30 hover:bg-emerald-50/60 border-s-4 border-s-emerald-500'
                           : 'hover:bg-slate-50/60'
                       }`}
                     >
@@ -456,11 +488,11 @@ export function ReceptionQueueSearchTable({
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-slate-400 font-mono" dir="ltr">
-                              {patient.patientPhone || 'لا يوجد هاتف'}
+                              {patient.patientPhone || tr('لا يوجد هاتف', 'No phone')}
                             </span>
                             {patient.patientAge && (
                               <span className="text-[11px] text-slate-400 font-medium">
-                                • {patient.patientAge} سنة
+                                {tr(`• ${patient.patientAge} سنة`, `• ${patient.patientAge} yrs`)}
                               </span>
                             )}
                           </div>
@@ -472,11 +504,7 @@ export function ReceptionQueueSearchTable({
                         <div className="flex items-center gap-1.5 text-slate-700">
                           <User className="w-3.5 h-3.5 text-slate-400" />
                           <span className="font-bold text-xs text-[#074C3A]">
-                            {patient.doctorName
-                              ? patient.doctorName.startsWith('د.') || patient.doctorName.startsWith('Dr.')
-                                ? patient.doctorName
-                                : `د. ${patient.doctorName}`
-                              : 'د. إسلام عبدالله'}
+                            {formatDoctorName(patient.doctorName, isAr)}
                           </span>
                         </div>
                       </td>
@@ -489,10 +517,12 @@ export function ReceptionQueueSearchTable({
                               ? t.checkup
                               : patient.type === 'CONSULTATION'
                               ? t.consultation
-                              : patient.type}
+                              : getAppointmentTypeLabel(patient.type, isAr)}
                           </span>
                           <span className="text-[10px] text-slate-400">
-                            {patient.source === 'WALK_IN' ? 'كشف مباشر' : 'حجز مسبق'}
+                            {patient.source === 'WALK_IN'
+                              ? tr('كشف مباشر', 'Walk-in')
+                              : tr('حجز مسبق', 'Scheduled')}
                           </span>
                         </div>
                       </td>
@@ -512,7 +542,7 @@ export function ReceptionQueueSearchTable({
                         ) : patient.status === 'COMPLETED' ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                            تم الكشف والمغادرة
+                            {tr('تم الكشف والمغادرة', 'Completed & Departed')}
                           </span>
                         ) : patient.status === 'WAITING' ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/70 shadow-2xs">
@@ -536,7 +566,7 @@ export function ReceptionQueueSearchTable({
                               }`}
                             />
                             <span className={patient.waitingMinutes > 30 ? 'text-amber-700 font-bold' : ''}>
-                              {patient.waitingMinutes} دقيقة
+                              {tr(`${patient.waitingMinutes} دقيقة`, `${patient.waitingMinutes} mins`)}
                             </span>
                           </div>
                         ) : (
@@ -552,7 +582,9 @@ export function ReceptionQueueSearchTable({
                               <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
                               <span>{t.exempt}</span>
                             </span>
-                            <span className="text-[11px] text-slate-400 font-medium mt-0.5">0 ج.م</span>
+                            <span className="text-[11px] text-slate-400 font-medium mt-0.5">
+                              {tr('0 ج.م', '0 EGP')}
+                            </span>
                           </div>
                         ) : patient.isFullyPaid ? (
                           <div className="flex flex-col items-center">
@@ -561,7 +593,9 @@ export function ReceptionQueueSearchTable({
                               <span>{t.paidInFull}</span>
                             </span>
                             <span className="text-[11px] text-slate-500 font-bold mt-0.5">
-                              {patient.remainingAmount === 0 ? 'خالص' : `${patient.remainingAmount} ج.م`}
+                              {patient.remainingAmount === 0
+                                ? tr('خالص', 'Settled')
+                                : tr(`${patient.remainingAmount} ج.م`, `${patient.remainingAmount} EGP`)}
                             </span>
                           </div>
                         ) : patient.remainingAmount > 0 ? (
@@ -570,11 +604,13 @@ export function ReceptionQueueSearchTable({
                               {patient.discount > 0 ? t.partiallyPaid : t.unpaid}
                             </span>
                             <span className="text-[11px] text-amber-900 font-black mt-0.5">
-                              متبقي: {patient.remainingAmount} ج.م
+                              {tr(`متبقي: ${patient.remainingAmount} ج.م`, `Remaining: ${patient.remainingAmount} EGP`)}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400 font-bold">خالص</span>
+                          <span className="text-xs text-slate-400 font-bold">
+                            {tr('خالص', 'Settled')}
+                          </span>
                         )}
                       </td>
 

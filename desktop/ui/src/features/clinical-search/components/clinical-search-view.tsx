@@ -1,21 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import {
   Search,
-  FileText,
   User,
-  Calendar,
   Pill,
-  ExternalLink,
   Sparkles,
   Stethoscope,
   X,
   RefreshCw,
   FolderOpen,
-  Filter,
 } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface ClinicalMatch {
   category: string;
@@ -36,26 +33,27 @@ interface ClinicalSearchResult {
   matches: ClinicalMatch[];
 }
 
-const QUICK_SEARCH_CHIPS = [
-  'x-ray',
-  'Augmentin',
-  'انحراف حاجز',
-  'حساسية',
-  'لحمية',
-  'أشعة مقطعية CT',
-  'منظار',
-  'Otrivin',
-  'التهاب الجيوب الأنفية',
-  'عملية',
-];
-
 export function ClinicalSearchView() {
+  const { isAr, dir, tr } = useAppLocale();
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'DRUG' | 'DIAGNOSIS' | 'INVESTIGATIONS' | 'HISTORY'>('ALL');
   const [results, setResults] = useState<ClinicalSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, _startTransition] = useTransition();
+
+  const quickSearchChips = [
+    'x-ray',
+    'Augmentin',
+    tr('انحراف حاجز', 'Septal deviation'),
+    tr('حساسية', 'Allergy'),
+    tr('لحمية', 'Polyps'),
+    tr('أشعة مقطعية CT', 'CT Scan'),
+    tr('منظار', 'Endoscopy'),
+    'Otrivin',
+    tr('التهاب الجيوب الأنفية', 'Sinusitis'),
+    tr('عملية', 'Surgery'),
+  ];
 
   const handleSearch = async (termToSearch?: string) => {
     const q = (termToSearch !== undefined ? termToSearch : query).trim();
@@ -121,7 +119,7 @@ export function ClinicalSearchView() {
   });
 
   return (
-    <div className="space-y-6 select-none" dir="rtl">
+    <div className="space-y-6 select-none" dir={dir}>
       {/* 1. ترويسة الصفحة */}
       <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -130,16 +128,22 @@ export function ClinicalSearchView() {
           </div>
           <div>
             <h1 className="text-xl font-black text-[#074C3A] tracking-tight">
-              البحث الطبي السريري الشامل
+              {tr('البحث الطبي السريري الشامل', 'Comprehensive Clinical Search')}
             </h1>
             <p className="text-xs text-slate-500 font-bold mt-0.5">
-              ابحث في كافة استمارات الكشف، التشخيصات، الروشتات، الأدوية، الفحوصات والشكاوى لكافة المرضى
+              {tr(
+                'ابحث في كافة استمارات الكشف، التشخيصات، الروشتات، الأدوية، الفحوصات والشكاوى لكافة المرضى',
+                'Search across all examination sheets, diagnoses, prescriptions, medications, tests, and complaints'
+              )}
             </p>
           </div>
         </div>
 
         <div className="text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl self-start md:self-auto">
-          البحث يبحث في كل كلمة أو اسم دواء أو تشخيص مدون بالعيادة
+          {tr(
+            'البحث يبحث في كل كلمة أو اسم دواء أو تشخيص مدون بالعيادة',
+            'Searches every recorded keyword, drug name, or diagnosis in the clinic'
+          )}
         </div>
       </div>
 
@@ -156,10 +160,13 @@ export function ClinicalSearchView() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="اكتب أي كلمة، اسم دواء، فحص (مثل: x-ray, Augmentin, انحراف حاجز, حساسية)..."
-            className="w-full h-14 pr-12 pl-36 rounded-2xl border-2 border-slate-200 bg-slate-50/50 text-slate-900 text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white shadow-inner transition-all"
+            placeholder={tr(
+              'اكتب أي كلمة، اسم دواء، فحص (مثل: x-ray, Augmentin, انحراف حاجز, حساسية)...',
+              'Type any keyword, drug name, or test (e.g. x-ray, Augmentin, sinusitis, allergy)...'
+            )}
+            className="w-full h-14 ps-12 pe-36 rounded-2xl border-2 border-slate-200 bg-slate-50/50 text-slate-900 text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:bg-white shadow-inner transition-all"
           />
-          <Search className="absolute right-4 w-5 h-5 text-slate-400" />
+          <Search className="absolute start-4 w-5 h-5 text-slate-400 pointer-events-none" />
 
           {query && (
             <button
@@ -169,7 +176,8 @@ export function ClinicalSearchView() {
                 setResults([]);
                 setHasSearched(false);
               }}
-              className="absolute left-32 text-slate-400 hover:text-slate-600 p-1"
+              aria-label={tr('مسح البحث', 'Clear search')}
+              className="absolute end-32 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -178,14 +186,14 @@ export function ClinicalSearchView() {
           <button
             type="submit"
             disabled={isLoading || !query.trim()}
-            className="absolute left-2.5 h-10 px-5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-50 text-white font-black text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            className="absolute end-2.5 h-10 px-5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-50 text-white font-black text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
           >
             {isLoading ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
               <Search className="w-4 h-4 stroke-[2.5]" />
             )}
-            <span>بحث فوري</span>
+            <span>{tr('بحث فوري', 'Search')}</span>
           </button>
         </form>
 
@@ -193,9 +201,9 @@ export function ClinicalSearchView() {
         <div className="flex items-center gap-2 flex-wrap pt-1">
           <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>اقتراحات سريعة:</span>
+            <span>{tr('اقتراحات سريعة:', 'Quick suggestions:')}</span>
           </span>
-          {QUICK_SEARCH_CHIPS.map((chip) => (
+          {quickSearchChips.map((chip) => (
             <button
               key={chip}
               type="button"
@@ -221,7 +229,7 @@ export function ClinicalSearchView() {
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
-              كافة النتائج ({results.length})
+              {tr(`كافة النتائج (${results.length})`, `All Results (${results.length})`)}
             </button>
 
             <button
@@ -233,7 +241,7 @@ export function ClinicalSearchView() {
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
-              روشتات وأدوية
+              {tr('روشتات وأدوية', 'Prescriptions & Drugs')}
             </button>
 
             <button
@@ -245,7 +253,7 @@ export function ClinicalSearchView() {
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
-              تشخيص طبي
+              {tr('تشخيص طبي', 'Diagnoses')}
             </button>
 
             <button
@@ -257,7 +265,7 @@ export function ClinicalSearchView() {
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
-              فحوصات وأشعة
+              {tr('فحوصات وأشعة', 'Labs & Imaging')}
             </button>
 
             <button
@@ -269,12 +277,21 @@ export function ClinicalSearchView() {
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
-              فحص وشكوى
+              {tr('فحص وشكوى', 'Exam & Complaint')}
             </button>
           </div>
 
           <div className="text-xs font-bold text-slate-500">
-            تم العثور على <strong>{filteredResults.length}</strong> نتيجة تطابق البحث
+            {isAr ? (
+              <>
+                تم العثور على <strong>{filteredResults.length}</strong> نتيجة تطابق البحث
+              </>
+            ) : (
+              <>
+                Found <strong>{filteredResults.length}</strong> matching{' '}
+                {filteredResults.length === 1 ? 'result' : 'results'}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -283,17 +300,29 @@ export function ClinicalSearchView() {
       {isLoading ? (
         <div className="bg-white rounded-3xl p-16 border border-slate-100 text-center shadow-xs flex flex-col items-center justify-center">
           <RefreshCw className="w-8 h-8 text-[#0B7B5E] animate-spin mb-3" />
-          <p className="text-sm font-black text-slate-700">جاري البحث الطبي السريري في السجلات...</p>
-          <p className="text-xs text-slate-400 mt-1">يتم البحث في جميع الفحوصات والروشتات والملاحظات</p>
+          <p className="text-sm font-black text-slate-700">
+            {tr('جاري البحث الطبي السريري في السجلات...', 'Searching clinical records...')}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            {tr(
+              'يتم البحث في جميع الفحوصات والروشتات والملاحظات',
+              'Scanning all examinations, prescriptions, and clinical notes'
+            )}
+          </p>
         </div>
       ) : hasSearched && filteredResults.length === 0 ? (
         <div className="bg-white rounded-3xl p-16 border border-slate-100 text-center shadow-xs space-y-3">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto text-2xl font-black">
             🔍
           </div>
-          <h3 className="text-lg font-black text-slate-800">لم يتم العثور على نتائج</h3>
+          <h3 className="text-lg font-black text-slate-800">
+            {tr('لم يتم العثور على نتائج', 'No results found')}
+          </h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-            لم نجد أي مريض مسجل يحتوي ملفه أو روشتاته على الكلمة: &quot;{query}&quot;. جرب كتابة جزء من الكلمة أو كلمة أخرى باللغة العربية أو الإنجليزية.
+            {tr(
+              `لم نجد أي مريض مسجل يحتوي ملفه أو روشتاته على الكلمة: "${query}". جرب كتابة جزء من الكلمة أو كلمة أخرى باللغة العربية أو الإنجليزية.`,
+              `No patient records or prescriptions matched "${query}". Try a partial keyword or another term in English or Arabic.`
+            )}
           </p>
         </div>
       ) : (
@@ -316,15 +345,24 @@ export function ClinicalSearchView() {
                       </h3>
                       {item.patientAge && (
                         <span className="text-xs font-bold text-slate-500">
-                          ({item.patientAge} سنة)
+                          ({item.patientAge} {tr('سنة', 'yrs')})
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500 font-bold mt-0.5">
-                      <span>الهاتف: <strong className="font-mono text-slate-700">{item.patientPhone || '—'}</strong></span>
-                      <span>رقم الملف: <strong className="font-mono text-slate-700">{item.fileNumber || '—'}</strong></span>
+                    <div className="flex items-center gap-3 text-xs text-slate-500 font-bold mt-0.5 flex-wrap">
+                      <span>
+                        {tr('الهاتف:', 'Phone:')}{' '}
+                        <strong className="font-mono text-slate-700">{item.patientPhone || '—'}</strong>
+                      </span>
+                      <span>
+                        {tr('رقم الملف:', 'File #')}{' '}
+                        <strong className="font-mono text-slate-700">{item.fileNumber || '—'}</strong>
+                      </span>
                       {item.visitDate && (
-                        <span>تاريخ الزيارة: <strong className="font-mono text-slate-700">{item.visitDate}</strong></span>
+                        <span>
+                          {tr('تاريخ الزيارة:', 'Visit Date:')}{' '}
+                          <strong className="font-mono text-slate-700">{item.visitDate}</strong>
+                        </span>
                       )}
                     </div>
                   </div>
@@ -336,10 +374,10 @@ export function ClinicalSearchView() {
                   <Link
                     href={`/dashboard/view-patients/${item.patientId}`}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-                    title="فتح ملف المريض الكامل"
+                    title={tr('فتح ملف المريض الكامل', 'Open full patient profile')}
                   >
                     <FolderOpen className="w-3.5 h-3.5 text-slate-600" />
-                    <span>ملف المريض</span>
+                    <span>{tr('ملف المريض', 'Patient File')}</span>
                   </Link>
 
                   {/* 2. فتح استمارة الكشف */}
@@ -347,10 +385,10 @@ export function ClinicalSearchView() {
                     <Link
                       href={`/dashboard/examination/${item.appointmentId}`}
                       className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#E3F5EE] hover:bg-[#D0E5DC] text-[#0B7B5E] text-xs font-black transition-all shadow-2xs cursor-pointer"
-                      title="فتح استمارة فحص الكشف"
+                      title={tr('فتح استمارة فحص الكشف', 'Open examination sheet')}
                     >
                       <Stethoscope className="w-3.5 h-3.5" />
-                      <span>استمارة الكشف</span>
+                      <span>{tr('استمارة الكشف', 'Exam Form')}</span>
                     </Link>
                   )}
 
@@ -359,10 +397,10 @@ export function ClinicalSearchView() {
                     <Link
                       href={`/dashboard/examination/${item.appointmentId}?tab=prescription`}
                       className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] text-white text-xs font-black transition-all shadow-xs cursor-pointer"
-                      title="فتح الروشتة الطبية"
+                      title={tr('فتح الروشتة الطبية', 'Open prescription')}
                     >
                       <Pill className="w-3.5 h-3.5" />
-                      <span>الروشتة (Rx)</span>
+                      <span>{tr('الروشتة (Rx)', 'Prescription (Rx)')}</span>
                     </Link>
                   )}
                 </div>
@@ -371,7 +409,10 @@ export function ClinicalSearchView() {
               {/* المقتطفات الطبية المكتشفة التي تطابق كلمة البحث */}
               <div className="space-y-2">
                 <div className="text-xs font-black text-slate-500 mb-1">
-                  المواضع التي وردت بها الكلمة في سجل هذا المريض:
+                  {tr(
+                    'المواضع التي وردت بها الكلمة في سجل هذا المريض:',
+                    'Matching fields found in this patient record:'
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {item.matches.map((m, mIdx) => (

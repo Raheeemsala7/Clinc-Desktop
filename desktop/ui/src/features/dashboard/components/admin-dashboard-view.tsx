@@ -3,12 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { cn } from '@/lib/utils';
 
 /**
  * المحتوى الخاص بلوحة تحكم المدير (Admin Dashboard) - مترجم بالكامل عبر next-intl
  */
 export const AdminDashboardView = () => {
+  const { dir } = useAppLocale();
   const t = useTranslations('Dashboard.admin');
   const tNav = useTranslations('Dashboard.nav');
 
@@ -42,7 +44,7 @@ export const AdminDashboardView = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
       {/* رأس الصفحة + فلتر التاريخ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">

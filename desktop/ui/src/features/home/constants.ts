@@ -13,6 +13,14 @@ import {
 export const COMPANY_WEBSITE_URL = 'https://www.vyro.software/en';
 
 /**
+ * رسالة التنبيه عند طلب التجربة المباشرة للنظام
+ */
+export const TRY_DEMO_TOAST_MESSAGE = {
+  ar: 'تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en',
+  en: 'Contact the Vyro Software development team to try the system and learn all the details: https://www.vyro.software/en',
+} as const;
+
+/**
  * رقم واتساب العيادة المخصص للحجز والاستفسارات
  */
 export const CLINIC_WHATSAPP_NUMBER = '201050792622';
@@ -41,6 +49,18 @@ export const NAV_LINKS: NavLinkItem[] = [
   { label: 'آراء المرضى', href: '#reviews' },
 ];
 
+export const NAV_LINKS_EN: NavLinkItem[] = [
+  { label: 'Home', href: '#hero' },
+  { label: 'About', href: '#about' },
+  { label: 'Qualifications', href: '#qualifications' },
+  { label: 'Services', href: '#services' },
+  { label: 'Clinic', href: '#clinic' },
+  { label: 'Patient Reviews', href: '#reviews' },
+];
+
+export const getNavLinks = (isAr: boolean): NavLinkItem[] =>
+  isAr ? NAV_LINKS : NAV_LINKS_EN;
+
 /**
  * مميزات سريعة في شاشة الهيرو
  */
@@ -58,6 +78,24 @@ export const HERO_STATS: HeroStat[] = [
     subtitle: 'للأنف والأذن',
   },
 ];
+
+export const HERO_STATS_EN: HeroStat[] = [
+  {
+    title: 'Endoscopy',
+    subtitle: 'Ear · Nose · Throat',
+  },
+  {
+    title: 'Micro-Surgeries',
+    subtitle: 'Microscopic & Endoscopic',
+  },
+  {
+    title: 'Functional Aesthetics',
+    subtitle: 'Nose & Ear',
+  },
+];
+
+export const getHeroStats = (isAr: boolean): HeroStat[] =>
+  isAr ? HERO_STATS : HERO_STATS_EN;
 
 /**
  * قائمة الخدمات الطبية التسع بنفس الترتيب والألوان والتصميم
@@ -146,6 +184,93 @@ export const SERVICES_LIST: ServiceItem[] = [
   },
 ];
 
+export const SERVICES_LIST_EN: ServiceItem[] = [
+  {
+    id: 's-01',
+    number: '01',
+    title: 'Nose & Sinus Endoscopy',
+    description: 'Diagnosis and endoscopic management of sinus and nasal septum conditions.',
+    theme: 'white',
+    badgeColor: 'blue',
+    linkColor: 'blue',
+  },
+  {
+    id: 's-02',
+    number: '02',
+    title: 'Microscopic Ear Surgery',
+    description: 'Precision microscopic surgeries to improve hearing and treat ear diseases.',
+    theme: 'navy',
+    badgeColor: 'yellow',
+    linkColor: 'yellow',
+  },
+  {
+    id: 's-03',
+    number: '03',
+    title: 'Endoscopic Ear Surgery',
+    description: 'State-of-the-art minimally invasive endoscopic ear interventions.',
+    theme: 'white',
+    badgeColor: 'navy',
+    linkColor: 'blue',
+  },
+  {
+    id: 's-04',
+    number: '04',
+    title: 'Tonsillectomy & Adenoidectomy',
+    description: 'Modern surgical techniques for both pediatric and adult patients.',
+    theme: 'navy',
+    badgeColor: 'yellow',
+    linkColor: 'yellow',
+  },
+  {
+    id: 's-05',
+    number: '05',
+    title: 'Laryngeal & Tracheal Endoscopy',
+    description: 'Comprehensive evaluation of voice, swallowing, and airway disorders.',
+    theme: 'white',
+    badgeColor: 'blue',
+    linkColor: 'blue',
+  },
+  {
+    id: 's-06',
+    number: '06',
+    title: 'Foreign Body Extraction',
+    description: 'Safe, gentle endoscopic foreign body removal from ear, nose, and throat.',
+    theme: 'navy',
+    badgeColor: 'yellow',
+    linkColor: 'yellow',
+  },
+  {
+    id: 's-07',
+    number: '07',
+    title: 'Snoring & Sleep Apnea Surgery',
+    description: 'Assessment and surgical management of snoring causes when indicated.',
+    theme: 'white',
+    badgeColor: 'navy',
+    linkColor: 'blue',
+  },
+  {
+    id: 's-08',
+    number: '08',
+    title: 'Functional Rhinoplasty',
+    description: 'Restoring nasal airway function while preserving natural cosmetic contours.',
+    theme: 'navy',
+    badgeColor: 'yellow',
+    linkColor: 'yellow',
+  },
+  {
+    id: 's-09',
+    number: '09',
+    title: 'Otoplasty (Prominent Ear Correction)',
+    description: 'Aesthetic and corrective ear reshaping for children and adults.',
+    theme: 'white',
+    badgeColor: 'blue',
+    linkColor: 'blue',
+  },
+];
+
+export const getServicesList = (isAr: boolean): ServiceItem[] =>
+  isAr ? SERVICES_LIST : SERVICES_LIST_EN;
+
 /**
  * المحطات التعليمية والمهنية للطبيب
  */
@@ -177,6 +302,37 @@ export const TIMELINE_MILESTONES: TimelineMilestone[] = [
   },
 ];
 
+export const TIMELINE_MILESTONES_EN: TimelineMilestone[] = [
+  {
+    id: 'm-1',
+    year: '[Year]',
+    degree: '[Bachelor of Medicine & Surgery (MBBCh)]',
+    institution: '[University]',
+  },
+  {
+    id: 'm-2',
+    year: '[Year]',
+    degree: "[Master's Degree / Diploma]",
+    institution: '[Institution]',
+  },
+  {
+    id: 'm-3',
+    year: '[Year]',
+    degree: '[Doctorate / Fellowship]',
+    institution: '[Authority]',
+  },
+  {
+    id: 'm-4',
+    year: '[Year — Present]',
+    degree: '[Current Position]',
+    institution: '[Hospital / Clinic]',
+    isCurrent: true,
+  },
+];
+
+export const getTimelineMilestones = (isAr: boolean): TimelineMilestone[] =>
+  isAr ? TIMELINE_MILESTONES : TIMELINE_MILESTONES_EN;
+
 /**
  * أقسام ومرافق العيادة
  */
@@ -204,6 +360,33 @@ export const CLINIC_FACILITIES: ClinicFacility[] = [
   },
 ];
 
+export const CLINIC_FACILITIES_EN: ClinicFacility[] = [
+  {
+    id: 'c-main',
+    title: '[Reception & Front Desk Photo]',
+    isFeatured: true,
+  },
+  {
+    id: 'c-checkup',
+    title: '[Examination Room]',
+  },
+  {
+    id: 'c-devices',
+    title: '[Medical Devices]',
+  },
+  {
+    id: 'c-endoscopy',
+    title: '[Endoscopy Suite]',
+  },
+  {
+    id: 'c-waiting',
+    title: '[Waiting Lounge]',
+  },
+];
+
+export const getClinicFacilities = (isAr: boolean): ClinicFacility[] =>
+  isAr ? CLINIC_FACILITIES : CLINIC_FACILITIES_EN;
+
 /**
  * آراء المرضى وتقييماتهم
  */
@@ -230,4 +413,31 @@ export const PATIENT_REVIEWS: PatientReview[] = [
     patientName: '[اسم المريض]',
   },
 ];
+
+export const PATIENT_REVIEWS_EN: PatientReview[] = [
+  {
+    id: 'r-1',
+    accent: 'yellow',
+    rating: 5,
+    text: '[Patient review statement as written]',
+    patientName: '[Patient Name]',
+  },
+  {
+    id: 'r-2',
+    accent: 'blue',
+    rating: 5,
+    text: '[Patient review statement as written]',
+    patientName: '[Patient Name]',
+  },
+  {
+    id: 'r-3',
+    accent: 'navy',
+    rating: 5,
+    text: '[Patient review statement as written]',
+    patientName: '[Patient Name]',
+  },
+];
+
+export const getPatientReviews = (isAr: boolean): PatientReview[] =>
+  isAr ? PATIENT_REVIEWS : PATIENT_REVIEWS_EN;
 

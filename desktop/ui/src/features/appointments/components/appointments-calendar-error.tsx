@@ -3,6 +3,7 @@
 import React, { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export interface AppointmentsCalendarErrorProps {
   error?: Error;
@@ -13,6 +14,7 @@ export function AppointmentsCalendarError({
   error,
   reset,
 }: AppointmentsCalendarErrorProps) {
+  const { dir, tr } = useAppLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -26,18 +28,18 @@ export function AppointmentsCalendarError({
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-rose-100 shadow-xs p-10 text-center" dir="rtl">
+    <div className="bg-white rounded-3xl border border-rose-100 shadow-xs p-10 text-center" dir={dir}>
       <div className="max-w-md mx-auto flex flex-col items-center">
         <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200/60 flex items-center justify-center text-rose-500 mb-4 shadow-xs">
           <AlertTriangle className="w-7 h-7 stroke-[2.2]" />
         </div>
 
         <h3 className="text-lg font-black text-[#074C3A] mb-2">
-          تعذر تحميل تقويم المواعيد
+          {tr('تعذر تحميل تقويم المواعيد', 'Failed to load appointments calendar')}
         </h3>
 
         <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-          {error?.message || 'حدث خطأ أثناء الاتصال بالخادم، يرجى المحاولة مرة أخرى.'}
+          {error?.message || tr('حدث خطأ أثناء الاتصال بالخادم، يرجى المحاولة مرة أخرى.', 'An error occurred while connecting to the server. Please try again.')}
         </p>
 
         <button
@@ -47,7 +49,7 @@ export function AppointmentsCalendarError({
           className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 disabled:opacity-60 text-white font-bold text-sm shadow-sm transition-all cursor-pointer"
         >
           <RotateCcw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />
-          <span>{isPending ? 'جاري التحديث...' : 'إعادة المحاولة'}</span>
+          <span>{isPending ? tr('جاري التحديث...', 'Refreshing...') : tr('إعادة المحاولة', 'Try again')}</span>
         </button>
       </div>
     </div>

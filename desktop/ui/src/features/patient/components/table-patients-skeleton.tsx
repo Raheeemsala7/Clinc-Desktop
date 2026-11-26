@@ -1,17 +1,22 @@
+'use client';
+
 import React from 'react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export function TablePatientsSkeleton() {
+  const { dir, tr } = useAppLocale();
+
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden select-none animate-pulse" dir="rtl">
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden select-none animate-pulse" dir={dir}>
       <div className="overflow-x-auto">
         <table className="w-full text-start border-collapse text-sm">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400 font-bold text-xs">
-              <th className="py-4 px-6 text-start">المريض</th>
-              <th className="py-4 px-6 text-start">التصنيف</th>
-              <th className="py-4 px-6 text-center">آخر زيارة</th>
-              <th className="py-4 px-6 text-center">الزيارات</th>
-              <th className="py-4 px-6 text-end">إجراءات</th>
+              <th className="py-4 px-6 text-start">{tr('المريض', 'Patient')}</th>
+              <th className="py-4 px-6 text-start">{tr('التصنيف', 'Category')}</th>
+              <th className="py-4 px-6 text-center">{tr('آخر زيارة', 'Last Visit')}</th>
+              <th className="py-4 px-6 text-center">{tr('الزيارات', 'Visits')}</th>
+              <th className="py-4 px-6 text-end">{tr('إجراءات', 'Actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 font-medium">

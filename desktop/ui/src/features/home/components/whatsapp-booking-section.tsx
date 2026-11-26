@@ -2,21 +2,22 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { getWhatsAppUrl } from '../constants';
 import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * قسم الحجز عبر الواتساب - تفاعلي وفخم مع أنيميشن نبضي وزر جذاب فائق الاستجابة
  */
 export const WhatsAppBookingSection = () => {
   const t = useTranslations('WhatsAppBooking');
-  const locale = useLocale();
-  const isArabic = locale === 'ar';
+  const { locale, dir, tr } = useAppLocale();
 
-  const bookingMsg = isArabic
-    ? 'مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.'
-    : 'Hello Dr. Eslam, I would like to book an appointment at the ENT clinic.';
+  const bookingMsg = tr(
+    'مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.',
+    'Hello Dr. Eslam, I would like to book an appointment at the ENT clinic.'
+  );
 
   const whatsappUrl = getWhatsAppUrl(bookingMsg, locale);
 
@@ -27,18 +28,18 @@ export const WhatsAppBookingSection = () => {
   ];
 
   return (
-    <section id="booking" className="py-16 sm:py-20 bg-gradient-to-br from-[#074C3A] via-[#074C3A] to-[#060F2E] text-white relative overflow-hidden">
+    <section id="booking" dir={dir} className="py-16 sm:py-20 bg-gradient-to-br from-[#074C3A] via-[#074C3A] to-[#060F2E] text-white relative overflow-hidden">
       {/* إضاءات جمالية خفيفة تنبض بالخلفية */}
       <motion.div
         animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-10 left-10 w-96 h-96 bg-[#0B7B5E] rounded-full blur-3xl pointer-events-none"
+        className="absolute top-10 end-10 w-96 h-96 bg-[#0B7B5E] rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
       <motion.div
         animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-        className="absolute bottom-10 right-10 w-96 h-96 bg-amber-400 rounded-full blur-3xl pointer-events-none"
+        className="absolute bottom-10 start-10 w-96 h-96 bg-amber-400 rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
 

@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Plus, Stethoscope, Users } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { getServerLocaleInfo } from '@/i18n/server-locale';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { TableAppointmentsSkeleton } from '@/features/appointments/components/table-appointments-skeleton';
 import { TableAppointmentsError } from '@/features/appointments/components/table-appointments-error';
@@ -14,6 +15,7 @@ import { getNextAuthToken } from '@/shared/lib/utils/auth.util';
  * المحتوى الخاص بشاشة الاستقبال (Receptionist Dashboard) - Server Component مع Suspense & ErrorBoundary
  */
 export async function ReceptionistDashboardView({ doctorId }: { doctorId?: string } = {}) {
+  const { dir, tr } = await getServerLocaleInfo();
   const t = await getTranslations('Dashboard.receptionist');
   const tDoctorStatus = await getTranslations('Dashboard.doctorStatus');
 
@@ -25,7 +27,7 @@ export async function ReceptionistDashboardView({ doctorId }: { doctorId?: strin
       : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
       {/* رأس الصفحة + زر حجز موعد جديد */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
@@ -64,7 +66,7 @@ export async function ReceptionistDashboardView({ doctorId }: { doctorId?: strin
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>جميع أطباء العيادة</span>
+            <span>{tr('جميع أطباء العيادة', 'All Clinic Doctors')}</span>
           </Link>
 
           {doctors.map((doc) => {

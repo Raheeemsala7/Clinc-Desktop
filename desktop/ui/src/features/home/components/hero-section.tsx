@@ -3,28 +3,31 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ExternalLink, LogIn, FileText, CheckCircle2, Users, Sparkles, Stethoscope } from 'lucide-react';
-import { COMPANY_WEBSITE_URL } from '../constants';
+import { ExternalLink, LogIn, FileText } from 'lucide-react';
+import { COMPANY_WEBSITE_URL, TRY_DEMO_TOAST_MESSAGE } from '../constants';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export const HeroSection = () => {
-  const handleTryDemo = (e: React.MouseEvent) => {
-    toast.info('تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en', {
+  const { dir, tr } = useAppLocale();
+
+  const handleTryDemo = () => {
+    toast.info(tr(TRY_DEMO_TOAST_MESSAGE.ar, TRY_DEMO_TOAST_MESSAGE.en), {
       duration: 6000,
     });
   };
 
   return (
-    <section id="hero" className="relative pt-8 pb-16 lg:pt-14 lg:pb-24 overflow-hidden select-none" dir="rtl">
+    <section id="hero" className="relative pt-8 pb-16 lg:pt-14 lg:pb-24 overflow-hidden select-none" dir={dir}>
       {/* خلفية جمالية خفيفة بالأخضر الزمردي والنعناعي */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#E3F5EE]/60 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-1/3 left-10 w-80 h-80 bg-[#45DBA5]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 start-1/4 w-96 h-96 bg-[#E3F5EE]/60 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-1/3 end-10 w-80 h-80 bg-[#45DBA5]/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
           {/* الجانب الأيمن (النص التعريفي والأزرار) */}
-          <div className="lg:col-span-7 space-y-6 text-center lg:text-right">
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-start">
             {/* الشارة العلوية */}
             <motion.div
               initial={{ opacity: 0, y: 15 }}
@@ -33,7 +36,7 @@ export const HeroSection = () => {
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E3F5EE] border border-[#D0E5DC] text-[#0B7B5E] text-xs sm:text-sm font-bold shadow-2xs"
             >
               <span className="w-2 h-2 rounded-full bg-[#0B7B5E] animate-pulse" />
-              <span>منظومة إدارة العيادات</span>
+              <span>{tr('منظومة إدارة العيادات', 'Clinic Management System')}</span>
             </motion.div>
 
             {/* العنوان الرئيسي */}
@@ -43,19 +46,22 @@ export const HeroSection = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl sm:text-5xl lg:text-6xl font-heading font-black text-[#0B241D] tracking-tight leading-[1.25]"
             >
-              نظّم عيادتك من الحجز
+              {tr('نظّم عيادتك من الحجز', 'Organize Your Clinic from Booking')}
               <br />
-              <span className="text-[#0B7B5E]">حتى الروشتة</span>
+              <span className="text-[#0B7B5E]">{tr('حتى الروشتة', 'to Prescription')}</span>
             </motion.h1>
 
-            {/* النص الوصفي لمنظومة نَفَس */}
+            {/* النص الوصفي لمنظومة ميدورا */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-base sm:text-lg text-[#4A635B] leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium"
             >
-              &ldquo;نَفَس: منظومة متكاملة لإدارة العيادات، حجز وطابور حي، وروشتة إلكترونية، وملف لكل مريض، وتقارير مالية. كلها في مكان واحد وبصلاحيات واضحة لكل فرد في الفريق.&rdquo;
+              &ldquo;{tr(
+                'ميدورا (Medora): منظومة متكاملة لإدارة العيادات، حجز وطابور حي، وروشتة إلكترونية، وملف لكل مريض، وتقارير مالية. كلها في مكان واحد وبصلاحيات واضحة لكل فرد في الفريق.',
+                'Medora: An all-in-one clinic management system for bookings, live queues, electronic prescriptions, patient records, and financial reports — all in one place with clear permissions for every team member.'
+              )}&rdquo;
             </motion.p>
 
             {/* أزرار الإجراءات الرئيسية */}
@@ -72,7 +78,7 @@ export const HeroSection = () => {
                 onClick={handleTryDemo}
                 className="bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-sm sm:text-base px-6 sm:px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-150 inline-flex items-center gap-2 cursor-pointer"
               >
-                <span>جرب الموقع تجريبياً</span>
+                <span>{tr('جرب الموقع تجريبياً', 'Try Live Demo')}</span>
                 <ExternalLink className="w-4 h-4 opacity-80" />
               </a>
 
@@ -81,7 +87,7 @@ export const HeroSection = () => {
                 className="bg-white hover:bg-[#F2F8F4] active:scale-95 text-[#074C3A] border-2 border-[#074C3A] font-bold text-sm sm:text-base px-6 sm:px-7 py-3.5 rounded-xl transition-all duration-150 inline-flex items-center gap-2 cursor-pointer shadow-2xs"
               >
                 <LogIn className="w-4 h-4 text-[#074C3A]" />
-                <span>تسجيل الدخول</span>
+                <span>{tr('تسجيل الدخول', 'Sign In')}</span>
               </Link>
             </motion.div>
 
@@ -92,11 +98,11 @@ export const HeroSection = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="pt-3 text-xs sm:text-sm font-semibold text-[#8D9D97] flex flex-wrap items-center justify-center lg:justify-start gap-4"
             >
-              <span>يعمل أوفلاين</span>
+              <span>{tr('يعمل أوفلاين', 'Works Offline')}</span>
               <span>•</span>
-              <span>يستخدمه مئات العيادات</span>
+              <span>{tr('يستخدمه مئات العيادات', 'Trusted by Hundreds of Clinics')}</span>
               <span>•</span>
-              <span>ملفاتك تحت أيديك</span>
+              <span>{tr('ملفاتك تحت أيديك', 'Your Records at Your Fingertips')}</span>
             </motion.div>
           </div>
 
@@ -111,10 +117,10 @@ export const HeroSection = () => {
               {/* ترويسة كرت الطابور الحي */}
               <div className="flex items-center justify-between pb-3 border-b border-[#D0E5DC]">
                 <h3 className="font-heading font-black text-base text-[#0B241D]">
-                  الطابور الحي
+                  {tr('الطابور الحي', 'Live Queue')}
                 </h3>
                 <span className="px-3 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold border border-[#D0E5DC]">
-                  3 في الانتظار
+                  {tr('3 في الانتظار', '3 Waiting')}
                 </span>
               </div>
 
@@ -127,8 +133,8 @@ export const HeroSection = () => {
                       12
                     </span>
                     <div>
-                      <p className="font-bold text-xs text-[#0B241D]">داخل الكشف</p>
-                      <p className="text-[11px] text-[#4A635B]">الطبيب المعالج</p>
+                      <p className="font-bold text-xs text-[#0B241D]">{tr('داخل الكشف', 'In Examination')}</p>
+                      <p className="text-[11px] text-[#4A635B]">{tr('الطبيب المعالج', 'Attending Doctor')}</p>
                     </div>
                   </div>
                   <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E] animate-pulse" />
@@ -141,11 +147,11 @@ export const HeroSection = () => {
                       13
                     </span>
                     <div>
-                      <p className="font-bold text-xs text-[#0B241D]">التالي</p>
-                      <p className="text-[11px] text-[#4A635B]">كشف جديد</p>
+                      <p className="font-bold text-xs text-[#0B241D]">{tr('التالي', 'Next Up')}</p>
+                      <p className="text-[11px] text-[#4A635B]">{tr('كشف جديد', 'New Visit')}</p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-bold text-[#0B7B5E]">جاهز</span>
+                  <span className="text-[11px] font-bold text-[#0B7B5E]">{tr('جاهز', 'Ready')}</span>
                 </div>
 
                 {/* 3. في الانتظار */}
@@ -155,11 +161,11 @@ export const HeroSection = () => {
                       14
                     </span>
                     <div>
-                      <p className="font-bold text-xs text-[#4A635B]">في الانتظار</p>
-                      <p className="text-[11px] text-[#8D9D97]">متابعة كشف</p>
+                      <p className="font-bold text-xs text-[#4A635B]">{tr('في الانتظار', 'Waiting')}</p>
+                      <p className="text-[11px] text-[#8D9D97]">{tr('متابعة كشف', 'Follow-up Visit')}</p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-bold text-[#8D9D97]">في الصالة</span>
+                  <span className="text-[11px] font-bold text-[#8D9D97]">{tr('في الصالة', 'In Lobby')}</span>
                 </div>
               </div>
 
@@ -170,10 +176,10 @@ export const HeroSection = () => {
                 </div>
                 <div>
                   <h4 className="font-heading font-black text-xs text-[#0B241D]">
-                    روشتة إلكترونية
+                    {tr('روشتة إلكترونية', 'Electronic Prescription')}
                   </h4>
                   <p className="text-[11px] text-[#4A635B] font-medium">
-                    تُطبع بضغطة واحدة، للقياس على كرت العيادة
+                    {tr('تُطبع بضغطة واحدة، للقياس على كرت العيادة', 'One-click printing, sized for your clinic letterhead')}
                   </p>
                 </div>
               </div>

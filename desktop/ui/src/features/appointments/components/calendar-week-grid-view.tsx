@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Clock } from 'lucide-react';
 import { WeekDayItem, WeekAppointmentItem } from '../types/calendar';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { formatDoctorName, getAppointmentTypeLabel } from '../constants/booking.constant';
 
 interface CalendarWeekGridViewProps {
   days: WeekDayItem[];
@@ -38,6 +40,7 @@ export function CalendarWeekGridView({
   selectedDoctorId,
   isDoctorView,
 }: CalendarWeekGridViewProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const router = useRouter();
 
   // خريطة لتحديد المواعيد حسب اليوم والساعة
@@ -50,39 +53,20 @@ export function CalendarWeekGridView({
     });
   };
 
-  const getTypeLabel = (type?: string) => {
-    switch (type) {
-      case 'FOLLOW_UP':
-        return 'إعادة';
-      case 'OPERATION_FOLLOWUP':
-        return 'متابعة عملية';
-      case 'ENDOSCOPY':
-        return 'منظار';
-      case 'SURGERY':
-      case 'POST_OPERATIVE':
-        return 'تدخل جراحي';
-      case 'TEST_RESULTS_REVIEW':
-        return 'متابعة';
-      case 'CONSULTATION':
-        return 'استشارة';
-      case 'LAB_TESTS_IMAGING':
-        return 'منظار';
-      default:
-        return 'كشف';
+  const getLocalizedDayName = (day: WeekDayItem) => {
+    if (isAr) return day.dayName;
+    try {
+      return new Date(day.date + 'T12:00:00Z').toLocaleDateString('en-US', {
+        weekday: 'short',
+        timeZone: 'UTC',
+      });
+    } catch {
+      return day.dayName;
     }
-  };
-
-  const formatDoctorName = (name?: string) => {
-    if (!name || !name.trim()) return 'د. إسلام عبدالله';
-    const clean = name.trim();
-    if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
-      return clean;
-    }
-    return `د. ${clean}`;
   };
 
   return (
-    <div className="space-y-4 select-none" dir="rtl">
+    <div className="space-y-4 select-none" dir={dir}>
       {/* 1. الشريط الفرعي التوضيحي ودليل الألوان (Legend) مع الإشارة للخط الأحمر مطابقة للصورة 2 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs px-1">
         {/* ملاحظة النقر */}
@@ -90,8 +74,14 @@ export function CalendarWeekGridView({
           <Clock className="w-4 h-4 text-slate-400" />
           <span>
             {isDoctorView
-              ? 'جدول مواعيدك الأسبوعية — اضغط على أي موعد لعرض تفاصيل المريض'
-              : 'اضغط على أي فترة فارغة لحجز موعد جديد'}
+              ? tr(
+                  'جدول مواعيدك الأسبوعية — اضغط على أي موعد لعرض تفاصيل المريض',
+                  'Your weekly schedule — click any appointment to view patient details'
+                )
+              : tr(
+                  'اضغط على أي فترة فارغة لحجز موعد جديد',
+                  'Click any empty slot to book a new appointment'
+                )}
           </span>
         </div>
 
@@ -99,19 +89,19 @@ export function CalendarWeekGridView({
         <div className="flex items-center gap-4 font-bold text-xs flex-wrap">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" />
-            <span>مكتمل</span>
+            <span>{tr('مكتمل', 'Completed')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#EAB308]" />
-            <span>في الانتظار</span>
+            <span>{tr('في الانتظار', 'Waiting')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E]" />
-            <span>محجوز</span>
+            <span>{tr('محجوز', 'Booked')}</span>
           </div>
           <div className="flex items-center gap-1.5 text-rose-500">
             <span className="w-3 h-0.5 bg-rose-500 inline-block" />
-            <span>الخط الأحمر = الوقت الحالي</span>
+            <span>{tr('الخط الأحمر = الوقت الحالي', 'Red line = Current time')}</span>
           </div>
         </div>
       </div>
@@ -120,13 +110,13 @@ export function CalendarWeekGridView({
       <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[860px]">
-            {/* صف رؤوس الأيام (7 أعمدة للأيام + عمود الوقت على اليسار) */}
+            {/* صف رؤوس الأيام (7 أعمدة للأيام + عمود الوقت) */}
             <div className="grid grid-cols-8 border-b border-slate-200 text-center text-xs font-bold bg-slate-50/50">
-              {/* رؤوس الأيام السبعة من السبت للجمعة (RTL) */}
+              {/* رؤوس الأيام السبعة */}
               {days.map((day) => (
                 <div
                   key={day.date}
-                  className={`py-3.5 px-2 border-l border-slate-200 transition-colors ${
+                  className={`py-3.5 px-2 border-e border-slate-200 transition-colors ${
                     day.isToday
                       ? 'bg-[#074C3A] text-white shadow-sm'
                       : day.isOffDay
@@ -135,7 +125,7 @@ export function CalendarWeekGridView({
                   }`}
                 >
                   <div className="text-sm font-black">
-                    {day.dayName} {day.dayNumber}
+                    {getLocalizedDayName(day)} {day.dayNumber}
                   </div>
                   <div
                     className={`text-[11px] mt-0.5 ${
@@ -146,14 +136,14 @@ export function CalendarWeekGridView({
                         : 'text-slate-400'
                     }`}
                   >
-                    {day.isToday ? 'اليوم' : day.isOffDay ? 'إجازة' : ''}
+                    {day.isToday ? tr('اليوم', 'Today') : day.isOffDay ? tr('إجازة', 'Off') : ''}
                   </div>
                 </div>
               ))}
 
-              {/* عمود الساعات في أقصى اليسار */}
+              {/* عمود الساعات في نهاية الصف */}
               <div className="py-3.5 px-2 text-slate-400 font-mono text-center flex items-center justify-center">
-                الوقت
+                {tr('الوقت', 'Time')}
               </div>
             </div>
 
@@ -169,7 +159,7 @@ export function CalendarWeekGridView({
                     return (
                       <div
                         key={`${day.date}-${hour}`}
-                        className={`p-1.5 border-l border-slate-100 relative transition-colors ${
+                        className={`p-1.5 border-e border-slate-100 relative transition-colors ${
                           isOff
                             ? 'bg-slate-50/50 cursor-not-allowed'
                             : isDoctorView
@@ -215,7 +205,11 @@ export function CalendarWeekGridView({
                                         selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
                                       }`
                                 }
-                                title={isDoctorView ? 'اضغط لفتح استمارة الكشف والروشتة 🩺' : 'عرض تفاصيل الموعد'}
+                                title={
+                                  isDoctorView
+                                    ? tr('اضغط لفتح استمارة الكشف والروشتة 🩺', 'Click to open examination & prescription 🩺')
+                                    : tr('عرض تفاصيل الموعد', 'View appointment details')
+                                }
                                 onClick={(e) => e.stopPropagation()}
                                 className={`block p-2 rounded-xl border text-[11px] font-bold shadow-2xs hover:shadow-xs transition-all ${cardStyle}`}
                               >
@@ -223,7 +217,7 @@ export function CalendarWeekGridView({
                                 <div className="flex items-center justify-between font-mono text-[10px]">
                                   <span className="font-bold">{appt.startTime}</span>
                                   <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-md bg-white/80 font-black shadow-2xs">
-                                    {getTypeLabel(appt.type)}
+                                    {getAppointmentTypeLabel(appt.type, isAr)}
                                   </span>
                                 </div>
 
@@ -235,7 +229,7 @@ export function CalendarWeekGridView({
                                 {/* السطر الثالث: اسم الطبيب المعالج بشكل بارز وواضح */}
                                 <div className="mt-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/95 text-[#074C3A] border border-[#0B7B5E]/20 text-[10px] font-black shadow-2xs truncate">
                                   <span className="text-[11px] shrink-0">👨‍⚕️</span>
-                                  <span className="truncate">{formatDoctorName(appt.doctorName)}</span>
+                                  <span className="truncate">{formatDoctorName(appt.doctorName, isAr)}</span>
                                 </div>
                               </Link>
                             );
@@ -245,7 +239,7 @@ export function CalendarWeekGridView({
                     );
                   })}
 
-                  {/* عمود الساعة في اليسار */}
+                  {/* عمود الساعة في نهاية الصف */}
                   <div className="p-2 text-center text-xs font-mono text-slate-400 font-bold flex items-center justify-center">
                     {hour}
                   </div>

@@ -183,13 +183,13 @@
       "passwordPlaceholder": "••••••••",
       "submitBtn": "دخول",
       "submitting": "جاري التحقق...",
-      "brandTitle": "نَفَس",
-      "heroTitleLine1": "نظام نَفَس",
+      "brandTitle": "ميدورا",
+      "heroTitleLine1": "نظام ميدورا (Medora)",
       "heroTitleLine2": "لإدارة العيادات",
       "heroDesc": "منظومة متكاملة لإدارة المواعيد والمرضى والطابور الحي والروشتات الإلكترونية.",
       "switchLang": "ENGLISH",
       "backToHome": "العودة للرئيسية",
-      "footerCopyright": "نظام نَفَس لإدارة العيادات © 2026 — جميع الحقوق محفوظة",
+      "footerCopyright": "نظام ميدورا (Medora) لإدارة العيادات © 2026 — جميع الحقوق محفوظة",
       "heroAria": "معلومات نظام العيادة",
       "formAria": "تسجيل الدخول",
       "validationRequired": "يرجى إدخال اسم المستخدم وكلمة المرور",
@@ -203,7 +203,7 @@
     }
   },
   "Dashboard": {
-    "systemTitle": "نَفَس · إدارة العيادات",
+    "systemTitle": "ميدورا · إدارة العيادات",
     "version": "v1.0",
     "notifications": "التنبيهات",
     "notificationMenu": {

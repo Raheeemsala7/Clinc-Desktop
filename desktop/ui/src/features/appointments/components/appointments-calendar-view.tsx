@@ -9,6 +9,7 @@ import { CalendarDayTimelineView } from './calendar-day-timeline-view';
 import { CalendarDayGridView } from './calendar-day-grid-view';
 import { CalendarWeekGridView } from './calendar-week-grid-view';
 import { CalendarMonthGridView } from './calendar-month-grid-view';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface AppointmentsCalendarViewProps {
   data: AppointmentsCalendarData;
@@ -23,6 +24,7 @@ export function AppointmentsCalendarView({
   initialDate,
   initialDoctorId,
 }: AppointmentsCalendarViewProps) {
+  const { dir } = useAppLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -96,7 +98,7 @@ export function AppointmentsCalendarView({
   };
 
   return (
-    <div className={`space-y-6 transition-opacity duration-200 ${isPending ? 'opacity-70' : 'opacity-100'}`}>
+    <div dir={dir} className={`space-y-6 transition-opacity duration-200 ${isPending ? 'opacity-70' : 'opacity-100'}`}>
       {/* 1. عناصر التحكم العلوية (Header Controls) */}
       <CalendarHeaderControls
         currentDate={currentDate}

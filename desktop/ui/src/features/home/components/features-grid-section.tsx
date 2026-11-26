@@ -10,52 +10,76 @@ import {
   ShieldCheck,
   TrendingUp,
 } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export const FeaturesGridSection = () => {
+  const { dir, tr } = useAppLocale();
+
   const features = [
     {
       icon: CalendarDays,
-      title: 'الحجز والطابور الحي',
-      description: 'حجز حضور أو سابق، وقت دور واضح، ومتابعة الطابور لحظة بلحظة بين الاستقبال والعيادة.',
+      title: tr('الحجز والطابور الحي', 'Booking & Live Queue'),
+      description: tr(
+        'حجز حضور أو سابق، وقت دور واضح، ومتابعة الطابور لحظة بلحظة بين الاستقبال والعيادة.',
+        'Walk-in or advance booking, clear turn times, and real-time queue tracking between reception and the clinic room.'
+      ),
     },
     {
       icon: FileText,
-      title: 'الروشتة الإلكترونية',
-      description: 'يكتبها الطبيب وتُطبع وتُحفظ تلقائياً في ملف المريض للرجوع إليها في أي زيارة.',
+      title: tr('الروشتة الإلكترونية', 'Electronic Prescription'),
+      description: tr(
+        'يكتبها الطبيب وتُطبع وتُحفظ تلقائياً في ملف المريض للرجوع إليها في أي زيارة.',
+        'Written by the doctor, printed instantly, and automatically saved to the patient file for reference on any future visit.'
+      ),
     },
     {
       icon: UserCheck,
-      title: 'ملف المريض',
-      description: 'الزيارات السابقة، والتشخيصات، والروشتات السابقة، والصور الطبية في مكان واحد متكامل.',
+      title: tr('ملف المريض', 'Patient Record'),
+      description: tr(
+        'الزيارات السابقة، والتشخيصات، والروشتات السابقة، والصور الطبية في مكان واحد متكامل.',
+        'Past visits, diagnoses, previous prescriptions, and medical images organized in one unified record.'
+      ),
     },
     {
       icon: Radio,
-      title: 'إشارة بين الطبيب والاستقبال',
-      description: 'عند انتهاء الكشف، يُنبه الطبيب لينتقل المريض التالي، مع إرسال أي تعليمات أو شات فوري.',
+      title: tr('إشارة بين الطبيب والاستقبال', 'Doctor–Reception Sync'),
+      description: tr(
+        'عند انتهاء الكشف، يُنبه الطبيب لينتقل المريض التالي، مع إرسال أي تعليمات أو شات فوري.',
+        'When an exam finishes, the doctor signals for the next patient and sends instructions or instant chat messages.'
+      ),
     },
     {
       icon: ShieldCheck,
-      title: 'أدوار وصلاحيات',
-      description: 'كل شخص يرى ما يخصه فقط، شاشة الطبيب مخصصة للفحص والروشتة، وشاشة الاستقبال للطابور والحسابات.',
+      title: tr('أدوار وصلاحيات', 'Roles & Permissions'),
+      description: tr(
+        'كل شخص يرى ما يخصه فقط، شاشة الطبيب مخصصة للفحص والروشتة، وشاشة الاستقبال للطابور والحسابات.',
+        'Everyone sees only what they need: a dedicated exam and Rx view for the doctor, and a queue and billing view for reception.'
+      ),
     },
     {
       icon: TrendingUp,
-      title: 'لوحة مالية',
-      description: 'إيرادات اليوم، والمصروفات، ومتابعة الدخل وصافي الصندوق في شاشة واضحة ومباشرة للمدير.',
+      title: tr('لوحة مالية', 'Financial Dashboard'),
+      description: tr(
+        'إيرادات اليوم، والمصروفات، ومتابعة الدخل وصافي الصندوق في شاشة واضحة ومباشرة للمدير.',
+        'Daily revenue, expenses, income tracking, and net cash balance in a clear, direct screen for the manager.'
+      ),
     },
   ];
 
   return (
-    <section id="features" className="py-14 lg:py-20 select-none" dir="rtl">
+    <section id="features" className="py-14 lg:py-20 select-none" dir={dir}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* عنوان القسم */}
         <div className="text-center space-y-3 mb-12">
           <span className="inline-block px-3.5 py-1 rounded-full bg-[#E3F5EE] text-[#0B7B5E] text-xs font-bold border border-[#D0E5DC]">
-            المميزات
+            {tr('المميزات', 'Features')}
           </span>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-black text-[#0B241D]">
-            كل ما تحتاجه العيادة في يومها، من غير تعقيد
+            {tr(
+              'كل ما تحتاجه العيادة في يومها، من غير تعقيد',
+              'Everything Your Clinic Needs Daily, Without Complexity'
+            )}
           </h2>
         </div>
 

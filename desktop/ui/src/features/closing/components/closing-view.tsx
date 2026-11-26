@@ -7,13 +7,15 @@ import { ClosingKpiCards } from './closing-kpi-cards';
 import { ClosingPreviewCard } from './closing-preview-card';
 import { ClosingFormCard } from './closing-form-card';
 import { RotateCcw, Loader2 } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export function ClosingView() {
   const t = useTranslations('Closing');
+  const { dir, tr } = useAppLocale();
   const { data: preview, isLoading, isFetching, refetch } = useClosingPreviewQuery();
 
   return (
-    <div className="space-y-6 pb-12 select-none">
+    <div className="space-y-6 pb-12 select-none" dir={dir}>
       {/* 1. رأس الصفحة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
@@ -30,7 +32,7 @@ export function ClosingView() {
           onClick={() => refetch()}
           disabled={isFetching}
           className="p-3 self-start sm:self-auto rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-all cursor-pointer shadow-2xs active:scale-95"
-          title="تحديث بيانات الإغلاق"
+          title={tr('تحديث بيانات الإغلاق', 'Refresh Closing Data')}
         >
           <RotateCcw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
         </button>
@@ -39,16 +41,17 @@ export function ClosingView() {
       {isLoading ? (
         <div className="bg-white rounded-3xl border border-slate-100 p-16 text-center shadow-xs">
           <Loader2 className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
-          <p className="text-xs text-slate-400 font-bold">جاري تحميل بيانات ومعاينة الإغلاق...</p>
+          <p className="text-xs text-slate-400 font-bold">
+            {tr('جاري تحميل بيانات ومعاينة الإغلاق...', 'Loading daily closing preview...')}
+          </p>
         </div>
       ) : (
         <>
           {/* 2. بطاقات المؤشرات الأربعة العلوية */}
           <ClosingKpiCards preview={preview} />
 
-          {/* 3. العمودين السفليين: إغلاق الصندوق (يسار) ومعاينة الإغلاق (يمين) */}
+          {/* 3. العمودين السفليين: إغلاق الصندوق ومعاينة الإغلاق */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-            {/* في RTL: العمود الأول يظهر يميناً (المعاينة) والثاني يساراً (النموذج) */}
             <div className="order-2 lg:order-1">
               <ClosingFormCard preview={preview} />
             </div>

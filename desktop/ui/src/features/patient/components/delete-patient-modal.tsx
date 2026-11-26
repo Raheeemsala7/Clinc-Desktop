@@ -4,6 +4,7 @@ import React, { useTransition } from 'react';
 import { Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { archivePatientAction, deletePatientAction } from '../apis/patient.action';
 import { Patient } from '../types/patient';
 
@@ -20,6 +21,7 @@ export function DeletePatientModal({
   patient,
   onSuccess,
 }: DeletePatientModalProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const router = useRouter();
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isArchiving, startArchiveTransition] = useTransition();
@@ -30,12 +32,17 @@ export function DeletePatientModal({
     startDeleteTransition(async () => {
       const res = await deletePatientAction(patient.id);
       if (res.status) {
-        toast.success(`تم حذف ملف المريض (${patient.fullName}) بنجاح`);
+        toast.success(
+          tr(
+            `تم حذف ملف المريض (${patient.fullName}) بنجاح`,
+            `Patient file (${patient.fullName}) deleted successfully`
+          )
+        );
         onClose();
         if (onSuccess) onSuccess();
         router.refresh();
       } else {
-        toast.error(res.message || 'فشل حذف المريض');
+        toast.error(res.message || tr('فشل حذف المريض', 'Failed to delete patient'));
       }
     });
   };
@@ -44,12 +51,17 @@ export function DeletePatientModal({
     startArchiveTransition(async () => {
       const res = await archivePatientAction(patient.id);
       if (res.status) {
-        toast.success(`تمت أرشفة ملف المريض (${patient.fullName}) بنجاح`);
+        toast.success(
+          tr(
+            `تمت أرشفة ملف المريض (${patient.fullName}) بنجاح`,
+            `Patient file (${patient.fullName}) archived successfully`
+          )
+        );
         onClose();
         if (onSuccess) onSuccess();
         router.refresh();
       } else {
-        toast.error(res.message || 'فشل أرشفة ملف المريض');
+        toast.error(res.message || tr('فشل أرشفة ملف المريض', 'Failed to archive patient file'));
       }
     });
   };
@@ -60,7 +72,7 @@ export function DeletePatientModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden animate-in zoom-in-95 duration-200"
-        dir="rtl"
+        dir={dir}
       >
         {/* أيقونة سلة المهملات داخل دائرة وردية هادئة مطابقة للصورة */}
         <div className="w-16 h-16 rounded-full bg-[#FFE4E6] flex items-center justify-center mx-auto mb-5 shadow-xs">
@@ -69,24 +81,49 @@ export function DeletePatientModal({
 
         {/* عنوان النافذة */}
         <h3 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight mb-3">
-          حذف المريض؟
+          {tr('حذف المريض؟', 'Delete Patient?')}
         </h3>
 
         {/* نص الرسالة التوضيحية */}
         <p className="text-sm text-slate-500 leading-relaxed mb-1">
-          سيتم حذف ملف <strong className="text-[#074C3A] font-black">{patient.fullName}</strong> وكل زياراته ومدفوعاته، ولا يمكن التراجع.
+          {isAr ? (
+            <>
+              سيتم حذف ملف <strong className="text-[#074C3A] font-black">{patient.fullName}</strong> وكل زياراته ومدفوعاته، ولا يمكن التراجع.
+            </>
+          ) : (
+            <>
+              The file for <strong className="text-[#074C3A] font-black">{patient.fullName}</strong> along with all visits and payments will be deleted. This cannot be undone.
+            </>
+          )}
         </p>
         <p className="text-xs text-slate-400 mb-8">
-          يمكنك{' '}
-          <button
-            type="button"
-            onClick={handleArchive}
-            disabled={isBusy}
-            className="text-[#0B7B5E] font-bold underline hover:text-[#0B7B5E] cursor-pointer inline-block"
-          >
-            أرشفته
-          </button>{' '}
-          بدل الحذف.
+          {isAr ? (
+            <>
+              يمكنك{' '}
+              <button
+                type="button"
+                onClick={handleArchive}
+                disabled={isBusy}
+                className="text-[#0B7B5E] font-bold underline hover:text-[#0B7B5E] cursor-pointer inline-block"
+              >
+                أرشفته
+              </button>{' '}
+              بدل الحذف.
+            </>
+          ) : (
+            <>
+              You can{' '}
+              <button
+                type="button"
+                onClick={handleArchive}
+                disabled={isBusy}
+                className="text-[#0B7B5E] font-bold underline hover:text-[#0B7B5E] cursor-pointer inline-block"
+              >
+                archive it
+              </button>{' '}
+              instead of deleting.
+            </>
+          )}
         </p>
 
         {/* أزرار الإجراءات الثلاثة مطابقة للتصميم */}
@@ -98,7 +135,7 @@ export function DeletePatientModal({
             disabled={isBusy}
             className="h-11 rounded-xl bg-[#DC2626] hover:bg-rose-700 text-white font-bold text-sm shadow-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
           >
-            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حذف نهائي'}
+            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : tr('حذف نهائي', 'Delete Forever')}
           </button>
 
           {/* زر الأرشفة */}
@@ -108,7 +145,7 @@ export function DeletePatientModal({
             disabled={isBusy}
             className="h-11 rounded-xl bg-white hover:bg-[#E3F5EE] text-[#0B7B5E] border border-[#BFDBFE] font-bold text-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
           >
-            {isArchiving ? <Loader2 className="w-4 h-4 animate-spin text-[#0B7B5E]" /> : 'أرشفة'}
+            {isArchiving ? <Loader2 className="w-4 h-4 animate-spin text-[#0B7B5E]" /> : tr('أرشفة', 'Archive')}
           </button>
 
           {/* زر الإلغاء */}
@@ -118,7 +155,7 @@ export function DeletePatientModal({
             disabled={isBusy}
             className="h-11 rounded-xl bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-bold text-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center"
           >
-            إلغاء
+            {tr('إلغاء', 'Cancel')}
           </button>
         </div>
       </div>

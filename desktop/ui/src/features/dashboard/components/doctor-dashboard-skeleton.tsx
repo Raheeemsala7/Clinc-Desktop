@@ -1,12 +1,17 @@
+'use client';
+
 import React from 'react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * هيكل التحميل (Skeleton) لشاشة كشف اليوم للطبيب
  * يُعرض فوراً أثناء التنقل الفوري (Instant Navigation) ومرحلة الـ Streaming داخل Suspense
  */
 export function DoctorDashboardSkeleton() {
+  const { dir } = useAppLocale();
+
   return (
-    <div className="space-y-6 animate-pulse">
+    <div className="space-y-6 animate-pulse" dir={dir}>
       {/* رأس الصفحة */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-2">

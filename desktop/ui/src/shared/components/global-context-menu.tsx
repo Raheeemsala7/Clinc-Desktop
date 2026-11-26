@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { ExternalLink, Copy, RefreshCw, ArrowRight, FileText } from 'lucide-react';
+import { ExternalLink, Copy, RefreshCw, ArrowRight, ArrowLeft, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { openInNewWindow } from '../utils/open-window';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface ContextMenuState {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface ContextMenuState {
 }
 
 export function GlobalContextMenu() {
+  const { isAr, dir, tr } = useAppLocale();
   const [menu, setMenu] = useState<ContextMenuState>({
     isOpen: false,
     x: 0,
@@ -109,13 +111,13 @@ export function GlobalContextMenu() {
   const handleCopyLink = () => {
     const textToCopy = menu.url || window.location.href;
     navigator.clipboard.writeText(textToCopy);
-    toast.success('تم نسخ الرابط بنجاح');
+    toast.success(tr('تم نسخ الرابط بنجاح', 'Link copied'));
     closeMenu();
   };
 
-  const handleCopyText = (text: string, label = 'النص') => {
+  const handleCopyText = (text: string, labelAr = 'النص', labelEn = 'Text') => {
     navigator.clipboard.writeText(text);
-    toast.success(`تم نسخ ${label} بنجاح`);
+    toast.success(tr(`تم نسخ ${labelAr} بنجاح`, `${labelEn} copied`));
     closeMenu();
   };
 
@@ -124,7 +126,7 @@ export function GlobalContextMenu() {
       ref={menuRef}
       style={{ top: `${menu.y}px`, left: `${menu.x}px` }}
       className="fixed z-99999 w-60 bg-white/95 border border-slate-200/90 rounded-2xl shadow-xl p-1.5 text-xs text-[#074C3A] select-none animate-in fade-in-50 zoom-in-95 backdrop-blur-md"
-      dir="rtl"
+      dir={dir}
     >
       <div className="space-y-0.5">
         {/* فتح في نافذة مستقلة جديدة */}
@@ -135,7 +137,11 @@ export function GlobalContextMenu() {
         >
           <span className="flex items-center gap-2">
             <ExternalLink className="w-4 h-4 text-[#0B7B5E] group-hover:scale-110 transition-transform" />
-            <span>{menu.url ? 'فتح الرابط في نافذة جديدة' : 'فتح الصفحة في نافذة جديدة'}</span>
+            <span>
+              {menu.url
+                ? tr('فتح الرابط في نافذة جديدة', 'Open link in new window')
+                : tr('فتح الصفحة في نافذة جديدة', 'Open page in new window')}
+            </span>
           </span>
           <span className="text-[10px] text-slate-400 font-mono">⌘N</span>
         </button>
@@ -148,7 +154,7 @@ export function GlobalContextMenu() {
             className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-start font-bold hover:bg-emerald-50/70 transition-colors cursor-pointer text-[#074C3A]"
           >
             <Copy className="w-4 h-4 text-[#0B7B5E]" />
-            <span>نسخ رابط الصفحة</span>
+            <span>{tr('نسخ رابط الصفحة', 'Copy page link')}</span>
           </button>
         )}
 
@@ -156,11 +162,11 @@ export function GlobalContextMenu() {
         {menu.patientCode && (
           <button
             type="button"
-            onClick={() => handleCopyText(menu.patientCode!, 'كود المريض')}
+            onClick={() => handleCopyText(menu.patientCode!, 'كود المريض', 'Patient code')}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-start font-bold hover:bg-emerald-50/70 transition-colors cursor-pointer text-[#074C3A]"
           >
             <FileText className="w-4 h-4 text-[#0B7B5E]" />
-            <span>نسخ كود المريض (#{menu.patientCode})</span>
+            <span>{tr(`نسخ كود المريض (#${menu.patientCode})`, `Copy patient code (#${menu.patientCode})`)}</span>
           </button>
         )}
 
@@ -168,11 +174,11 @@ export function GlobalContextMenu() {
         {menu.selectedText && (
           <button
             type="button"
-            onClick={() => handleCopyText(menu.selectedText!, 'النص المحدد')}
+            onClick={() => handleCopyText(menu.selectedText!, 'النص المحدد', 'Selected text')}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-start font-bold hover:bg-emerald-50/70 transition-colors cursor-pointer text-[#074C3A]"
           >
             <Copy className="w-4 h-4 text-slate-400" />
-            <span>نسخ النص المحدد</span>
+            <span>{tr('نسخ النص المحدد', 'Copy selected text')}</span>
           </button>
         )}
 
@@ -189,7 +195,7 @@ export function GlobalContextMenu() {
         >
           <span className="flex items-center gap-2">
             <RefreshCw className="w-4 h-4 text-slate-400" />
-            <span>تحديث الشاشة</span>
+            <span>{tr('تحديث الشاشة', 'Refresh page')}</span>
           </span>
           <span className="text-[10px] text-slate-400 font-mono">F5</span>
         </button>
@@ -203,8 +209,8 @@ export function GlobalContextMenu() {
           }}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-start font-bold hover:bg-slate-50 transition-colors cursor-pointer text-slate-600"
         >
-          <ArrowRight className="w-4 h-4" />
-          <span>الرجوع للصفحة السابقة</span>
+          {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+          <span>{tr('الرجوع للصفحة السابقة', 'Go back')}</span>
         </button>
       </div>
     </div>

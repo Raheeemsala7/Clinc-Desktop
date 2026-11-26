@@ -8,16 +8,13 @@ import {
   CheckCircle2,
   Save,
   Coffee,
-  AlertCircle,
   ToggleLeft,
   ToggleRight,
   Loader2,
-  Plus,
-  Trash2,
   User as UserIcon,
-  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface DayConfig {
   id: string;
@@ -43,6 +40,7 @@ const INITIAL_DAYS: DayConfig[] = [
 ];
 
 export default function DoctorSchedulePage() {
+  const { isAr, dir, tr } = useAppLocale();
   const { data: session } = useSession();
   const [schedule, setSchedule] = useState<DayConfig[]>(INITIAL_DAYS);
   const [slotDurationMinutes, setSlotDurationMinutes] = useState<number>(20);
@@ -168,12 +166,11 @@ export default function DoctorSchedulePage() {
     );
   };
 
-  // 2. حفظ الجدول وإرساله لقاعدة بيانات العيادة (MongoDB) لتسميعه فوراً عند الاستقبال
+  // حفظ الجدول وإرساله لقاعدة بيانات العيادة لتسميعه فوراً عند الاستقبال
   const handleSave = async () => {
     setIsSaving(true);
 
     try {
-      // بناء مصفوفة weeklySchedule المتوافقة مع معايير السيرفر وقاعدة البيانات
       const weeklySchedule = schedule.map((day) => {
         if (!day.enabled) {
           return {
@@ -186,7 +183,6 @@ export default function DoctorSchedulePage() {
         let shifts: Array<{ startTime: string; endTime: string }> = [];
 
         if (day.hasBreak && day.breakStart && day.breakEnd) {
-          // التحقق من ترتيب أوقات الورديات والراحة
           if (
             day.startTime < day.breakStart &&
             day.breakStart < day.breakEnd &&
@@ -197,7 +193,6 @@ export default function DoctorSchedulePage() {
               { startTime: day.breakEnd, endTime: day.endTime },
             ];
           } else {
-            // في حال عدم تناسق أوقات الراحة، نعتمد الفترة كاملة
             shifts = [{ startTime: day.startTime, endTime: day.endTime }];
           }
         } else {
@@ -223,12 +218,20 @@ export default function DoctorSchedulePage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'فشل حفظ جدول المواعيد في الخادم');
+        throw new Error(
+          errorData?.message ||
+            tr('فشل حفظ جدول المواعيد في الخادم', 'Failed to save schedule on the server')
+        );
       }
 
-      toast.success('تم حفظ جدول أوقات العمل في قاعدة البيانات وتحديث مواعيد الاستقبال بنجاح ✅');
+      toast.success(
+        tr(
+          'تم حفظ جدول أوقات العمل في قاعدة البيانات وتحديث مواعيد الاستقبال بنجاح ✅',
+          'Weekly schedule saved and reception slots updated successfully ✅'
+        )
+      );
     } catch (err: any) {
-      toast.error(err?.message || 'حدث خطأ أثناء حفظ الجدول');
+      toast.error(err?.message || tr('حدث خطأ أثناء حفظ الجدول', 'An error occurred while saving the schedule'));
     } finally {
       setIsSaving(false);
     }
@@ -237,7 +240,7 @@ export default function DoctorSchedulePage() {
   const activeDaysCount = schedule.filter((d) => d.enabled).length;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6" dir="rtl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6" dir={dir}>
       {/* 1. الترويسة الرئيسية */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-xs">
         <div className="space-y-1">
@@ -246,11 +249,14 @@ export default function DoctorSchedulePage() {
               <Clock className="w-5 h-5" />
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-[#074C3A] tracking-tight">
-              أوقات العمل الأسبوعية والورديات
+              {tr('أوقات العمل الأسبوعية والورديات', 'Weekly Working Hours & Shifts')}
             </h1>
           </div>
           <p className="text-xs sm:text-sm font-bold text-slate-400">
-            تحديد مواعيد الحضور وساعات الكشف اليومية لتظهر تلقائياً للاستقبال لحجز المرضى
+            {tr(
+              'تحديد مواعيد الحضور وساعات الكشف اليومية لتظهر تلقائياً للاستقبال لحجز المرضى',
+              'Set clinic attendance days and hours so available booking slots appear automatically for reception'
+            )}
           </p>
         </div>
 
@@ -258,7 +264,7 @@ export default function DoctorSchedulePage() {
           {doctorsList.length > 1 && (
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-2xl">
               <UserIcon className="w-4 h-4 text-[#0B7B5E]" />
-              <span className="text-xs font-bold text-slate-500">الطبيب:</span>
+              <span className="text-xs font-bold text-slate-500">{tr('الطبيب:', 'Doctor:')}</span>
               <select
                 value={selectedDoctorId}
                 onChange={(e) => setSelectedDoctorId(e.target.value)}
@@ -276,7 +282,7 @@ export default function DoctorSchedulePage() {
           {isLoading && (
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
               <Loader2 className="w-4 h-4 animate-spin text-[#0B7B5E]" />
-              <span>جاري تحميل المواعيد...</span>
+              <span>{tr('جاري تحميل المواعيد...', 'Loading schedule...')}</span>
             </div>
           )}
 
@@ -287,7 +293,11 @@ export default function DoctorSchedulePage() {
             className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#0B7B5E] hover:bg-[#09634C] text-white font-black text-sm transition-all shadow-md active:scale-95 disabled:opacity-60 cursor-pointer"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>{isSaving ? 'جاري الحفظ بالسيرفر...' : 'حفظ الجدول وتحديث الاستقبال'}</span>
+            <span>
+              {isSaving
+                ? tr('جاري الحفظ بالسيرفر...', 'Saving to server...')
+                : tr('حفظ الجدول وتحديث الاستقبال', 'Save Schedule & Update Reception')}
+            </span>
           </button>
         </div>
       </div>
@@ -295,57 +305,76 @@ export default function DoctorSchedulePage() {
       {/* 2. كروت الإحصائيات السريعة وتحديد مدة الكشف */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-xs space-y-1">
-          <span className="text-xs font-bold text-slate-400 block">أيام العمل المتاحة</span>
-          <span className="text-2xl font-black text-[#074C3A]">{activeDaysCount} أيام / أسبوع</span>
+          <span className="text-xs font-bold text-slate-400 block">
+            {tr('أيام العمل المتاحة', 'Active Working Days')}
+          </span>
+          <span className="text-2xl font-black text-[#074C3A]">
+            {activeDaysCount} {tr('أيام / أسبوع', 'days / week')}
+          </span>
           <span className="text-[11px] text-emerald-600 font-bold block">
-            {7 - activeDaysCount} أيام عطلة أسبوعية
+            {7 - activeDaysCount} {tr('أيام عطلة أسبوعية', 'days off / week')}
           </span>
         </div>
 
         <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 block">مدة الكشف لكل مريض</span>
+            <span className="text-xs font-bold text-slate-400 block">
+              {tr('مدة الكشف لكل مريض', 'Slot Duration per Patient')}
+            </span>
             <select
               value={slotDurationMinutes}
               onChange={(e) => setSlotDurationMinutes(Number(e.target.value))}
               className="px-2.5 py-1 rounded-xl border border-slate-200 bg-emerald-50 text-[#074C3A] font-black text-xs focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
             >
-              <option value={15}>15 دقيقة</option>
-              <option value={20}>20 دقيقة</option>
-              <option value={30}>30 دقيقة</option>
-              <option value={45}>45 دقيقة</option>
-              <option value={60}>60 دقيقة (ساعة)</option>
+              <option value={15}>{tr('15 دقيقة', '15 min')}</option>
+              <option value={20}>{tr('20 دقيقة', '20 min')}</option>
+              <option value={30}>{tr('30 دقيقة', '30 min')}</option>
+              <option value={45}>{tr('45 دقيقة', '45 min')}</option>
+              <option value={60}>{tr('60 دقيقة (ساعة)', '60 min (1 hour)')}</option>
             </select>
           </div>
-          <span className="text-2xl font-black text-[#0B7B5E]">{slotDurationMinutes} دقيقة</span>
+          <span className="text-2xl font-black text-[#0B7B5E]">
+            {slotDurationMinutes} {tr('دقيقة', 'min')}
+          </span>
           <span className="text-[11px] text-slate-500 font-bold block">
-            يتم تقسيم ساعات الحضور تلقائياً إلى فترات بهذه المدة
+            {tr(
+              'يتم تقسيم ساعات الحضور تلقائياً إلى فترات بهذه المدة',
+              'Working hours are automatically split into slots of this duration'
+            )}
           </span>
         </div>
 
         <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-xs space-y-1">
-          <span className="text-xs font-bold text-slate-400 block">حالة المزامنة مع الاستقبال</span>
+          <span className="text-xs font-bold text-slate-400 block">
+            {tr('حالة المزامنة مع الاستقبال', 'Reception Sync Status')}
+          </span>
           <div className="flex items-center gap-1.5 text-emerald-600 font-black text-lg pt-1">
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-            <span>مربوط مباشرة بقاعدة البيانات</span>
+            <span>{tr('مربوط مباشرة بقاعدة البيانات', 'Live Database Sync')}</span>
           </div>
           <span className="text-[11px] text-slate-400 font-bold block">
-            أي تعديل يحفظ هنا يظهر فوراً في شاشة حجز الاستقبال
+            {tr(
+              'أي تعديل يحفظ هنا يظهر فوراً في شاشة حجز الاستقبال',
+              'Any saved change reflects immediately in reception booking'
+            )}
           </span>
         </div>
       </div>
 
       {/* 3. جدول أيام الأسبوع التفصيلي */}
       <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-[#0B7B5E]" />
             <h2 className="text-base font-black text-[#074C3A]">
-              جدول الحضور اليومي وساعات العمل
+              {tr('جدول الحضور اليومي وساعات العمل', 'Daily Attendance & Working Hours')}
             </h2>
           </div>
           <span className="text-xs text-slate-400 font-bold">
-            فعّل الأيام التي تعمل بها وحدد ساعات الحضور وموعد الاستراحة إن وجد
+            {tr(
+              'فعّل الأيام التي تعمل بها وحدد ساعات الحضور وموعد الاستراحة إن وجد',
+              'Enable your working days and set shift hours and optional break times'
+            )}
           </span>
         </div>
 
@@ -367,7 +396,11 @@ export default function DoctorSchedulePage() {
                   className={`p-1 rounded-xl transition-all cursor-pointer ${
                     day.enabled ? 'text-emerald-600' : 'text-slate-400'
                   }`}
-                  title={day.enabled ? 'اضغط للتعطيل' : 'اضغط للتفعيل'}
+                  title={
+                    day.enabled
+                      ? tr('اضغط للتعطيل', 'Click to disable')
+                      : tr('اضغط للتفعيل', 'Click to enable')
+                  }
                 >
                   {day.enabled ? (
                     <ToggleRight className="w-8 h-8" />
@@ -378,10 +411,10 @@ export default function DoctorSchedulePage() {
 
                 <div>
                   <span className="font-black text-sm text-[#074C3A] block">
-                    {day.nameAr}
+                    {isAr ? day.nameAr : day.nameEn}
                   </span>
-                  <span className="text-[11px] font-bold text-slate-400 block" dir="ltr">
-                    {day.nameEn}
+                  <span className="text-[11px] font-bold text-slate-400 block" dir={isAr ? 'ltr' : 'rtl'}>
+                    {isAr ? day.nameEn : day.nameAr}
                   </span>
                 </div>
               </div>
@@ -390,7 +423,7 @@ export default function DoctorSchedulePage() {
               {day.enabled ? (
                 <div className="flex items-center gap-3 sm:gap-4 flex-wrap text-xs font-bold text-slate-700">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500">وقت البدء:</span>
+                    <span className="text-slate-500">{tr('وقت البدء:', 'Start:')}</span>
                     <input
                       type="time"
                       value={day.startTime}
@@ -400,7 +433,7 @@ export default function DoctorSchedulePage() {
                   </div>
 
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500">وقت الانتهاء:</span>
+                    <span className="text-slate-500">{tr('وقت الانتهاء:', 'End:')}</span>
                     <input
                       type="time"
                       value={day.endTime}
@@ -421,19 +454,23 @@ export default function DoctorSchedulePage() {
                       }`}
                     >
                       <Coffee className="w-3.5 h-3.5 text-amber-600" />
-                      <span>{day.hasBreak ? 'استراحة مفعّلة' : '+ إضافة استراحة'}</span>
+                      <span>
+                        {day.hasBreak
+                          ? tr('استراحة مفعّلة', 'Break Enabled')
+                          : tr('+ إضافة استراحة', '+ Add Break')}
+                      </span>
                     </button>
 
                     {day.hasBreak && (
                       <div className="flex items-center gap-1.5 bg-amber-50/60 p-1.5 rounded-xl border border-amber-200 text-amber-900">
-                        <span className="text-[11px] font-bold">من:</span>
+                        <span className="text-[11px] font-bold">{tr('من:', 'From:')}</span>
                         <input
                           type="time"
                           value={day.breakStart}
                           onChange={(e) => updateDayTime(day.id, 'breakStart', e.target.value)}
                           className="px-2 py-1 rounded-lg border border-amber-300 bg-white font-bold text-xs"
                         />
-                        <span className="text-[11px] font-bold">إلى:</span>
+                        <span className="text-[11px] font-bold">{tr('إلى:', 'To:')}</span>
                         <input
                           type="time"
                           value={day.breakEnd}
@@ -446,7 +483,12 @@ export default function DoctorSchedulePage() {
                 </div>
               ) : (
                 <div className="text-xs font-bold text-slate-400 flex items-center gap-2">
-                  <span>عطلة أسبوعية · لن تظهر أي مواعيد للحجز في هذا اليوم عند الاستقبال</span>
+                  <span>
+                    {tr(
+                      'عطلة أسبوعية · لن تظهر أي مواعيد للحجز في هذا اليوم عند الاستقبال',
+                      'Day off · No booking slots will be shown at reception for this day'
+                    )}
+                  </span>
                 </div>
               )}
 
@@ -459,7 +501,7 @@ export default function DoctorSchedulePage() {
                       : 'bg-slate-200 text-slate-600'
                   }`}
                 >
-                  {day.enabled ? 'متاح للحجز ✓' : 'إجازة'}
+                  {day.enabled ? tr('متاح للحجز ✓', 'Available ✓') : tr('إجازة', 'Day Off')}
                 </span>
               </div>
             </div>

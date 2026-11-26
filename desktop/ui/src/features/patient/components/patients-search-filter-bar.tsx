@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
 import { Search, Plus, AlertTriangle, Users, Loader2 } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { PatientFilterType } from '../types/patient';
 import { CreatePatientModal } from './create-patient-modal';
 
@@ -14,6 +15,7 @@ interface PatientsSearchFilterBarProps {
 
 export function PatientsSearchFilterBar({ totalCount = 0 }: PatientsSearchFilterBarProps) {
   const t = useTranslations('Patients');
+  const { tr } = useAppLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -73,15 +75,15 @@ export function PatientsSearchFilterBar({ totalCount = 0 }: PatientsSearchFilter
   };
 
   const filters: Array<{ id: PatientFilterType; label: string; icon?: React.ReactNode }> = [
-    { id: 'all', label: 'الكل' },
+    { id: 'all', label: tr('الكل', 'All') },
     {
       id: 'chronic',
-      label: 'مرض مزمن',
+      label: tr('مرض مزمن', 'Chronic Condition'),
       icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />,
     },
-    { id: 'male', label: 'ذكر' },
-    { id: 'female', label: 'أنثى' },
-    { id: 'month', label: 'زاروا هذا الشهر' },
+    { id: 'male', label: tr('ذكر', 'Male') },
+    { id: 'female', label: tr('أنثى', 'Female') },
+    { id: 'month', label: tr('زاروا هذا الشهر', 'Visited This Month') },
   ];
 
   return (
@@ -121,11 +123,11 @@ export function PatientsSearchFilterBar({ totalCount = 0 }: PatientsSearchFilter
             value={searchTerm}
             onChange={handleInputChange}
             placeholder={t('searchPlaceholder')}
-            className="w-full h-11 pr-10 pl-4 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all shadow-2xs"
+            className="w-full h-11 ps-10 pe-4 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all shadow-2xs"
           />
-          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-slate-400 absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           {isPending && (
-            <Loader2 className="w-4 h-4 text-[#0B7B5E] animate-spin absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Loader2 className="w-4 h-4 text-[#0B7B5E] animate-spin absolute end-3.5 top-1/2 -translate-y-1/2" />
           )}
         </div>
 
@@ -133,7 +135,7 @@ export function PatientsSearchFilterBar({ totalCount = 0 }: PatientsSearchFilter
           type="submit"
           className="h-11 px-5 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-bold shadow-xs transition-all cursor-pointer shrink-0"
         >
-          بحث
+          {tr('بحث', 'Search')}
         </button>
       </form>
 

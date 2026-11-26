@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ExpenseBudgetStatus } from '../types/expenses';
-import { ShieldCheck, AlertTriangle, TrendingUp, Sparkles, Settings2, Clock, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Sparkles, Settings2, Clock, CheckCircle2 } from 'lucide-react';
 import { UpdateBudgetModal } from './update-budget-modal';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface ExpensesBudgetCardProps {
   budget?: ExpenseBudgetStatus;
@@ -13,6 +14,7 @@ interface ExpensesBudgetCardProps {
 
 export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps) {
   const t = useTranslations('Expenses');
+  const { dir, tr } = useAppLocale();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const monthlyLimit = Number(budget?.monthlyLimit || 1000);
@@ -20,7 +22,7 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
   const remaining = Number(budget?.remainingBudget ?? Math.max(0, monthlyLimit - totalApproved));
   const pendingAmount = Number(budget?.totalPendingSpent || 0);
   const usagePercentage = Number(budget?.usagePercentage || 0);
-  const isExceeded = budget?.isExceeded ?? (totalApproved >= monthlyLimit);
+  const isExceeded = budget?.isExceeded ?? totalApproved >= monthlyLimit;
 
   const formatMoney = (val: number) => {
     return Number(val || 0).toLocaleString('en-US', {
@@ -31,7 +33,10 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
 
   return (
     <>
-      <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-7 shadow-xs relative overflow-hidden transition-all hover:shadow-md">
+      <div
+        className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-7 shadow-xs relative overflow-hidden transition-all hover:shadow-md"
+        dir={dir}
+      >
         {/* شريط الإضاءة العلوي */}
         <div
           className={`absolute top-0 right-0 left-0 h-1.5 transition-all ${
@@ -60,7 +65,7 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
               </div>
 
               {/* شارة حالة الميزانية */}
-              <div className="mr-auto sm:mr-0">
+              <div className="ms-auto sm:ms-0">
                 {!isExceeded ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -79,10 +84,14 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
             <div className="pt-2">
               <div className="flex items-center justify-between text-xs font-bold mb-1.5">
                 <span className="text-slate-500">
-                  {t('usagePercentage')}: <span className="font-mono text-[#074C3A]">{usagePercentage}%</span>
+                  {t('usagePercentage')}:{' '}
+                  <span className="font-mono text-[#074C3A]">{usagePercentage}%</span>
                 </span>
                 <span className="text-slate-400">
-                  {t('budgetMonth')}: <span className="font-mono text-slate-700">{budget?.month || 'Current'}</span>
+                  {t('budgetMonth')}:{' '}
+                  <span className="font-mono text-slate-700">
+                    {budget?.month || tr('الشهر الحالي', 'Current')}
+                  </span>
                 </span>
               </div>
               <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden p-0.5">

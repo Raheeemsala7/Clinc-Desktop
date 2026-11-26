@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { PatientDetails } from '../types/patient';
 
 interface PatientPersonalInfoCardProps {
@@ -22,33 +23,34 @@ function formatDate(dateStr?: string | null): string {
 }
 
 export function PatientPersonalInfoCard({ details }: PatientPersonalInfoCardProps) {
+  const { tr } = useAppLocale();
   const patient = details.patient;
 
   const maritalStatusLabel =
     patient.maritalStatus === 'SINGLE'
-      ? 'أعزب'
+      ? tr('أعزب', 'Single')
       : patient.maritalStatus === 'WIDOWED'
-      ? 'أرمل / أرملة'
+      ? tr('أرمل / أرملة', 'Widowed')
       : patient.maritalStatus === 'DIVORCED'
-      ? 'مطلق / مطلقة'
-      : 'متزوج';
+      ? tr('مطلق / مطلقة', 'Divorced')
+      : tr('متزوج', 'Married');
 
   const rows = [
-    { label: 'رقم الملف', value: patient.fileNumber ? `#${patient.fileNumber}` : `#${patient.id?.slice(-4)}` },
-    { label: 'الاسم الكامل', value: patient.fullName },
-    { label: 'تاريخ الميلاد', value: formatDate(patient.dateOfBirth) },
-    { label: 'النوع', value: patient.gender === 'MALE' ? 'ذكر' : 'أنثى' },
-    { label: 'الحالة الاجتماعية', value: maritalStatusLabel },
-    { label: 'الهاتف', value: patient.phone, isLtr: true },
-    { label: 'الوظيفة', value: patient.occupation || '—' },
-    { label: 'العنوان', value: patient.address || '—' },
-    { label: 'تاريخ التسجيل', value: formatDate(patient.createdAt) },
+    { label: tr('رقم الملف', 'File Number'), value: patient.fileNumber ? `#${patient.fileNumber}` : `#${patient.id?.slice(-4)}`, isLtr: true },
+    { label: tr('الاسم الكامل', 'Full Name'), value: patient.fullName },
+    { label: tr('تاريخ الميلاد', 'Date of Birth'), value: formatDate(patient.dateOfBirth), isLtr: true },
+    { label: tr('النوع', 'Gender'), value: patient.gender === 'MALE' ? tr('ذكر', 'Male') : tr('أنثى', 'Female') },
+    { label: tr('الحالة الاجتماعية', 'Marital Status'), value: maritalStatusLabel },
+    { label: tr('الهاتف', 'Phone'), value: patient.phone, isLtr: true },
+    { label: tr('الوظيفة', 'Occupation'), value: patient.occupation || '—' },
+    { label: tr('العنوان', 'Address'), value: patient.address || '—' },
+    { label: tr('تاريخ التسجيل', 'Registration Date'), value: formatDate(patient.createdAt), isLtr: true },
   ];
 
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-xs text-start select-none">
       <h3 className="text-base font-black text-[#074C3A] mb-4 pb-3 border-b border-slate-100">
-        البيانات الشخصية
+        {tr('البيانات الشخصية', 'Personal Information')}
       </h3>
 
       <div className="space-y-3.5">
@@ -56,8 +58,9 @@ export function PatientPersonalInfoCard({ details }: PatientPersonalInfoCardProp
           <div key={idx} className="flex items-center justify-between gap-3 text-xs">
             <span className="text-slate-400 font-bold">{row.label}</span>
             <span
+              dir={row.isLtr ? 'ltr' : undefined}
               className={`font-black text-[#074C3A] ${
-                row.isLtr ? 'dir-ltr font-mono' : ''
+                row.isLtr ? 'font-mono' : ''
               }`}
             >
               {row.value}

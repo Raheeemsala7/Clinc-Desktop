@@ -1,6 +1,6 @@
 appId: com.nafs.clinic.desktop
 productName: Clinic Management System
-copyright: Copyright © 2026 Nafs Clinic System
+copyright: Copyright © 2026 Medora
 
 publish:
   provider: github
@@ -46,6 +46,6 @@ nsis:
   installerHeaderIcon: resources/icon.ico
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  shortcutName: Nafs Clinic
+  shortcutName: Medora
   runAfterFinish: true
   deleteAppDataOnUninstall: false

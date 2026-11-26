@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import { SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { AuthLanguageBtn } from '@/features/auth/components/auth-language-btn';
@@ -23,6 +23,8 @@ interface DashboardHeaderProps {
  */
 export function DashboardHeader({ role }: DashboardHeaderProps) {
   const t = useTranslations('Dashboard');
+  const locale = useLocale();
+  const isAr = locale === 'ar';
   const { data: session } = useSession();
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.ADMIN;
 
@@ -30,15 +32,18 @@ export function DashboardHeader({ role }: DashboardHeaderProps) {
   let dynamicGreeting = t(config.greetingKey);
   if (rawName) {
     if (role === 'DOCTOR') {
-      const cleanDoctorName =
-        rawName.startsWith('د.') || rawName.startsWith('د/') || rawName.startsWith('Dr.')
-          ? rawName
-          : `د. ${rawName}`;
-      dynamicGreeting = `مرحباً ${cleanDoctorName}`;
+      const cleanDoctorName = isAr
+        ? (rawName.startsWith('د.') || rawName.startsWith('د/') || rawName.startsWith('Dr.')
+            ? rawName
+            : `د. ${rawName}`)
+        : (rawName.startsWith('Dr.')
+            ? rawName
+            : `Dr. ${rawName.replace(/^(د\.|د\/)\s*/, '')}`);
+      dynamicGreeting = isAr ? `مرحباً ${cleanDoctorName}` : `Welcome, ${cleanDoctorName}`;
     } else if (role === 'ADMIN') {
-      dynamicGreeting = `مرحباً، ${rawName} (المدير)`;
+      dynamicGreeting = isAr ? `مرحباً، ${rawName} (المدير)` : `Welcome, ${rawName} (Admin)`;
     } else {
-      dynamicGreeting = `مرحباً، ${rawName}`;
+      dynamicGreeting = isAr ? `مرحباً، ${rawName}` : `Welcome, ${rawName}`;
     }
   }
 

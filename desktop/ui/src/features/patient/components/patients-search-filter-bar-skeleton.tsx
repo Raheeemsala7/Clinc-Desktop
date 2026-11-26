@@ -1,8 +1,13 @@
+'use client';
+
 import React from 'react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 export function PatientsSearchFilterBarSkeleton() {
+  const { dir } = useAppLocale();
+
   return (
-    <div className="space-y-4 select-none animate-pulse" dir="rtl">
+    <div className="space-y-4 select-none animate-pulse" dir={dir}>
       {/* 1. رأس الصفحة: العنوان والزر */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-2 text-start">

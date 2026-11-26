@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 
 /**
@@ -20,6 +21,7 @@ import { toast } from 'sonner';
  */
 export function LoginForm() {
   const t = useTranslations('Auth.login');
+  const { tr } = useAppLocale();
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormType>({
@@ -123,7 +125,7 @@ export function LoginForm() {
                   autoComplete="current-password"
                   placeholder={t('passwordPlaceholder')}
                   className={cn(
-                    'w-full h-12 pr-4 pl-12 rounded-xl border border-[#D0E5DC] bg-white text-[#0B241D] text-sm placeholder:text-[#8D9D97] transition-all duration-150',
+                    'w-full h-12 ps-4 pe-12 rounded-xl border border-[#D0E5DC] bg-white text-[#0B241D] text-sm placeholder:text-[#8D9D97] transition-all duration-150',
                     'focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15',
                     'disabled:opacity-60 disabled:cursor-not-allowed',
                     fieldState.invalid && 'border-destructive focus:border-destructive focus:ring-destructive/10'
@@ -133,8 +135,8 @@ export function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0B7B5E] p-1 rounded-lg transition-colors cursor-pointer select-none"
-                  title={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                  className="absolute end-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0B7B5E] p-1 rounded-lg transition-colors cursor-pointer select-none"
+                  title={showPassword ? tr('إخفاء كلمة المرور', 'Hide password') : tr('إظهار كلمة المرور', 'Show password')}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -170,20 +172,24 @@ export function LoginForm() {
       {/* رابط تجربة البرنامج والتواصل مع الشركة المطورة */}
       <div className="mt-8 pt-5 border-t border-[#D0E5DC]/80 text-center select-none">
         <p className="text-xs text-[#4A635B] mb-2 font-medium">
-          تريد تجربة المنظومة لعيادتك أو معرفة الأسعار؟
+          {tr('تريد تجربة المنظومة لعيادتك أو معرفة الأسعار؟', 'Want to try Medora for your clinic or check pricing?')}
         </p>
         <a
           href="https://www.vyro.software/en"
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {
-            toast.info('تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en', {
-              duration: 6000,
-            });
+            toast.info(
+              tr(
+                'تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en',
+                'Contact Vyro Software team for a demo and pricing details: https://www.vyro.software/en'
+              ),
+              { duration: 6000 }
+            );
           }}
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#E3F5EE] border border-[#D0E5DC] text-[#0B7B5E] hover:text-[#09634C] hover:bg-[#d5eee4] text-xs font-bold transition-all shadow-2xs"
         >
-          <span>جرب الموقع تجريبياً · تواصل مع Vyro Software</span>
+          <span>{tr('جرب الموقع تجريبياً · تواصل مع Vyro Software', 'Try Demo · Contact Vyro Software')}</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>

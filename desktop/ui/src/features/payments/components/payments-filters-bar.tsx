@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { PaymentFilterTab, PaymentsSummaryCounts } from '../types/payments';
 import { Search, Calendar, Download, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface PaymentsFiltersBarProps {
   currentTab: PaymentFilterTab;
@@ -34,6 +35,7 @@ export function PaymentsFiltersBar({
   onExport,
 }: PaymentsFiltersBarProps) {
   const t = useTranslations('Payments');
+  const { dir, tr } = useAppLocale();
 
   const tabs: Array<{ id: PaymentFilterTab; label: string; count: number }> = [
     { id: 'all', label: t('all'), count: counts.all },
@@ -43,7 +45,10 @@ export function PaymentsFiltersBar({
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 select-none">
+    <div
+      className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 select-none"
+      dir={dir}
+    >
       {/* 1. ألسنة التبويب للفلترة (Pills/Tabs) */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
         {tabs.map((tab) => {
@@ -81,16 +86,18 @@ export function PaymentsFiltersBar({
           <select
             value={selectedDoctorId || 'all'}
             onChange={(e) => onDoctorChange(e.target.value)}
-            className="h-10 pr-9 pl-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer appearance-none shadow-2xs"
+            className="h-10 ps-9 pe-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer appearance-none shadow-2xs"
           >
-            <option value="all">جميع الأطباء (إجمالي الدخل)</option>
+            <option value="all">
+              {tr('جميع الأطباء (إجمالي الدخل)', 'All Doctors (Total Revenue)')}
+            </option>
             {doctors.map((doc) => (
               <option key={doc.id} value={doc.id}>
                 {doc.name}
               </option>
             ))}
           </select>
-          <Stethoscope className="w-4 h-4 text-[#0B7B5E] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Stethoscope className="w-4 h-4 text-[#0B7B5E] absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* حقل البحث بالاسم أو رقم الهاتف */}
@@ -100,9 +107,9 @@ export function PaymentsFiltersBar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="w-full h-10 pr-9 pl-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all"
+            className="w-full h-10 ps-9 pe-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all"
           />
-          <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* منتقي اليوم المحدد (Date Picker) */}
@@ -111,9 +118,9 @@ export function PaymentsFiltersBar({
             type="date"
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="h-10 pr-9 pl-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer font-sans"
+            className="h-10 ps-9 pe-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer font-sans"
           />
-          <Calendar className="w-4 h-4 text-[#0B7B5E] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Calendar className="w-4 h-4 text-[#0B7B5E] absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* زر التصدير (Export) */}

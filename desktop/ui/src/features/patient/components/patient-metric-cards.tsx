@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { PatientDetails } from '../types/patient';
 
 interface PatientMetricCardsProps {
@@ -22,6 +23,7 @@ function formatDate(dateStr?: string | null): string {
 }
 
 export function PatientMetricCards({ details }: PatientMetricCardsProps) {
+  const { tr } = useAppLocale();
   const financial = details.financialSummary || {
     totalCharged: 0,
     totalPaid: 0,
@@ -48,7 +50,7 @@ export function PatientMetricCards({ details }: PatientMetricCardsProps) {
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 select-none">
       {/* 1. عدد الزيارات */}
       <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between min-h-[100px] text-start">
-        <span className="text-xs font-bold text-slate-400">عدد الزيارات</span>
+        <span className="text-xs font-bold text-slate-400">{tr('عدد الزيارات', 'Total Visits')}</span>
         <div className="mt-2 text-2xl sm:text-3xl font-black text-[#074C3A] font-sans">
           {visitCount}
         </div>
@@ -56,26 +58,26 @@ export function PatientMetricCards({ details }: PatientMetricCardsProps) {
 
       {/* 2. آخر زيارة */}
       <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between min-h-[100px] text-start">
-        <span className="text-xs font-bold text-slate-400">آخر زيارة</span>
-        <div className="mt-2 text-lg sm:text-xl font-black text-[#074C3A] font-mono">
+        <span className="text-xs font-bold text-slate-400">{tr('آخر زيارة', 'Last Visit')}</span>
+        <div className="mt-2 text-lg sm:text-xl font-black text-[#074C3A] font-mono" dir="ltr">
           {formatDate(lastVisitDate)}
         </div>
       </div>
 
       {/* 3. إجمالي المدفوع */}
       <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between min-h-[100px] text-start">
-        <span className="text-xs font-bold text-slate-400">إجمالي المدفوع</span>
+        <span className="text-xs font-bold text-slate-400">{tr('إجمالي المدفوع', 'Total Paid')}</span>
         <div className="mt-2 flex items-baseline gap-1 text-[#074C3A]">
           <span className="text-xl sm:text-2xl font-black font-sans">
             {formatMoney(financial.totalPaid)}
           </span>
-          <span className="text-xs font-bold text-slate-500">ج.م</span>
+          <span className="text-xs font-bold text-slate-500">{tr('ج.م', 'EGP')}</span>
         </div>
       </div>
 
       {/* 4. المتبقي */}
       <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between min-h-[100px] text-start">
-        <span className="text-xs font-bold text-slate-400">المتبقي</span>
+        <span className="text-xs font-bold text-slate-400">{tr('المتبقي', 'Remaining Balance')}</span>
         <div
           className={`mt-2 flex items-baseline gap-1 ${
             remaining > 0 ? 'text-amber-600' : 'text-emerald-600'
@@ -84,7 +86,7 @@ export function PatientMetricCards({ details }: PatientMetricCardsProps) {
           <span className="text-xl sm:text-2xl font-black font-sans">
             {formatMoney(remaining)}
           </span>
-          <span className="text-xs font-bold">ج.م</span>
+          <span className="text-xs font-bold">{tr('ج.م', 'EGP')}</span>
         </div>
       </div>
     </div>

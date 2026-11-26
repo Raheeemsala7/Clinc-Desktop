@@ -5,6 +5,7 @@ import { usePayRemainingPaymentMutation } from '../hooks/payments.hook';
 import { X, Coins, Banknote, CreditCard, Wallet, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PaymentMethod } from '../types/payments';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface PayRemainingModalProps {
   isOpen: boolean;
@@ -25,12 +26,15 @@ export function PayRemainingModal({
   paidAmount,
   remainingAmount,
 }: PayRemainingModalProps) {
+  const { dir, tr } = useAppLocale();
   const [amount, setAmount] = useState<number>(remainingAmount);
   const [method, setMethod] = useState<PaymentMethod>('CASH');
   const [notes, setNotes] = useState<string>('');
   const payMutation = usePayRemainingPaymentMutation();
 
   if (!isOpen) return null;
+
+  const currencyLabel = tr('ج.م', 'EGP');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +56,10 @@ export function PayRemainingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200"
+      dir={dir}
+    >
       <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
         {/* رأس النافذة */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -62,17 +69,18 @@ export function PayRemainingModal({
             </div>
             <div>
               <h3 className="text-base font-black text-[#074C3A]">
-                سداد المبلغ المتبقي
+                {tr('سداد المبلغ المتبقي', 'Pay Remaining Balance')}
               </h3>
               <p className="text-xs text-slate-400 font-medium">
-                المريض: <strong className="text-slate-700">{patientName}</strong>
+                {tr('المريض:', 'Patient:')}{' '}
+                <strong className="text-slate-700">{patientName}</strong>
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -83,23 +91,36 @@ export function PayRemainingModal({
           {/* تفاصيل المبالغ */}
           <div className="grid grid-cols-3 gap-2.5 p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 text-center text-xs">
             <div>
-              <span className="text-slate-400 block text-[11px] mb-0.5">إجمالي الكشف</span>
-              <span className="font-black text-[#074C3A]">{totalAmount} ج.م</span>
+              <span className="text-slate-400 block text-[11px] mb-0.5">
+                {tr('إجمالي الكشف', 'Total Fee')}
+              </span>
+              <span className="font-black text-[#074C3A]">
+                {totalAmount} {currencyLabel}
+              </span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[11px] mb-0.5">المسدد سابقاً</span>
-              <span className="font-black text-emerald-600">{paidAmount} ج.م</span>
+              <span className="text-slate-400 block text-[11px] mb-0.5">
+                {tr('المسدد سابقاً', 'Previously Paid')}
+              </span>
+              <span className="font-black text-emerald-600">
+                {paidAmount} {currencyLabel}
+              </span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[11px] mb-0.5">المتبقي حالياً</span>
-              <span className="font-black text-rose-600">{remainingAmount} ج.م</span>
+              <span className="text-slate-400 block text-[11px] mb-0.5">
+                {tr('المتبقي حالياً', 'Current Remaining')}
+              </span>
+              <span className="font-black text-rose-600">
+                {remainingAmount} {currencyLabel}
+              </span>
             </div>
           </div>
 
           {/* المبلغ المراد تحصيله الآن */}
           <div>
             <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-              المبلغ المدفوع الآن (ج.م) <span className="text-rose-500">*</span>
+              {tr('المبلغ المدفوع الآن (ج.م)', 'Amount Paid Now (EGP)')}{' '}
+              <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <input
@@ -110,17 +131,20 @@ export function PayRemainingModal({
                 onFocus={(e) => e.target.select()}
                 onChange={(e) => setAmount(e.target.value === '' ? 0 : Number(e.target.value))}
                 placeholder="0"
-                className="w-full h-11 px-3.5 rounded-2xl border border-slate-200 bg-white text-sm font-black text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all font-sans"
+                className="w-full h-11 ps-3.5 pe-12 rounded-2xl border border-slate-200 bg-white text-sm font-black text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all font-sans"
                 required
               />
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                ج.م
+              <span className="absolute end-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                {currencyLabel}
               </span>
             </div>
             {amount < remainingAmount && (
               <p className="text-[11px] text-amber-600 font-bold mt-1 flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>سيتبقى بعد هذا الإيصال: {remainingAmount - amount} ج.م</span>
+                <span>
+                  {tr('سيتبقى بعد هذا الإيصال:', 'Remaining after this receipt:')}{' '}
+                  {remainingAmount - amount} {currencyLabel}
+                </span>
               </p>
             )}
           </div>
@@ -128,7 +152,7 @@ export function PayRemainingModal({
           {/* طريقة الدفع */}
           <div>
             <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-              طريقة الدفع
+              {tr('طريقة الدفع', 'Payment Method')}
             </label>
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -142,7 +166,7 @@ export function PayRemainingModal({
                 )}
               >
                 <Banknote className="w-4 h-4" />
-                <span>نقدي</span>
+                <span>{tr('نقدي', 'Cash')}</span>
               </button>
 
               <button
@@ -156,7 +180,7 @@ export function PayRemainingModal({
                 )}
               >
                 <CreditCard className="w-4 h-4" />
-                <span>بطاقة / فيزا</span>
+                <span>{tr('بطاقة / فيزا', 'Card / Visa')}</span>
               </button>
 
               <button
@@ -170,7 +194,7 @@ export function PayRemainingModal({
                 )}
               >
                 <Wallet className="w-4 h-4" />
-                <span>محفظة</span>
+                <span>{tr('محفظة', 'Wallet')}</span>
               </button>
             </div>
           </div>
@@ -178,13 +202,16 @@ export function PayRemainingModal({
           {/* ملاحظات الإيصال */}
           <div>
             <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-              ملاحظات التحصيل (اختياري)
+              {tr('ملاحظات التحصيل (اختياري)', 'Payment Notes (Optional)')}
             </label>
             <input
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="مثال: سداد باقي قيمة الكشف عند الخروج"
+              placeholder={tr(
+                'مثال: سداد باقي قيمة الكشف عند الخروج',
+                'e.g., Settling remaining fee at checkout'
+              )}
               className="w-full h-11 px-3.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all placeholder:text-slate-400 placeholder:font-normal"
             />
           </div>
@@ -197,7 +224,7 @@ export function PayRemainingModal({
               disabled={payMutation.isPending}
               className="h-11 px-4 rounded-2xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer"
             >
-              إلغاء
+              {tr('إلغاء', 'Cancel')}
             </button>
             <button
               type="submit"
@@ -207,10 +234,10 @@ export function PayRemainingModal({
               {payMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>جاري تسجيل السداد...</span>
+                  <span>{tr('جاري تسجيل السداد...', 'Recording payment...')}</span>
                 </>
               ) : (
-                <span>تأكيد السداد وإصدار الإيصال</span>
+                <span>{tr('تأكيد السداد وإصدار الإيصال', 'Confirm Payment & Issue Receipt')}</span>
               )}
             </button>
           </div>
@@ -219,4 +246,3 @@ export function PayRemainingModal({
     </div>
   );
 }
-

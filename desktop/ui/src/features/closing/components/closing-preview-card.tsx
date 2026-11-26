@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { ClosingPreview } from '../types/closing';
 import { AlertTriangle } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface ClosingPreviewCardProps {
   preview?: ClosingPreview;
@@ -11,6 +12,7 @@ interface ClosingPreviewCardProps {
 
 export function ClosingPreviewCard({ preview }: ClosingPreviewCardProps) {
   const t = useTranslations('Closing');
+  const { dir } = useAppLocale();
   const totalCashPayments = Number(preview?.totalCashPayments ?? 0);
   const totalApprovedExpenses = Number(preview?.totalApprovedExpenses ?? 0);
   const expectedCash = Number(preview?.expectedCash ?? 0);
@@ -29,7 +31,10 @@ export function ClosingPreviewCard({ preview }: ClosingPreviewCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden flex flex-col">
+    <div
+      className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden flex flex-col"
+      dir={dir}
+    >
       {/* 1. رأس البطاقة الكحلي الداكن */}
       <div className="bg-[#074C3A] text-white px-6 py-4 flex items-center justify-between">
         <h3 className="text-base font-bold tracking-tight">{t('previewTitle')}</h3>

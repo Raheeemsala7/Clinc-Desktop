@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Plus, Receipt, Loader2, Sparkles, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { X, Plus, Receipt, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useCreateExpenseMutation, useExpenseCategoriesQuery } from '../hooks/expenses.hook';
 import { ExpenseBudgetStatus } from '../types/expenses';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface CreateExpenseModalProps {
   isOpen: boolean;
@@ -12,12 +13,13 @@ interface CreateExpenseModalProps {
 }
 
 export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseModalProps) {
+  const { dir, tr } = useAppLocale();
   const [categoryId, setCategoryId] = useState('');
   const [amount, setAmount] = useState<string>('');
   const [description, setDescription] = useState('');
   const [spentAt, setSpentAt] = useState(() => new Date().toISOString().split('T')[0]);
 
-  const { data: categories = [], isLoading: isLoadingCategories } = useExpenseCategoriesQuery();
+  const { data: categories = [] } = useExpenseCategoriesQuery();
   const createMutation = useCreateExpenseMutation();
 
   if (!isOpen) return null;
@@ -25,7 +27,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
   const numAmount = Number(amount) || 0;
   const remainingBudget = Number(budget?.remainingBudget ?? 1000);
   const willBeAutoApproved = numAmount > 0 && numAmount <= remainingBudget;
-  const willNeedApproval = numAmount > 0 && numAmount > remainingBudget;
+  const currencyLabel = tr('ج.م', 'EGP');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +52,10 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200"
+      dir={dir}
+    >
       <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
         {/* رأس النافذة */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -60,10 +65,10 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
             </div>
             <div>
               <h3 className="text-base font-black text-[#074C3A]">
-                تسجيل مصروف جديد
+                {tr('تسجيل مصروف جديد', 'Record New Expense')}
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                إدخال بنود المصروفات ومشتريات العيادة
+                {tr('إدخال بنود المصروفات ومشتريات العيادة', 'Enter clinic expenses and purchase details')}
               </p>
             </div>
           </div>
@@ -81,7 +86,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
           {/* 1. بند المصروف (التصنيف) */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              بند / تصنيف المصروف *
+              {tr('بند / تصنيف المصروف *', 'Expense Category *')}
             </label>
             <select
               required
@@ -89,7 +94,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
               onChange={(e) => setCategoryId(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-sm font-medium bg-white transition-all cursor-pointer"
             >
-              <option value="">اختر التصنيف المناسب...</option>
+              <option value="">{tr('اختر التصنيف المناسب...', 'Select a category...')}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
@@ -102,7 +107,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                المبلغ (ج.م) *
+                {tr('المبلغ (ج.م) *', 'Amount (EGP) *')}
               </label>
               <div className="relative">
                 <input
@@ -113,17 +118,17 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-sm font-bold font-sans transition-all"
+                  className="w-full ps-4 pe-12 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-sm font-bold font-sans transition-all"
                 />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                  ج.م
+                <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                  {currencyLabel}
                 </span>
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                تاريخ الصرف *
+                {tr('تاريخ الصرف *', 'Expense Date *')}
               </label>
               <input
                 type="date"
@@ -152,12 +157,20 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
                 )}
                 <div>
                   <span className="font-bold block mb-0.5">
-                    {willBeAutoApproved ? 'اعتماد تلقائي فوري' : 'يتطلب موافقة الإدارة'}
+                    {willBeAutoApproved
+                      ? tr('اعتماد تلقائي فوري', 'Instant Auto-Approval')
+                      : tr('يتطلب موافقة الإدارة', 'Requires Admin Approval')}
                   </span>
                   <p className="text-[11px] leading-relaxed opacity-90">
                     {willBeAutoApproved
-                      ? `هذا المبلغ ضمن السقف الشهري المتبقي المتاح (${remainingBudget.toLocaleString()} ج.م)، وسيتم اعتماده تلقائياً بدون انتظار موافقة الإدارة.`
-                      : `هذا المبلغ يتجاوز السقف الشهري المتبقي المتاح (${remainingBudget.toLocaleString()} ج.م)، لذلك سيتم حفظه وإرساله للإدارة للموافقة عليه أولاً.`}
+                      ? tr(
+                          `هذا المبلغ ضمن السقف الشهري المتبقي المتاح (${remainingBudget.toLocaleString()} ج.م)، وسيتم اعتماده تلقائياً بدون انتظار موافقة الإدارة.`,
+                          `This amount is within the remaining monthly threshold (${remainingBudget.toLocaleString()} EGP) and will be auto-approved immediately.`
+                        )
+                      : tr(
+                          `هذا المبلغ يتجاوز السقف الشهري المتبقي المتاح (${remainingBudget.toLocaleString()} ج.م)، لذلك سيتم حفظه وإرساله للإدارة للموافقة عليه أولاً.`,
+                          `This amount exceeds the remaining monthly threshold (${remainingBudget.toLocaleString()} EGP), so it will be saved and sent to admin for approval.`
+                        )}
                   </p>
                 </div>
               </div>
@@ -167,14 +180,17 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
           {/* 3. البيان / الوصف */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              بيان المصروف وتفاصيل الشراء *
+              {tr('بيان المصروف وتفاصيل الشراء *', 'Expense Description & Details *')}
             </label>
             <textarea
               required
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="اكتب تفاصيل ما تم شراؤه أو سبب الصرف..."
+              placeholder={tr(
+                'اكتب تفاصيل ما تم شراؤه أو سبب الصرف...',
+                'Describe what was purchased or the reason for the expense...'
+              )}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0B7B5E] text-sm font-medium transition-all resize-none"
             />
           </div>
@@ -189,12 +205,12 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
               {createMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>جاري التسجيل...</span>
+                  <span>{tr('جاري التسجيل...', 'Recording...')}</span>
                 </>
               ) : (
                 <>
                   <Plus className="w-4 h-4" />
-                  <span>حفظ وتسجيل المصروف</span>
+                  <span>{tr('حفظ وتسجيل المصروف', 'Save & Record Expense')}</span>
                 </>
               )}
             </button>
@@ -204,7 +220,7 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
               disabled={createMutation.isPending}
               className="py-3 px-5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm transition-all cursor-pointer"
             >
-              إلغاء
+              {tr('إلغاء', 'Cancel')}
             </button>
           </div>
         </form>
@@ -212,4 +228,3 @@ export function CreateExpenseModal({ isOpen, onClose, budget }: CreateExpenseMod
     </div>
   );
 }
-

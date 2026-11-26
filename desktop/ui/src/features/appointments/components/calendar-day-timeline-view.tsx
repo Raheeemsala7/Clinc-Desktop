@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { DaySlotItem, DaySlotAppointment } from '../types/calendar';
 import { openInNewWindow } from '@/shared/utils/open-window';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { formatDoctorName, getAppointmentTypeLabel } from '../constants/booking.constant';
 
 interface CalendarDayTimelineViewProps {
   slots: DaySlotItem[];
@@ -42,6 +44,7 @@ export function CalendarDayTimelineView({
   isFinishingExam,
   finishingExamId,
 }: CalendarDayTimelineViewProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const [filter, setFilter] = React.useState<'all' | 'booked' | 'waiting' | 'available'>(
     isDoctorView ? 'booked' : 'all'
   );
@@ -67,37 +70,6 @@ export function CalendarDayTimelineView({
       ? availableSlots
       : slots;
 
-  const getTypeLabel = (type?: string) => {
-    switch (type) {
-      case 'FOLLOW_UP':
-        return 'إعادة';
-      case 'OPERATION_FOLLOWUP':
-        return 'متابعة عملية';
-      case 'ENDOSCOPY':
-        return 'منظار';
-      case 'SURGERY':
-      case 'POST_OPERATIVE':
-        return 'تدخل جراحي';
-      case 'TEST_RESULTS_REVIEW':
-        return 'مراجعة فحوصات';
-      case 'CONSULTATION':
-        return 'استشارة';
-      case 'LAB_TESTS_IMAGING':
-        return 'منظار';
-      default:
-        return 'كشف';
-    }
-  };
-
-  const formatDoctorName = (name?: string) => {
-    if (!name || !name.trim()) return 'د. إسلام عبدالله';
-    const clean = name.trim();
-    if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
-      return clean;
-    }
-    return `د. ${clean}`;
-  };
-
   const renderAppointmentCard = (appt: DaySlotAppointment, slotTime: string, totalInSlot: number) => {
     const isInProgress = appt.status === 'IN_PROGRESS';
     const isWaiting = appt.status === 'WAITING';
@@ -122,7 +94,7 @@ export function CalendarDayTimelineView({
       statusBadge = (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-xs">
           <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-          <span>كشف جاري الآن 🩺</span>
+          <span>{tr('كشف جاري الآن 🩺', 'Exam in Progress 🩺')}</span>
         </span>
       );
     } else if (isWaiting) {
@@ -133,7 +105,7 @@ export function CalendarDayTimelineView({
       statusBadge = (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-amber-500 text-white shadow-xs">
           <Clock className="w-3.5 h-3.5" />
-          <span>في صالة الانتظار ⏳</span>
+          <span>{tr('في صالة الانتظار ⏳', 'In Waiting Room ⏳')}</span>
         </span>
       );
     } else if (isBookedStatus) {
@@ -143,7 +115,7 @@ export function CalendarDayTimelineView({
       timeBadgeStyle = 'bg-[#E3F5EE] text-[#0B7B5E]';
       statusBadge = (
         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-bold bg-[#0B7B5E] text-white shadow-2xs">
-          <span>حجز مسبق مؤكد 📅</span>
+          <span>{tr('حجز مسبق مؤكد 📅', 'Confirmed Booking 📅')}</span>
         </span>
       );
     } else if (isCompleted) {
@@ -154,7 +126,11 @@ export function CalendarDayTimelineView({
       statusBadge = (
         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-bold bg-slate-500 text-white">
           <Check className="w-3.5 h-3.5" />
-          <span>{appt.status === 'PENDING_CHECKOUT' ? 'بانتظار المحاسبة' : 'تم الكشف ✓'}</span>
+          <span>
+            {appt.status === 'PENDING_CHECKOUT'
+              ? tr('بانتظار المحاسبة', 'Pending Checkout')
+              : tr('تم الكشف ✓', 'Completed ✓')}
+          </span>
         </span>
       );
     }
@@ -164,18 +140,20 @@ export function CalendarDayTimelineView({
         key={appt.id}
         className={`rounded-3xl border transition-all p-4 sm:p-5 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 ${containerStyle}`}
       >
-        {/* شريط الإشارة الملون في اليمين */}
-        <div className={`absolute right-0 top-0 bottom-0 w-2.5 ${indicatorColor}`} />
+        {/* شريط الإشارة الملون في بداية البطاقة */}
+        <div className={`absolute start-0 top-0 bottom-0 w-2.5 ${indicatorColor}`} />
 
         {/* الجانب الأيمن: وقت الحجز + بيانات المريض ورقم الدور */}
-        <div className="flex items-center gap-4 sm:gap-5 pr-2 flex-1">
+        <div className="flex items-center gap-4 sm:gap-5 ps-2 flex-1">
           {/* توقيت الساعة */}
           <div className="text-center shrink-0 min-w-[75px]">
             <div className={`text-base sm:text-lg font-black font-mono px-3 py-1.5 rounded-2xl ${timeBadgeStyle}`}>
               {slotTime}
             </div>
             <div className="text-[11px] text-slate-500 font-bold mt-1">
-              {totalInSlot > 1 ? `${totalInSlot} مرضى بهذه الساعة` : 'موعد مجدول'}
+              {totalInSlot > 1
+                ? tr(`${totalInSlot} مرضى بهذه الساعة`, `${totalInSlot} patients in this slot`)
+                : tr('موعد مجدول', 'Scheduled')}
             </div>
           </div>
 
@@ -194,7 +172,9 @@ export function CalendarDayTimelineView({
               {/* شارة اسم الطبيب البارزة */}
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#E3F5EE] text-[#074C3A] text-xs font-black border border-[#D0E5DC] shadow-2xs">
                 <Stethoscope className="w-3.5 h-3.5 text-[#0B7B5E]" />
-                <span>الطبيب: {formatDoctorName(appt.doctorName)}</span>
+                <span>
+                  {tr('الطبيب:', 'Doctor:')} {formatDoctorName(appt.doctorName, isAr)}
+                </span>
               </span>
             </div>
 
@@ -206,7 +186,7 @@ export function CalendarDayTimelineView({
               )}
               {appt.notes && (
                 <span className="text-slate-500 bg-white/70 px-2 py-0.5 rounded-md border border-slate-200/60">
-                  ملاحظة: {appt.notes}
+                  {tr('ملاحظة:', 'Note:')} {appt.notes}
                 </span>
               )}
             </div>
@@ -217,20 +197,23 @@ export function CalendarDayTimelineView({
         <div className="flex items-center gap-2.5 flex-wrap justify-start md:justify-end">
           {/* شارة نوع الكشف */}
           <span className="px-3 py-1 rounded-xl bg-white text-[#0B7B5E] text-xs font-bold border border-[#D0E5DC] shadow-2xs">
-            {getTypeLabel(appt.type)}
+            {getAppointmentTypeLabel(appt.type, isAr)}
           </span>
 
           {/* شارة الموقف المالي */}
           {appt.isFullyPaid ? (
             <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold flex items-center gap-1 shadow-2xs">
               <Check className="w-3.5 h-3.5" />
-              <span>مدفوع ({appt.totalAmount} ج.م)</span>
+              <span>{tr(`مدفوع (${appt.totalAmount} ج.م)`, `Paid (${appt.totalAmount} EGP)`)}</span>
             </span>
           ) : appt.hasRemaining ? (
             <span className="px-3 py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1 shadow-2xs">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
               <span>
-                عربون {appt.paidAmount} · متبقي {appt.remainingAmount} ج.م
+                {tr(
+                  `عربون ${appt.paidAmount} · متبقي ${appt.remainingAmount} ج.م`,
+                  `Paid ${appt.paidAmount} · Due ${appt.remainingAmount} EGP`
+                )}
               </span>
             </span>
           ) : null}
@@ -252,7 +235,7 @@ export function CalendarDayTimelineView({
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
             >
               <Stethoscope className="w-4 h-4 stroke-[2.2]" />
-              <span>كشف وروشتة 📋</span>
+              <span>{tr('كشف وروشتة 📋', 'Exam & Rx 📋')}</span>
             </Link>
 
             {/* إذا كان كشف جاري: زر إنهاء الكشف */}
@@ -264,7 +247,11 @@ export function CalendarDayTimelineView({
                 className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-60"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>{isFinishingExam && finishingExamId === appt.id ? 'جاري الإنهاء...' : 'إنهاء الكشف ✓'}</span>
+                <span>
+                  {isFinishingExam && finishingExamId === appt.id
+                    ? tr('جاري الإنهاء...', 'Finishing...')
+                    : tr('إنهاء الكشف ✓', 'Finish Exam ✓')}
+                </span>
               </button>
             )}
 
@@ -277,14 +264,18 @@ export function CalendarDayTimelineView({
                 className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-60"
               >
                 <LogIn className="w-4 h-4" />
-                <span>{isAdmitting && admittingId === appt.id ? 'جاري الإدخال...' : 'إدخال للكشف 🚪'}</span>
+                <span>
+                  {isAdmitting && admittingId === appt.id
+                    ? tr('جاري الإدخال...', 'Admitting...')
+                    : tr('إدخال للكشف 🚪', 'Admit Patient 🚪')}
+                </span>
               </button>
             )}
 
             {/* زر فتح ملف المريض الطبي */}
             <Link
               href={`/dashboard/view-patients/${appt.patientId}`}
-              title="فتح الملف الطبي للمريض"
+              title={tr('فتح الملف الطبي للمريض', 'Open patient medical file')}
               className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-slate-600 cursor-pointer transition-colors shadow-2xs"
             >
               <FileText className="w-4 h-4 text-[#0B7B5E]" />
@@ -296,7 +287,7 @@ export function CalendarDayTimelineView({
   };
 
   return (
-    <div className="space-y-4 select-none text-start" dir="rtl">
+    <div className="space-y-4 select-none text-start" dir={dir}>
       {/* الشريط الفرعي التوضيحي مع دليل الألوان الفسفوري عالي الوضوح وأزرار الفلترة */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-xs font-bold px-1 bg-white p-4 rounded-3xl border border-slate-100 shadow-xs">
         {/* أزرار الفلترة السريعة */}
@@ -310,7 +301,7 @@ export function CalendarDayTimelineView({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            المحجوزة فقط ({totalBookedAppointments})
+            {tr(`المحجوزة فقط (${totalBookedAppointments})`, `Booked Only (${totalBookedAppointments})`)}
           </button>
 
           <button
@@ -322,7 +313,7 @@ export function CalendarDayTimelineView({
                 : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/60'
             }`}
           >
-            في الانتظار ({waitingSlots.length})
+            {tr(`في الانتظار (${waitingSlots.length})`, `Waiting (${waitingSlots.length})`)}
           </button>
 
           <button
@@ -334,7 +325,7 @@ export function CalendarDayTimelineView({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            جميع الساعات ({slots.length})
+            {tr(`جميع الساعات (${slots.length})`, `All Hours (${slots.length})`)}
           </button>
 
           <button
@@ -346,7 +337,7 @@ export function CalendarDayTimelineView({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            الشاغرة ({availableSlots.length})
+            {tr(`الشاغرة (${availableSlots.length})`, `Available (${availableSlots.length})`)}
           </button>
         </div>
 
@@ -354,27 +345,27 @@ export function CalendarDayTimelineView({
         <div className="flex items-center gap-3 text-xs font-bold flex-wrap bg-slate-50 p-2 rounded-2xl border border-slate-200/60">
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-300">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
-            <span>كشف جاري الآن</span>
+            <span>{tr('كشف جاري الآن', 'Exam in Progress')}</span>
           </div>
 
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-            <span>في صالة الانتظار</span>
+            <span>{tr('في صالة الانتظار', 'Waiting Room')}</span>
           </div>
 
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#E3F5EE] text-[#074C3A] border border-[#D0E5DC]">
             <span className="w-2.5 h-2.5 rounded-full bg-[#0B7B5E]" />
-            <span>حجز مسبق مؤكد</span>
+            <span>{tr('حجز مسبق مؤكد', 'Confirmed')}</span>
           </div>
 
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200 text-slate-800 border border-slate-300">
             <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
-            <span>تم الكشف</span>
+            <span>{tr('تم الكشف', 'Completed')}</span>
           </div>
 
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white text-slate-600 border border-slate-300">
             <span className="w-2.5 h-2.5 rounded-full bg-slate-300 border border-slate-400" />
-            <span>ساعة شاغرة</span>
+            <span>{tr('ساعة شاغرة', 'Open Slot')}</span>
           </div>
         </div>
       </div>
@@ -383,7 +374,7 @@ export function CalendarDayTimelineView({
       <div className="space-y-3">
         {filteredSlots.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 border border-slate-200/80 text-center text-slate-400 font-bold text-sm shadow-xs">
-            لا توجد فترات أو مواعيد مطابقة في هذا اليوم
+            {tr('لا توجد فترات أو مواعيد مطابقة في هذا اليوم', 'No matching slots or appointments for this day')}
           </div>
         ) : (
           filteredSlots.map((slot) => {
@@ -416,7 +407,7 @@ export function CalendarDayTimelineView({
                 {/* نص توضيحي */}
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
                   <Clock className="w-4 h-4 text-slate-400" />
-                  <span>ساعة شاغرة — متاحة لاستقبال كشف جديد</span>
+                  <span>{tr('ساعة شاغرة — متاحة لاستقبال كشف جديد', 'Open slot — available for booking')}</span>
                 </div>
 
                 {/* شارة أو زر */}
@@ -428,11 +419,11 @@ export function CalendarDayTimelineView({
                     className="h-9 px-4 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE] hover:bg-[#E3F5EE] text-[#0B7B5E] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>حجز هذه الفترة</span>
+                    <span>{tr('حجز هذه الفترة', 'Book This Slot')}</span>
                   </Link>
                 ) : (
                   <span className="text-xs text-slate-400 font-bold px-3 py-1 rounded-xl bg-slate-100 border border-slate-200/60">
-                    متاحة
+                    {tr('متاحة', 'Available')}
                   </span>
                 )}
               </div>

@@ -2,21 +2,50 @@
 
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { PatientDetails } from '../types/patient';
 
 interface PatientHeroBannerProps {
   details: PatientDetails;
 }
 
+const CHRONIC_EN_MAP: Record<string, string> = {
+  diabetes: 'Diabetes',
+  السكر: 'Diabetes',
+  hypertension: 'Hypertension',
+  الضغط: 'Hypertension',
+  heart: 'Heart Disease',
+  القلب: 'Heart Disease',
+  allergy: 'Allergy',
+  الحساسية: 'Allergy',
+  asthma: 'Asthma',
+  الربو: 'Asthma',
+  kidney: 'Kidney Disease',
+  الكلى: 'Kidney Disease',
+  thyroid: 'Thyroid',
+  'الغدة الدرقية': 'Thyroid',
+  other: 'Other',
+  أخرى: 'Other',
+};
+
+function formatChronicLabel(condition: string, isAr: boolean): string {
+  if (isAr) return condition;
+  if (condition.startsWith('أخرى:')) {
+    return `Other: ${condition.slice('أخرى:'.length).trim()}`;
+  }
+  return CHRONIC_EN_MAP[condition] || condition;
+}
+
 export function PatientHeroBanner({ details }: PatientHeroBannerProps) {
+  const { isAr, tr } = useAppLocale();
   const patient = details.patient;
   const chronicList = patient.chronicConditions || [];
   const hasChronic = chronicList.length > 0;
-  const firstLetter = patient.fullName?.trim()?.charAt(0) || 'م';
+  const firstLetter = patient.fullName?.trim()?.charAt(0) || tr('م', 'P');
   const fileNumber = (patient as any).fileNumber
-    ? `ملف #${(patient as any).fileNumber}`
+    ? tr(`ملف #${(patient as any).fileNumber}`, `File #${(patient as any).fileNumber}`)
     : patient.id
-    ? `ملف #${patient.id.slice(-4)}`
+    ? tr(`ملف #${patient.id.slice(-4)}`, `File #${patient.id.slice(-4)}`)
     : '';
 
   return (
@@ -38,11 +67,11 @@ export function PatientHeroBanner({ details }: PatientHeroBannerProps) {
               {fileNumber}
             </span>
             <span>·</span>
-            <span>{patient.age ? `${patient.age} سنة` : ''}</span>
+            <span>{patient.age ? tr(`${patient.age} سنة`, `${patient.age} yrs`) : ''}</span>
             <span>·</span>
             <span dir="ltr">{patient.phone}</span>
             <span>·</span>
-            <span>{patient.gender === 'MALE' ? 'ذكر' : 'أنثى'}</span>
+            <span>{patient.gender === 'MALE' ? tr('ذكر', 'Male') : tr('أنثى', 'Female')}</span>
           </div>
         </div>
       </div>
@@ -52,10 +81,10 @@ export function PatientHeroBanner({ details }: PatientHeroBannerProps) {
         <div className="bg-[#EAB308] text-[#074C3A] rounded-2xl p-4 sm:p-4.5 min-w-[180px] shadow-sm shrink-0 border border-yellow-300">
           <div className="flex items-center gap-1.5 font-black text-xs sm:text-sm mb-1 text-[#074C3A]">
             <AlertTriangle className="w-4 h-4 stroke-[2.5]" />
-            <span>مرض مزمن</span>
+            <span>{tr('مرض مزمن', 'Chronic Condition')}</span>
           </div>
           <p className="text-xs font-bold text-slate-900 leading-tight">
-            {chronicList.join('، ')}
+            {chronicList.map((c) => formatChronicLabel(c, isAr)).join(isAr ? '، ' : ', ')}
           </p>
         </div>
       )}

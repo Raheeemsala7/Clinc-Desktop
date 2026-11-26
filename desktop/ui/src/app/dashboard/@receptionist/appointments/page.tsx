@@ -5,11 +5,18 @@ import { AppointmentsCalendarServer } from '@/features/appointments/components/a
 import { AppointmentsCalendarSkeleton } from '@/features/appointments/components/appointments-calendar-skeleton';
 import { AppointmentsCalendarError } from '@/features/appointments/components/appointments-calendar-error';
 import { CalendarViewMode } from '@/features/appointments/types/calendar';
+import { getServerLocaleInfo } from '@/i18n/server-locale';
 
-export const metadata: Metadata = {
-  title: 'تقويم المواعيد والحجوزات | العيادة',
-  description: 'عرض الفترات الزمنية الشاغرة والمحجوزة بالساعة لكل طبيب وإدارة حجوزات العيادة',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { tr } = await getServerLocaleInfo();
+  return {
+    title: tr('تقويم المواعيد والحجوزات | العيادة', 'Appointments & Bookings Calendar | Clinic'),
+    description: tr(
+      'عرض الفترات الزمنية الشاغرة والمحجوزة بالساعة لكل طبيب وإدارة حجوزات العيادة',
+      'View hourly available and booked slots for each doctor and manage clinic bookings'
+    ),
+  };
+}
 
 interface ReceptionistAppointmentsPageProps {
   searchParams: Promise<{
@@ -19,18 +26,23 @@ interface ReceptionistAppointmentsPageProps {
   }>;
 }
 
-export default function ReceptionistAppointmentsPage({
+export default async function ReceptionistAppointmentsPage({
   searchParams,
 }: ReceptionistAppointmentsPageProps) {
+  const { dir, tr } = await getServerLocaleInfo();
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6" dir="rtl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6" dir={dir}>
       {/* 1. ترويسة الصفحة مطابقة للتصميم */}
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight">
-          تقويم المواعيد والحجوزات
+          {tr('تقويم المواعيد والحجوزات', 'Appointments & Bookings Calendar')}
         </h1>
         <p className="text-xs sm:text-sm font-bold text-slate-400">
-          عرض الفترات الزمنية الشاغرة والمحجوزة بالساعة لكل طبيب وإدارة حجوزات العيادة
+          {tr(
+            'عرض الفترات الزمنية الشاغرة والمحجوزة بالساعة لكل طبيب وإدارة حجوزات العيادة',
+            'View hourly available and booked slots for each doctor and manage clinic bookings'
+          )}
         </p>
       </div>
 

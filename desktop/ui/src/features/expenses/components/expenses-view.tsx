@@ -14,6 +14,7 @@ import { ExpensesFiltersBar } from './expenses-filters-bar';
 import { ExpenseCardItem } from './expense-card-item';
 import { CreateExpenseModal } from './create-expense-modal';
 import { RejectExpenseModal } from './reject-expense-modal';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 interface ExpensesViewProps {
   isAdmin?: boolean;
@@ -21,6 +22,7 @@ interface ExpensesViewProps {
 
 export function ExpensesView({ isAdmin }: ExpensesViewProps) {
   const t = useTranslations('Expenses');
+  const { dir, tr } = useAppLocale();
   const [currentTab, setCurrentTab] = useState<ExpenseFilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -98,7 +100,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12" dir={dir}>
       {/* 1. رأس الصفحة وزر تسجيل المصروف */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
@@ -116,7 +118,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
             onClick={handleRefresh}
             disabled={isFetching}
             className="p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-all cursor-pointer shadow-2xs active:scale-95"
-            title="تحديث البيانات"
+            title={tr('تحديث البيانات', 'Refresh Data')}
           >
             <RotateCcw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
           </button>
@@ -153,17 +155,24 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
       {isLoading ? (
         <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center shadow-xs">
           <Loader2 className="w-8 h-8 text-[#0B7B5E] animate-spin mx-auto mb-3" />
-          <p className="text-xs text-slate-400 font-bold">جاري تحميل سجل المصروفات...</p>
+          <p className="text-xs text-slate-400 font-bold">
+            {tr('جاري تحميل سجل المصروفات...', 'Loading expenses log...')}
+          </p>
         </div>
       ) : error ? (
         <div className="bg-white rounded-3xl border border-rose-100 p-8 text-center text-rose-600 shadow-xs">
-          <p className="text-sm font-bold">حدث خطأ أثناء جلب المصروفات، يرجى المحاولة مرة أخرى.</p>
+          <p className="text-sm font-bold">
+            {tr(
+              'حدث خطأ أثناء جلب المصروفات، يرجى المحاولة مرة أخرى.',
+              'An error occurred while fetching expenses, please try again.'
+            )}
+          </p>
           <button
             type="button"
             onClick={handleRefresh}
             className="mt-3 px-4 py-2 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 cursor-pointer"
           >
-            إعادة المحاولة
+            {tr('إعادة المحاولة', 'Retry')}
           </button>
         </div>
       ) : filteredExpenses.length === 0 ? (
@@ -172,10 +181,10 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
             <Receipt className="w-8 h-8 stroke-[1.8]" />
           </div>
           <h3 className="text-base font-black text-[#074C3A] mb-1">
-            لا توجد أي مصروفات مطابقة للفلتر
+            {t('emptyTitle')}
           </h3>
           <p className="text-xs text-slate-400 max-w-sm mx-auto mb-5">
-            لم يتم العثور على أي مصروفات مسجلة بهذه الشروط. يمكنك تسجيل مصروف جديد في أي وقت.
+            {t('emptySubtitle')}
           </p>
           <button
             type="button"
@@ -183,7 +192,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] text-white text-xs font-bold hover:bg-[#09634C] transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>تسجيل مصروف جديد</span>
+            <span>{t('newExpenseBtn')}</span>
           </button>
         </div>
       ) : (
@@ -214,4 +223,3 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
     </div>
   );
 }
-

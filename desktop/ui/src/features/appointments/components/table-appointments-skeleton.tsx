@@ -1,12 +1,17 @@
+'use client';
+
 import React from 'react';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * هيكل التحميل التفاعلي (Skeleton) لجدول قائمة انتظار الاستقبال
  * يُعرض أثناء جلب بيانات مواعيد اليوم داخل Suspense
  */
 export function TableAppointmentsSkeleton() {
+  const { dir, tr } = useAppLocale();
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
+    <div dir={dir} className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
       {/* رأس الجدول التوضيحي أثناء التحميل */}
       <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/30">
         <div className="space-y-2">
@@ -25,13 +30,13 @@ export function TableAppointmentsSkeleton() {
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400 font-bold text-xs">
               <th className="py-4 px-6 text-start">#</th>
-              <th className="py-4 px-6 text-start">المريض</th>
-              <th className="py-4 px-6 text-start">الطبيب المعالج</th>
-              <th className="py-4 px-6 text-center">نوع الكشف</th>
-              <th className="py-4 px-6 text-center">الحالة</th>
-              <th className="py-4 px-6 text-center">مدة الانتظار</th>
-              <th className="py-4 px-6 text-center">الموقف المالي / المتبقي</th>
-              <th className="py-4 px-6 text-end">إجراءات</th>
+              <th className="py-4 px-6 text-start">{tr('المريض', 'Patient')}</th>
+              <th className="py-4 px-6 text-start">{tr('الطبيب المعالج', 'Doctor')}</th>
+              <th className="py-4 px-6 text-center">{tr('نوع الكشف', 'Type')}</th>
+              <th className="py-4 px-6 text-center">{tr('الحالة', 'Status')}</th>
+              <th className="py-4 px-6 text-center">{tr('مدة الانتظار', 'Wait Time')}</th>
+              <th className="py-4 px-6 text-center">{tr('الموقف المالي / المتبقي', 'Financial Status')}</th>
+              <th className="py-4 px-6 text-end">{tr('إجراءات', 'Actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 font-medium">

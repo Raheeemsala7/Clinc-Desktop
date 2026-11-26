@@ -2,18 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, LogIn, PhoneCall } from 'lucide-react';
+import { Menu, X, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NafsLogo } from '@/shared/components/nafs-logo';
-import { COMPANY_WEBSITE_URL } from '../constants';
+import { COMPANY_WEBSITE_URL, TRY_DEMO_TOAST_MESSAGE } from '../constants';
 import { toast } from 'sonner';
-import { useLocale } from 'next-intl';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { cn } from '@/lib/utils';
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const locale = useLocale();
+  const { dir, tr } = useAppLocale();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,13 +24,13 @@ export const Navbar = () => {
   }, []);
 
   const navItems = [
-    { label: 'المميزات', href: '#features' },
-    { label: 'الأدوار', href: '#roles' },
-    { label: 'كيف نعمل', href: '#how-it-works' },
+    { label: tr('المميزات', 'Features'), href: '#features' },
+    { label: tr('الأدوار', 'Roles'), href: '#roles' },
+    { label: tr('كيف نعمل', 'How It Works'), href: '#how-it-works' },
   ];
 
   const handleTryDemo = () => {
-    toast.info('تواصل مع فريق تطوير Vyro Software لتجربة المنظومة ومعرفة كل التفاصيل: https://www.vyro.software/en', {
+    toast.info(tr(TRY_DEMO_TOAST_MESSAGE.ar, TRY_DEMO_TOAST_MESSAGE.en), {
       duration: 6000,
     });
   };
@@ -43,7 +43,7 @@ export const Navbar = () => {
           ? 'bg-white/90 backdrop-blur-md shadow-xs border-b border-[#D0E5DC] py-3'
           : 'bg-white/70 backdrop-blur-xs py-4 border-b border-[#D0E5DC]/60'
       )}
-      dir="rtl"
+      dir={dir}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
@@ -53,7 +53,10 @@ export const Navbar = () => {
           </div>
 
           {/* المنتصف: روابط التنقل الرئيسية */}
-          <nav className="hidden md:flex items-center gap-8" aria-label="Main Navigation">
+          <nav
+            className="hidden md:flex items-center gap-8"
+            aria-label={tr('التنقل الرئيسي', 'Main Navigation')}
+          >
             {navItems.map((item) => (
               <a
                 key={item.href}
@@ -72,7 +75,7 @@ export const Navbar = () => {
               className="text-[#0B241D] hover:text-[#0B7B5E] border border-[#D0E5DC] hover:border-[#0B7B5E] bg-white font-bold text-xs sm:text-sm px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-150 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <LogIn className="w-4 h-4 text-[#0B7B5E]" />
-              <span>تسجيل الدخول</span>
+              <span>{tr('تسجيل الدخول', 'Sign In')}</span>
             </Link>
 
             <motion.a
@@ -84,7 +87,7 @@ export const Navbar = () => {
               onClick={handleTryDemo}
               className="bg-[#0B7B5E] hover:bg-[#09634C] text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors"
             >
-              <span>جرب الموقع تجريبياً</span>
+              <span>{tr('جرب الموقع تجريبياً', 'Try Live Demo')}</span>
             </motion.a>
 
             {/* زر القائمة للشاشات الصغيرة */}
@@ -92,7 +95,7 @@ export const Navbar = () => {
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-[#4A635B] hover:text-[#0B7B5E] rounded-xl hover:bg-[#E3F5EE] transition-colors cursor-pointer"
-              aria-label="القائمة"
+              aria-label={tr('القائمة', 'Menu')}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

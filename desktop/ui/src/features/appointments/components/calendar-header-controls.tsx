@@ -12,6 +12,8 @@ import {
   Stethoscope,
 } from 'lucide-react';
 import { CalendarViewMode } from '../types/calendar';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { formatDoctorName } from '../constants/booking.constant';
 
 interface CalendarHeaderControlsProps {
   currentDate: string;
@@ -39,15 +41,6 @@ function getTodayIso(): string {
   return `${year}-${month}-${day}`;
 }
 
-function formatDoctorName(name?: string): string {
-  if (!name || !name.trim()) return 'د. إسلام عبدالله';
-  const clean = name.trim();
-  if (clean.startsWith('د.') || clean.startsWith('Dr.') || clean.startsWith('د/')) {
-    return clean;
-  }
-  return `د. ${clean}`;
-}
-
 export function CalendarHeaderControls({
   currentDate,
   onDateChange,
@@ -65,6 +58,7 @@ export function CalendarHeaderControls({
   onShiftWeek,
   onShiftMonth,
 }: CalendarHeaderControlsProps) {
+  const { isAr, dir, tr } = useAppLocale();
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   // التنقل يوماً للأمام أو للخلف في وضع القائمة
@@ -79,14 +73,29 @@ export function CalendarHeaderControls({
   const formatDayDisplayLabel = (dateStr: string) => {
     try {
       const d = new Date(dateStr + 'T12:00:00Z');
-      const arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-      const dayName = arabicDays[d.getUTCDay()];
+      const dayName = d.toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
+        weekday: 'long',
+        timeZone: 'UTC',
+      });
       const day = d.getUTCDate().toString().padStart(2, '0');
       const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
       const year = d.getUTCFullYear();
       return `${dayName} ${day}/${month}/${year}`;
     } catch {
       return dateStr.replace(/-/g, ' / ');
+    }
+  };
+
+  const formatMonthDisplayLabel = () => {
+    try {
+      const d = new Date(currentDate + 'T12:00:00Z');
+      const displayMonth = isAr
+        ? monthName || d.toLocaleDateString('ar-EG', { month: 'long', timeZone: 'UTC' })
+        : d.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+      const displayYear = monthYear || d.getUTCFullYear();
+      return `${displayMonth} ${displayYear}`;
+    } catch {
+      return `${monthName || ''} ${monthYear || 2026}`.trim();
     }
   };
 
@@ -107,11 +116,13 @@ export function CalendarHeaderControls({
   };
 
   const isCalendarMode = viewMode === 'day' || viewMode === 'week' || viewMode === 'month';
+  const PrevIcon = isAr ? ChevronRight : ChevronLeft;
+  const NextIcon = isAr ? ChevronLeft : ChevronRight;
 
   return (
     <div
       className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 select-none"
-      dir="rtl"
+      dir={dir}
     >
       {/* الجانب الأيمن: زر اليوم + منتقي التاريخ + (تبويبات النطاق يوم/أسبوع/شهر) + قائمة الأطباء */}
       <div className="flex items-center gap-2.5 flex-wrap">
@@ -123,7 +134,7 @@ export function CalendarHeaderControls({
           }}
           className="h-10 px-4 rounded-xl bg-[#074C3A] hover:bg-[#111f68] active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
         >
-          اليوم
+          {tr('اليوم', 'Today')}
         </button>
 
         {/* منتقي وملاح التاريخ بحسب النمط (شهر / أسبوع / يوم) */}
@@ -133,26 +144,24 @@ export function CalendarHeaderControls({
             <button
               type="button"
               onClick={() => onShiftMonth?.(-1)}
-              title="الشهر السابق"
+              title={tr('الشهر السابق', 'Previous month')}
               className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
             >
-              <ChevronRight className="w-4 h-4" />
+              <PrevIcon className="w-4 h-4" />
             </button>
 
             <div className="flex items-center gap-2 px-1 text-xs font-black text-[#074C3A]">
-              <span>
-                {monthName || 'نوفمبر'} {monthYear || 2026}
-              </span>
+              <span>{formatMonthDisplayLabel()}</span>
               <CalendarIcon className="w-4 h-4 text-[#0B7B5E]" />
             </div>
 
             <button
               type="button"
               onClick={() => onShiftMonth?.(1)}
-              title="الشهر التالي"
+              title={tr('الشهر التالي', 'Next month')}
               className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <NextIcon className="w-4 h-4" />
             </button>
           </div>
         ) : viewMode === 'week' ? (
@@ -161,24 +170,24 @@ export function CalendarHeaderControls({
             <button
               type="button"
               onClick={() => onShiftWeek?.(-7)}
-              title="الأسبوع السابق"
+              title={tr('الأسبوع السابق', 'Previous week')}
               className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
             >
-              <ChevronRight className="w-4 h-4" />
+              <PrevIcon className="w-4 h-4" />
             </button>
 
             <div className="flex items-center gap-2 px-1 text-xs font-bold text-[#074C3A] font-sans">
-              <span>{formatWeekRangeLabel(weekStartDate, weekEndDate)}</span>
+              <span dir="ltr">{formatWeekRangeLabel(weekStartDate, weekEndDate)}</span>
               <CalendarIcon className="w-4 h-4 text-[#0B7B5E]" />
             </div>
 
             <button
               type="button"
               onClick={() => onShiftWeek?.(7)}
-              title="الأسبوع التالي"
+              title={tr('الأسبوع التالي', 'Next week')}
               className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <NextIcon className="w-4 h-4" />
             </button>
           </div>
         ) : (
@@ -187,10 +196,10 @@ export function CalendarHeaderControls({
             <button
               type="button"
               onClick={() => handleShiftDay(-1)}
-              title="اليوم السابق"
+              title={tr('اليوم السابق', 'Previous day')}
               className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
             >
-              <ChevronRight className="w-4 h-4" />
+              <PrevIcon className="w-4 h-4" />
             </button>
 
             <div
@@ -213,10 +222,10 @@ export function CalendarHeaderControls({
             <button
               type="button"
               onClick={() => handleShiftDay(1)}
-              title="اليوم التالي"
+              title={tr('اليوم التالي', 'Next day')}
               className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <NextIcon className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -233,7 +242,7 @@ export function CalendarHeaderControls({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              يوم
+              {tr('يوم', 'Day')}
             </button>
             <button
               type="button"
@@ -244,7 +253,7 @@ export function CalendarHeaderControls({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              أسبوع
+              {tr('أسبوع', 'Week')}
             </button>
             <button
               type="button"
@@ -255,7 +264,7 @@ export function CalendarHeaderControls({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              شهر
+              {tr('شهر', 'Month')}
             </button>
           </div>
         )}
@@ -264,25 +273,25 @@ export function CalendarHeaderControls({
         {isDoctorView ? (
           <div className="h-10 px-3.5 rounded-xl border border-[#D0E5DC] bg-[#E3F5EE]/60 text-xs font-black text-[#074C3A] shadow-2xs flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-[#0B7B5E]" />
-            <span>{doctorName ? formatDoctorName(doctorName) : 'جدول مواعيدي الخاصة'}</span>
+            <span>{doctorName ? formatDoctorName(doctorName, isAr) : tr('جدول مواعيدي الخاصة', 'My Personal Schedule')}</span>
           </div>
         ) : (
           <div className="relative">
             <select
               value={selectedDoctorId || ''}
               onChange={(e) => onDoctorChange(e.target.value)}
-              className="h-10 pr-4 pl-9 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] shadow-2xs appearance-none focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
+              className="h-10 ps-4 pe-9 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#074C3A] shadow-2xs appearance-none focus:outline-none focus:border-[#0B7B5E] cursor-pointer"
             >
-              <option value="">جميع الأطباء (كل المواعيد)</option>
+              <option value="">{tr('جميع الأطباء (كل المواعيد)', 'All Doctors (All Appointments)')}</option>
               {doctors && doctors.length > 0
                 ? doctors.map((doc) => (
                     <option key={doc.id} value={doc.id}>
-                      {formatDoctorName(doc.name)}
+                      {formatDoctorName(doc.name, isAr)}
                     </option>
                   ))
                 : null}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         )}
       </div>
@@ -301,7 +310,7 @@ export function CalendarHeaderControls({
             }`}
           >
             <ListFilter className="w-3.5 h-3.5" />
-            <span>قائمة</span>
+            <span>{tr('قائمة', 'List')}</span>
           </button>
 
           <button
@@ -314,7 +323,7 @@ export function CalendarHeaderControls({
             }`}
           >
             <CalendarIcon className="w-3.5 h-3.5" />
-            <span>تقويم</span>
+            <span>{tr('تقويم', 'Calendar')}</span>
           </button>
         </div>
 
@@ -327,7 +336,7 @@ export function CalendarHeaderControls({
             className="h-10 px-4 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>حجز موعد جديد</span>
+            <span>{tr('حجز موعد جديد', 'New Booking')}</span>
           </Link>
         )}
       </div>
