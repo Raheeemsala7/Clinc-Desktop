@@ -2354,7 +2354,7 @@ export function PrintablePrescriptionSlip({
                           </div>
 
                           {/* السطر الثاني: الجرعة والتكرار والمدة أسفل اسم الدواء */}
-                          <div className="pl-4 space-y-0 text-left">
+                          <div className="pl-4 space-y-0 text-right" dir="rtl">
                             <div className="text-[11px] font-bold flex items-center gap-1.5 flex-wrap text-black">
                               {displayDose && (
                                 <span className="font-black">{displayDose}</span>
