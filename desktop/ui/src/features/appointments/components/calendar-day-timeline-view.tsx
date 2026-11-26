@@ -15,7 +15,6 @@ import {
   User,
 } from 'lucide-react';
 import { DaySlotItem, DaySlotAppointment } from '../types/calendar';
-import { openInNewWindow } from '@/shared/utils/open-window';
 import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { formatDoctorName, getAppointmentTypeLabel } from '../constants/booking.constant';
 
@@ -226,12 +225,6 @@ export function CalendarDayTimelineView({
             {/* زر فتح الكشف والروشتة */}
             <Link
               href={`/dashboard/examination/${appt.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => {
-                e.preventDefault();
-                openInNewWindow(`/dashboard/examination/${appt.id}`);
-              }}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B7B5E] hover:bg-[#09634C] active:scale-95 text-white text-xs font-black transition-all shadow-xs cursor-pointer whitespace-nowrap"
             >
               <Stethoscope className="w-4 h-4 stroke-[2.2]" />

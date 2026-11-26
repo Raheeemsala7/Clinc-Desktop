@@ -560,7 +560,7 @@ ipcMain.handle('app:open-new-window', async (_event, urlOrPath: string) => {
   const targetUrl =
     urlOrPath.startsWith('http://') || urlOrPath.startsWith('https://')
       ? urlOrPath
-      : `http://localhost:3000${urlOrPath.startsWith('/') ? '' : '/'}${urlOrPath}`;
+      : `http://127.0.0.1:3000${urlOrPath.startsWith('/') ? '' : '/'}${urlOrPath}`;
 
   const iconPath = path.resolve(__dirname, '../../resources/icon.ico');
   const childWin = new BrowserWindow({

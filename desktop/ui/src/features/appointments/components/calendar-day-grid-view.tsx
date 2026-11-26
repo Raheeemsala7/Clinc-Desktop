@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { DaySlotItem, DaySlotAppointment, WeekAppointmentItem } from '../types/calendar';
 import { TodayQueueItem } from '../apis/appointment.api';
-import { openInNewWindow } from '@/shared/utils/open-window';
 import { useAppLocale } from '@/shared/hooks/use-app-locale';
 import { formatTime12h, getAppointmentTypeLabel } from '../constants/booking.constant';
 
@@ -349,14 +348,14 @@ export function CalendarDayGridView({
     }
   };
 
-  // إدخال المريض فورياً ونقله لشيت الكشف الطبي في نافذة مستقلة
+  // إدخال المريض فورياً ونقله لشيت الكشف الطبي مباشرة داخل النظام
   const handleAdmitAndOpenExam = (e: React.MouseEvent, apptId: string) => {
     e.stopPropagation();
     e.preventDefault();
     if (onAdmit) {
       onAdmit(apptId);
     }
-    openInNewWindow(`/dashboard/examination/${apptId}`);
+    router.push(`/dashboard/examination/${apptId}`);
   };
 
   // رابط الملف الطبي للمريض (للشاشات المختلفة)
@@ -693,14 +692,6 @@ export function CalendarDayGridView({
                       {appointment?.patientId && (
                         <Link
                           href={getPatientProfileUrl(appointment.patientId) || '#'}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const url = getPatientProfileUrl(appointment.patientId);
-                            if (url) openInNewWindow(url);
-                          }}
                           className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-white/90 hover:bg-white text-slate-700 hover:text-[#074C3A] text-[9px] font-bold border border-slate-200 transition-all shadow-2xs shrink-0"
                           title={tr('عرض ملف المريض والزيارات السابقة 👤', 'View patient file & visit history 👤')}
                         >
@@ -763,15 +754,6 @@ export function CalendarDayGridView({
 
                             <Link
                               href={`/dashboard/examination/${appointment?.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (appointment?.id) {
-                                  openInNewWindow(`/dashboard/examination/${appointment.id}`);
-                                }
-                              }}
                               className="px-2 py-0.5 rounded-lg bg-[#074C3A] hover:bg-[#0B7B5E] text-white font-black text-[10px] transition-all shadow-2xs cursor-pointer flex items-center gap-0.5 shrink-0"
                               title={tr('فتح استمارة الكشف والروشتة 🩺', 'Open examination & prescription 🩺')}
                             >
@@ -908,15 +890,6 @@ export function CalendarDayGridView({
                                       selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
                                     }`
                               }
-                              target={isDoctorView ? '_blank' : undefined}
-                              rel={isDoctorView ? 'noopener noreferrer' : undefined}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (isDoctorView) {
-                                  e.preventDefault();
-                                  openInNewWindow(`/dashboard/examination/${primaryAppt.id}`);
-                                }
-                              }}
                               title={
                                 isDoctorView
                                   ? tr('اضغط لفتح استمارة الكشف والروشتة 🩺', 'Click to open examination & prescription 🩺')
@@ -951,7 +924,7 @@ export function CalendarDayGridView({
                                       e.preventDefault();
                                       e.stopPropagation();
                                       const url = getPatientProfileUrl(primaryAppt.patientId);
-                                      if (url) openInNewWindow(url);
+                                      if (url) router.push(url);
                                     }}
                                     className="hover:underline text-[9px] text-[#074C3A] cursor-pointer"
                                   >
