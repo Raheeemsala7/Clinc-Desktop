@@ -10,6 +10,7 @@ export function AppUpdateButton() {
   const [status, setStatus] = useState<'idle' | 'checking' | 'up-to-date' | 'downloading' | 'ready'>('idle');
   const [newVersion, setNewVersion] = useState<string>('');
   const [currentVersion, setCurrentVersion] = useState<string>('');
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).electronAPI) {
@@ -24,6 +25,13 @@ export function AppUpdateButton() {
         api.onUpdateAvailable((info: any) => {
           setStatus('downloading');
           if (info?.version) setNewVersion(info.version);
+        });
+      }
+
+      if (api.onUpdateProgress) {
+        api.onUpdateProgress((pct: number) => {
+          setStatus('downloading');
+          setDownloadProgress(pct);
         });
       }
 
@@ -83,7 +91,12 @@ export function AppUpdateButton() {
     return (
       <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-semibold">
         <Download className="w-3.5 h-3.5 animate-bounce text-amber-600" />
-        <span>{tr(`جاري تنزيل التحديث ${newVersion ? `(v${newVersion})` : ''}...`, `Downloading update ${newVersion ? `(v${newVersion})` : ''}...`)}</span>
+        <span>
+          {tr(
+            `جاري تنزيل التحديث ${newVersion ? `(v${newVersion})` : ''} ${downloadProgress > 0 ? `${downloadProgress}%` : ''}...`,
+            `Downloading update ${newVersion ? `(v${newVersion})` : ''} ${downloadProgress > 0 ? `${downloadProgress}%` : ''}...`
+          )}
+        </span>
       </div>
     );
   }

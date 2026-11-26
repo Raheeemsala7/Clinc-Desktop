@@ -679,6 +679,7 @@ function setupAutoUpdater() {
   try {
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.disableDifferentialDownload = true;
 
     autoUpdater.on('checking-for-update', () => {
       appLog('🔄 [AUTO-UPDATE] Checking GitHub Releases for updates...');

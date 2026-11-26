@@ -23,6 +23,7 @@ export interface IElectronAPI {
   checkForUpdates: () => Promise<any>;
   installUpdateNow: () => Promise<void>;
   onUpdateAvailable: (callback: (info: any) => void) => void;
+  onUpdateProgress: (callback: (pct: number) => void) => void;
   onUpdateDownloaded: (callback: (info: any) => void) => void;
 }
 
@@ -51,6 +52,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   installUpdateNow: () => ipcRenderer.invoke('app:install-update-now'),
   onUpdateAvailable: (callback: (info: any) => void) => {
     ipcRenderer.on('app:update-available', (_e, info) => callback(info));
+  },
+  onUpdateProgress: (callback: (pct: number) => void) => {
+    ipcRenderer.on('app:update-progress', (_e, pct) => callback(pct));
   },
   onUpdateDownloaded: (callback: (info: any) => void) => {
     ipcRenderer.on('app:update-downloaded', (_e, info) => callback(info));
