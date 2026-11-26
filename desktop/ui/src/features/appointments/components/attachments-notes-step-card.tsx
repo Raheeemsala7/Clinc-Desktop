@@ -6,6 +6,7 @@ import { BookingFormType, StagedAttachment } from '../types/booking';
 import { Upload, X, AlertCircle, Loader2, CheckCircle2, FileText } from 'lucide-react';
 import { fileToBase64, uploadAttachmentsApi } from '../services/attachments.service';
 import { toast } from 'sonner';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
 const ALLOWED_TYPES = [
@@ -23,6 +24,7 @@ const ALLOWED_TYPES = [
  * - حقل ملاحظات إضافية للطبيب أو الاستقبال
  */
 export function AttachmentsNotesStepCard() {
+  const { tr } = useAppLocale();
   const {
     control,
     setValue,
@@ -46,12 +48,22 @@ export function AttachmentsNotesStepCard() {
       const isAllowed = ALLOWED_TYPES.includes(file.type) || isPdf;
 
       if (!isAllowed) {
-        toast.error(`الملف ${file.name} غير مدعوم. يرجى اختيار صور (JPG, PNG) أو ملفات PDF.`);
+        toast.error(
+          tr(
+            `الملف ${file.name} غير مدعوم. يرجى اختيار صور (JPG, PNG) أو ملفات PDF.`,
+            `File ${file.name} is not supported. Please choose images (JPG, PNG) or PDF files.`
+          )
+        );
         continue;
       }
 
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        toast.error(`حجم الملف ${file.name} يتجاوز 15 ميجابايت.`);
+        toast.error(
+          tr(
+            `حجم الملف ${file.name} يتجاوز 15 ميجابايت.`,
+            `File ${file.name} exceeds 15 MB.`
+          )
+        );
         continue;
       }
 
@@ -113,14 +125,19 @@ export function AttachmentsNotesStepCard() {
           });
         }
       } catch (err: any) {
-        toast.error(`فشل رفع ${staged.name}: ${err.message || 'خطأ في الخادم'}`);
+        toast.error(
+          tr(
+            `فشل رفع ${staged.name}: ${err.message || 'خطأ في الخادم'}`,
+            `Failed to upload ${staged.name}: ${err.message || 'Server error'}`
+          )
+        );
         const currentList = (getValues('attachments') || []) as StagedAttachment[];
         const updatedList = currentList.map((item) =>
           item.id === staged.id
             ? {
                 ...item,
                 isUploading: false,
-                uploadError: 'فشل الرفع',
+                uploadError: tr('فشل الرفع', 'Upload failed'),
               }
             : item
         );
@@ -155,17 +172,19 @@ export function AttachmentsNotesStepCard() {
           </span>
           <div>
             <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
-              مرفقات وملاحظات
+              {tr('مرفقات وملاحظات', 'Attachments & Notes')}
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              اختياري
+              {tr('اختياري', 'Optional')}
             </p>
           </div>
         </div>
 
         {/* شارة عدد الملفات المرفوعة */}
         <div className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-500 text-xs font-black shrink-0 font-mono">
-          {attachments.length > 0 ? `${attachments.length} مرفق` : 'غير مقيد'}
+          {attachments.length > 0
+            ? tr(`${attachments.length} مرفق`, `${attachments.length} file(s)`)
+            : tr('غير مقيد', 'Unlimited')}
         </div>
       </div>
 
@@ -210,10 +229,16 @@ export function AttachmentsNotesStepCard() {
           <Upload className="size-5" />
         </div>
         <p className="text-xs sm:text-sm font-black text-[#0B7B5E]">
-          اضغط لرفع صور الفحوصات أو ملفات PDF أو اسحبها هنا
+          {tr(
+            'اضغط لرفع صور الفحوصات أو ملفات PDF أو اسحبها هنا',
+            'Click or drag & drop lab images or PDF files here'
+          )}
         </p>
         <p className="text-2xs sm:text-xs text-slate-400 font-medium">
-          رفع غير مقيد بعدد (صور JPG, PNG و ملفات PDF حتى 15MB)
+          {tr(
+            'رفع غير مقيد بعدد (صور JPG, PNG و ملفات PDF حتى 15MB)',
+            'Unlimited uploads (JPG, PNG images & PDF files up to 15MB)'
+          )}
         </p>
       </div>
 
@@ -231,7 +256,9 @@ export function AttachmentsNotesStepCard() {
                   {isPdf ? (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-rose-50/70 p-2 text-center">
                       <FileText className="w-8 h-8 text-rose-500 mb-1" />
-                      <span className="text-[10px] font-black text-rose-700">مستند PDF</span>
+                      <span className="text-[10px] font-black text-rose-700">
+                        {tr('مستند PDF', 'PDF Document')}
+                      </span>
                     </div>
                   ) : (
                     <img
@@ -245,7 +272,7 @@ export function AttachmentsNotesStepCard() {
                 {att.isUploading && (
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-2xs flex flex-col items-center justify-center text-white gap-1">
                     <Loader2 className="w-5 h-5 animate-spin text-white" />
-                    <span className="text-[10px] font-bold">جاري الرفع...</span>
+                    <span className="text-[10px] font-bold">{tr('جاري الرفع...', 'Uploading...')}</span>
                   </div>
                 )}
 
@@ -253,7 +280,7 @@ export function AttachmentsNotesStepCard() {
                 {att.url && !att.isUploading && (
                   <div className="absolute top-1 start-1 px-1.5 py-0.5 rounded-md bg-emerald-500/90 text-white text-[9px] font-black flex items-center gap-1 shadow-xs">
                     <CheckCircle2 className="w-3 h-3 stroke-[3]" />
-                    <span>تم الرفع</span>
+                    <span>{tr('تم الرفع', 'Uploaded')}</span>
                   </div>
                 )}
 
@@ -261,7 +288,7 @@ export function AttachmentsNotesStepCard() {
                 {att.uploadError && !att.isUploading && (
                   <div className="absolute top-1 start-1 px-1.5 py-0.5 rounded-md bg-rose-500/90 text-white text-[9px] font-black flex items-center gap-1 shadow-xs">
                     <AlertCircle className="w-3 h-3 stroke-[3]" />
-                    <span>فشل الرفع</span>
+                    <span>{tr('فشل الرفع', 'Failed')}</span>
                   </div>
                 )}
               </div>
@@ -281,7 +308,7 @@ export function AttachmentsNotesStepCard() {
                   handleRemoveAttachment(idx);
                 }}
                 className="absolute top-1 end-1 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-xs opacity-90 hover:opacity-100 transition-opacity cursor-pointer z-10"
-                title="حذف الصورة"
+                title={tr('حذف الصورة', 'Remove attachment')}
               >
                 <X className="w-3 h-3 stroke-[3]" />
               </button>
@@ -299,7 +326,7 @@ export function AttachmentsNotesStepCard() {
           <textarea
             {...field}
             rows={3}
-            placeholder="ملاحظات للطبيب أو الاستقبال..."
+            placeholder={tr('ملاحظات للطبيب أو الاستقبال...', 'Notes for doctor or reception...')}
             className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0B7B5E] focus:ring-2 focus:ring-[#0B7B5E]/15 transition-all resize-none"
           />
         )}

@@ -4,10 +4,11 @@ import React, { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType } from '../types/booking';
-import { SAMPLE_DOCTORS, SAMPLE_SLOTS } from '../constants/booking.constant';
+import { formatTime12h } from '../constants/booking.constant';
 import { useDoctorsQuery, useDoctorAvailableSlotsQuery } from '../hooks/appointments.hook';
 import { Calendar, ChevronDown, AlertCircle, Loader2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * القسم 3: الطبيب والتوقيت
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils';
  * - زر «الآن» للحضور المباشر الفوري بالوقت الحالي
  */
 export function DoctorTimingStepCard() {
+  const { isAr, tr } = useAppLocale();
   const {
     control,
     setValue,
@@ -77,7 +79,8 @@ export function DoctorTimingStepCard() {
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const isPm = hours >= 12;
     const displayHours = (hours % 12 || 12).toString().padStart(2, '0');
-    const formattedTime = `${displayHours}:${minutes} ${isPm ? 'م' : 'ص'}`;
+    const period = isPm ? (isAr ? 'م' : 'PM') : (isAr ? 'ص' : 'AM');
+    const formattedTime = `${displayHours}:${minutes} ${period}`;
 
     setValue('appointmentTime', formattedTime, {
       shouldValidate: true,
@@ -110,12 +113,17 @@ export function DoctorTimingStepCard() {
   useEffect(() => {
     if (source === 'SCHEDULED' && displayableSlots.length > 0) {
       const isCurrentTimeAvailable = displayableSlots.some(
-        (s: any) => !s.isBooked && (s.label === selectedTime || s.startTime === selectedTime)
+        (s: any) =>
+          !s.isBooked &&
+          (s.label === selectedTime ||
+            s.startTime === selectedTime ||
+            formatTime12h(s.startTime || s.label, isAr) === selectedTime)
       );
       if (!isCurrentTimeAvailable) {
         const firstAvailable = displayableSlots.find((s: any) => !s.isBooked && !s.isPast) || displayableSlots.find((s: any) => !s.isBooked);
         if (firstAvailable) {
-          const slotLabel = (firstAvailable as any).label || (firstAvailable as any).startTime || (firstAvailable as any).time;
+          const rawVal = (firstAvailable as any).startTime || (firstAvailable as any).label || (firstAvailable as any).time;
+          const slotLabel = formatTime12h(rawVal, isAr);
           setValue('appointmentTime', slotLabel, {
             shouldValidate: true,
             shouldDirty: true,
@@ -128,7 +136,7 @@ export function DoctorTimingStepCard() {
         }
       }
     }
-  }, [displayableSlots, source, selectedTime, setValue]);
+  }, [displayableSlots, source, selectedTime, setValue, isAr]);
 
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-100 space-y-6 animate-in fade-in-50">
@@ -139,10 +147,10 @@ export function DoctorTimingStepCard() {
         </span>
         <div>
           <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
-            الطبيب والتوقيت
+            {tr('الطبيب والتوقيت', 'Doctor & Timing')}
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            حدد الطبيب والتاريخ والساعة ونوع الحضور
+            {tr('حدد الطبيب والتاريخ والساعة ونوع الحضور', 'Select the doctor, date, time, and visit type')}
           </p>
         </div>
       </div>
@@ -152,7 +160,7 @@ export function DoctorTimingStepCard() {
         {/* 1. الطبيب المعالج */}
         <div>
           <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-            الطبيب المعالج <span className="text-rose-500">*</span>
+            {tr('الطبيب المعالج', 'Doctor')} <span className="text-rose-500">*</span>
           </label>
           <Controller
             name="doctorId"
@@ -167,7 +175,7 @@ export function DoctorTimingStepCard() {
                   }}
                   disabled={isLoadingDoctors}
                   className={cn(
-                    'w-full h-11 pr-3.5 pl-9 rounded-2xl border bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all appearance-none cursor-pointer disabled:opacity-60',
+                    'w-full h-11 ps-3.5 pe-9 rounded-2xl border bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all appearance-none cursor-pointer disabled:opacity-60',
                     errors.doctorId ? 'border-rose-400' : 'border-slate-200'
                   )}
                 >
@@ -177,7 +185,7 @@ export function DoctorTimingStepCard() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             )}
           />
@@ -192,7 +200,7 @@ export function DoctorTimingStepCard() {
         {/* 2. تاريخ الموعد */}
         <div>
           <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-            تاريخ الموعد <span className="text-rose-500">*</span>
+            {tr('تاريخ الموعد', 'Appointment Date')} <span className="text-rose-500">*</span>
           </label>
           <Controller
             name="appointmentDate"
@@ -204,11 +212,11 @@ export function DoctorTimingStepCard() {
                   value={field.value}
                   onChange={field.onChange}
                   className={cn(
-                    'w-full h-11 pr-10 pl-3.5 rounded-2xl border bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer',
+                    'w-full h-11 ps-10 pe-3.5 rounded-2xl border bg-white text-xs font-bold text-[#074C3A] focus:outline-none focus:border-[#0B7B5E] focus:ring-4 focus:ring-[#0B7B5E]/15 transition-all cursor-pointer',
                     errors.appointmentDate ? 'border-rose-400' : 'border-slate-200'
                   )}
                 />
-                <Calendar className="w-4 h-4 text-[#0B7B5E] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Calendar className="w-4 h-4 text-[#0B7B5E] absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             )}
           />
@@ -223,7 +231,7 @@ export function DoctorTimingStepCard() {
         {/* 3. ساعة الموعد (عرض ذكي بالقراءة فقط لاختيار الوقت من المواعيد المتاحة) */}
         <div>
           <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-            ساعة الموعد <span className="text-rose-500">*</span>
+            {tr('ساعة الموعد', 'Appointment Time')} <span className="text-rose-500">*</span>
           </label>
           <div
             className={cn(
@@ -232,7 +240,7 @@ export function DoctorTimingStepCard() {
             )}
           >
             <span className={cn(selectedTime ? 'text-[#074C3A]' : 'text-slate-400 font-normal')}>
-              {selectedTime || 'اختر من المواعيد'}
+              {selectedTime ? formatTime12h(selectedTime, isAr) : tr('اختر من المواعيد', 'Select a time slot')}
             </span>
             <Clock className="w-4 h-4 text-slate-400 shrink-0" />
           </div>
@@ -247,7 +255,7 @@ export function DoctorTimingStepCard() {
         {/* 4. نوع الحضور */}
         <div>
           <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-            نوع الحضور <span className="text-rose-500">*</span>
+            {tr('نوع الحضور', 'Visit Type')} <span className="text-rose-500">*</span>
           </label>
           <Controller
             name="source"
@@ -267,8 +275,8 @@ export function DoctorTimingStepCard() {
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
-                  <span>بدون موعد</span>
-                  <span className="text-[9px] opacity-90">(مباشر)</span>
+                  <span>{tr('بدون موعد', 'Walk-in')}</span>
+                  <span className="text-[9px] opacity-90">{tr('(مباشر)', '(Direct)')}</span>
                 </button>
                 <button
                   type="button"
@@ -279,8 +287,8 @@ export function DoctorTimingStepCard() {
                       displayableSlots.find((s: any) => !s.isBooked && !s.isPast) ||
                       displayableSlots.find((s: any) => !s.isBooked);
                     if (firstAvailable) {
-                      const slotLabel = (firstAvailable as any).label || (firstAvailable as any).startTime || (firstAvailable as any).time;
-                      handleSelectSlot(slotLabel);
+                      const rawVal = (firstAvailable as any).startTime || (firstAvailable as any).label || (firstAvailable as any).time;
+                      handleSelectSlot(formatTime12h(rawVal, isAr));
                     }
                   }}
                   className={cn(
@@ -290,8 +298,8 @@ export function DoctorTimingStepCard() {
                       : 'text-slate-600 hover:text-slate-900'
                   )}
                 >
-                  <span>موعد</span>
-                  <span className="text-[9px] opacity-90">مسبق</span>
+                  <span>{tr('موعد', 'Scheduled')}</span>
+                  <span className="text-[9px] opacity-90">{tr('مسبق', 'Pre-booked')}</span>
                 </button>
               </div>
             )}
@@ -304,11 +312,14 @@ export function DoctorTimingStepCard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="text-xs font-black text-[#074C3A]">
-              المواعيد المتاحة اليوم
+              {tr('المواعيد المتاحة اليوم', 'Available Slots')}
             </h4>
             {selectedTime && (
               <span className="px-2.5 py-0.5 rounded-lg bg-[#E3F5EE] border border-[#D0E5DC] text-[#0B7B5E] text-[11px] font-black">
-                الوقت المختار: {selectedTime}
+                {tr(
+                  `الوقت المختار: ${formatTime12h(selectedTime, isAr)}`,
+                  `Selected: ${formatTime12h(selectedTime, isAr)}`
+                )}
               </span>
             )}
             {isFetchingSlots && (
@@ -316,7 +327,10 @@ export function DoctorTimingStepCard() {
             )}
           </div>
           <span className="text-[11px] text-slate-400">
-            المشطوبة محجوزة • «الآن» للحضور المباشر
+            {tr(
+              'المشطوبة محجوزة • «الآن» للحضور المباشر',
+              'Crossed-out slots are booked • "Now" for direct walk-in'
+            )}
           </span>
         </div>
 
@@ -324,14 +338,18 @@ export function DoctorTimingStepCard() {
         {isLoadingSlots ? (
           <div className="flex items-center gap-2 py-4 text-xs font-bold text-slate-400">
             <Loader2 className="w-4 h-4 animate-spin text-[#0B7B5E]" />
-            <span>جاري فحص المواعيد المتاحة للطبيب...</span>
+            <span>{tr('جاري فحص المواعيد المتاحة للطبيب...', 'Checking available slots for doctor...')}</span>
           </div>
         ) : slotsData && !slotsData.isWorkingDay ? (
           /* حالة يوم عطلة أو غير متاح */
           <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-900 text-xs font-bold flex items-center gap-2 animate-in fade-in-50">
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              {slotsData.message || 'عطلة أسبوعية · لا توجد فترات عمل متاحة لهذا الطبيب في هذا اليوم'}
+              {slotsData.message ||
+                tr(
+                  'عطلة أسبوعية · لا توجد فترات عمل متاحة لهذا الطبيب في هذا اليوم',
+                  'Day off · No working shifts available for this doctor on this date'
+                )}
             </span>
           </div>
         ) : slotsData && slotsData.isPast ? (
@@ -339,13 +357,17 @@ export function DoctorTimingStepCard() {
           <div className="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200 text-rose-900 text-xs font-bold flex items-center gap-2 animate-in fade-in-50">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>
-              {slotsData.message || 'التاريخ المحدد في الماضي · لا يمكن حجز مواعيد سابقة'}
+              {slotsData.message ||
+                tr(
+                  'التاريخ المحدد في الماضي · لا يمكن حجز مواعيد سابقة',
+                  'Selected date is in the past · Cannot book past dates'
+                )}
             </span>
           </div>
         ) : displayableSlots.length === 0 ? (
           /* حالة عدم وجود مواعيد متاحة أو محجوزة */
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 text-xs font-bold text-center">
-            لا توجد مواعيد متاحة أو محجوزة متبقية لهذا اليوم.
+            {tr('لا توجد مواعيد متاحة أو محجوزة متبقية لهذا اليوم.', 'No available or remaining slots for this day.')}
           </div>
         ) : (
           /* شبكة أزرار الفترات الزمنية المتاحة لاختيار الوقت */
@@ -359,15 +381,21 @@ export function DoctorTimingStepCard() {
                 source === 'WALK_IN' && 'ring-2 ring-amber-500 ring-offset-1'
               )}
             >
-              الآن
+              {tr('الآن', 'Now')}
             </button>
 
             {/* أزرار الساعات */}
             {displayableSlots.map((slot: any, idx: number) => {
-              const label = slot.label || slot.startTime || `slot-${idx}`;
+              const rawLabel = slot.label || slot.startTime || `slot-${idx}`;
+              const displayLabel = slot.startTime
+                ? formatTime12h(slot.startTime, isAr)
+                : formatTime12h(rawLabel, isAr);
               const isBooked = Boolean(slot.isBooked);
               const isPast = Boolean(slot.isPast);
-              const isSelected = selectedTime === label;
+              const isSelected =
+                selectedTime === displayLabel ||
+                selectedTime === rawLabel ||
+                (slot.startTime && selectedTime === slot.startTime);
 
               // 1. موعد محجوز لمريض آخر (مشطوب وغير متاح)
               if (isBooked) {
@@ -376,11 +404,11 @@ export function DoctorTimingStepCard() {
                     key={slot.time || slot.startTime || idx}
                     type="button"
                     disabled
-                    title="موعد محجوز لمريض آخر"
+                    title={tr('موعد محجوز لمريض آخر', 'Booked for another patient')}
                     className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-400 border border-slate-200 line-through cursor-not-allowed select-none opacity-80"
                   >
-                    <span>{label}</span>
-                    <span className="text-[10px] mr-1">(محجوز)</span>
+                    <span>{displayLabel}</span>
+                    <span className="text-[10px] ms-1">{tr('(محجوز)', '(Booked)')}</span>
                   </button>
                 );
               }
@@ -391,8 +419,8 @@ export function DoctorTimingStepCard() {
                   <button
                     key={slot.time || slot.startTime || idx}
                     type="button"
-                    onClick={() => handleSelectSlot(label)}
-                    title="موعد سابق اليوم (متاح للاختيار)"
+                    onClick={() => handleSelectSlot(displayLabel)}
+                    title={tr('موعد سابق اليوم (متاح للاختيار)', 'Earlier slot today (selectable)')}
                     className={cn(
                       'px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer select-none',
                       isSelected
@@ -400,7 +428,7 @@ export function DoctorTimingStepCard() {
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE]/40'
                     )}
                   >
-                    {label}
+                    {displayLabel}
                   </button>
                 );
               }
@@ -410,7 +438,7 @@ export function DoctorTimingStepCard() {
                 <button
                   key={slot.time || slot.startTime || idx}
                   type="button"
-                  onClick={() => handleSelectSlot(label)}
+                  onClick={() => handleSelectSlot(displayLabel)}
                   className={cn(
                     'px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer select-none',
                     isSelected
@@ -418,7 +446,7 @@ export function DoctorTimingStepCard() {
                       : 'bg-white text-slate-700 border-slate-200 hover:border-[#0B7B5E] hover:bg-[#E3F5EE]/40'
                   )}
                 >
-                  {label}
+                  {displayLabel}
                 </button>
               );
             })}

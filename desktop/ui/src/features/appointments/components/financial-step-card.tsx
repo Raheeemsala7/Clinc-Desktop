@@ -3,9 +3,10 @@
 import React from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType } from '../types/booking';
-import { EXEMPTION_PRESETS } from '../constants/booking.constant';
+import { EXEMPTION_PRESET_OPTIONS } from '../constants/booking.constant';
 import { Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * القسم 4: الرسوم والبيانات المالية
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils';
  * - خيار إعفاء المريض من الرسوم (حالة خاصة / مجاني) مع تحديد سبب الإعفاء
  */
 export function FinancialStepCard() {
+  const { isAr, tr } = useAppLocale();
   const {
     control,
     setValue,
@@ -39,7 +41,7 @@ export function FinancialStepCard() {
 
     if (nextState) {
       if (!exemptionReason) {
-        setValue('exemptionReason', EXEMPTION_PRESETS[0], {
+        setValue('exemptionReason', EXEMPTION_PRESET_OPTIONS[0].value, {
           shouldValidate: true,
           shouldDirty: true,
           shouldTouch: true,
@@ -65,10 +67,13 @@ export function FinancialStepCard() {
         </span>
         <div>
           <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
-            الرسوم والبيانات المالية
+            {tr('الرسوم والبيانات المالية', 'Fees & Payment Details')}
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            رسوم الكشف، السداد مقدماً، أو تطبيق الإعفاء من الرسوم
+            {tr(
+              'رسوم الكشف، السداد مقدماً، أو تطبيق الإعفاء من الرسوم',
+              'Examination fee, advance payment, or fee exemption'
+            )}
           </p>
         </div>
       </div>
@@ -78,7 +83,7 @@ export function FinancialStepCard() {
         {/* 1. سعر الكشف كامل */}
         <div>
           <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-            سعر الكشف كامل <span className="text-rose-500">*</span>
+            {tr('سعر الكشف كامل', 'Full Exam Fee')} <span className="text-rose-500">*</span>
           </label>
           <Controller
             name="examinationFee"
@@ -105,7 +110,7 @@ export function FinancialStepCard() {
                   )}
                 />
                 <span className="absolute end-3.5 text-xs font-bold text-slate-400 pointer-events-none select-none">
-                  ج.م
+                  {tr('ج.م', 'EGP')}
                 </span>
               </div>
             )}
@@ -121,7 +126,7 @@ export function FinancialStepCard() {
         {/* 2. قيمة الخصم المالي */}
         <div>
           <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-            قيمة الخصم
+            {tr('قيمة الخصم', 'Discount')}
           </label>
           <Controller
             name="discount"
@@ -148,7 +153,7 @@ export function FinancialStepCard() {
                   )}
                 />
                 <span className="absolute end-3.5 text-xs font-bold text-slate-400 pointer-events-none select-none">
-                  ج.م
+                  {tr('ج.م', 'EGP')}
                 </span>
               </div>
             )}
@@ -164,7 +169,7 @@ export function FinancialStepCard() {
         {/* 3. المدفوع الآن */}
         <div>
           <label className="block text-xs font-bold text-[#074C3A] mb-1.5">
-            المدفوع الآن
+            {tr('المدفوع الآن', 'Paid Now')}
           </label>
           <Controller
             name="paidAmount"
@@ -193,7 +198,7 @@ export function FinancialStepCard() {
                   )}
                 />
                 <span className="absolute end-3.5 text-xs font-bold text-slate-400 pointer-events-none select-none">
-                  ج.م
+                  {tr('ج.م', 'EGP')}
                 </span>
               </div>
             )}
@@ -201,7 +206,12 @@ export function FinancialStepCard() {
           {isOverpaid && (
             <p className="text-xs text-rose-600 font-bold flex items-center gap-1.5 mt-1.5 bg-rose-50 border border-rose-200 p-2 rounded-xl">
               <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
-              <span>المبلغ المدفوع ({paidAmount} ج.م) أكبر من صافي الكشف ({netFee} ج.م)</span>
+              <span>
+                {tr(
+                  `المبلغ المدفوع (${paidAmount} ج.م) أكبر من صافي الكشف (${netFee} ج.م)`,
+                  `Paid amount (${paidAmount} EGP) exceeds net fee (${netFee} EGP)`
+                )}
+              </span>
             </p>
           )}
           {errors.paidAmount && !isOverpaid && (
@@ -217,18 +227,24 @@ export function FinancialStepCard() {
       {!isExempt && (
         <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
           <div className="flex items-center justify-between px-2">
-            <span className="text-xs font-bold text-slate-500">الصافي بعد الخصم:</span>
-            <span className="text-sm font-black text-[#0B7B5E]">{netFee} ج.م</span>
+            <span className="text-xs font-bold text-slate-500">
+              {tr('الصافي بعد الخصم:', 'Net After Discount:')}
+            </span>
+            <span className="text-sm font-black text-[#0B7B5E]">
+              {netFee} {tr('ج.م', 'EGP')}
+            </span>
           </div>
-          <div className="flex items-center justify-between px-2 border-r border-slate-200">
-            <span className="text-xs font-bold text-slate-500">المبلغ المتبقي:</span>
+          <div className="flex items-center justify-between px-2 border-s border-slate-200">
+            <span className="text-xs font-bold text-slate-500">
+              {tr('المبلغ المتبقي:', 'Remaining:')}
+            </span>
             <span
               className={cn(
                 'text-sm font-black',
                 remaining > 0 ? 'text-amber-600' : 'text-emerald-600'
               )}
             >
-              {remaining > 0 ? `${remaining} ج.م` : 'مسدد بالكامل ✓'}
+              {remaining > 0 ? tr(`${remaining} ج.م`, `${remaining} EGP`) : tr('مسدد بالكامل ✓', 'Paid in full ✓')}
             </span>
           </div>
         </div>
@@ -258,7 +274,7 @@ export function FinancialStepCard() {
           onClick={handleToggleExemption}
           className="text-xs sm:text-sm font-bold text-[#074C3A] cursor-pointer select-none"
         >
-          إعفاء المريض من الرسوم (حالة خاصة / مجاني)
+          {tr('إعفاء المريض من الرسوم (حالة خاصة / مجاني)', 'Exempt patient from fees (special case / free)')}
         </span>
       </div>
 
@@ -266,16 +282,16 @@ export function FinancialStepCard() {
       {isExempt && (
         <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF0] border border-amber-300 space-y-3 animate-in fade-in-50">
           <label className="block text-xs font-black text-[#074C3A]">
-            سبب الإعفاء من الرسوم <span className="text-rose-500">*</span>
+            {tr('سبب الإعفاء من الرسوم', 'Exemption Reason')} <span className="text-rose-500">*</span>
           </label>
           <div className="space-y-2">
-            {EXEMPTION_PRESETS.map((preset) => {
-              const isSelected = exemptionReason === preset;
+            {EXEMPTION_PRESET_OPTIONS.map((preset) => {
+              const isSelected = exemptionReason === preset.value || exemptionReason === preset.en;
               return (
                 <button
-                  key={preset}
+                  key={preset.value}
                   type="button"
-                  onClick={() => handleSelectPreset(preset)}
+                  onClick={() => handleSelectPreset(preset.value)}
                   className={cn(
                     'w-full py-2.5 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 select-none',
                     isSelected
@@ -284,7 +300,7 @@ export function FinancialStepCard() {
                   )}
                 >
                   {isSelected && <Check className="w-4 h-4 text-white stroke-[3] shrink-0" />}
-                  <span>{preset}</span>
+                  <span>{isAr ? preset.ar : preset.en}</span>
                 </button>
               );
             })}

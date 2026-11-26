@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType, PatientBasic } from '../types/booking';
-import { CHRONIC_DISEASES } from '../constants/booking.constant';
+import { CHRONIC_DISEASES, getChronicDiseaseLabel } from '../constants/booking.constant';
 import { UserPlus, Check, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { SearchPatientInput } from './search-patient-input';
 import { CreatePatientForm } from '@/features/patient/components/create-patient-form';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * القسم 1: المريض والتاريخ المرضي
@@ -18,6 +19,7 @@ import { CreatePatientForm } from '@/features/patient/components/create-patient-
  * - تحديد وكتابة الأمراض المزمنة المخصصة وتحديث ملخص الحجز لحظياً
  */
 export function PatientStepCard() {
+  const { isAr, tr } = useAppLocale();
   const {
     control,
     setValue,
@@ -97,7 +99,7 @@ export function PatientStepCard() {
   const handleAddCustomDisease = () => {
     const trimmed = newCustomDiseaseText.trim();
     if (!trimmed) {
-      toast.info('يرجى كتابة اسم المرض المزمن أولاً');
+      toast.info(tr('يرجى كتابة اسم المرض المزمن أولاً', 'Please enter the chronic condition name first'));
       return;
     }
     // إضافته للأمراض المختارة
@@ -113,7 +115,12 @@ export function PatientStepCard() {
       } catch {}
     }
     setNewCustomDiseaseText('');
-    toast.success(`تمت إضافة "${trimmed}" إلى الأمراض المزمنة للمريض`);
+    toast.success(
+      tr(
+        `تمت إضافة "${trimmed}" إلى الأمراض المزمنة للمريض`,
+        `Added "${trimmed}" to patient's chronic conditions`
+      )
+    );
   };
 
   // 5. حذف مرض مخصص من القائمة
@@ -126,7 +133,7 @@ export function PatientStepCard() {
     try {
       localStorage.setItem('clinic_custom_chronic_diseases', JSON.stringify(next));
     } catch {}
-    toast.success(`تم حذف "${name}"`);
+    toast.success(tr(`تم حذف "${name}"`, `Removed "${name}"`));
   };
 
   return (
@@ -146,10 +153,10 @@ export function PatientStepCard() {
         </span>
         <div>
           <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
-            المريض والتاريخ المرضي
+            {tr('المريض والتاريخ المرضي', 'Patient & Medical History')}
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            ابحث عن مريض مسجل أو سجل مريضاً جديداً
+            {tr('ابحث عن مريض مسجل أو سجل مريضاً جديداً', 'Search for an existing patient or register a new one')}
           </p>
         </div>
       </div>
@@ -170,7 +177,7 @@ export function PatientStepCard() {
               className="h-11 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
             >
               <UserPlus className="w-4 h-4 text-[#0B7B5E]" />
-              <span>{isQuickAddOpen ? 'إلغاء' : '+ مريض جديد'}</span>
+              <span>{isQuickAddOpen ? tr('إلغاء', 'Cancel') : tr('+ مريض جديد', '+ New Patient')}</span>
             </button>
           </div>
 
@@ -180,7 +187,7 @@ export function PatientStepCard() {
               <div className="flex items-center justify-between">
                 <h4 className="font-bold text-xs sm:text-sm text-[#074C3A] flex items-center gap-2">
                   <UserPlus className="w-4 h-4 text-[#0B7B5E]" />
-                  <span>تسجيل مريض جديد فوري</span>
+                  <span>{tr('تسجيل مريض جديد فوري', 'Quick Patient Registration')}</span>
                 </h4>
                 <button
                   type="button"
@@ -190,7 +197,7 @@ export function PatientStepCard() {
                   }}
                   className="text-xs text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                 >
-                  إلغاء
+                  {tr('إلغاء', 'Cancel')}
                 </button>
               </div>
 
@@ -219,26 +226,33 @@ export function PatientStepCard() {
           <div className="p-4 rounded-2xl bg-[#E3F5EE]/60 border border-[#D0E5DC]/70 flex items-center justify-between animate-in fade-in-50">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#074C3A] text-white flex items-center justify-center font-black text-sm shrink-0">
-                {selectedPatientName ? selectedPatientName.charAt(0) : 'م'}
+                {selectedPatientName ? selectedPatientName.charAt(0) : tr('م', 'P')}
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-black text-sm text-[#074C3A]">{selectedPatientName}</p>
                   {isChild && (
                     <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-black">
-                      👶 طفل
+                      {tr('👶 طفل', '👶 Pediatric')}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {selectedPatientPhone ? `${selectedPatientPhone} · ` : ''}
-                  {selectedPatientAge ? `السن: ${selectedPatientAge} سنة · ` : ''}
+                <p className="text-xs text-slate-500 mt-0.5 flex items-center flex-wrap gap-1">
+                  {selectedPatientPhone ? (
+                    <>
+                      <span dir="ltr">{selectedPatientPhone}</span>
+                      <span>·</span>
+                    </>
+                  ) : null}
+                  {selectedPatientAge
+                    ? tr(`السن: ${selectedPatientAge} سنة · `, `Age: ${selectedPatientAge} yrs · `)
+                    : ''}
                   {selectedPatientGender
                     ? selectedPatientGender === 'FEMALE' || selectedPatientGender === 'female'
-                      ? 'أنثى · '
-                      : 'ذكر · '
+                      ? tr('أنثى · ', 'Female · ')
+                      : tr('ذكر · ', 'Male · ')
                     : ''}
-                  سجل مريض معتمد
+                  {tr('سجل مريض معتمد', 'Verified Patient Record')}
                 </p>
               </div>
             </div>
@@ -248,7 +262,7 @@ export function PatientStepCard() {
               onClick={handleClearPatient}
               className="text-xs font-bold text-[#0B7B5E] hover:underline cursor-pointer"
             >
-              تغيير
+              {tr('تغيير', 'Change')}
             </button>
           </div>
 
@@ -258,10 +272,16 @@ export function PatientStepCard() {
               <span className="text-2xl">👶</span>
               <div>
                 <span className="text-xs sm:text-sm font-bold text-slate-800 block">
-                  تصنيف المريض: هل المريض طفل؟ (Pediatric)
+                  {tr(
+                    'تصنيف المريض: هل المريض طفل؟ (Pediatric)',
+                    'Patient Category: Is the patient a child? (Pediatric)'
+                  )}
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  لتنبيه الطبيب في شاشة الكشف لمراعاة جرعات الأطفال ورعايتهم الخاصة
+                  {tr(
+                    'لتنبيه الطبيب في شاشة الكشف لمراعاة جرعات الأطفال ورعايتهم الخاصة',
+                    'Alerts the doctor during examination to adjust pediatric care and dosages'
+                  )}
                 </span>
               </div>
             </div>
@@ -277,7 +297,7 @@ export function PatientStepCard() {
                     : 'text-slate-500 hover:text-slate-800'
                 )}
               >
-                <span>نعم (طفل) 👶</span>
+                <span>{tr('نعم (طفل) 👶', 'Yes (Child) 👶')}</span>
                 {isChild && <Check className="w-3.5 h-3.5 stroke-[3]" />}
               </button>
               <button
@@ -290,7 +310,7 @@ export function PatientStepCard() {
                     : 'text-slate-500 hover:text-slate-800'
                 )}
               >
-                <span>بالغ</span>
+                <span>{tr('بالغ', 'Adult')}</span>
               </button>
             </div>
           </div>
@@ -300,7 +320,8 @@ export function PatientStepCard() {
             {/* السؤال وزر التبديل (نعم / لا) */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <span className="font-bold text-xs sm:text-sm text-slate-800">
-                هل يعاني المريض من مرض مزمن؟ <span className="text-amber-600">*</span>
+                {tr('هل يعاني المريض من مرض مزمن؟', 'Does the patient have any chronic conditions?')}{' '}
+                <span className="text-amber-600">*</span>
               </span>
 
               <div className="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200">
@@ -314,7 +335,7 @@ export function PatientStepCard() {
                       : 'text-slate-500 hover:text-slate-800'
                   )}
                 >
-                  نعم
+                  {tr('نعم', 'Yes')}
                 </button>
                 <button
                   type="button"
@@ -330,7 +351,7 @@ export function PatientStepCard() {
                       : 'text-slate-500 hover:text-slate-800'
                   )}
                 >
-                  لا
+                  {tr('لا', 'No')}
                 </button>
               </div>
             </div>
@@ -355,7 +376,7 @@ export function PatientStepCard() {
                         )}
                       >
                         {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                        <span>{disease.label}</span>
+                        <span>{getChronicDiseaseLabel(disease.id, isAr)}</span>
                       </button>
                     );
                   })}
@@ -388,7 +409,7 @@ export function PatientStepCard() {
                             handleDeleteCustomDisease(cust);
                           }}
                           className="text-slate-400 hover:text-rose-600 text-xs px-0.5 cursor-pointer"
-                          title="حذف من القائمة"
+                          title={tr('حذف من القائمة', 'Remove from list')}
                         >
                           ×
                         </button>
@@ -409,7 +430,10 @@ export function PatientStepCard() {
                         handleAddCustomDisease();
                       }
                     }}
-                    placeholder="اكتب مرضاً مزمناً غير موجود بالاختيارات (مثال: حساسية بنسلين، روماتيزم، سيولة)..."
+                    placeholder={tr(
+                      'اكتب مرضاً مزمناً غير موجود بالاختيارات (مثال: حساسية بنسلين، روماتيزم، سيولة)...',
+                      'Enter a custom chronic condition (e.g., Penicillin allergy, Rheumatism)...'
+                    )}
                     className="flex-1 h-9 px-3.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
                   />
                   <button
@@ -418,7 +442,7 @@ export function PatientStepCard() {
                     className="h-9 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1 cursor-pointer transition-all shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>إضافة</span>
+                    <span>{tr('إضافة', 'Add')}</span>
                   </button>
                 </div>
 
@@ -430,7 +454,10 @@ export function PatientStepCard() {
                     render={({ field }) => (
                       <input
                         type="text"
-                        placeholder="تفاصيل إضافية أو أدوية منتظمة يتناولها المريض (اختياري)..."
+                        placeholder={tr(
+                          'تفاصيل إضافية أو أدوية منتظمة يتناولها المريض (اختياري)...',
+                          'Additional details or regular medications (optional)...'
+                        )}
                         className="w-full h-10 px-3.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-amber-500 focus:ring-3 focus:ring-amber-200/30 transition-all shadow-2xs"
                         {...field}
                       />

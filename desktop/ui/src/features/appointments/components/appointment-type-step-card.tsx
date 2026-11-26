@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType } from '../types/booking';
-import { APPOINTMENT_TYPES } from '../constants/booking.constant';
+import { APPOINTMENT_TYPES, getAppointmentTypeLabel } from '../constants/booking.constant';
 import { getStoredPricing } from '@/features/pricing/pricing-storage';
 import { Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
 
 /**
  * القسم 2: نوع الموعد
@@ -14,6 +15,7 @@ import { cn } from '@/lib/utils';
  * - تحديث سعر الكشف تلقائياً في النموذج وملخص الحجز
  */
 export function AppointmentTypeStepCard() {
+  const { isAr, tr } = useAppLocale();
   const {
     control,
     setValue,
@@ -66,10 +68,10 @@ export function AppointmentTypeStepCard() {
         </span>
         <div>
           <h3 className="text-base sm:text-lg font-black text-[#074C3A] tracking-tight">
-            نوع الموعد
+            {tr('نوع الموعد', 'Appointment Type')}
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            اختر نوع الحجز
+            {tr('اختر نوع الحجز', 'Select booking type')}
           </p>
         </div>
       </div>
@@ -99,14 +101,14 @@ export function AppointmentTypeStepCard() {
                       {isSelected && (
                         <Check className="w-3 h-3 text-[#0B7B5E] stroke-[3] shrink-0" />
                       )}
-                      <span className="text-xs sm:text-sm">{type.label}</span>
+                      <span className="text-xs sm:text-sm">{getAppointmentTypeLabel(type.id, isAr)}</span>
                       <span
                         className={cn('w-2 h-2 rounded-full shrink-0', type.dotColor)}
                         aria-hidden="true"
                       />
                     </div>
                     <span className="text-[10px] text-slate-400 font-mono font-bold">
-                      {type.defaultFee > 0 ? `${type.defaultFee} ج.م` : 'مجاني'}
+                      {type.defaultFee > 0 ? tr(`${type.defaultFee} ج.م`, `${type.defaultFee} EGP`) : tr('مجاني', 'Free')}
                     </span>
                   </button>
                 );

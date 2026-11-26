@@ -13,15 +13,18 @@ import { DoctorTimingStepCard } from './doctor-timing-step-card';
 import { FinancialStepCard } from './financial-step-card';
 import { AttachmentsNotesStepCard } from './attachments-notes-step-card';
 import { BookingSummaryPanel } from './booking-summary-panel';
-import { ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateAppointmentMutation } from '../hooks/appointments.hook';
 import { to24HourTime, getCurrentTime24 } from '../services/doctors.service';
 import { fileToBase64, uploadAttachmentsApi } from '../services/attachments.service';
 import { getPriceForType } from '@/features/pricing/pricing-storage';
+import { useAppLocale } from '@/shared/hooks/use-app-locale';
+import { getChronicDiseaseLabel } from '../constants/booking.constant';
 
 
 export function BookingForm() {
+  const { isAr, dir, tr } = useAppLocale();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -78,7 +81,12 @@ export function BookingForm() {
 
       // 3. حماية تامة: إذا كان موعد مسبق (SCHEDULED) ولم يختر المستخدم وقتاً
       if (data.source === 'SCHEDULED' && !time24) {
-        toast.error('يرجى اختيار وقت الموعد من قائمة المواعيد المتاحة أولاً.');
+        toast.error(
+          tr(
+            'يرجى اختيار وقت الموعد من قائمة المواعيد المتاحة أولاً.',
+            'Please select an appointment time slot first.'
+          )
+        );
         setIsSubmitting(false);
         return;
       }
@@ -87,7 +95,12 @@ export function BookingForm() {
       const rawAttachments = (data.attachments || []) as any[];
       const isAnyUploading = rawAttachments.some((att) => att.isUploading);
       if (isAnyUploading) {
-        toast.warning('جاري استكمال رفع الصور في الخلفية، يرجى الانتظار لحظات...');
+        toast.warning(
+          tr(
+            'جاري استكمال رفع الصور في الخلفية، يرجى الانتظار لحظات...',
+            'Attachments are still uploading, please wait a moment...'
+          )
+        );
         setIsSubmitting(false);
         return;
       }
@@ -105,7 +118,7 @@ export function BookingForm() {
       // في حال وجود صور تم اختيارها ولم يتم استكمال رفعها تلقائياً
       const unuploaded = rawAttachments.filter((att) => !att.url && att.file);
       if (unuploaded.length > 0) {
-        toast.info('جاري رفع الصور المتبقية...');
+        toast.info(tr('جاري رفع الصور المتبقية...', 'Uploading remaining attachments...'));
         const toUploadPayload = await Promise.all(
           unuploaded.map(async (att) => ({
             name: att.name,
@@ -131,16 +144,26 @@ export function BookingForm() {
       const discountVal = Number(data.discount) || 0;
       const netTotal = Math.max(0, examFee - discountVal);
 
-      const childTag = data.isChild ? '👶 طفل' : '';
+      const childTag = data.isChild ? tr('👶 طفل', '👶 Pediatric') : '';
       const chronicList = data.hasChronicDisease && data.chronicDiseases?.length
-        ? `أمراض مزمنة: ${data.chronicDiseases.join('، ')}`
+        ? tr(
+            `أمراض مزمنة: ${data.chronicDiseases.map((d) => getChronicDiseaseLabel(d, true)).join('، ')}`,
+            `Chronic diseases: ${data.chronicDiseases.map((d) => getChronicDiseaseLabel(d, false)).join(', ')}`
+          )
         : '';
-      const chronicDetails = data.chronicNotes ? `تفاصيل: ${data.chronicNotes}` : '';
+      const chronicDetails = data.chronicNotes
+        ? tr(`تفاصيل: ${data.chronicNotes}`, `Details: ${data.chronicNotes}`)
+        : '';
       const combinedNotes = [childTag, chronicList, chronicDetails, data.notes].filter(Boolean).join(' | ');
 
       // التحقق الصارم من أن المبلغ المدفوع لا يتجاوز صافي الكشف
       if (!data.isExempt && (Number(data.paidAmount) || 0) > netTotal) {
-        toast.error(`المبلغ المدفوع (${data.paidAmount} ج.م) لا يمكن أن يتجاوز صافي سعر الكشف (${netTotal} ج.م)`);
+        toast.error(
+          tr(
+            `المبلغ المدفوع (${data.paidAmount} ج.م) لا يمكن أن يتجاوز صافي سعر الكشف (${netTotal} ج.م)`,
+            `Paid amount (${data.paidAmount} EGP) cannot exceed net exam fee (${netTotal} EGP)`
+          )
+        );
         return;
       }
 
@@ -169,15 +192,21 @@ export function BookingForm() {
       console.log('✅ نتيجة الحجز من الخادم:', result);
 
       if (result && !result.status) {
-        toast.error(result.message || 'فشل في حفظ الحجز');
+        toast.error(result.message || tr('فشل في حفظ الحجز', 'Failed to save booking'));
         return;
       }
 
-      toast.success('تم تأكيد وحفظ الحجز بنجاح!');
+      toast.success(tr('تم تأكيد وحفظ الحجز بنجاح!', 'Booking confirmed and saved successfully!'));
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Submit booking error:', error);
-      toast.error(error?.message || 'حدث خطأ أثناء حفظ الحجز، يرجى المحاولة مرة أخرى.');
+      toast.error(
+        error?.message ||
+          tr(
+            'حدث خطأ أثناء حفظ الحجز، يرجى المحاولة مرة أخرى.',
+            'An error occurred while saving the booking. Please try again.'
+          )
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -187,25 +216,32 @@ export function BookingForm() {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6 pb-24 lg:pb-8">
+      <form dir={dir} onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6 pb-24 lg:pb-8">
         {/* شريط الإلغاء والعودة للرئيسية */}
         <div className="flex items-center justify-between">
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs"
           >
-            <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
-            <span>إلغاء والعودة</span>
+            {isAr ? (
+              <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
+            ) : (
+              <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
+            )}
+            <span>{tr('إلغاء والعودة', 'Cancel & Back')}</span>
           </Link>
         </div>
 
         {/* رأس الصفحة الرئيسي */}
         <div className="text-start">
           <h2 className="text-2xl sm:text-3xl font-black text-[#074C3A] tracking-tight">
-            حجز موعد جديد
+            {tr('حجز موعد جديد', 'Book New Appointment')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            أدخل بيانات الحجز في شاشة واحدة، والملخص يُحدث تلقائياً
+            {tr(
+              'أدخل بيانات الحجز في شاشة واحدة، والملخص يُحدث تلقائياً',
+              'Enter all booking details on one screen; the summary updates automatically'
+            )}
           </p>
         </div>
 
