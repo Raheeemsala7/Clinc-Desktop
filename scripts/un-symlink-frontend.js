@@ -82,11 +82,19 @@ const winUnpackedFrontend = path.resolve(__dirname, '../desktop/dist-installer/w
 if (fs.existsSync(winUnpackedFrontend)) {
   deJunctionDir(winUnpackedFrontend);
 }
+const winUnpackedFrontendRoot = path.resolve(__dirname, '../desktop/dist-installer/win-unpacked/resources/frontend');
+if (fs.existsSync(winUnpackedFrontendRoot)) {
+  deJunctionDir(winUnpackedFrontendRoot);
+}
 
-// 2. Process standalone frontend in desktop/ui/.next/standalone/desktop/ui
+// 2. Process standalone frontend in desktop/ui/.next/standalone
 const standaloneFrontend = path.resolve(__dirname, '../desktop/ui/.next/standalone/desktop/ui');
 if (fs.existsSync(standaloneFrontend)) {
   deJunctionDir(standaloneFrontend);
+}
+const standaloneFrontendRoot = path.resolve(__dirname, '../desktop/ui/.next/standalone');
+if (fs.existsSync(standaloneFrontendRoot)) {
+  deJunctionDir(standaloneFrontendRoot);
 }
 
 console.log('🎉 [DE-JUNCTION] All junctions successfully replaced with portable real directories!');
