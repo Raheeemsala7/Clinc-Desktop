@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { AuthLanguageBtn } from '@/features/auth/components/auth-language-btn';
@@ -26,6 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * بدون الحاجة لقراءة كود اللغة أو حقن سمة dir يدوياً
  */
 export default async function LoginPage() {
+  await connection();
   const session = await getServerSession(authOptions);
   if (session?.user) {
     redirect('/dashboard');

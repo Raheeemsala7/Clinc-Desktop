@@ -5,6 +5,7 @@ const withNextIntl =  createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   /* config options here */
   experimental: {
     agentFeedback: true,

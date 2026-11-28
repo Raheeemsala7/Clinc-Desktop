@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { authOptions } from "@/auth";
 import { HomePageClient } from "@/features/home";
 
@@ -8,6 +9,7 @@ import { HomePageClient } from "@/features/home";
  * إذا كان المستخدم مسجلاً دخوله مسبقاً، يتم توجيهه فوراً ومباشرة للوحة التحكم (/dashboard)
  */
 export default async function HomePage() {
+  await connection();
   const session = await getServerSession(authOptions);
   if (session?.user) {
     redirect('/dashboard');
