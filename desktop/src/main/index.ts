@@ -182,8 +182,8 @@ async function bootServicesAndLoadUrl() {
 
   if (mainWindow && !mainWindow.isDestroyed()) {
     if (nextReady) {
-      appLog('🚀 [DESKTOP] Loading http://localhost:3000 in main window.');
-      mainWindow.loadURL('http://localhost:3000');
+      appLog('🚀 [DESKTOP] Loading http://127.0.0.1:3000 in main window.');
+      mainWindow.loadURL('http://127.0.0.1:3000');
     } else {
       appLog('❌ [DESKTOP] Next.js UI timed out. Showing fallback error page.');
       mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
@@ -544,7 +544,7 @@ ipcMain.handle('app:go-to-login', async () => {
   }
   await bootServicesAndLoadUrl();
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.loadURL('http://localhost:3000/auth/login');
+    mainWindow.loadURL('http://127.0.0.1:3000/auth/login');
   }
   return { success: true };
 });

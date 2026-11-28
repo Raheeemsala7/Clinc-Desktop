@@ -357,7 +357,7 @@ export class ProcessSupervisor {
         NEXT_PUBLIC_API_URL: apiUrl,
         NEXT_PUBLIC_SOCKET_URL: socketUrl,
         NEXTAUTH_SECRET: '204a49bce159670a0bba3850cac547dc8d8dfb04ef7402b6cbb5eac7986c5545',
-        NEXTAUTH_URL: 'http://localhost:3000',
+        NEXTAUTH_URL: 'http://127.0.0.1:3000',
         NODE_ENV: !app.isPackaged ? 'development' : 'production',
       },
       stdio: 'pipe',
